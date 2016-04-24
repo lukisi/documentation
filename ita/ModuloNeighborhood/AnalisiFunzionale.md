@@ -41,11 +41,11 @@ anche il compito di permettere agli altri moduli la comunicazione tra nodi:
 
 ## <a name="Operazioni_di_base"></a>Operazioni di base
 
-Il modulo fa uso delle [tasklet](../Librerie/TaskletSystem), un sistema di multithreading
+Il modulo fa uso delle [tasklet](../Librerie/TaskletSystem.md), un sistema di multithreading
 cooperativo. Attraverso di esso esegue il monitoraggio delle schede di rete lasciando libero il chiamante
 di svolgere altri task.
 
-Il modulo fa uso del framework [ZCD](../Librerie/ZCD), precisamente appoggiandosi alla
+Il modulo fa uso del framework [ZCD](../Librerie/ZCD.md), precisamente appoggiandosi alla
 libreria di livello intermedio *ntkdrpc* prodotta con questo framework per formalizzare i metodi remoti
 usati nel demone *ntkd*.
 
@@ -303,7 +303,7 @@ a conoscenza non solo dell'indirizzo IP a cui raggiungere il nodo, ma anche del 
 cui operare.
 
 Esaminiamo cosa avviene lato server. Una descrizione passo passo è presente in questo
-[documento](ita_ChiamateLatoServer).
+[documento](ChiamateLatoServer.md).
 
 Abbiamo anticipato che, per gestire le comunicazioni lato server, all'inizio della sua attività il modulo
 Neighborhood deve essere istruito su come gestire le chiamate che riceve. L'utilizzatore del modulo dovrà
@@ -420,7 +420,7 @@ Abbiamo detto che la creazione di una nuova *identità* di un nodo non è una sc
 utilizzatore. Vediamo come questo avviene.
 
 *   Per una comprensione delle motivazioni di queste *identità* e del loro rapporto con gli *indirizzi di scheda* si
-veda il documento ["Modulo QSPN - Esempio di uso degli indirizzi virtuali"](../../qspn/wiki/ita_Esempio1_Step1),
+veda il documento ["Modulo QSPN - Esempio di uso degli indirizzi virtuali"](../ModuloQSPN/Esempio1/Step1.md),
 in particolare la premessa.
 
 Esaminiamo il caso in cui, a fronte di una migrazione, il nodo corrente *a* crea una nuova identità *a<sub>1</sub>*,
@@ -828,7 +828,7 @@ Tutte queste operazioni non coinvolgono direttamente il modulo Neighborhood.
 ## <a name="Classi_e_interfacce"></a>Classi e interfacce
 
 L'implementazione del sistema di tasklet è passata al modulo dal suo utilizzatore. Si tratta di una istanza dell'interfaccia
-ITasklet che è descritta nel relativo [documento](../../tasklet-system/wiki/ita_TaskletSystem#Interfacce).
+ITasklet che è descritta nel relativo [documento](../Librerie/TaskletSystem.md#Interfacce).
 
 * * *
 
@@ -890,7 +890,7 @@ La stub factory è un oggetto di cui il modulo conosce l'interfaccia INeighborho
 Il manager di rotte e indirizzi è un oggetto di cui il modulo conosce l'interfaccia INeighborhoodIPRouteManager.
 Tramite essa il modulo può:
 
-*   Dato il nome di una interfaccia di rete e un indirizzo IP [link-local](http://en.wikipedia.org/wiki/Link-local_address)
+*   Dato il nome di una interfaccia di rete e un indirizzo IP [link-local](https://en.wikipedia.org/wiki/Link-local_address)
     nella dotted form, aggiungere l'indirizzo IP all'interfaccia di rete (metodo 'add_address');
 
 *   Dato il nome di una interfaccia di rete, il suo indirizzo IP link-local associato e un altro indirizzo IP link-local
@@ -916,7 +916,7 @@ l'intervento del modulo Neighborhood.
 * * *
 
 La classe usata per l'identificativo di una identità, cioè NodeID, è definita nella libreria
-[Common](../../ntkd-common/wiki/ita_Common). Il modulo Neighborhood ha una dipendenza su questa libreria,
+[Common](../Librerie/Common.md). Il modulo Neighborhood ha una dipendenza su questa libreria,
 quindi conosce tale classe.
 
 La conoscenza del modulo Neighborhood relativamente a tale classe si limita al fatto di sapere che essa è

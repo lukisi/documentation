@@ -119,7 +119,7 @@ Cicla le interfacce che ha già in gestione; se una ha gli stessi valori per nom
 che è un duplicato; se una ha lo stesso MAC e nome diverso oppure lo stesso nome e MAC diverso allora il modulo va in errore fatale.
 
 Il modulo, per ogni interfaccia che inizia a gestire, memorizza il suo nome e il suo MAC address e genera e memorizza un
-indirizzo locale di scheda. Usa l'oggetto [INeighborhoodIPRouteManager](ita_Requisiti#INeighborhoodIPRouteManager)
+indirizzo locale di scheda. Usa l'oggetto [INeighborhoodIPRouteManager](Requisiti.md#INeighborhoodIPRouteManager)
 per impostare l'indirizzo generato. Poi emette il segnale *nic_address_set*.
 
 Poi avvia una tasklet nella quale invia un broadcast_to_dev (cioè un broadcast solo su quella interfaccia di rete) con
@@ -133,7 +133,7 @@ Un nodo che vuole accordarsi per un arco con un vicino di cui ha notato la prese
 in UDP unicast, indicando anche esso il suo NeighborhoodNodeID e il MAC e l'indirizzo locale della interfaccia di rete, e
 riceverà la risposta. Dopo entrambi i nodi avranno un arco il cui costo è ancora non misurato.
 
-Dopo essersi accordati per l'arco entrambi i nodi usano l'oggetto [INeighborhoodIPRouteManager](ita_Requisiti#INeighborhoodIPRouteManager)
+Dopo essersi accordati per l'arco entrambi i nodi usano l'oggetto [INeighborhoodIPRouteManager](Requisiti.md#INeighborhoodIPRouteManager)
 per impostare la rotta verso l'indirizzo di scheda del nuovo vicino. Quindi da subito è possibile realizzare connessioni
 reliable (con protocollo TCP) tra i due nodi passanti per questo nuovo arco.
 
@@ -146,7 +146,7 @@ ogni 30 secondi si ripete. Nell'effettuare la misurazione si verifica anche il f
 funziona viene rimosso.
 
 La misurazione del costo espresso come RTT avviene attraverso l'uso dell'oggetto
-[INeighborhoodNetworkInterface](ita_Requisiti#INeighborhoodNetworkInterface), come indicato nel relativo documento.
+[INeighborhoodNetworkInterface](Requisiti.md#INeighborhoodNetworkInterface), come indicato nel relativo documento.
 
 Dopo che è stata fatta la prima misurazione, il modulo emette il segnale *arc_added* e l'arco va a far parte della
 lista ufficiale.
@@ -500,7 +500,7 @@ per simulare questo scenario.
 Supponiamo di avere i nodi *a*, *b*, *c*, *d*, *e* sui quali è in esecuzione il programma *neighborhoodclient*.
 Questi nodi sono disposti secondo il disegno:
 
-![grafo1](img/ita_DettagliTecnici/grafo1.png)
+![grafo1](img/DettagliTecnici/grafo1.png)
 
 Su ogni nodo viene avviato il programma *neighborhoodclient*, specificando sulla linea di comando l'identificativo
 numerico da assegnare alla prima *identità principale*. Indichiamo queste *identità* (e il relativo numero
@@ -539,7 +539,7 @@ riguardo la creazione degli *archi-identità*:
 
 *   *a<sub>0</sub>-d<sub>0</sub>* si appoggia sull'arco *a-d*.
 
-![grafo2](img/ita_DettagliTecnici/grafo2.png)
+![grafo2](img/DettagliTecnici/grafo2.png)
 
 Adesso le *identità* *a<sub>0</sub>* e *b<sub>0</sub>* migrano dando luogo alle nuove *identità* *a<sub>1</sub>* e
 *b<sub>1</sub>* che diventano le *identità principali* dei nodi *a* e *b*.
@@ -623,7 +623,7 @@ Per simulare questo evento, l'utente effettua queste operazioni:
 *   Analogamente, sulla console del nodo *e* chiede la costituzione di un nuovo *arco-identità* sull'arco
     *e-b* che collega la identità *e<sub>0</sub>* con *b<sub>1</sub>*.
 
-![grafo3](img/ita_DettagliTecnici/grafo3.png)
+![grafo3](img/DettagliTecnici/grafo3.png)
 
 In seguito viene rimosso l' *arco-identità* *b<sub>0</sub>*-*e<sub>0</sub>*. Il motivo di questa rimozione
 è spiegato nel documento del modulo QSPN, riguarda i cluster di nodi e le *identità di connettività*.
@@ -646,7 +646,7 @@ nel primo cluster per mantenerlo internamente connesso. Risulta altresì chiaro 
 *arco-identità*: perché una *identità di connettività* mantiene collegamenti solo all'interno del cluster che
 essa supporta. Evidenziamo anche le *identità di connettività* con un asterisco.
 
-![grafo4](img/ita_DettagliTecnici/grafo4.png)
+![grafo4](img/DettagliTecnici/grafo4.png)
 
 Infine l'identità *b<sub>0</sub>* si accorge di non essere necessaria alla connettività interna del primo
 cluster, quindi si auto-distrugge.
