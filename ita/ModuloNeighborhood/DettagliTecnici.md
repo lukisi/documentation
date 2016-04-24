@@ -665,4 +665,4 @@ Per simulare questo evento, l'utente effettua queste operazioni:
 *   Analogamente, sulla console del nodo *c* chiede la rimozione dell' *arco-identità* che poggia sull'arco
     *c-b* e collega *c<sub>0</sub>* a *b<sub>0</sub>*.
 
-![grafo5](img/ita_DettagliTecnici/grafo5.png)
+![grafo5](img/DettagliTecnici/grafo5.png)

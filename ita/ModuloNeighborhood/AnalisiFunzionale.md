@@ -41,11 +41,11 @@ anche il compito di permettere agli altri moduli la comunicazione tra nodi:
 
 ## <a name="Operazioni_di_base"></a>Operazioni di base
 
-Il modulo fa uso delle [tasklet](../../tasklet-system/wiki/ita_TaskletSystem), un sistema di multithreading
+Il modulo fa uso delle [tasklet](../Librerie/TaskletSystem), un sistema di multithreading
 cooperativo. Attraverso di esso esegue il monitoraggio delle schede di rete lasciando libero il chiamante
 di svolgere altri task.
 
-Il modulo fa uso del framework [ZCD](../../zcd/wiki/ita_ZCD), precisamente appoggiandosi alla
+Il modulo fa uso del framework [ZCD](../Librerie/ZCD), precisamente appoggiandosi alla
 libreria di livello intermedio *ntkdrpc* prodotta con questo framework per formalizzare i metodi remoti
 usati nel demone *ntkd*.
 
