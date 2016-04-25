@@ -62,19 +62,15 @@ NeigborhoodNodeID) e non basarsi soltanto sui distinti MAC address.
 
 Con ogni vicino, poi, si accorda per la creazione (o meno) di un arco. L'accordo potrebbe non essere raggiunto
 perché uno dei due vertici ha già un numero di archi elevato. Se l'accordo viene raggiunto entrambi i nodi
-vengono anche a conoscenza dell' *indirizzo di scheda* del vicino.
+vengono anche a conoscenza dell'*indirizzo di scheda* del vicino.
 
 Sia *k* un arco che il modulo nel nodo corrente *a* ha creato con un vicino *b*. La struttura dati che il
 modulo mantiene per l'arco *k* contiene:
 
 *   L'identificativo di *b* (NeighborhoodNodeID).
-
 *   Il MAC address dell'interfaccia di rete di *b*.
-
-*   L' *indirizzo di scheda* associato dal nodo *b* a detta interfaccia.
-
+*   L'*indirizzo di scheda* associato dal nodo *b* a detta interfaccia.
 *   L'interfaccia di rete di *a*.
-
 *   Il costo dell'arco.
 
 Quando il modulo crea un nuovo arco, esso imposta le rotte nelle tabelle del kernel per rendere possibile
@@ -133,7 +129,7 @@ ethernet di un singolo nodo ad un unico hub, perché in nessun caso si potrebber
 
 * * *
 
-Il costo di un arco in una direzione (da A verso B?) può essere diverso dal costo nella direzione inversa.
+Il costo di un arco in una direzione (da A verso B) può essere diverso dal costo nella direzione inversa.
 Cioè ogni vertice effettua una misurazione del costo dell'arco indipendente da quella fatta dall'altro
 vertice. Questo non è utile quando il costo rappresenta il round-trip time, ma può esserlo se rappresenta
 la larghezza di banda in uscita.
@@ -347,7 +343,7 @@ chiamato *CallerInfo*. Con tale oggetto esso può identificare attraverso quale 
 messaggio è pervenuto. Per realizzare questa associazione il modulo Neighborhood deve fornire essenzialmente due metodi:
 
 *   *NodeID get_identity(ISourceID source_id)* - Solo per i messaggi destinati a moduli *di identità*, dato
-    l'identificativo del mittente di un messaggio ricevuto restituisce il NodeID dell' *identità* del mittente.
+    l'identificativo del mittente di un messaggio ricevuto restituisce il NodeID dell'*identità* del mittente.
     Tale dato è contenuto nella classe IdentityAwareSourceID, che è interna al modulo Neighborhood.
 
 *   *INeighborhoodArc get_node_arc(ISourceID source_id, string dev)* - Solo per i messaggi destinati a moduli
@@ -410,7 +406,7 @@ L'elemento *w* contiene:
 la *identità principale* del nodo *b* allora questo MAC address risulta essere lo stesso che si può reperire
 dall'oggetto arco *i*.
 
-*   *w.peer_linklocal* - L' *indirizzo di scheda* dell'interfaccia gestita da *b<sub>j</sub>*. Se *b<sub>j</sub>*
+*   *w.peer_linklocal* - L'*indirizzo di scheda* dell'interfaccia gestita da *b<sub>j</sub>*. Se *b<sub>j</sub>*
 è la *identità principale* del nodo *b* allora questo *indirizzo di scheda* risulta essere lo stesso che si può
 reperire dall'oggetto arco *i*.
 
@@ -506,9 +502,8 @@ di dati che chiamiamo *MigrationData migration_data*:
 
 *   L'utilizzatore del modulo manteneva anche una associazione *f* tra la coppia *a<sub>0</sub>-i* (formata
     dall'identità *a<sub>0</sub>* e un arco *i* che il modulo Neighborhood aveva realizzato tra il nodo *a*
-    e un altro nodo) e un set di identità nel nodo collegato all'arco *i*.
-
-*   Entriamo nel dettaglio dell'associazione *f*. Per ogni arco *i*:
+    e un altro nodo) e un set di identità nel nodo collegato all'arco *i*.  
+    Entriamo nel dettaglio dell'associazione *f*. Per ogni arco *i*:
 
     *   L'arco *i* collega una interfaccia di rete reale di *a* con una interfaccia di rete reale del nodo
         collegato. Sia *b* questo nodo. Chiamiamo *ir(i)* l'interfaccia reale che in *a* è l'end-point dell'arco *i*.
@@ -535,30 +530,24 @@ di dati che chiamiamo *MigrationData migration_data*:
         *   La struttura dati *w* contiene:
 
             *   *w.peer_nodeid* - Il NodeID di *b<sub>j</sub>*.
-
             *   *w.peer_mac* - Il MAC address dell'interfaccia di rete (reale o pseudo) gestita da
                 *b<sub>j</sub>* che usa fisicamente l'interfaccia reale di *b* che è l'end-point dell'arco *i*.
-
-            *   *w.peer_linklocal* - L' *indirizzo di scheda* dell'interfaccia (reale o pseudo) gestita da
+            *   *w.peer_linklocal* - L'*indirizzo di scheda* dell'interfaccia (reale o pseudo) gestita da
                 *b<sub>j</sub>* che usa fisicamente l'interfaccia reale di *b* che è l'end-point dell'arco *i*.
 
         *   Altre informazioni su questo *arco-identità*, che sono in realtà valide per tutti gli elementi
             del set *f(a<sub>0</sub>-i)*, sono:
 
             *   *ns = ns(a<sub>0</sub>)* - Il nome del network namespace gestito da *a<sub>0</sub>*.
-
             *   *dev = in(a<sub>0</sub>)(ir(i)).dev* - Il nome dell'interfaccia (reale o pseudo) gestita
                 da *a<sub>0</sub>* che usa fisicamente l'interfaccia reale di *a* che è l'end-point dell'arco *i*.
-
             *   *mac = in(a<sub>0</sub>)(ir(i)).mac* - Il MAC dell'interfaccia (reale o pseudo) gestita da
                 *a<sub>0</sub>* che usa fisicamente l'interfaccia reale di *a* che è l'end-point dell'arco *i*.
-
-            *   *linklocal = in(a<sub>0</sub>)(ir(i)).linklocal* - L' *indirizzo di scheda* dell'interfaccia
+            *   *linklocal = in(a<sub>0</sub>)(ir(i)).linklocal* - L'*indirizzo di scheda* dell'interfaccia
                 (reale o pseudo) gestita da *a<sub>0</sub>* che usa fisicamente l'interfaccia reale di *a* che è l'end-point dell'arco *i*.
 
 *   Ci sono da fare delle operazioni per ogni *arco-identità* che parte da *a<sub>0</sub>* ora che la nuova identità
-    *a<sub>1</sub>* è stata creata basandosi sulla precedente identità *a<sub>0</sub>*.
-
+    *a<sub>1</sub>* è stata creata basandosi sulla precedente identità *a<sub>0</sub>*.  
     Per l'esattezza, quali operazioni vanno fatte dipende anche dal fatto che l'identità nel nodo collegato
     abbia o meno partecipato anch'essa alla migrazione.
 
@@ -579,14 +568,11 @@ di dati che chiamiamo *MigrationData migration_data*:
     *   Cambia i dati dell'arco assegnato ad *a<sub>0</sub>* relativamente all'interfaccia locale:
 
         *   *w<sub>0</sub>.ns = ns(a<sub>0</sub>)*.
-
         *   *w<sub>0</sub>.dev = in(a<sub>0</sub>)(ir(i)).dev*.
-
         *   *w<sub>0</sub>.mac = in(a<sub>0</sub>)(ir(i)).mac*.
-
         *   *w<sub>0</sub>.linklocal = in(a<sub>0</sub>)(ir(i)).linklocal*.
 
-    *   In realtà questi dati sono stati cambiati automaticamente nel momento in cui sono stati cambiati i
+        In realtà questi dati sono stati cambiati automaticamente nel momento in cui sono stati cambiati i
         valori nelle associazioni *ns(a<sub>0</sub>)* e *in(a<sub>0</sub>)*.
 
     *   Il nodo *a* deve comunicare al nodo *b* il *migration_id* visto prima e le informazioni che sono relative
@@ -597,16 +583,11 @@ di dati che chiamiamo *MigrationData migration_data*:
         *   Il nodo *a* comunica:
 
             *   *migration_id* - L'identificativo della migrazione.
-
             *   *peer_id* - L'identificativo della identità *b<sub>j</sub>* in *b*.
-
             *   *old_id* - L'identificativo della vecchia identità *a<sub>0</sub>* in *a*.
-
             *   *new_id* - L'identificativo della nuova identità *a<sub>1</sub>* in *a*.
-
             *   *old_id_new_mac* - Il MAC della nuova pseudo-interfaccia gestita da *a<sub>0</sub>* per questo arco.
                 Cioè *in(a<sub>0</sub>)(ir(i)).mac* ossia l'equivalente della scrittura *w<sub>0</sub>.mac*.
-
             *   *old_id_new_linklocal* - L'indirizzo link-local della nuova pseudo-interfaccia gestita
                 da *a<sub>0</sub>* per questo arco. Cioè *in(a<sub>0</sub>)(ir(i)).linklocal* ossia l'equivalente
                 della scrittura *w<sub>0</sub>.linklocal*.
@@ -617,15 +598,15 @@ di dati che chiamiamo *MigrationData migration_data*:
 
                 *   *peer_new_id* - L'identificativo della nuova identità frutto della migrazione di *b<sub>j</sub>*,
                     chiamiamola *b<sub>k</sub>*.
-
                 *   *peer_old_id_new_mac* - Il MAC della nuova pseudo-interfaccia gestita da *b<sub>j</sub>* per
                     questo arco.
-
                 *   *peer_old_id_new_linklocal* - L'indirizzo link-local della nuova pseudo-interfaccia gestita da
                     *b<sub>j</sub>* per questo arco.
 
             *   Altrimenti:
+
                 *   "OK".
+
     *   Il nodo *a* ora sa se l'identità *b<sub>j</sub>* ha partecipato anch'essa alla migrazione. Se sì, il nodo
         *a* conosce i dati *peer_old_id_new_mac* e *peer_old_id_new_linklocal* che sono riferiti a *b<sub>k</sub>*,
         la quale ora gestisce la vecchia interfaccia del nodo *b* che prima era gestita da *b<sub>j</sub>*.
@@ -658,7 +639,7 @@ di dati che chiamiamo *MigrationData migration_data*:
     *   Altrimenti:
 
         *   Il nodo *b*, come vedremo in dettaglio poco più sotto, forma un nuovo *arco-identità* *b<sub>j</sub>*-*a<sub>1</sub>*;
-            cambia i dati dell' *arco-identità* *b<sub>j</sub>*-*a<sub>0</sub>*, cioè MAC e linklocal; aggiunge una rotta nelle
+            cambia i dati dell'*arco-identità* *b<sub>j</sub>*-*a<sub>0</sub>*, cioè MAC e linklocal; aggiunge una rotta nelle
             tabelle di un suo namespace (quello gestito da *b<sub>j</sub>*) per l'arco *b<sub>j</sub>*-*a<sub>0</sub>*.
 
 Tutte queste operazioni non coinvolgono direttamente il modulo Neighborhood. Esso resta comunque in grado, ricevendo
@@ -668,27 +649,24 @@ per mezzo delle callback ricevute all'inizio, se è per la sua nuova identità e
 
 Esaminiamo il caso in cui un nodo vicino *b* crea una nuova identità *b<sub>1</sub>* basata su una sua precedente identità
 *b<sub>0</sub>*. La precedente identità *b<sub>0</sub>* era collegata attraverso un arco *i* (o più di uno) alla identità del
-nodo corrente *a<sub>k</sub>*, la quale non è cambiata. Sia *w* l' *arco-identità* *a<sub>k</sub>*-*b<sub>0</sub>* che si
+nodo corrente *a<sub>k</sub>*, la quale non è cambiata. Sia *w* l'*arco-identità* *a<sub>k</sub>*-*b<sub>0</sub>* che si
 appoggia su *i*.
 
 *   Il nodo *a* riceve sull'arco *i* da parte del nodo *b* la comunicazione di cui sopra
     (*migration_id*, *peer_id*, *old_id*, *new_id*, *old_id_new_mac*, *old_id_new_linklocal*) dalla quale deduce che
-    sono cambiati gli estremi dell' *arco-identità* *a<sub>k</sub>*-*b<sub>0</sub>*.
-
-*   Il nodo *a* riconosce *a<sub>k</sub>* in *peer_id*. Inoltre riconosce *b<sub>0</sub>* in *old_id* e ritrova nelle sue
-    associazioni l' *arco-identità* *a<sub>k</sub>*-*b<sub>0</sub>* che si appoggia sull'arco *i*.
-
-*   Il nodo *a* inoltre viene a conoscenza del NodeID di *b<sub>1</sub>* (*new_id*) con il quale dovrà formare un nuovo
+    sono cambiati gli estremi dell'*arco-identità* *a<sub>k</sub>*-*b<sub>0</sub>*.  
+    Il nodo *a* riconosce *a<sub>k</sub>* in *peer_id*. Inoltre riconosce *b<sub>0</sub>* in *old_id* e ritrova nelle sue
+    associazioni l'*arco-identità* *a<sub>k</sub>*-*b<sub>0</sub>* che si appoggia sull'arco *i*.  
+    Il nodo *a* inoltre viene a conoscenza del NodeID di *b<sub>1</sub>* (*new_id*) con il quale dovrà formare un nuovo
     *arco-identità* *a<sub>k</sub>*-*b<sub>1</sub>*. Questo *arco-identità* avrà per MAC e linklocal i valori che aveva
-    l' *arco-identità* *a<sub>k</sub>*-*b<sub>0</sub>*.
-
-*   Il nodo *a* inoltre viene a conoscenza dei nuovi valori MAC e linklocal che ora andranno cambiati nell' *arco-identità*
+    l'*arco-identità* *a<sub>k</sub>*-*b<sub>0</sub>*.  
+    Il nodo *a* inoltre viene a conoscenza dei nuovi valori MAC e linklocal che ora andranno cambiati nell'*arco-identità*
     *a<sub>k</sub>*-*b<sub>0</sub>*.
 
 *   Il nodo *a*, poiché l'identità *a<sub>k</sub>* non ha partecipato alla migrazione *migration_id*, risponde subito
     semplicemente "OK".
 
-*   Cerca nell'elenco che ha nell'associazione *f(a<sub>k</sub>-i)* l' *arco-identità* *w* che lo collega a *b<sub>0</sub>*.
+*   Cerca nell'elenco che ha nell'associazione *f(a<sub>k</sub>-i)* l'*arco-identità* *w* che lo collega a *b<sub>0</sub>*.
 
 *   Memorizza *old_peer_linklocal = w.peer_linklocal*.
 
@@ -732,7 +710,7 @@ come gateway.
     *   Il nodo *a* comunica sull'arco *i* al nodo *b* che sta rimuovendo il suo *arco-identità* *a<sub>k</sub>*-*b<sub>j</sub>*
         sull'arco *i* affinché anche il nodo *b* apporti le modifiche alle sue associazioni.
 
-    *   Cerca nell'elenco che ha nell'associazione *f(a<sub>k</sub>-i)* l' *arco-identità* *w* che lo collega a *b<sub>j</sub>*.
+    *   Cerca nell'elenco che ha nell'associazione *f(a<sub>k</sub>-i)* l'*arco-identità* *w* che lo collega a *b<sub>j</sub>*.
 
     *   Elimina dalle tabelle di routing di *ns(a<sub>k</sub>)* la rotta che collegava
         *in(a<sub>k</sub>)(ir(i)).linklocal* a *w.peer_linklocal*.
@@ -746,13 +724,10 @@ Tutte queste operazioni non coinvolgono direttamente il modulo Neighborhood.
 *   Implementazione del sistema di tasklet.
 *   Delegati per la gestione delle chiamate ricevute:
     *   *get_identity_skeleton* - Una callback per gestire gli IdentityAwareUnicastID.
-
     *   *get_identity_skeleton_set* - Una callback per gestire gli IdentityAwareBroadcastID.
-
     *   *node_skeleton* - Uno skeleton del root-dispatcher per gestire gli WholeNodeUnicastID e gli WholeNodeBroadcastID.
-
-*   La (o le) interfaccia di rete da monitorare.
-*   Durante le operazioni del modulo è possibile aggiungere o rimuovere una interfaccia di rete da monitorare.
+*   La (o le) interfaccia di rete da monitorare.  
+    Durante le operazioni del modulo è possibile aggiungere o rimuovere una interfaccia di rete da monitorare.
 *   Numero massimo di archi da realizzare.
 *   Factory per creare uno "stub" per invocare metodi remoti nei nodi vicini.
 *   Manager di indirizzi e rotte.
@@ -760,51 +735,42 @@ Tutte queste operazioni non coinvolgono direttamente il modulo Neighborhood.
 ## <a name="Deliverables"></a>Deliverables
 
 *   Emette un segnale per:
-    *   Avvenuta assegnazione dell' *indirizzo di scheda* ad una interfaccia di rete gestita.
-
+    *   Avvenuta assegnazione dell'*indirizzo di scheda* ad una interfaccia di rete gestita.
     *   Costituzione di un arco. Significa anche avvenuto inserimento della rotta nelle tabelle.
     *   Rimozione di un arco. Significa anche avvenuta rimozione della rotta nelle tabelle.
     *   Variazione del costo di un arco.
-    *   Avvenuta rimozione dell' *indirizzo di scheda* ad una interfaccia di rete che non si gestisce più.
+    *   Avvenuta rimozione dell'*indirizzo di scheda* ad una interfaccia di rete che non si gestisce più.
 
 *   Fornisce metodi per:
     *   *current_arcs* - Ottenere l'elenco degli archi ora presenti.
-
     *   *get_dispatcher* - Dati alcuni parametri relativi ad un messaggio in unicast ricevuto (IUnicastID,
         ISourceID, peer_address, dev), eventualmente servendosi dei delegati passati per associare i NodeID
         ad uno skeleton, dopo aver verificato di processare il messaggio solo una volta (in caso di protocollo
         UDP in presenza di molteplici interfacce di rete nel nodo corrente collegate su un solo broadcast domain),
         restituisce una istanza di skeleton del root-dispatcher se il messaggio è da processare, oppure null.
-
     *   *get_dispatcher_set* - Dati alcuni parametri relativi ad un messaggio in broadcast ricevuto (IBroadcastID,
         ISourceID, peer_address, dev), eventualmente servendosi dei delegati passati per associare i NodeID ad uno
         skeleton, restituisce una lista (che può essere vuota) di istanze di skeleton del root-dispatcher: il messaggio
         è da processare su ognuna di queste istanze.
-
     *   *get_identity* - Solo per i messaggi destinati a moduli *di identità*, dato l'identificativo del mittente di
-        un messaggio ricevuto, cioè una istanza di ISourceID, ottenere il NodeID dell' *identità* del mittente. Se
+        un messaggio ricevuto, cioè una istanza di ISourceID, ottenere il NodeID dell'*identità* del mittente. Se
         non è possibile ottenerlo, restituisce null.
-
     *   *get_node_arc* - Solo per i messaggi destinati a moduli *di nodo*, dato l'identificativo del mittente di un
         messaggio ricevuto, cioè una istanza di ISourceID, e il nome dell'interfaccia di rete su cui il messaggio è
         stato ricevuto, ottenere l'istanza di arco (INeighborhoodArc). Se non è possibile ottenerlo, restituisce null.
-
     *   *get_stub_identity_aware_unicast* - Dato un arco che collega questo nodo, chiamiamolo *a*, ad un altro nodo
         vicino, chiamiamolo *b*, dato l'identificativo di una *identità* che risiede in *a*, chiamiamola
         *a<sub>k</sub>*, dato l'identificativo di una *identità* che risiede in *b*, chiamiamola *b<sub>j</sub>*,
         ottenere un oggetto stub utilizzabile per chiamare un metodo remoto su un modulo *di identità* da *a<sub>k</sub>*
         a *b<sub>j</sub>*. Questo stub dialoga con il nodo remoto con protocollo reliable.
-
     *   *get_stub_whole_node_unicast* - Dato un arco che collega questo nodo, chiamiamolo *a*, ad un altro nodo vicino,
         chiamiamolo *b*, ottenere un oggetto stub utilizzabile per chiamare un metodo remoto su un modulo *di nodo* da
         *a* a *b*. Questo stub dialoga con il nodo remoto con protocollo reliable.
-
     *   *get_stub_identity_aware_broadcast* - Dato l'identificativo di una *identità* che risiede in *a*, chiamiamola
         *a<sub>k</sub>*, dato un set di identificativi di *identità* che risiedono in alcuni nodi vicini, ottenere
-        un oggetto stub utilizzabile per inviare un messaggio in broadcast destinato a un modulo *di identità* di queste *identità*.
-
-    *   Il modulo produrrà uno stub che si occuperà di inviare il messaggio in broadcast su tutte le interfacce di rete gestite.
-    *   Quando si invia un messaggio tramite questo oggetto l'invio del messaggio è asincrono: procederà in una nuova
+        un oggetto stub utilizzabile per inviare un messaggio in broadcast destinato a un modulo *di identità* di queste *identità*.  
+        Il modulo produrrà uno stub che si occuperà di inviare il messaggio in broadcast su tutte le interfacce di rete gestite.  
+        Quando si invia un messaggio tramite questo oggetto l'invio del messaggio è asincrono: procederà in una nuova
         tasklet, mentre il metodo non fornirà alcuna risposta al chiamante. E' possibile fornire un oggetto in cui un
         determinato metodo (callback) verrà richiamato dopo un certo tempo se per qualcuno degli archi noti al modulo
         non si avrà ricevuto un messaggio di ACK dal vicino collegato. Questo controllo viene fatto sugli archi che sono
@@ -812,17 +778,14 @@ Tutte queste operazioni non coinvolgono direttamente il modulo Neighborhood.
         una volta per ogni arco che fallisce e avrà quell'arco come argomento, così che il chiamante possa prendere un
         provvedimento, ad esempio riprovando con diverse chiamate unicast reliable. Si noti che in questo caso ad un arco
         passato alla callback possono corrispondere diversi *archi-identità*.
-
     *   *get_stub_whole_node_broadcast* - Dato un set di archi che collegano ad alcuni nodi vicini, ottenere un oggetto
-        stub utilizzabile per inviare un messaggio in broadcast destinato a un modulo *di nodo* di questi nodi vicini.
-
-    *   Il modulo produrrà una istanza di IBroadcastID che indicherà come destinatari i nodi che sono identificati
-        dagli archi che sono stati passati a questo metodo.
-    *   Il modulo poi produrrà uno stub che si occuperà di inviare il messaggio in broadcast su tutte le interfacce di rete gestite.
-    *   Quando si invia un messaggio tramite questo oggetto l'invio del messaggio è asincrono e non reliable: si veda la
+        stub utilizzabile per inviare un messaggio in broadcast destinato a un modulo *di nodo* di questi nodi vicini.  
+        Il modulo produrrà una istanza di IBroadcastID che indicherà come destinatari i nodi che sono identificati
+        dagli archi che sono stati passati a questo metodo.  
+        Il modulo poi produrrà uno stub che si occuperà di inviare il messaggio in broadcast su tutte le interfacce di rete gestite.  
+        Quando si invia un messaggio tramite questo oggetto l'invio del messaggio è asincrono e non reliable: si veda la
         spiegazione del metodo precedente. Tuttavia in questo caso ad un arco passato alla callback non corrispondono
         diversi *archi-identità*.
-
     *   *remove_my_arc* - Forzare la rimozione di un arco.
 
 ## <a name="Classi_e_interfacce"></a>Classi e interfacce
@@ -836,54 +799,44 @@ Una interfaccia di rete passata al modulo è un oggetto istanza di una classe di
 INeighborhoodNetworkInterface. Tramite questa interfaccia il modulo può:
 
 *   Leggere il nome dell'interfaccia di rete, es: wlan0 (proprietà *dev*).
-
 *   Leggere il MAC address dell'interfaccia di rete, es: CC:AF:78:2E:C8:B6 (proprietà *mac*).
-
 *   Misurare il round-trip time (la latenza) con un vicino (metodo *measure_rtt*).
 
 * * *
 
 La stub factory è un oggetto di cui il modulo conosce l'interfaccia INeighborhoodStubFactory. Tramite essa il modulo può:
 
-*   Creare uno stub per chiamare un metodo via UDP in broadcast sui nodi vicini (metodo 'get_broadcast').
-*   Il modulo specifica una o più interfacce di rete, ciascuna con l'indirizzo da usare come *source*, sulle quali
-    desidera che lo stub invii il messaggio.
-
-*   Inoltre il modulo specifica l'oggetto ISourceID che lo stub includerà nel messaggio come identificativo della
-    *identità* del mittente.
-
-*   Inoltre il modulo specifica l'oggetto IBroadcastID che lo stub includerà nel messaggio. In questo modo viene
+*   Creare uno stub per chiamare un metodo via UDP in broadcast sui nodi vicini (metodo 'get_broadcast').  
+    Il modulo specifica una o più interfacce di rete, ciascuna con l'indirizzo da usare come *source*, sulle quali
+    desidera che lo stub invii il messaggio.  
+    Inoltre il modulo specifica l'oggetto ISourceID che lo stub includerà nel messaggio come identificativo della
+    *identità* del mittente.  
+    Inoltre il modulo specifica l'oggetto IBroadcastID che lo stub includerà nel messaggio. In questo modo viene
     indicato a ogni vicino che riceve il messaggio se debba considerarsi tra i destinatari (con una o più delle
-    sue *identità*).
-
-*   Infine il modulo può indicare un'istanza dell'interfaccia IAckCommunicator se vuole ricevere dopo il timeout la
+    sue *identità*).  
+    Infine il modulo può indicare un'istanza dell'interfaccia IAckCommunicator se vuole ricevere dopo il timeout la
     lista dei MAC address che hanno segnalato con un ACK la ricezione del messaggio. Tale interfaccia è fornita dalla
     libreria di livello intermedio *ntkdrpc* prodotta per usare il framework ZCD.
-
-*   Creare uno stub per chiamare un metodo via UDP su uno specifico vicino (metodo 'get_unicast').
-*   Il modulo specifica l'interfaccia di rete, con l'indirizzo da usare come *source*, sulla quale desidera che lo stub invii il messaggio.
-
-*   Inoltre il modulo specifica l'oggetto ISourceID che lo stub includerà nel messaggio come identificativo della *identità* del mittente.
-
-*   Inoltre il modulo specifica l'oggetto IUnicastID che lo stub includerà nel messaggio per indicare a ogni vicino che
-    lo riceve se è lui (una sua *identità*) il destinatario.
-
-*   Infine il modulo può specificare se si vuole attendere l'esecuzione del metodo da parte del vicino o no. Se no,
-    allora la corretta ricezione del messaggio da parte del vicino **non** è garantita.
-
-*   Il modulo usa questa modalità per comunicare con un vicino quando ancora non è stata negoziata la creazione dell'arco
+*   Creare uno stub per chiamare un metodo via UDP su uno specifico vicino (metodo 'get_unicast').  
+    Il modulo specifica l'interfaccia di rete, con l'indirizzo da usare come *source*, sulla quale desidera che lo
+    stub invii il messaggio.  
+    Inoltre il modulo specifica l'oggetto ISourceID che lo stub includerà nel messaggio come identificativo
+    dell'*identità* del mittente.  
+    Inoltre il modulo specifica l'oggetto IUnicastID che lo stub includerà nel messaggio per indicare a ogni vicino che
+    lo riceve se è lui (una sua *identità*) il destinatario.  
+    Infine il modulo può specificare se si vuole attendere l'esecuzione del metodo da parte del vicino o no. Se no,
+    allora la corretta ricezione del messaggio da parte del vicino **non** è garantita.  
+    Il modulo usa questa modalità per comunicare con un vicino quando ancora non è stata negoziata la creazione dell'arco
     e quindi non è ancora possibile realizzare la connessione via TCP.
-*   Creare uno stub per chiamare un metodo via TCP su uno specifico indirizzo (metodo 'get_tcp').
-*   Il modulo specifica l'indirizzo di scheda associato all'arco.
-*   Inoltre il modulo specifica l'oggetto ISourceID che lo stub includerà nel messaggio come identificativo della *identità* del mittente.
-
-*   Inoltre il modulo specifica l'oggetto IUnicastID che lo stub includerà nel messaggio per indicare al nodo
-    ricevente quale sia (fra le sue *identità*) il destinatario.
-
-*   Infine il modulo può specificare se si vuole attendere l'esecuzione del metodo da parte del vicino o no, ma
-    comunque se il metodo ritorna senza l'eccezione StubError la ricezione da parte del vicino è garantita.
-
-*   Il modulo usa questa modalità per comunicare in modo reliable con un nodo vicino attraverso un suo arco.
+*   Creare uno stub per chiamare un metodo via TCP su uno specifico indirizzo (metodo 'get_tcp').  
+    Il modulo specifica l'indirizzo di scheda associato all'arco.  
+    Inoltre il modulo specifica l'oggetto ISourceID che lo stub includerà nel messaggio come identificativo
+    dell'*identità* del mittente.  
+    Inoltre il modulo specifica l'oggetto IUnicastID che lo stub includerà nel messaggio per indicare al nodo
+    ricevente quale sia (fra le sue *identità*) il destinatario.  
+    Infine il modulo può specificare se si vuole attendere l'esecuzione del metodo da parte del vicino o no, ma
+    comunque se il metodo ritorna senza l'eccezione StubError la ricezione da parte del vicino è garantita.  
+    Il modulo usa questa modalità per comunicare in modo reliable con un nodo vicino attraverso un suo arco.
 
 * * *
 
@@ -892,7 +845,6 @@ Tramite essa il modulo può:
 
 *   Dato il nome di una interfaccia di rete e un indirizzo IP [link-local](https://en.wikipedia.org/wiki/Link-local_address)
     nella dotted form, aggiungere l'indirizzo IP all'interfaccia di rete (metodo 'add_address');
-
 *   Dato il nome di una interfaccia di rete, il suo indirizzo IP link-local associato e un altro indirizzo IP link-local
     nella dotted form, aggiungere la rotta con scope link verso un vicino sull'interfaccia specificando come src
     preferito l'indirizzo di scheda (metodo 'add_neighbor');
@@ -907,9 +859,9 @@ realizza, il modulo aggiunge la rotta con scope link verso l'indirizzo di scheda
 collegata all'arco. Quando rimuove l'arco rimuove anche la rotta. Quando il modulo cessa di gestire un'interfaccia
 rimuove il relativo indirizzo.
 
-Tramite questo meccanismo il modulo gestisce solo gli indirizzi di scheda della *identità principale* del nodo
-corrente, nel network namespace default. Allo stesso modo, esso imposta le rotte verso gli indirizzi di scheda della
-*identità principale* di ogni nodo vicino, sempre nel network namespace default. Per la gestione delle altre *identità*,
+Tramite questo meccanismo il modulo gestisce solo gli indirizzi di scheda dell'*identità principale* del nodo
+corrente, nel network namespace default. Allo stesso modo, esso imposta le rotte verso gli indirizzi di scheda
+dell'*identità principale* di ogni nodo vicino, sempre nel network namespace default. Per la gestione delle altre *identità*,
 sia come indirizzi propri sia come rotte verso gli indirizzi dei vicini, il nodo le gestisce in autonomia, senza
 l'intervento del modulo Neighborhood.
 
@@ -947,7 +899,7 @@ Quando si chiama il metodo che produce uno stub per l'invio di messaggi in broad
 oggetto che contiene il codice e i dati necessari a gestire l'evento di 'mancata ricezione di un ACK da un
 arco entro il timeout'. Tale oggetto implementa l'interfaccia INeighborhoodMissingArcHandler. L'interfaccia permette di:
 
-*   lanciare il codice che gestisce una arco mancante, passandogli l'arco (metodo 'missing').
+*   Lanciare il codice che gestisce una arco mancante, passandogli l'arco (metodo 'missing').
 
 * * *
 
