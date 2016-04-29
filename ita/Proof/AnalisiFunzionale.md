@@ -169,7 +169,7 @@ routing interno ai g-nodi.
 
 Una volta scelti i valori di *l* e di *g-exp(i)* rispettando i vincoli prima esposti, vediamo come si mappa
 un indirizzo Netsukuku (di nodo o di g-nodo) nei vari tipi di indirizzi IP. Si veda anche il
-documento [livelli e bits](../ModuloQSPN/LivelliBits).
+documento [livelli e bits](../ModuloQSPN/LivelliBits.md).
 
 ### Indirizzo IP globale di un nodo
 
