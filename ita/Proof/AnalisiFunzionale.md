@@ -297,19 +297,27 @@ Se è *reale*, riguardo questo indirizzo Netsukuku:
 *   Il nodo ha un indirizzo IP globale.
 *   Il nodo può (opzionalmente) assegnarsi un indirizzo IP globale anonimizzante.
 *   Per ogni livello *j* da 0 a *l* - 1:
-    *   Il nodo ha un indirizzo IP nel range destinato agli indirizzi interni al livello *j* + 1 (non quando *j* + 1 = *l*; in quel caso abbiamo l'indirizzo IP globale).
-    *   Per ogni g-nodo *d* di livello *j* che il nodo conosce, e solo quelli la cui componente (a livello *j*) è *reale*:
-    *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP interno di livello *j* + 1 (d1) e anche l'indirizzo IP globale (d2) (oppure solo d2 quando *j* + 1 = *l*).
+    *   Il nodo ha un indirizzo IP nel range destinato agli indirizzi interni al livello *j* + 1
+        (non quando *j* + 1 = *l*; in quel caso abbiamo l'indirizzo IP globale).
+    *   Per ogni g-nodo *d* di livello *j* che il nodo conosce, e solo quelli la cui
+        componente (a livello *j*) è *reale*:
+    *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui
+        componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP
+        interno di livello *j* + 1 (d1) e anche l'indirizzo IP globale (d2) (oppure solo d2 quando *j* + 1 = *l*).
         *   Per d1:
             *   Il nodo ha una rotta in "egress". In essa l'indirizzo come *src* è quello suo *interno* di livello *j* + 1.
             *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
                 *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono stati selezionati dalle regole più restrittive, cioè provenienti da un MAC address che il nodo non conosce.
+            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
+                address che il nodo non conosce.
         *   Per d2:
             *   Il nodo ha una rotta in "egress". In essa l'indirizzo come *src* è quello suo *globale*.
             *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
                 *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono stati selezionati dalle regole più restrittive, cioè provenienti da un MAC address che il nodo non conosce.
+            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
+                address che il nodo non conosce.
 
 Se è *virtuale*, significa che l'indirizzo ha una o più componenti virtuali. Sia *i* il livello
 più basso in cui la componente è virtuale. Sia *k* il livello più alto in cui la componente è virtuale.
@@ -319,33 +327,45 @@ In questo caso, riguardo questo indirizzo Netsukuku:
 *   Il nodo NON ha un indirizzo IP globale.
 *   Per ogni livello *j* da 0 a *i*-1:
     *   Il nodo ha un indirizzo IP nel range destinato agli indirizzi interni al livello j+1.
-    *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP interno di livello *j+1* (d1).
+    *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui
+        componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP interno di livello *j+1* (d1).
         *   Per d1:
-            * Il nodo ha una rotta in "egress". In essa l'indirizzo come *src* è quello suo *interno* di livello *j+1*.
-            * Per ogni MAC address *m* di diretto vicino che il nodo conosce:
-                * Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            * Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono stati selezionati dalle regole più restrittive, cioè provenienti da un MAC address che il nodo non conosce.
+            *   Il nodo ha una rotta in "egress". In essa l'indirizzo come *src* è quello suo *interno* di livello *j+1*.
+            *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
+                *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
+            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
+                address che il nodo non conosce.
 *   Per ogni livello *j* da *i* a *k*-1:
     *   Il nodo NON ha un indirizzo IP nel range destinato agli indirizzi interni al livello j+1.
-    *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP interno di livello *j+1* (d1).
+    *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui
+        componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP interno di livello *j+1* (d1).
         *   Per d1:
-            * Il nodo NON ha una rotta in "egress".
-            * Per ogni MAC address *m* di diretto vicino che il nodo conosce:
-                * Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            * Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono stati selezionati dalle regole più restrittive, cioè provenienti da un MAC address che il nodo non conosce.
+            *   Il nodo NON ha una rotta in "egress".
+            *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
+                *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
+            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
+                address che il nodo non conosce.
 *   Per ogni livello *j* da *k* a *l*-1:
     *   Il nodo NON ha un indirizzo IP nel range destinato agli indirizzi interni al livello *j*+1.
-    *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP interno di livello *j+1* (d1) e anche l'indirizzo IP globale (d2) (oppure solo d2 quando *j*+1 = *l*).
+    *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui
+        componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP
+        interno di livello *j+1* (d1) e anche l'indirizzo IP globale (d2) (oppure solo d2 quando *j*+1 = *l*).
         *   Per d1:
-            * Il nodo NON ha una rotta in "egress".
-            * Per ogni MAC address *m* di diretto vicino che il nodo conosce:
-                * Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            * Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono stati selezionati dalle regole più restrittive, cioè provenienti da un MAC address che il nodo non conosce.
+            *   Il nodo NON ha una rotta in "egress".
+            *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
+                *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
+            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
+                address che il nodo non conosce.
         *   Per d2:
-            * Il nodo NON ha una rotta in "egress".
-            * Per ogni MAC address *m* di diretto vicino che il nodo conosce:
-                * Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            * Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono stati selezionati dalle regole più restrittive, cioè provenienti da un MAC address che il nodo non conosce.
+            *   Il nodo NON ha una rotta in "egress".
+            *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
+                *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
+            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
+                address che il nodo non conosce.
 
 ### Identità di connettività
 
@@ -360,25 +380,34 @@ Riguardo questi indirizzi Netsukuku:
 *   Il nodo NON ha un indirizzo IP globale.
 *   Per ogni livello *j* da 0 a *k*-1:
     *   Il nodo NON ha un indirizzo IP nel range destinato agli indirizzi interni al livello *j*+1.
-    *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP interno di livello *j+1* (d1).
+    *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui
+        componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP interno di livello *j+1* (d1).
         *   Per d1:
             *   Il nodo NON ha una rotta in "egress".
             *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
                 *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono stati selezionati dalle regole più restrittive, cioè provenienti da un MAC address che il nodo non conosce.
+            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
+                address che il nodo non conosce.
 *   Per ogni livello *j* da *k* a *l*-1:
     *   Il nodo NON ha un indirizzo IP nel range destinato agli indirizzi interni al livello *j*+1.
-    *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP interno di livello *j+1* (d1) e anche l'indirizzo IP globale (d2) (oppure solo d2 quando *j*+1 = *l*).
+    *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui
+        componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP
+        interno di livello *j+1* (d1) e anche l'indirizzo IP globale (d2) (oppure solo d2 quando *j*+1 = *l*).
         *   Per d1:
             *   Il nodo NON ha una rotta in "egress".
             *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
                 *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono stati selezionati dalle regole più restrittive, cioè provenienti da un MAC address che il nodo non conosce.
+            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
+                address che il nodo non conosce.
         *   Per d2:
             *   Il nodo NON ha una rotta in "egress".
             *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
                 *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono stati selezionati dalle regole più restrittive, cioè provenienti da un MAC address che il nodo non conosce.
+            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
+                address che il nodo non conosce.
 
 ## Indirizzi del nodo
 
@@ -445,16 +474,24 @@ rotte nelle tabelle di routing) in modo da garantire questi comportamenti:
 
 *   Se un processo locale vuole inviare un pacchetto ad un indirizzo *d* nello spazio di Netsukuku:
     *   Se il modulo QSPN non ha alcun percorso verso la destinazione *d*:
-        *   Il sistema non trova nelle tabelle del kernel alcuna rotta e segnala al processo che la destinazione *d* è irraggiungibile.
+        *   Il sistema non trova nelle tabelle del kernel alcuna rotta e segnala al processo
+            che la destinazione *d* è irraggiungibile.
     *   Altrimenti:
-        *   Il sistema trova nelle tabelle del kernel una rotta il cui gateway è costituito dal primo hop del miglior percorso (fra tutti quelli che il modulo QSPN ha scoperto) verso la destinazione *d*.
+        *   Il sistema trova nelle tabelle del kernel una rotta il cui gateway è costituito dal
+            primo hop del miglior percorso (fra tutti quelli che il modulo QSPN ha scoperto) verso
+            la destinazione *d*.
 *   Se un pacchetto è ricevuto da un vicino *v* ed è destinato ad un altro indirizzo *d* nello spazio di Netsukuku:
-    *   Se il modulo QSPN non ha alcun percorso verso la destinazione *d*, tale che non contenga fra i suoi hop il *massimo distinto g-nodo* del vicino *v*:
-        *   Il sistema non trova nelle tabelle del kernel alcuna rotta; quindi scarta il pacchetto e invia un pacchetto ICMP "host *d* irraggiungibile" al mittente.
+    *   Se il modulo QSPN non ha alcun percorso verso la destinazione *d*, tale che non contenga
+        fra i suoi hop il *massimo distinto g-nodo* del vicino *v*:
+        *   Il sistema non trova nelle tabelle del kernel alcuna rotta; quindi scarta il pacchetto
+            e invia un pacchetto ICMP "host *d* irraggiungibile" al mittente.
     *   Altrimenti:
-        *   Il sistema trova nelle tabelle del kernel una rotta il cui gateway è costituito dal primo hop per il miglior percorso verso la destinazione *d*, tale che non contenga il g-nodo del vicino.
+        *   Il sistema trova nelle tabelle del kernel una rotta il cui gateway è costituito dal primo
+            hop per il miglior percorso verso la destinazione *d*, tale che non contenga il g-nodo del vicino.
         *   Se l'indirizzo *d* è nello spazio di indirizzi che codificano la richiesta di anonimato:
-            *   Opzionalmente, il sistema trova una regola che gli impone di mascherare l'indirizzo del mittente (cioè di indicare se stesso come mittente e inoltrare le comunicazioni di risposta che riceverà al vero mittente).
+            *   Opzionalmente, il sistema trova una regola che gli impone di mascherare l'indirizzo
+                del mittente (cioè di indicare se stesso come mittente e inoltrare le comunicazioni di
+                risposta che riceverà al vero mittente).
 
 * * *
 
@@ -640,11 +677,17 @@ Per ogni percorso scelto dal programma *qspnclient* per entrare in una tabella, 
 inserisce nella tabella fino a 4 rotte. Sia *i* il livello del g-nodo destinazione del percorso. Queste
 sono le rotte:
 
-*   Globale. La destinazione di questa rotta è l'indirizzo del g-nodo nella sua forma globale, il suo "src" è il mio indirizzo nella sua forma globale.
-*   Anonimo globale. La destinazione di questa rotta è l'indirizzo del g-nodo nella sua forma globale e con anonimato, il suo "src" è il mio indirizzo nella sua forma globale.
+*   Globale. La destinazione di questa rotta è l'indirizzo del g-nodo nella sua forma globale, il
+    suo "src" è il mio indirizzo nella sua forma globale.
+*   Anonimo globale. La destinazione di questa rotta è l'indirizzo del g-nodo nella sua forma globale
+    e con anonimato, il suo "src" è il mio indirizzo nella sua forma globale.
 *   Se *i* < *levels* - 1:
-    *   Interno al nostro g-nodo di livello *i* + 1. La destinazione di questa rotta è l'indirizzo del g-nodo nella sua forma interna al g-nodo di livello *i* + 1, il suo "src" è il mio indirizzo nella sua forma interna al g-nodo di livello *i* + 1.
-    *   Anonimo interno al nostro g-nodo di livello *i* + 1. La destinazione di questa rotta è l'indirizzo del g-nodo nella sua forma interna al g-nodo di livello *i* + 1 e con anonimato, il suo "src" è il mio indirizzo nella sua forma interna al g-nodo di livello *i* + 1.
+    *   Interno al nostro g-nodo di livello *i* + 1. La destinazione di questa rotta è l'indirizzo
+        del g-nodo nella sua forma interna al g-nodo di livello *i* + 1, il suo "src" è il mio indirizzo
+        nella sua forma interna al g-nodo di livello *i* + 1.
+    *   Anonimo interno al nostro g-nodo di livello *i* + 1. La destinazione di questa rotta è l'indirizzo
+        del g-nodo nella sua forma interna al g-nodo di livello *i* + 1 e con anonimato, il suo "src" è il
+        mio indirizzo nella sua forma interna al g-nodo di livello *i* + 1.
 
 Quando il programma ha finito di usare una tabella (ad esempio se un arco che conosceva non è più presente,
 oppure se il programma termina) svuota la tabella, poi rimuove la regola, poi rimuove il record
