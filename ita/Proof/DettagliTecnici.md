@@ -21,9 +21,9 @@ Il modulo Neighborhood, in base all'ordine in cui gli sono passati, produce una 
 al metodo *add_address* di INeighborhoodIPRouteManager. Poi emette il segnale *nic_address_set*. Quando
 riceve questo segnale il programma crea una istanza di ProofOfConcept.HandledNic che contiene:
 
-*   string dev.
-*   string mac.
-*   string linklocal.
+*   `string dev`.
+*   `string mac`.
+*   `string linklocal`.
 
 Poi associa tale istanza al prossimo valore dell'indice autoincrementante *linklocal_nextindex*, nel dizionario *linklocals*.
 
