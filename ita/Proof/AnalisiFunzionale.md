@@ -283,7 +283,7 @@ assegna anche questo indirizzo.
 ## Identità
 
 Ogni identità che vive nel nodo ha un suo indirizzo Netsukuku. Inoltre ha una mappa di percorsi, ognuno
-che ha come destinazione (e come passi) un g-nodo "visibile" dal suo indirizzo Netsukuku.
+che ha come destinazione (e come passi) un g-nodo *visibile* dal suo indirizzo Netsukuku.
 
 Un nodo ha sempre una identità principale e zero o più identità di connettività.
 
@@ -305,17 +305,17 @@ Se è *reale*, riguardo questo indirizzo Netsukuku:
         componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP
         interno di livello *j* + 1 (d1) e anche l'indirizzo IP globale (d2) (oppure solo d2 quando *j* + 1 = *l*).
         *   Per d1:
-            *   Il nodo ha una rotta in "egress". In essa l'indirizzo come *src* è quello suo *interno* di livello *j* + 1.
+            *   Il nodo ha una rotta in *partenza*. In essa l'indirizzo come *src* è quello suo *interno* di livello *j* + 1.
             *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
-                *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                *   Il nodo ha una rotta in *inoltro* per i pacchetti provenienti da *m*.
+            *   Il nodo ha inoltre una rotta in *inoltro* per i pacchetti che non sono
                 stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
                 address che il nodo non conosce.
         *   Per d2:
-            *   Il nodo ha una rotta in "egress". In essa l'indirizzo come *src* è quello suo *globale*.
+            *   Il nodo ha una rotta in *partenza*. In essa l'indirizzo come *src* è quello suo *globale*.
             *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
-                *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                *   Il nodo ha una rotta in *inoltro* per i pacchetti provenienti da *m*.
+            *   Il nodo ha inoltre una rotta in *inoltro* per i pacchetti che non sono
                 stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
                 address che il nodo non conosce.
 
@@ -330,10 +330,10 @@ In questo caso, riguardo questo indirizzo Netsukuku:
     *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui
         componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP interno di livello *j+1* (d1).
         *   Per d1:
-            *   Il nodo ha una rotta in "egress". In essa l'indirizzo come *src* è quello suo *interno* di livello *j+1*.
+            *   Il nodo ha una rotta in *partenza*. In essa l'indirizzo come *src* è quello suo *interno* di livello *j+1*.
             *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
-                *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                *   Il nodo ha una rotta in *inoltro* per i pacchetti provenienti da *m*.
+            *   Il nodo ha inoltre una rotta in *inoltro* per i pacchetti che non sono
                 stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
                 address che il nodo non conosce.
 *   Per ogni livello *j* da *i* a *k*-1:
@@ -341,10 +341,10 @@ In questo caso, riguardo questo indirizzo Netsukuku:
     *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui
         componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP interno di livello *j+1* (d1).
         *   Per d1:
-            *   Il nodo NON ha una rotta in "egress".
+            *   Il nodo NON ha una rotta in *partenza*.
             *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
-                *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                *   Il nodo ha una rotta in *inoltro* per i pacchetti provenienti da *m*.
+            *   Il nodo ha inoltre una rotta in *inoltro* per i pacchetti che non sono
                 stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
                 address che il nodo non conosce.
 *   Per ogni livello *j* da *k* a *l*-1:
@@ -353,17 +353,17 @@ In questo caso, riguardo questo indirizzo Netsukuku:
         componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP
         interno di livello *j+1* (d1) e anche l'indirizzo IP globale (d2) (oppure solo d2 quando *j*+1 = *l*).
         *   Per d1:
-            *   Il nodo NON ha una rotta in "egress".
+            *   Il nodo NON ha una rotta in *partenza*.
             *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
-                *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                *   Il nodo ha una rotta in *inoltro* per i pacchetti provenienti da *m*.
+            *   Il nodo ha inoltre una rotta in *inoltro* per i pacchetti che non sono
                 stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
                 address che il nodo non conosce.
         *   Per d2:
-            *   Il nodo NON ha una rotta in "egress".
+            *   Il nodo NON ha una rotta in *partenza*.
             *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
-                *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                *   Il nodo ha una rotta in *inoltro* per i pacchetti provenienti da *m*.
+            *   Il nodo ha inoltre una rotta in *inoltro* per i pacchetti che non sono
                 stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
                 address che il nodo non conosce.
 
@@ -383,10 +383,10 @@ Riguardo questi indirizzi Netsukuku:
     *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui
         componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP interno di livello *j+1* (d1).
         *   Per d1:
-            *   Il nodo NON ha una rotta in "egress".
+            *   Il nodo NON ha una rotta in *partenza*.
             *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
-                *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                *   Il nodo ha una rotta in *inoltro* per i pacchetti provenienti da *m*.
+            *   Il nodo ha inoltre una rotta in *inoltro* per i pacchetti che non sono
                 stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
                 address che il nodo non conosce.
 *   Per ogni livello *j* da *k* a *l*-1:
@@ -395,17 +395,17 @@ Riguardo questi indirizzi Netsukuku:
         componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP
         interno di livello *j+1* (d1) e anche l'indirizzo IP globale (d2) (oppure solo d2 quando *j*+1 = *l*).
         *   Per d1:
-            *   Il nodo NON ha una rotta in "egress".
+            *   Il nodo NON ha una rotta in *partenza*.
             *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
-                *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                *   Il nodo ha una rotta in *inoltro* per i pacchetti provenienti da *m*.
+            *   Il nodo ha inoltre una rotta in *inoltro* per i pacchetti che non sono
                 stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
                 address che il nodo non conosce.
         *   Per d2:
-            *   Il nodo NON ha una rotta in "egress".
+            *   Il nodo NON ha una rotta in *partenza*.
             *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
-                *   Il nodo ha una rotta in "forward" per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in "forward" per i pacchetti che non sono
+                *   Il nodo ha una rotta in *inoltro* per i pacchetti provenienti da *m*.
+            *   Il nodo ha inoltre una rotta in *inoltro* per i pacchetti che non sono
                 stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
                 address che il nodo non conosce.
 
@@ -423,7 +423,7 @@ Tutti questi indirizzi il nodo se li assegna.
 
 Inoltre, opzionalmente, il nodo può calcolare per ognuno di questi indirizzi (*N*, *N<sub>1</sub>*,
 *N<sub>2</sub>*, ...) un altro indirizzo corrispettivo per i pacchetti che gli sono destinati in
-"forma anonima". Si tratta sempre di ulteriori indirizzi IPv4 che identificano questo nodo in modo
+*forma anonima*. Si tratta sempre di ulteriori indirizzi IPv4 che identificano questo nodo in modo
 univoco (a livello globale o all'interno di un suo g-nodo). Questi però saranno usati, come vedremo
 in seguito, dai client per contattare questo nodo senza rivelare il proprio indirizzo. Il nodo quindi
 può assegnarsi questi indirizzi oppure no. Se lo fa significa che vuole dare la possibilità ai client
@@ -450,7 +450,7 @@ ha la sua importanza in relazione al protocollo di risoluzione degli indirizzi I
 indirizzi MAC ([Address Resolution Protocol](https://en.wikipedia.org/wiki/Address_Resolution_Protocol)).
 Infatti quando un nodo *a* vuole trasmettere un pacchetto IP ad un suo diretto vicino *b*, esso conosce
 l'indirizzo IP di *b* e l'interfaccia di rete di *a* dove trasmettere. Il nodo *a* trasmette in broadcast
-su quel segmento di rete una richiesta: "chi ha l'indirizzo IP XYZ?". Il nodo *b* risponde indicando al
+su quel segmento di rete una richiesta: «chi ha l'indirizzo IP XYZ?». Il nodo *b* risponde indicando al
 nodo *a* l'indirizzo MAC della sua interfaccia di rete. Quindi il nodo *a* può incapsulare il pacchetto
 IP in un frame Ethernet che riporta gli indirizzi MAC dell'interfaccia che trasmette e dell'interfaccia che deve ricevere.
 
@@ -484,7 +484,7 @@ rotte nelle tabelle di routing) in modo da garantire questi comportamenti:
     *   Se il modulo QSPN non ha alcun percorso verso la destinazione *d*, tale che non contenga
         fra i suoi hop il *massimo distinto g-nodo* del vicino *v*:
         *   Il sistema non trova nelle tabelle del kernel alcuna rotta; quindi scarta il pacchetto
-            e invia un pacchetto ICMP "host *d* irraggiungibile" al mittente.
+            e invia un pacchetto ICMP «host *d* irraggiungibile» al mittente.
     *   Altrimenti:
         *   Il sistema trova nelle tabelle del kernel una rotta il cui gateway è costituito dal primo
             hop per il miglior percorso verso la destinazione *d*, tale che non contenga il g-nodo del vicino.
@@ -628,13 +628,13 @@ In ogni tabella possono esserci diverse rotte. Ogni rotta ha alcune informazioni
 
 Quando un pacchetto va inviato ad una certa destinazione, ci sono delle regole che dicono al sistema su
 quali tabelle guardare. Queste regole, visibili con il comando `ip rule list`, di default dicono di
-guardare per prima la tabella "local", per penultima la tabella "main" e per ultima la tabella
-"default". Tra la regola che dice di guardare la "local" e quella che dice di guardare la "main" possono
+guardare per prima la tabella `local`, per penultima la tabella `main` e per ultima la tabella
+`default`. Tra la regola che dice di guardare la `local` e quella che dice di guardare la `main` possono
 essere inserite altre regole.
 
 Ogni regola può dire semplicemente di guardare una tabella, oppure di guardarla solo a determinate
-condizioni. Una particolare condizione che ci torna utile è questa: "guarda la tabella XXX se il
-pacchetto da trasmettere è marcato con il numero YYY". La marcatura del pacchetto è virtuale, nel
+condizioni. Una particolare condizione che ci torna utile è questa: «guarda la tabella `XXX` se il
+pacchetto da trasmettere è marcato con il numero `YYY`». La marcatura del pacchetto è virtuale, nel
 senso che i dati del pacchetto non sono affatto modificati, ma solo il sistema locale lo vede come
 marcato; ed è sempre il sistema locale che lo ha precedentemente marcato. Questa marcatura viene
 fatta da una parte del kernel che può essere istruita usando l'azione `MARK` del comando `iptables`.
@@ -642,35 +642,35 @@ fatta da una parte del kernel che può essere istruita usando l'azione `MARK` de
 Fatta questa premessa, come si comporta il programma?
 
 Per ogni arco verso un vicino, il programma memorizza una rotta diretta (cioè senza gateway) nella
-tabella "main", indicando come destinazione l'indirizzo di scheda del vicino e come mittente preferito
-il proprio indirizzo di scheda. Questo lo abbiamo visto poco sopra; infatti il comando "ip route add"
-senza specificare un nome di tabella si riferisce alla tabella "main".
+tabella `main`, indicando come destinazione l'indirizzo di scheda del vicino e come mittente preferito
+il proprio indirizzo di scheda. Questo lo abbiamo visto poco sopra; infatti il comando `ip route add`
+senza specificare un nome di tabella si riferisce alla tabella `main`.
 
-Il programma crea una tabella "ntk" con identificativo YYY, dove YYY è il primo identificativo
-libero nel file /etc/iproute2/rt_tables. Tale tabella sarà inizialmente vuota; in essa il programma
+Il programma crea una tabella `ntk` con identificativo `YYY`, dove `YYY` è il primo identificativo
+libero nel file `/etc/iproute2/rt_tables`. Tale tabella sarà inizialmente vuota; in essa il programma
 andrà a mettere le rotte di pertinenza della rete Netsukuku, cioè quelle con destinazione nello
-spazio 10.0.0.0/8. Inoltre aggiunge una regola che dice di guardare la tabella "ntk" prima della "main".
+spazio 10.0.0.0/8. Inoltre aggiunge una regola che dice di guardare la tabella `ntk` prima della `main`.
 
-Il programma, per ogni suo arco, crea un'altra tabella chiamata `ntk_from_XXX` con identificativo YYY,
-dove XXX è il MAC address del nodo vicino, YYY è il primo identificativo libero nel
+Il programma, per ogni suo arco, crea un'altra tabella chiamata `ntk_from_XXX` con identificativo `YYY`,
+dove `XXX` è il MAC address del nodo vicino, `YYY` è il primo identificativo libero nel
 file `/etc/iproute2/rt_tables`. Questa tabella conterrà rotte da esaminare solo per i pacchetti da
 inoltrare che ci sono pervenuti attraverso questo arco. Il programma quindi aggiunge una regola che
-dice di guardare la tabella "ntk_from_XXX" se il pacchetto da trasmettere è marcato con il numero
-YYY. Inoltre istruisce il kernel di marcare con il numero YYY i pacchetti che hanno XXX come MAC di provenienza.
+dice di guardare la tabella `ntk_from_XXX` se il pacchetto da trasmettere è marcato con il numero
+`YYY`. Inoltre istruisce il kernel di marcare con il numero `YYY` i pacchetti che hanno `XXX` come MAC di provenienza.
 
-Anche le varie tabelle "ntk_from_XXX" conterranno solo rotte di pertinenza della rete Netsukuku, cioè
+Anche le varie tabelle `ntk_from_XXX` conterranno solo rotte di pertinenza della rete Netsukuku, cioè
 quelle con destinazione nello spazio 10.0.0.0/8.
 
-Inoltre, sia la tabella "ntk" sia le varie "ntk_from_XXX" conterranno la rotta "unreachable 10.0.0.0/8".
+Inoltre, sia la tabella `ntk` sia le varie `ntk_from_XXX` conterranno la rotta "unreachable 10.0.0.0/8".
 Questa rotta verrà presa in esame solo se un pacchetto ha una destinazione all'interno dello spazio
 di Netsukuku, ma per tale destinazione non esistono altre rotte valide con una classe più restrittiva.
 In altre parole, una destinazione per la quale non si conosce nessun percorso. Questa particolare rotta dice
 che il pacchetto non potrà giungere a destinazione e il suo mittente ne va informato.
 
 Sulla base degli eventi segnalati dal modulo QSPN, e se necessario richiamando i suoi metodi pubblici, il
-programma *qspnclient* popola e mantiene le rotte nelle tabelle "ntk" e "ntk_from_XXX". I percorsi
+programma *qspnclient* popola e mantiene le rotte nelle tabelle `ntk` e `ntk_from_XXX`. I percorsi
 segnalati dal modulo QSPN contengono sempre un arco del nodo corrente come passo iniziale e da tale arco
-si può risalire all'indirizzo di scheda del vicino. Le rotte nelle tabelle "ntk" e "ntk_from_XXX" infatti
+si può risalire all'indirizzo di scheda del vicino. Le rotte nelle tabelle `ntk` e `ntk_from_XXX` infatti
 devono avere come campo gateway (gw) l'indirizzo di scheda del vicino, non il suo indirizzo Netsukuku.
 
 Per ogni percorso scelto dal programma *qspnclient* per entrare in una tabella, in realtà il programma
