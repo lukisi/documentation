@@ -233,16 +233,18 @@ Globale di *h*:
 Quindi *n* imposta solo la rotta globale: 10.32.0.0/12 via xx dev yy src 10.53.241.79
 
 ### Richiesta di anonimato
-Ogni nodo si assegna anche un altro indirizzo globale, identico al primo, ma con il bit *anonimizzante* impostato.
 
-Allo stesso modo, per ogni destinazione di cui viene a conoscenza, aggiunge una rotta verso
+Un nodo, opzionalmente, può dichiararsi disposto ad accettare richieste in forma anonima. Se intende
+farlo, il nodo si assegna anche un altro indirizzo globale, identico al primo, ma con il bit *anonimizzante* impostato.
+
+Ogni nodo, invece, per ogni destinazione di cui viene a conoscenza, aggiunge una rotta verso
 l'indirizzo IP *anonimizzante* relativo.
 
 Per esempio il nodo *n*:
 
-*   Si assegna l'indirizzo IP `10.181.241.79`.
-*   Aggiunge la rotta `10.181.14.0/24 src 10.181.241.79`.
-*   Aggiunge la rotta `10.160.0.0/12 src 10.181.241.79`.
+*   Opzionalmente, si assegna l'indirizzo IP `10.181.241.79`.
+*   Aggiunge la rotta `10.181.14.0/24 src 10.53.241.79`.
+*   Aggiunge la rotta `10.160.0.0/12 src 10.53.241.79`.
 
 Infine, i nodi che sono disposti a anonimizzare i vicini che ne fanno richiesta, impostano le regole di
 masquerade del firewall. Precisamente, i pacchetti da inoltrare verso 10.128.0.0/10 vanno mascherati
