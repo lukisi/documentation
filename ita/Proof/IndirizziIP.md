@@ -39,14 +39,15 @@ Il *gsize* del livello più alto soddisfa il vincolo di essere maggiore o uguale
 Gli indirizzi validi sono 2<sup>22</sup>, cioè circa 4 milioni.
 
 Il numero di indirizzi Netsukuku che ogni nodo dovrà al massimo memorizzare come destinazioni
-nella sua mappa di percorsi è di 1×3 + 1×15 + 2×255 = 528. Infatti la *gsize* del livello
-4 è 4; ma per tale livello ogni nodo dovrà memorizzare al massimo 3 diversi g-nodi destinazione di livello 3
+nella sua mappa di percorsi è di 1×3 + 1×15 + 2×255 = 528. Infatti la *gsize* del livello 3
+(cioè il numero massimo di g-nodi di livello 3 dentro lo stesso g-nodo di livello 4)
+è 4; ma per tale livello ogni nodo dovrà memorizzare al massimo 3 diversi g-nodi destinazione di livello 3
 in quanto il suo stesso g-nodo di livello 3 non sarà mai una destinazione. Allo stesso modo la *gsize* del livello
-3 è 16; ma per tale livello ogni nodo dovrà memorizzare al massimo 15 diversi g-nodi destinazione di livello 2
+2 è 16; ma per tale livello ogni nodo dovrà memorizzare al massimo 15 diversi g-nodi destinazione di livello 2
 in quanto il suo stesso g-nodo di livello 2 non sarà mai una destinazione. Allo stesso modo la *gsize* del livello
-2 è 256; ma per tale livello ogni nodo dovrà memorizzare al massimo 255 diversi g-nodi destinazione di livello 1
+1 è 256; ma per tale livello ogni nodo dovrà memorizzare al massimo 255 diversi g-nodi destinazione di livello 1
 in quanto il suo stesso g-nodo di livello 1 non sarà mai una destinazione. Allo stesso modo la *gsize* del livello
-1 è 256; ma per tale livello ogni nodo dovrà memorizzare al massimo 255 diversi singoli nodi destinazione
+0 è 256; ma per tale livello ogni nodo dovrà memorizzare al massimo 255 diversi singoli nodi destinazione
 in quanto esso stesso non sarà mai una destinazione.
 
 Per ogni destinazione di cui viene a conoscenza il protocollo memorizzerà
@@ -264,7 +265,7 @@ Quest'ultima impostazione (sulle regole di masquerade del firewall) è facoltati
 
 ## Disposizione ottimale
 
-Per ridurre al massimo il numero di rotte da memorizzare in uno spazio a 24 bit come la classe 10.0.0.0/8 si proceda come segue:
+Per ridurre al minimo il numero massimo di rotte da memorizzare in uno spazio a 24 bit come la classe 10.0.0.0/8 si proceda come segue:
 
 Abbiamo 24 bit a disposizione. Tolto 1 per le rappresentazioni interne e 1 per l'anonimato abbiamo 22 bit. Diamo 4 bit al livello alto; abbiamo così un *gsize* del livello più alto capace di rappresentare fino a 16 livelli. Per sfruttarli tutti facciamo i livelli da 14 a 3 da 1 bit e i livelli 2, 1 e 0 da 2 bit.
 
