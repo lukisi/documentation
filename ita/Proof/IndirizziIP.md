@@ -39,7 +39,17 @@ Il *gsize* del livello più alto soddisfa il vincolo di essere maggiore o uguale
 Gli indirizzi validi sono 2<sup>22</sup>, cioè circa 4 milioni.
 
 Il numero di indirizzi Netsukuku che ogni nodo dovrà al massimo memorizzare come destinazioni
-nella sua mappa di percorsi è di 1×3 + 1×15 + 2×255 = 528. Per ognuno il protocollo memorizzerà
+nella sua mappa di percorsi è di 1×3 + 1×15 + 2×255 = 528. Infatti la *gsize* del livello
+4 è 4; ma per tale livello ogni nodo dovrà memorizzare al massimo 3 diversi g-nodi destinazione di livello 3
+in quanto il suo stesso g-nodo di livello 3 non sarà mai una destinazione. Allo stesso modo la *gsize* del livello
+3 è 16; ma per tale livello ogni nodo dovrà memorizzare al massimo 15 diversi g-nodi destinazione di livello 2
+in quanto il suo stesso g-nodo di livello 2 non sarà mai una destinazione. Allo stesso modo la *gsize* del livello
+2 è 256; ma per tale livello ogni nodo dovrà memorizzare al massimo 255 diversi g-nodi destinazione di livello 1
+in quanto il suo stesso g-nodo di livello 1 non sarà mai una destinazione. Allo stesso modo la *gsize* del livello
+1 è 256; ma per tale livello ogni nodo dovrà memorizzare al massimo 255 diversi singoli nodi destinazione
+in quanto esso stesso non sarà mai una destinazione.
+
+Per ogni destinazione di cui viene a conoscenza il protocollo memorizzerà
 un massimo di *k* percorsi disgiunti. Solo il migliore di essi verrà riportato nelle tabelle di
 routing del kernel, indicando il solo gateway.
 
@@ -62,22 +72,20 @@ Gli indirizzi (B) hanno il bit più alto impostato a 0 e il secondo bit più alt
 numero codificato nei successivi 2 bit è un intero *k*, con 0 < *k* < *l*. Gli altri bit compongono
 l'indirizzo di una destinazione identificata univocamente all'interno del gnodo di livello *k*.
 
-**Nota:** Gli esempi di calcolo mostrati sotto vanno corretti.
-
 ## Esempio
 
-Prendiamo 3 nodi. N1 è il nostro nodo, quello di cui esaminiamo le tabelle di  routing. N2 è un
-nodo con cui abbiamo un qualche gnodo in comune. N3 è un nodo con cui non abbiamo in comune nemmeno
-il gnodo più alto. Vediamo quali informazioni mantiene il nodo N1.
+Prendiamo 3 nodi. Il nodo *n* è quello di cui esaminiamo le tabelle di  routing. Il nodo *m* è un
+nodo con cui *n* ha un qualche gnodo in comune. Il nodo *o* è un nodo con cui *n* non ha in comune nemmeno
+il gnodo più alto. Vediamo quali informazioni mantiene il nodo *n*.
 
-### Nodo N1
+### Nodo *n*
 
-Per il nodo N1 sia l'indirizzo Netsukuku 3·5·241·79.
+Per il nodo *n* sia l'indirizzo Netsukuku 3·5·241·79.
 
 Computiamo il nostro IP globale e i 3 IP validi internamente ad un gnodo.
 
 ```
-Globale di N1:
+Globale di *n*:
 [0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
    3                   1 1
    5                       0 1 0 1
@@ -85,7 +93,7 @@ Globale di N1:
   79                                                   0 1 0 0 1 1 1 1
  = 10.53.241.79
 
-Interno di N1 nel suo gnodo di livello 3:
+Interno di *n* nel suo gnodo di livello 3:
 [0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
   livello gnodo        1 1
    5                       0 1 0 1
@@ -93,7 +101,7 @@ Interno di N1 nel suo gnodo di livello 3:
   79                                                   0 1 0 0 1 1 1 1
  = 10.117.241.79
 
-Interno di N1 nel suo gnodo di livello 2:
+Interno di *n* nel suo gnodo di livello 2:
 [0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
   livello gnodo        1 0
    N/A                     0 0 0 0
@@ -101,7 +109,7 @@ Interno di N1 nel suo gnodo di livello 2:
   79                                                   0 1 0 0 1 1 1 1
  = 10.96.241.79
 
-Interno di N1 nel suo gnodo di livello 1:
+Interno di *n* nel suo gnodo di livello 1:
 [0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
   livello gnodo        0 1
    N/A                     0 0 0 0
@@ -110,21 +118,21 @@ Interno di N1 nel suo gnodo di livello 1:
  = 10.80.0.79
 ```
 
-N1 si assegna quindi questi IP:
+*n* si assegna quindi questi IP:
 
 *   il globale: 10.53.241.79
 *   l'interno nel livello 3: 10.117.241.79
 *   l'interno nel livello 2: 10.96.241.79
 *   l'interno nel livello 1: 10.80.0.79
 
-### Nodo N2
+### Nodo *m*
 
-Per il nodo N2 sia l'indirizzo Netsukuku 3·5·14·204.
+Per il nodo *m* sia l'indirizzo Netsukuku 3·5·14·204.
 
-Computiamo il suo IP globale e quello interno al gnodo di livello 2 (quello in comune con N1).
+Computiamo il suo IP globale e quello interno al gnodo di livello 2 (quello in comune con *n*).
 
 ```
-Globale di N2:
+Globale di *m*:
 [0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
    3                   1 1
    5                       0 1 0 1
@@ -132,7 +140,7 @@ Globale di N2:
  204                                                   1 1 0 0 1 1 0 0
  = 10.53.14.204
 
-Interno di N2 nel suo gnodo di livello 2:
+Interno di *m* nel suo gnodo di livello 2:
 [0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
   livello gnodo        1 0
    N/A                     0 0 0 0
@@ -141,57 +149,68 @@ Interno di N2 nel suo gnodo di livello 2:
  = 10.96.14.204
 ```
 
-Quando N1 riceve un ETP che contiene il gnodo con N2 esso lo vede come (1,14) cioè come gnodo *g*
+Quando *n* riceve un ETP che contiene il gnodo con *m* esso lo vede come (1,14) cioè come gnodo *g*
 di livello 1 appartenente al suo stesso gnodo di livello 2 e con identificativo 14 (a livello 1).
 
 Per il g-nodo *g* l'indirizzo Netsukuku è 3·5·14.
 
-Il nodo N1 computa:
+Il nodo *n* computa:
 
 ```
-Globale di g:
+Globale di *g*:
 [0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[0|0|0|0|0|0|0|0]
    3                   1 1
    5                       0 1 0 1
   14                                 0 0 0 0 1 1 1 0
  = 10.53.14.0/24
 
-Interno di g nel suo gnodo di livello 2:
-[0|0|0|0|1|0|1|0].[1|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[0|0|0|0|0|0|0|0]
+Interno di *g* nel suo gnodo di livello 2:
+[0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[0|0|0|0|0|0|0|0]
   livello gnodo        1 0
    N/A                     0 0 0 0
   14                                 0 0 0 0 1 1 1 0
- = 10.160.14.0/24
+ = 10.96.14.0/24
 ```
 
-Quindi N1 imposta:
+Quindi *n* imposta:
 
 *   la rotta globale: 10.53.14.0/24 via xx dev yy src 10.53.241.79
-*   la rotta interna al g-nodo di livello 2: 10.160.14.0/24 via xx dev yy src 10.96.241.79
+*   la rotta interna al g-nodo di livello 2: 10.96.14.0/24 via xx dev yy src 10.96.241.79
 
-Quando viene richiesto l'indirizzo di n2.ntk il resolver cerca nel db andna il nome n2 e trova il NIP N[11,0,2,0,3,2,0,3,10].
+Ipotiziamo ora di sfruttare il momento della risoluzione *hostname → IP address* per intervenire sulle
+operazioni del nodo *n* quando questo vuole iniziare una connessione (o una trasmissione) con il
+nodo *m*. Supponiamo che il nodo *m* abbia registrato per se il nome "morfeo".
 
-Invece di trasformarlo direttamente in 10.44.142.58, il resolver vede rispetto al proprio NIP (primario) quale è il minimo comune gnodo (in questo caso 4) e computa il relativo interno nel suo gnodo di livello 4: 10.144.2.58.
+Quando il nodo *n* richiede la risoluzione del nome "morfeo.ntk" il resolver cerca nel database
+ANDNA il nome "morfeo" e trova l'indirizzo Netsukuku 3·5·14·204.
 
-Questo nella route table corrisponde a 10.144.2.0/24 quindi N1 manda il pacchetto al suo gateway indicando come proprio IP 10.144.1.39.
+Invece di computare il relativo indirizzo IP globale 10.53.14.204, il resolver vede rispetto al proprio indirizzo
+Netsukuku (quello dell'identità principale) qual'è il minimo comune gnodo (in questo caso 2) e computa
+il relativo indirizzo IP interno nel suo gnodo di livello 2: 10.96.14.204.
 
-Una volta realizzata una connessione TCP con questo IP, questa connessione continuerà a funzionare anche se un gnodo di livello superiore migra, anche gradualmente un nodo alla volta, ad un altra posizione di pari livello.
+Questo nella route table corrisponde a 10.96.14.0/24 quindi *n* manda il pacchetto al suo gateway
+indicando come proprio IP 10.96.241.79.
 
-*   **Appunto**: mentre un g-nodo migra un nodo alla volta non si riscontrano problemi nel funzionamento del QSPN. Possono esserci problemi temporanei nei servizi peer-to-peer perché essi dipendono dal completo indirizzo di un nodo all'interno dell'intera rete e non all'interno di un g-nodo. Questi temporanei malfunzionamenti non sono gravi ad esempio nel servizio di risoluzione nomi. Potrebbe essere più insidioso il servizio Coordinator, ad esempio se un nodo nuovo vuole entrare nel g-nodo mentre questo sta migrando.  
-Ma possiamo correggere il funzionamento del Coordinator per renderlo invulnerabile: basta che l'oggetto chiave di questo servizio non è più l'indirizzo del g-nodo da coordinare ma solo il suo livello. Questo cambio si può fare per il semplice motivo che il percorso di un messaggio verso il Coordinator di un certo g-nodo è sempre completamente interno al g-nodo stesso.  
-Fatto questo cambio otteniamo che quando il messaggio viene inoltrato da un nodo che ha migrato ad un nodo che non ha ancora migrato il significato della chiave non cambia.
+Una volta realizzata una connessione TCP con questo indirizzo IP, questa connessione continuerebbe a funzionare anche
+se un gnodo di livello superiore migrasse, anche gradualmente un nodo alla volta, ad un altra posizione di pari livello.
 
-Va detto che il nodo N1 sarà comunque in grado di inviare pacchetti e/o realizzare una connessione TCP direttamente con l'IP globale se lo conosce, cioè 10.44.142.58, ma in questo caso la connessione si romperebbe durante una tale migrazione.
+Ad esempio se il g-nodo 3·5 migrasse dal g-nodo 3 al g-nodo 1 assumendo in esso l'identificativo 1·2.
+Oppure se il g-nodo 3 in blocco facesse ingresso in una diversa rete assumendo in essa l'identificativo (di livello 3) 1.
 
-Quando viene richiesto il nome di 10.144.2.58 il resolver lo contatta come al solito e riceve la lista di nomi [n2] a cui aggiunge ".NTK".
+Va detto che il nodo *n* sarà comunque in grado di inviare pacchetti e/o realizzare una connessione TCP direttamente
+con l'indirizzo IP globale se lo conosce, cioè 10.53.14.204, ma in questo caso la connessione si romperebbe durante una tale migrazione.
 
-### Nodo N3
-Sia N3 con NIP N[5,2,3,0,1,0,2,3,0].
+La risoluzione inversa non subirebbe alterazioni. Quando il nodo *n* vuole sapere il nome dell'host che
+ha indirizzo IP 10.96.14.204 (oppure 10.53.14.204) il resolver lo contatta e riceve la lista di nomi
+che il nodo *m* ha registrato.
 
-Computiamo solo il suo IP globale poiché l'unico g-nodo comune con N1 è il 9 (intera rete).
+### Nodo *o*
+Sia *o* con NIP N[5,2,3,0,1,0,2,3,0].
+
+Computiamo solo il suo IP globale poiché l'unico g-nodo comune con *n* è il 9 (intera rete).
 
 ```
-IP globale di N3:
+IP globale di *o*:
 [0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
    5                   0 1 0 1
    2                           1 0
@@ -205,9 +224,9 @@ IP globale di N3:
  = 10.22.196.176
 ```
 
-Quando N1 riceve un ETP che contiene il g-nodo con N3 esso lo vede come (8,5) cioè come g-nodo di livello 8 con id 5.
+Quando *n* riceve un ETP che contiene il g-nodo con *o* esso lo vede come (8,5) cioè come g-nodo di livello 8 con id 5.
 
-Il nodo N1 computa solo:
+Il nodo *n* computa solo:
 
 ```
 G[5]
@@ -216,12 +235,12 @@ G[5]
  = 10.20.0.0/14
 ```
 
-Quindi N1 imposta solo la rotta globale: 10.20.0.0/14 via xx dev yy src 10.44.141.39
+Quindi *n* imposta solo la rotta globale: 10.20.0.0/14 via xx dev yy src 10.44.141.39
 
 ### Richiesta di anonimato
 Ogni nodo, per ogni suo indirizzo (quello globale e quelli interni nei vari livelli) si assegna anche un altro indirizzo identico ma con il bit di anonimato impostato.
 
-Per esempio N1 aggiunge
+Per esempio *n* aggiunge
 
 *   al suo globale: 10.44.141.39 => 10.108.141.39
 *   al suo interno al livello 8: 10.160.141.39 => 10.224.141.39
@@ -249,5 +268,5 @@ Per ridurre al massimo il numero di rotte da memorizzare in uno spazio a 24 bit 
 
 Abbiamo 24 bit a disposizione. Tolto 1 per le rappresentazioni interne e 1 per l'anonimato abbiamo 22 bit. Diamo 4 bit al livello alto; abbiamo così un *gsize* del livello più alto capace di rappresentare fino a 16 livelli. Per sfruttarli tutti facciamo i livelli da 14 a 3 da 1 bit e i livelli 2, 1 e 0 da 2 bit.
 
-Il numero di indirizzi Netsukuku che ogni nodo dovrà al massimo memorizzare come destinazioni nella sua mappa di percorsi è di 1×15 + 12×1 + 3×3 = 36. Resta invariato che il numero massimo di nodi nella rete è 2<sup>22</sup>.
+Il numero di indirizzi Netsukuku che ogni nodo dovrà al massimo memorizzare come destinazioni nella sua mappa di percorsi è di 1×15 + 12×1 + 3×3 = 36. Resta invariato che il numero massimo di nodi nella rete è 2<sup>22</sup>.
 
