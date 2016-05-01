@@ -12,13 +12,19 @@
     *   Nell'allegato RoutingIndirizziInterni all'analisi del modulo QSPN si fa riferimento al "documento livelli e bits".
     *   Nell'analisi funzionale del proof-of-concept si fa riferimento al "documento livelli e bits".
 
-Riserviamo un bit (quello più alto dell'indirizzo) che se è 1 significa che l'indirizzo identifica, univocamente all'interno di tutta la rete, una destinazione che accetta di essere contattata in forma anonima.
+Riserviamo un bit (quello più alto dell'indirizzo) che se è 1 significa che l'indirizzo identifica,
+univocamente all'interno di tutta la rete, una destinazione che accetta di essere contattata in forma anonima.
 
-Riserviamo un altro bit (il secondo più alto) che se è 1 significa che l'indirizzo identifica univocamente una destinazione **non** all'interno di tutta la rete, bensì all'interno di un g-nodo di un determinato livello *i*, con 0 < *i* < *l*.
+Riserviamo un altro bit (il secondo più alto) che se è 1 significa che l'indirizzo identifica univocamente
+una destinazione **non** all'interno di tutta la rete, bensì all'interno di un g-nodo di un determinato
+livello *i*, con 0 < *i* < *l*.
 
 Non possono essere impostati a 1 entrambi i suddetti bit.
 
-Alla rappresentazione dell'identificativo nel livello più alto della gerarchia dobbiamo destinare un numero di bit tale da poter rappresentare tutti i livelli presenti. Cioè il *gsize* del livello più alto deve essere maggiore o uguale al numero di livelli totale. Questo per poter rappresentare, come vedremo in seguito, ogni possibile destinazione interna ad un gnodo.
+Alla rappresentazione dell'identificativo nel livello più alto della gerarchia dobbiamo destinare
+un numero di bit tale da poter rappresentare tutti i livelli presenti. Cioè il *gsize* del livello
+più alto deve essere maggiore o uguale al numero di livelli totale. Questo per poter rappresentare,
+come vedremo in seguito, ogni possibile destinazione interna ad un gnodo.
 
 Facciamo l'esempio di una rete IPv4, quindi nella classe 10.0.0.0/8.
 
@@ -32,225 +38,136 @@ Il *gsize* del livello più alto soddisfa il vincolo di essere maggiore o uguale
 
 Gli indirizzi validi sono 2<sup>22</sup>, cioè circa 4 milioni.
 
-Il numero di indirizzi Netsukuku che ogni nodo dovrà al massimo memorizzare come destinazioni nella sua mappa di percorsi è di 1×3 + 1×15 + 2×255 = 528. Per ognuno il protocollo memorizzerà un massimo di *k* percorsi disgiunti. Solo il migliore di essi verrà riportato nelle tabelle di routing del kernel, indicando il solo gateway.
+Il numero di indirizzi Netsukuku che ogni nodo dovrà al massimo memorizzare come destinazioni
+nella sua mappa di percorsi è di 1×3 + 1×15 + 2×255 = 528. Per ognuno il protocollo memorizzerà
+un massimo di *k* percorsi disgiunti. Solo il migliore di essi verrà riportato nelle tabelle di
+routing del kernel, indicando il solo gateway.
 
-**Nota:** Questo esempio è volutamente semplice. Il numero di possibili indirizzi Netsukuku di destinazione rimane molto alto. La suddivisione ottimale (che riduce al minimo tale numero) verrà descritta dopo.
+**Nota:** Questo esempio è volutamente semplice. Il numero di possibili indirizzi Netsukuku di
+destinazione rimane molto alto. La suddivisione ottimale (che riduce al minimo tale numero) verrà descritta dopo.
 
-Ogni indirizzo Netsukuku di destinazione, cioè ogni g-nodo di livello *i* con 0 ≤ *i* < *l*, verrà riportato nelle tabelle del kernel come indirizzo IP in 3 forme:
+Ogni indirizzo Netsukuku di destinazione, cioè ogni g-nodo di livello *i* con 0 ≤ *i* < *l*, verrà
+riportato nelle tabelle del kernel come indirizzo IP in 3 forme:
+
 *   (A) Come indirizzo senza anonimato, univoco a livello globale.
-*   (B) Come indirizzo senza anonimato, univoco all'interno del gnodo di livello *i* + 1. Questa forma non si applicherà alle destinazioni di livello *i* = *l* - 1.
+*   (B) Come indirizzo senza anonimato, univoco all'interno del gnodo di livello *i* + 1. Questa forma
+    non si applicherà alle destinazioni di livello *i* = *l* - 1.
 *   (C) Come indirizzo con richiesta di anonimato, univoco a livello globale.
 
-Gli indirizzi (C) hanno, come detto, il bit più alto impostato a 1 e il secondo bit più alto impostato a 0. Gli altri bit compongono l'indirizzo di una destinazione identificata univocamente all'interno di tutta la rete.
+Gli indirizzi (C) hanno, come detto, il bit più alto impostato a 1 e il secondo bit più alto
+impostato a 0. Gli altri bit compongono l'indirizzo di una destinazione identificata univocamente
+all'interno di tutta la rete.
 
-Gli indirizzi (B) hanno il bit più alto impostato a 0 e il secondo bit più alto impostato a 1. Il numero codificato nei successivi 2 bit è un intero *k*, con 0 < *k* < *l*. Gli altri bit compongono l'indirizzo di una destinazione identificata univocamente all'interno del gnodo di livello *k*.
+Gli indirizzi (B) hanno il bit più alto impostato a 0 e il secondo bit più alto impostato a 1. Il
+numero codificato nei successivi 2 bit è un intero *k*, con 0 < *k* < *l*. Gli altri bit compongono
+l'indirizzo di una destinazione identificata univocamente all'interno del gnodo di livello *k*.
 
 **Nota:** Gli esempi di calcolo mostrati sotto vanno corretti.
 
 ## Esempio
 
-Prendiamo 3 nodi. N1 è il nostro nodo, quello di cui esaminiamo le tabelle di  routing. N2 è un nodo con cui abbiamo un qualche gnodo in comune. N3 è un nodo con cui non abbiamo in comune nemmeno il gnodo più alto. Vediamo quali informazioni mantiene il nodo N1.
+Prendiamo 3 nodi. N1 è il nostro nodo, quello di cui esaminiamo le tabelle di  routing. N2 è un
+nodo con cui abbiamo un qualche gnodo in comune. N3 è un nodo con cui non abbiamo in comune nemmeno
+il gnodo più alto. Vediamo quali informazioni mantiene il nodo N1.
 
 ### Nodo N1
 
-Sia N1 con NIP N[11,0,2,0,3,1,0,2,7].
+Per il nodo N1 sia l'indirizzo Netsukuku 3·5·241·79.
 
-Computiamo il nostro IP globale e i 8 IP validi internamente ad un gnodo.
+Computiamo il nostro IP globale e i 3 IP validi internamente ad un gnodo.
 
 ```
 Globale di N1:
 [0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  11                   1 0 1 1
-   0                           0 0
-   2                                 1 0
-   0                                     0 0
-   3                                         1 1
-   1                                             0 1
-   0                                                   0 0
-   2                                                       1 0
-   7                                                           0 1 1 1
- = 10.44.141.39
-
-Interno di N1 nel suo gnodo di livello 8:
-[0|0|0|0|1|0|1|0].[1|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello gnodo        1 0 0 0
-   0                           0 0
-   2                                 1 0
-   0                                     0 0
-   3                                         1 1
-   1                                             0 1
-   0                                                   0 0
-   2                                                       1 0
-   7                                                           0 1 1 1
- = 10.160.141.39
-
-Interno di N1 nel suo gnodo di livello 7:
-[0|0|0|0|1|0|1|0].[1|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello gnodo        0 1 1 1
-   N/A                         0 0
-   2                                 1 0
-   0                                     0 0
-   3                                         1 1
-   1                                             0 1
-   0                                                   0 0
-   2                                                       1 0
-   7                                                           0 1 1 1
- = 10.156.141.39
-
-Interno di N1 nel suo gnodo di livello 6:
-[0|0|0|0|1|0|1|0].[1|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello gnodo        0 1 1 0
-   N/A                         0 0
-   N/A                               0 0
-   0                                     0 0
-   3                                         1 1
-   1                                             0 1
-   0                                                   0 0
-   2                                                       1 0
-   7                                                           0 1 1 1
- = 10.152.13.39
-
-Interno di N1 nel suo gnodo di livello 5:
-[0|0|0|0|1|0|1|0].[1|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello gnodo        0 1 0 1
-   N/A                         0 0
-   N/A                               0 0
-   N/A                                   0 0
-   3                                         1 1
-   1                                             0 1
-   0                                                   0 0
-   2                                                       1 0
-   7                                                           0 1 1 1
- = 10.148.13.39
-
-Interno di N1 nel suo gnodo di livello 4:
-[0|0|0|0|1|0|1|0].[1|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello gnodo        0 1 0 0
-   N/A                         0 0
-   N/A                               0 0
-   N/A                                   0 0
-   N/A                                       0 0
-   1                                             0 1
-   0                                                   0 0
-   2                                                       1 0
-   7                                                           0 1 1 1
- = 10.144.1.39
+   3                   1 1
+   5                       0 1 0 1
+ 241                                 1 1 1 1 0 0 0 1
+  79                                                   0 1 0 0 1 1 1 1
+ = 10.53.241.79
 
 Interno di N1 nel suo gnodo di livello 3:
-[0|0|0|0|1|0|1|0].[1|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello gnodo        0 0 1 1
-   N/A                         0 0
-   N/A                               0 0
-   N/A                                   0 0
-   N/A                                       0 0
-   N/A                                           0 0
-   0                                                   0 0
-   2                                                       1 0
-   7                                                           0 1 1 1
- = 10.140.0.39
+[0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
+  livello gnodo        1 1
+   5                       0 1 0 1
+ 241                                 1 1 1 1 0 0 0 1
+  79                                                   0 1 0 0 1 1 1 1
+ = 10.117.241.79
 
 Interno di N1 nel suo gnodo di livello 2:
-[0|0|0|0|1|0|1|0].[1|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello gnodo        0 0 1 0
-   N/A                         0 0
-   N/A                               0 0
-   N/A                                   0 0
-   N/A                                       0 0
-   N/A                                           0 0
-   N/A                                                 0 0
-   2                                                       1 0
-   7                                                           0 1 1 1
- = 10.136.0.39
+[0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
+  livello gnodo        1 0
+   N/A                     0 0 0 0
+ 241                                 1 1 1 1 0 0 0 1
+  79                                                   0 1 0 0 1 1 1 1
+ = 10.96.241.79
 
 Interno di N1 nel suo gnodo di livello 1:
-[0|0|0|0|1|0|1|0].[1|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello gnodo        0 0 0 1
-   N/A                         0 0
-   N/A                               0 0
-   N/A                                   0 0
-   N/A                                       0 0
-   N/A                                           0 0
-   N/A                                                 0 0
-   N/A                                                     0 0
-   7                                                           0 1 1 1
- = 10.132.0.7
+[0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
+  livello gnodo        0 1
+   N/A                     0 0 0 0
+   N/A                               0 0 0 0 0 0 0 0
+  79                                                   0 1 0 0 1 1 1 1
+ = 10.80.0.79
 ```
 
 N1 si assegna quindi questi IP:
 
-*   il globale: 10.44.141.39
-*   l'interno nel livello 8: 10.160.141.39
-*   l'interno nel livello 7: 10.156.141.39
-*   l'interno nel livello 6: 10.152.13.39
-*   l'interno nel livello 5: 10.148.13.39
-*   l'interno nel livello 4: 10.144.1.39
-*   l'interno nel livello 3: 10.140.0.39
-*   l'interno nel livello 2: 10.136.0.39
-*   l'interno nel livello 1: 10.132.0.7
+*   il globale: 10.53.241.79
+*   l'interno nel livello 3: 10.117.241.79
+*   l'interno nel livello 2: 10.96.241.79
+*   l'interno nel livello 1: 10.80.0.79
 
 ### Nodo N2
-Sia N2 con NIP N[11,0,2,0,3,2,0,3,10].
 
-Computiamo il suo IP globale e quello interno al gnodo di livello 4 (quello in comune con N1).
+Per il nodo N2 sia l'indirizzo Netsukuku 3·5·14·204.
+
+Computiamo il suo IP globale e quello interno al gnodo di livello 2 (quello in comune con N1).
 
 ```
 Globale di N2:
 [0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  11                   1 0 1 1
-   0                           0 0
-   2                                 1 0
-   0                                     0 0
-   3                                         1 1
-   2                                             1 0
-   0                                                   0 0
-   3                                                       1 1
-  10                                                           1 0 1 0
- = 10.44.142.58
+   3                   1 1
+   5                       0 1 0 1
+  14                                 0 0 0 0 1 1 1 0
+ 204                                                   1 1 0 0 1 1 0 0
+ = 10.53.14.204
 
-Interno di N2 nel suo gnodo di livello 4:
-[0|0|0|0|1|0|1|0].[1|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello gnodo        0 1 0 0
-   N/A                         0 0
-   N/A                               0 0
-   N/A                                   0 0
-   N/A                                       0 0
-   2                                             1 0
-   0                                                   0 0
-   3                                                       1 1
-  10                                                           1 0 1 0
- = 10.144.2.58
+Interno di N2 nel suo gnodo di livello 2:
+[0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
+  livello gnodo        1 0
+   N/A                     0 0 0 0
+  14                                 0 0 0 0 1 1 1 0
+ 204                                                   1 1 0 0 1 1 0 0
+ = 10.96.14.204
 ```
 
-Quando N1 riceve un ETP che contiene il gnodo con N2 esso lo vede come (3,2) cioè come gnodo di livello 3 appartenente al suo stesso gnodo di livello 4 e con identificativo (a livello 3) = 2.
+Quando N1 riceve un ETP che contiene il gnodo con N2 esso lo vede come (1,14) cioè come gnodo *g*
+di livello 1 appartenente al suo stesso gnodo di livello 2 e con identificativo 14 (a livello 1).
+
+Per il g-nodo *g* l'indirizzo Netsukuku è 3·5·14.
 
 Il nodo N1 computa:
 
 ```
-G[11,0,2,0,3,2]
+Globale di g:
 [0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[0|0|0|0|0|0|0|0]
-  11                   1 0 1 1
-   0                           0 0
-   2                                 1 0
-   0                                     0 0
-   3                                         1 1
-   2                                             1 0
- = 10.44.142.0/24
+   3                   1 1
+   5                       0 1 0 1
+  14                                 0 0 0 0 1 1 1 0
+ = 10.53.14.0/24
 
-Interno di G[11,0,2,0,3,2] nel suo gnodo di livello 4:
+Interno di g nel suo gnodo di livello 2:
 [0|0|0|0|1|0|1|0].[1|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[0|0|0|0|0|0|0|0]
-  livello gnodo        0 1 0 0
-   N/A                         0 0
-   N/A                               0 0
-   N/A                                   0 0
-   N/A                                       0 0
-   2                                             1 0
- = 10.144.2.0/24
+  livello gnodo        1 0
+   N/A                     0 0 0 0
+  14                                 0 0 0 0 1 1 1 0
+ = 10.160.14.0/24
 ```
 
 Quindi N1 imposta:
 
-*   la rotta globale: 10.44.142.0/24 via xx dev yy src 10.44.141.39
-*   la rotta interna al g-nodo di livello 4: 10.144.2.0/24 via xx dev yy src 10.144.1.39
+*   la rotta globale: 10.53.14.0/24 via xx dev yy src 10.53.241.79
+*   la rotta interna al g-nodo di livello 2: 10.160.14.0/24 via xx dev yy src 10.96.241.79
 
 Quando viene richiesto l'indirizzo di n2.ntk il resolver cerca nel db andna il nome n2 e trova il NIP N[11,0,2,0,3,2,0,3,10].
 
