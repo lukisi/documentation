@@ -130,7 +130,7 @@ Interno di *n* nel suo gnodo di livello 1:
 
 Per il nodo *m* sia l'indirizzo Netsukuku 3·5·14·204.
 
-Computiamo il suo IP globale e quello interno al gnodo di livello 2 (quello in comune con *n*).
+Computiamo il suo indirizzo IP globale e quello interno al gnodo di livello 2 (quello in comune con *n*).
 
 ```
 Globale di *m*:
@@ -150,7 +150,7 @@ Interno di *m* nel suo gnodo di livello 2:
  = 10.96.14.204
 ```
 
-Quando *n* riceve un ETP che contiene il gnodo con *m* esso lo vede come (1,14) cioè come gnodo *g*
+Quando *n* riceve un ETP che contiene il gnodo con *m* esso lo vede come (1, 14) cioè come gnodo *g*
 di livello 1 appartenente al suo stesso gnodo di livello 2 e con identificativo 14 (a livello 1).
 
 Per il g-nodo *g* l'indirizzo Netsukuku è 3·5·14.
@@ -187,12 +187,12 @@ ANDNA il nome "morfeo" e trova l'indirizzo Netsukuku 3·5·14·204.
 
 Invece di computare il relativo indirizzo IP globale 10.53.14.204, il resolver vede rispetto al proprio indirizzo
 Netsukuku (quello dell'identità principale) qual'è il minimo comune gnodo (in questo caso 2) e computa
-il relativo indirizzo IP interno nel suo gnodo di livello 2: 10.96.14.204.
+il relativo indirizzo IP interno in quel gnodo: 10.96.14.204.
 
 Questo nella route table corrisponde a 10.96.14.0/24 quindi *n* manda il pacchetto al suo gateway
 indicando come proprio IP 10.96.241.79.
 
-Una volta realizzata una connessione TCP con questo indirizzo IP, questa connessione continuerebbe a funzionare anche
+Una volta realizzata una connessione TCP tra questi due indirizzi IP, questa connessione continuerebbe a funzionare anche
 se un gnodo di livello superiore migrasse, anche gradualmente un nodo alla volta, ad un altra posizione di pari livello.
 
 Ad esempio se il g-nodo 3·5 migrasse dal g-nodo 3 al g-nodo 1 assumendo in esso l'identificativo 1·2.
@@ -206,68 +206,65 @@ ha indirizzo IP 10.96.14.204 (oppure 10.53.14.204) il resolver lo contatta e ric
 che il nodo *m* ha registrato.
 
 ### Nodo *o*
-Sia *o* con NIP N[5,2,3,0,1,0,2,3,0].
 
-Computiamo solo il suo IP globale poiché l'unico g-nodo comune con *n* è il 9 (intera rete).
+Per il nodo *o* sia l'indirizzo Netsukuku 2·10·237·242.
 
-```
-IP globale di *o*:
-[0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-   5                   0 1 0 1
-   2                           1 0
-   3                                 1 1
-   0                                     0 0
-   1                                         0 1
-   0                                             0 0
-   2                                                   1 0
-   3                                                       1 1
-   0                                                           0 0 0 0
- = 10.22.196.176
-```
-
-Quando *n* riceve un ETP che contiene il g-nodo con *o* esso lo vede come (8,5) cioè come g-nodo di livello 8 con id 5.
-
-Il nodo *n* computa solo:
+Computiamo solo il suo indirizzo IP globale poiché l'unico g-nodo comune con *n* è il 4 (intera rete).
 
 ```
-G[5]
-[0|0|0|0|1|0|1|0].[0|0|?|?|?|?|0|0].[0|0|0|0|0|0|0|0].[0|0|0|0|0|0|0|0]
-   5                   0 1 0 1
- = 10.20.0.0/14
+Globale di *o*:
+ = 10.42.237.242
 ```
 
-Quindi *n* imposta solo la rotta globale: 10.20.0.0/14 via xx dev yy src 10.44.141.39
+Quando *n* riceve un ETP che contiene il gnodo con *o* esso lo vede come (3, 2) cioè come gnodo *h*
+di livello 3 con identificativo 2.
+
+Per il g-nodo *h* l'indirizzo Netsukuku è 2.
+
+Il nodo *n* computa:
+
+```
+Globale di *h*:
+[0|0|0|0|1|0|1|0].[0|0|?|?|0|0|0|0].[0|0|0|0|0|0|0|0].[0|0|0|0|0|0|0|0]
+   5                   1 0
+ = 10.32.0.0/12
+```
+
+Quindi *n* imposta solo la rotta globale: 10.32.0.0/12 via xx dev yy src 10.53.241.79
 
 ### Richiesta di anonimato
-Ogni nodo, per ogni suo indirizzo (quello globale e quelli interni nei vari livelli) si assegna anche un altro indirizzo identico ma con il bit di anonimato impostato.
+Ogni nodo si assegna anche un altro indirizzo globale, identico al primo, ma con il bit *anonimizzante* impostato.
 
-Per esempio *n* aggiunge
+Allo stesso modo, per ogni destinazione di cui viene a conoscenza, aggiunge una rotta verso
+l'indirizzo IP *anonimizzante* relativo.
 
-*   al suo globale: 10.44.141.39 => 10.108.141.39
-*   al suo interno al livello 8: 10.160.141.39 => 10.224.141.39
-*   ...
+Per esempio il nodo *n*:
 
-La stessa duplicazione avviene nelle rotte. Ad esempio alle rotte
+*   Si assegna l'indirizzo IP `10.181.241.79`.
+*   Aggiunge la rotta `10.181.14.0/24 src 10.181.241.79`.
+*   Aggiunge la rotta `10.160.0.0/12 src 10.181.241.79`.
 
-*   10.44.142.0/24 via xx dev yy src 10.44.141.39
-*   10.144.2.0/24 via xx dev yy src 10.144.1.39
+Infine, i nodi che sono disposti a anonimizzare i vicini che ne fanno richiesta, impostano le regole di
+masquerade del firewall. Precisamente, i pacchetti da inoltrare verso 10.128.0.0/10 vanno mascherati
+(Source NATting). Naturalmente anche il pacchetto inoltrato avrà codificata la richiesta di essere anonimizzato negli hop successivi.
 
-si aggiungono le rotte
+Quando il nodo *n* vuole contattare un server in forma anonima, lo può fare se il server accetta di
+essere contattato con un indirizzo *anonimizzante*. In questo caso *n* invia i suoi pacchetti a tale
+indirizzo. Durante il tragitto tutti gli hop disposti a farlo maschereranno il source IP.
 
-*   10.108.142.0/24 via xx dev yy src 10.44.141.39
-*   10.224.2.0/24 via xx dev yy src 10.144.1.39
-
-Infine, i nodi che sono disposti a anonimizzare i vicini che ne fanno richiesta, impostano le regole di masquerade del firewall. Precisamente, i pacchetti da inoltrare verso 10.64.0.0/10 e verso 10.192.0.0/10 vanno mascherati (NAT). Naturalmente anche il pacchetto inoltrato avrà codificata la richiesta di essere anonimizzato negli hop successivi.
-
-Quando un nodo vuole raggiungere un certo indirizzo in forma anonima invia i suoi pacchetti all'indirizzo con il bit impostato. Durante il tragitto tutti gli hop disposti a farlo lo anonimizzeranno.
-
-Quest'ultima impostazione (sulle regole di masquerade del firewall) è facoltativa. Se un nodo con poche risorse di memoria, ad esempio, non vuole mascherare i pacchetti che inoltra, comunque l'operazione avrà l'effetto desiderato se qualcuno degli hop durante il percorso sarà disposto a farlo.
+Quest'ultima impostazione (sulle regole di masquerade del firewall) è facoltativa. Se un nodo con poche
+risorse di memoria, ad esempio, non vuole mascherare i pacchetti che inoltra, comunque l'operazione avrà
+l'effetto desiderato se qualcuno degli hop durante il percorso sarà disposto a farlo.
 
 ## Disposizione ottimale
 
-Per ridurre al minimo il numero massimo di rotte da memorizzare in uno spazio a 24 bit come la classe 10.0.0.0/8 si proceda come segue:
+Per ridurre al minimo il numero massimo di rotte da memorizzare in uno spazio a 24 bit come
+la classe 10.0.0.0/8 si proceda come illustrato di seguito.
 
-Abbiamo 24 bit a disposizione. Tolto 1 per le rappresentazioni interne e 1 per l'anonimato abbiamo 22 bit. Diamo 4 bit al livello alto; abbiamo così un *gsize* del livello più alto capace di rappresentare fino a 16 livelli. Per sfruttarli tutti facciamo i livelli da 14 a 3 da 1 bit e i livelli 2, 1 e 0 da 2 bit.
+Abbiamo 24 bit a disposizione. Tolto 1 per le rappresentazioni interne e 1 per l'anonimato abbiamo 22 bit.
+Diamo 4 bit al livello alto; abbiamo così un *gsize* del livello più alto capace di rappresentare fino
+a 16 livelli. Per sfruttarli tutti facciamo i livelli da 14 a 3 da 1 bit e i livelli 2, 1 e 0 da 2 bit.
 
-Il numero di indirizzi Netsukuku che ogni nodo dovrà al massimo memorizzare come destinazioni nella sua mappa di percorsi è di 1×15 + 12×1 + 3×3 = 36. Resta invariato che il numero massimo di nodi nella rete è 2<sup>22</sup>.
+Il numero di indirizzi Netsukuku che ogni nodo dovrà al massimo memorizzare come destinazioni nella
+sua mappa di percorsi è di 1×15 + 12×1 + 3×3 = 36. Resta invariato che il numero massimo di nodi nella rete è 2<sup>22</sup>.
 
