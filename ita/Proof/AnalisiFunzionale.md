@@ -472,39 +472,73 @@ network namespace. L'identità di connettività ha un indirizzo Netsukuku *di co
 Significa che l'indirizzo ha una o più componenti virtuali. Sia *i* il livello più basso in cui
 la componente è virtuale. Sia *k* il livello più alto in cui la componente è virtuale.
 
-Riguardo questi indirizzi Netsukuku:
+In questo caso, riguardo questo indirizzo Netsukuku *n*:
 
-*   Il nodo NON ha un indirizzo IP globale.
+*   NON esiste un indirizzo IP globale di *n*.
+*   NON esiste un indirizzo IP globale anonimizzante di *n*.
 *   Per ogni livello *j* da 0 a *k*-1:
-    *   Il nodo NON ha un indirizzo IP nel range destinato agli indirizzi interni al livello *j*+1.
-    *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui
-        componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP interno di livello *j+1* (d1).
-        *   Per d1:
-            *   Il nodo NON ha una rotta in *partenza*.
-            *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
-                *   Il nodo ha una rotta in *inoltro* per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in *inoltro* per i pacchetti che non sono
-                stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
-                address che il nodo non conosce.
+    *   NON esiste un indirizzo IP interno al livello *j* + 1 di *n*.
+    *   Per ogni g-nodo *d* di livello *j* che il nodo conosce, e solo quelli la cui
+        componente (a livello *j*) è *reale*:
+        *   Il nodo computa questi indirizzi IP:
+            *   *d<sub>i</sub>* - Indirizzo IP interno al livello *j* + 1 del g-nodo *d*.
+        *   Il nodo NON ha una rotta in *partenza* verso *d<sub>i</sub>*.
+        *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
+            *   Il nodo imposta una rotta in *inoltro* verso *d<sub>i</sub>* per i pacchetti
+                provenienti da *m*.  
+                Viene impostata la rotta identificata dal miglior percorso noto per quella
+                destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
+                La destinazione *d<sub>i</sub>* può essere "non raggiungibile" per i pacchetti
+                in *inoltro* provenienti da *m*.
+        *   Il nodo imposta una rotta in *inoltro* verso *d<sub>i</sub>* per i pacchetti
+            provenienti da un MAC address che non è fra quelli che il nodo conosce.  
+            Viene impostata la rotta identificata dal miglior percorso noto per quella
+            destinazione. La destinazione *d<sub>i</sub>* non può essere "non raggiungibile".
 *   Per ogni livello *j* da *k* a *l*-1:
-    *   Il nodo NON ha un indirizzo IP nel range destinato agli indirizzi interni al livello *j*+1.
-    *   Esaminiamo i g-nodi di livello *j* che il nodo conosce, e solo quelli la cui
-        componente (a livello *j*) è *reale*. Per ognuno di essi calcoliamo l'indirizzo IP
-        interno di livello *j+1* (d1) e anche l'indirizzo IP globale (d2) (oppure solo d2 quando *j*+1 = *l*).
-        *   Per d1:
-            *   Il nodo NON ha una rotta in *partenza*.
-            *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
-                *   Il nodo ha una rotta in *inoltro* per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in *inoltro* per i pacchetti che non sono
-                stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
-                address che il nodo non conosce.
-        *   Per d2:
-            *   Il nodo NON ha una rotta in *partenza*.
-            *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
-                *   Il nodo ha una rotta in *inoltro* per i pacchetti provenienti da *m*.
-            *   Il nodo ha inoltre una rotta in *inoltro* per i pacchetti che non sono
-                stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
-                address che il nodo non conosce.
+    *   NON esiste un indirizzo IP interno al livello *j* + 1 di *n*.
+    *   Per ogni g-nodo *d* di livello *j* che il nodo conosce, e solo quelli la cui
+        componente (a livello *j*) è *reale*:
+        *   Il nodo computa questi indirizzi IP:
+            *   *d<sub>g</sub>* - Indirizzo IP globale del g-nodo *d*.
+            *   *d<sub>a</sub>* - Indirizzo IP globale anonimizzante del g-nodo *d*.
+            *   *d<sub>i</sub>* - Indirizzo IP interno al livello *j* + 1 del g-nodo *d*. Questo
+                solo quando *j* + 1 ≠ *l*.
+        *   Il nodo NON ha una rotta in *partenza* verso *d<sub>g</sub>*.
+        *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
+            *   Il nodo imposta una rotta in *inoltro* verso *d<sub>g</sub>* per i pacchetti
+                provenienti da *m*.  
+                Viene impostata la rotta identificata dal miglior percorso noto per quella
+                destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
+                La destinazione *d<sub>g</sub>* può essere "non raggiungibile" per i pacchetti
+                in *inoltro* provenienti da *m*.
+        *   Il nodo imposta una rotta in *inoltro* verso *d<sub>g</sub>* per i pacchetti
+            provenienti da un MAC address che non è fra quelli che il nodo conosce.  
+            Viene impostata la rotta identificata dal miglior percorso noto per quella
+            destinazione. La destinazione *d<sub>g</sub>* non può essere "non raggiungibile".
+        *   Il nodo NON ha una rotta in *partenza* verso *d<sub>a</sub>*.
+        *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
+            *   Il nodo imposta una rotta in *inoltro* verso *d<sub>a</sub>* per i pacchetti
+                provenienti da *m*.  
+                Viene impostata la rotta identificata dal miglior percorso noto per quella
+                destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
+                La destinazione *d<sub>a</sub>* può essere "non raggiungibile" per i pacchetti
+                in *inoltro* provenienti da *m*.
+        *   Il nodo imposta una rotta in *inoltro* verso *d<sub>a</sub>* per i pacchetti
+            provenienti da un MAC address che non è fra quelli che il nodo conosce.  
+            Viene impostata la rotta identificata dal miglior percorso noto per quella
+            destinazione. La destinazione *d<sub>a</sub>* non può essere "non raggiungibile".
+        *   Il nodo NON ha una rotta in *partenza* verso *d<sub>i</sub>*.
+        *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
+            *   Il nodo imposta una rotta in *inoltro* verso *d<sub>i</sub>* per i pacchetti
+                provenienti da *m*.  
+                Viene impostata la rotta identificata dal miglior percorso noto per quella
+                destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
+                La destinazione *d<sub>i</sub>* può essere "non raggiungibile" per i pacchetti
+                in *inoltro* provenienti da *m*.
+        *   Il nodo imposta una rotta in *inoltro* verso *d<sub>i</sub>* per i pacchetti
+            provenienti da un MAC address che non è fra quelli che il nodo conosce.  
+            Viene impostata la rotta identificata dal miglior percorso noto per quella
+            destinazione. La destinazione *d<sub>i</sub>* non può essere "non raggiungibile".
 
 ## <a name="Indirizzi_del_nodo"/>Indirizzi del nodo
 
