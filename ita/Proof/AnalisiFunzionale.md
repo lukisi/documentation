@@ -1,13 +1,26 @@
 # Proof of concept - Analisi Funzionale
 
-1.  **TODO**
-1.  **TOC**
+1.  [Ruolo del qspnclient](#Ruolo_del_qspnclient)
+    1.  [Interazione programma-utente](#Interazione_programma_utente)
+1.  [Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IPv4](#Mappatura_indirizzi_ip)
+    1.  [Indirizzo IP globale di un nodo](#Indirizzo_globale_nodo)
+    1.  [Indirizzo IP globale di un g-nodo](#Indirizzo_globale_gnodo)
+    1.  [Indirizzo IP di un nodo interno ad un suo g-nodo](#Indirizzo_interno_nodo)
+    1.  [Indirizzo IP di un g-nodo interno al suo g-nodo direttamente superiore](#Indirizzo_interno_gnodo)
+    1.  [Indirizzo IP di un nodo o g-nodo contattabile in forma anonima](#Indirizzo_anonimizzante)
+1.  [Identità](#Identita)
+    1.  [Identità principale](#Identita_principale)
+    1.  [Identità di connettività](#Identita_di_connettivita)
+1.  [Indirizzi del nodo](#Indirizzi_del_nodo)
+1.  [Rotte nelle tabelle di routing](#Rotte_nelle_tabelle_di_routing)
+    1.  [Source NATting](#Source_natting)
+    1.  [Routing](#Routing)
 
 Ci proponiamo di realizzare un programma, **qspnclient**, che si avvale del modulo QSPN e altri
 moduli a sostegno (Neighborhood, Identities) per stabilire come impostare le rotte nelle tabelle
 di routing del kernel di una macchina. Si tratta di un programma specifico per un sistema Linux.
 
-## Ruolo del qspnclient
+## <a name="Ruolo_del_qspnclient"/>Ruolo del qspnclient
 
 Questo programma permette all'utente di fare le veci del demone *ntkd*, simulando le sue operazioni
 e quelle di pertinenza di altri moduli:
@@ -25,7 +38,7 @@ sistema riesca effettivamente a stabilire connessioni con gli altri nodi della r
 siano quelle che ci si attende, eccetera. Inoltre il programma interattivamente consente di chiedere
 al modulo QSPN le informazioni che ha raccolto e mostrarle all'utente.
 
-### Interazione programma-utente
+### <a name="Interazione_programma_utente"/>Interazione programma-utente
 
 Il programma *qspnclient* prevede che l'utente immetta, come argomenti della riga di comando e in modo
 interattivo dalla console durante la sua esecuzione, tutti i requisiti del modulo.
@@ -139,7 +152,7 @@ di default del programma, se l'utente non indica alcun flag a riguardo, è di:
 *   abilitare l'anonimizzazione dei pacchetti che transitano per il nodo;
 *   non accettare richieste indirizzate al nodo da un client in forma anonima.
 
-## Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IPv4
+## <a name="Mappatura_indirizzi_ip"/>Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IPv4
 
 Gli indirizzi dei nodi nella rete Netsukuku, nella sua attuale implementazione, vanno mappati nella
 classe IPv4 10.0.0.0/8.
@@ -171,7 +184,7 @@ Una volta scelti i valori di *l* e di *g-exp(i)* rispettando i vincoli prima esp
 un indirizzo Netsukuku (di nodo o di g-nodo) nei vari tipi di indirizzi IP. Si veda anche il
 documento [livelli e bits](../ModuloQSPN/LivelliBits.md).
 
-### Indirizzo IP globale di un nodo
+### <a name="Indirizzo_globale_nodo"/>Indirizzo IP globale di un nodo
 
 Sia *n* l'indirizzo Netsukuku di un nodo. Indichiamo con *n<sub>0</sub>* l'identificativo del nodo
 all'interno del suo g-nodo di livello 1. E a seguire con *n<sub>i</sub>* l'identificativo del g-nodo di
@@ -193,7 +206,7 @@ ai livelli 1 e 0. Sono soddisfatti i due vincoli esposti sopra.
 
 Consideriamo il nodo *n* con indirizzo Netsukuku 3·10·123·45. L'indirizzo IP globale di *n* è 10.58.123.45.
 
-### Indirizzo IP globale di un g-nodo
+### <a name="Indirizzo_globale_gnodo"/>Indirizzo IP globale di un g-nodo
 
 Sia *g* l'indirizzo Netsukuku di un g-nodo di livello *i*. L'indirizzo completo sarà
 *g<sub>l-1</sub>·...·g<sub>i</sub>*.
@@ -214,7 +227,7 @@ appartiene al suo stesso g-nodo di livello 3.
 
 L'indirizzo Netsukuku di *g* è 3·1. L'indirizzo IP globale di *g* in notazione CIDR è 10.49.0.0/16.
 
-### Indirizzo IP di un nodo interno ad un suo g-nodo
+### <a name="Indirizzo_interno_nodo"/>Indirizzo IP di un nodo interno ad un suo g-nodo
 
 Sia *n* un nodo con indirizzo *n<sub>l-1</sub>·...·n<sub>1</sub>·n<sub>0</sub>*. Sia *g* il suo g-nodo
 di livello *i* con 0 < *i* < *l*. Quindi *g* ha indirizzo *n<sub>l-1</sub>·...·n<sub>i</sub>*. Vogliamo
@@ -236,7 +249,7 @@ Fin da subito il nodo *n* si è assegnato, oltre all'indirizzo IP globale 10.58.
 IP interno al g-nodo di livello 2, che è 10.96.123.45. Analogamente, il nodo *m* si è assegnato, oltre
 all'indirizzo IP globale 10.58.67.89, anche l'indirizzo IP interno al g-nodo di livello 2, che è 10.96.67.89.
 
-### Indirizzo IP di un g-nodo interno al suo g-nodo direttamente superiore
+### <a name="Indirizzo_interno_gnodo"/>Indirizzo IP di un g-nodo interno al suo g-nodo direttamente superiore
 
 Sia *g* un g-nodo di livello *i* con indirizzo *g<sub>l-1</sub>·...·g<sub>i</sub>* con *i* < *l* - 1.
 Sia *h* il suo g-nodo di livello *i* + 1. Quindi *h* ha indirizzo *g<sub>l-1</sub>·...·g<sub>i+1</sub>*.
@@ -258,7 +271,7 @@ il nodo *n* ha nelle tabelle di routing una rotta per 10.96.67.0/24 che scaturis
 noto verso la destinazione *g*. Quindi, se il nodo *n* trasmette un pacchetto IP all'indirizzo 10.96.67.89
 (che *m* si era assegnato nell'esempio sopra) tale pacchetto prende quella rotta.
 
-### Indirizzo IP di un nodo o g-nodo contattabile in forma anonima
+### <a name="Indirizzo_anonimizzante"/>Indirizzo IP di un nodo o g-nodo contattabile in forma anonima
 
 Sia *n* un nodo con indirizzo *n<sub>l-1</sub>·...·n<sub>1</sub>·n<sub>0</sub>*. Vogliamo comporre
 un indirizzo IP per tale risorsa tale che un client lo possa usare per contattare il nodo mantenendo
@@ -280,14 +293,14 @@ Consideriamo il nodo *n* di prima. L'indirizzo IP globale anonimizzante di *n* �
 Se il nodo *n* ammette la possibilità di venire contattato in forma anonima (questa è una sua scelta) si
 assegna anche questo indirizzo.
 
-## Identità
+## <a name="Identita"/>Identità
 
 Ogni identità che vive nel nodo ha un suo indirizzo Netsukuku. Inoltre ha una mappa di percorsi, ognuno
 che ha come destinazione (e come passi) un g-nodo *visibile* dal suo indirizzo Netsukuku.
 
 Un nodo ha sempre una identità principale e zero o più identità di connettività.
 
-### Identità principale
+### <a name="Identita_principale"/>Identità principale
 
 L'identità principale gestisce il network namespace default. L'identità principale ha un indirizzo
 Netsukuku *definitivo* che può essere *reale* o *virtuale*.
@@ -367,7 +380,7 @@ In questo caso, riguardo questo indirizzo Netsukuku:
                 stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
                 address che il nodo non conosce.
 
-### Identità di connettività
+### <a name="Identita_di_connettivita"/>Identità di connettività
 
 Un nodo può avere 0 o più identità di connettività. L'identità di connettività gestisce un certo
 network namespace. L'identità di connettività ha un indirizzo Netsukuku *di connettività* che è *virtuale*.
@@ -409,7 +422,7 @@ Riguardo questi indirizzi Netsukuku:
                 stati selezionati dalle regole più restrittive, cioè provenienti da un MAC
                 address che il nodo non conosce.
 
-## Indirizzi del nodo
+## <a name="Indirizzi_del_nodo"/>Indirizzi del nodo
 
 Per assegnarsi un indirizzo IPv4, un nodo parte dal suo indirizzo Netsukuku, che è una sequenza di
 posizioni all'interno dei vari g-nodi di appartenenza ad ogni livello. Il nodo calcola per prima
@@ -467,7 +480,7 @@ a ognuna delle interfacce di rete che gestisce.
 
 Inoltre, prima di terminare, li rimuove da tutte le interfacce che gestisce.
 
-## Rotte nelle tabelle di routing
+## <a name="Rotte_nelle_tabelle_di_routing"/>Rotte nelle tabelle di routing
 
 Il programma deve istruire le policy di routing del sistema (che di norma significa impostare delle
 rotte nelle tabelle di routing) in modo da garantire questi comportamenti:
@@ -498,7 +511,7 @@ rotte nelle tabelle di routing) in modo da garantire questi comportamenti:
 Vediamo come queste impostazioni si configurano in un sistema Linux e quindi quali operazioni fa
 il programma *qspnclient*. Esaminiamo prima l'aspetto del source natting e poi del routing.
 
-### Source NATting
+### <a name="Source_natting"/>Source NATting
 
 Il [source NATting](https://en.wikipedia.org/wiki/Network_address_translation) in un sistema Linux
 può essere realizzato istruendo il kernel con il comando `iptables` (utilizzando una regola con
@@ -608,7 +621,7 @@ indicando come nuovo indirizzo mittente uno dei propri indirizzi, come segue:
 Quando il programma termina, se aveva istruito il kernel per fare il source natting, rimuove le regole
 che aveva messe nella catena `POSTROUTING` della tabella `nat`.
 
-### Routing
+### <a name="Routing"/>Routing
 
 In un sistema Linux le rotte vengono memorizzate in diverse tabelle. Queste tabelle hanno un
 identificativo che è un numero da 0 a 255. Hanno anche un nome descrittivo: l'associazione del
