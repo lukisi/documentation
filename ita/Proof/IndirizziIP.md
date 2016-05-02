@@ -3,8 +3,7 @@
 *   **Nota**  
     Questo documento è di pertinenza dell'utilizzatore del modulo QSPN. Quando il modulo
     QSPN comunica di aver scoperto una nuova destinazione, allora l'utilizzatore è tenuto a
-    popolare le tabelle di routing tenendo conto delle convenzioni descritte in questo documento,
-    ossia bit di rappresentazione di percorsi interni e bit di richiesta di anonimato.  
+    popolare le tabelle di routing tenendo conto delle convenzioni descritte in questo documento.  
     Ci sono riferimenti al presente documento in alcuni punti:
 
     *   Nell'analisi funzionale del modulo PeerServices si parla di "connessione TCP con un percorso interno".
@@ -12,29 +11,155 @@
     *   Nell'allegato RoutingIndirizziInterni all'analisi del modulo QSPN si fa riferimento al "documento livelli e bits".
     *   Nell'analisi funzionale del proof-of-concept si fa riferimento al "documento livelli e bits".
 
-Riserviamo un bit (quello più alto dell'indirizzo) che se è 1 significa che l'indirizzo identifica,
-univocamente all'interno di tutta la rete, una destinazione che accetta di essere contattata in forma anonima.
+## Calcolo degli indirizzi IP
 
-Riserviamo un altro bit (il secondo più alto) che se è 1 significa che l'indirizzo identifica univocamente
-una destinazione **non** all'interno di tutta la rete, bensì all'interno di un g-nodo di un determinato
-livello *i*, con 0 < *i* < *l*.
+Questo documento illustra come si calcolano gli indirizzi IP che un *nodo del grafo* vuole assegnarsi.
 
-Non possono essere impostati a 1 entrambi i suddetti bit.
+Nel documento di [analisi](AnalisiFunzionale.md) abbiamo precisato che ogni *identità* che vive in
+un nodo detiene un indirizzo Netsukuku. Ogni identità è quindi un *nodo del grafo*. Inoltre ogni
+identità può volersi assegnare zero o più indirizzi IP.
 
-Alla rappresentazione dell'identificativo nel livello più alto della gerarchia dobbiamo destinare
-un numero di bit tale da poter rappresentare tutti i livelli presenti. Cioè il *gsize* del livello
-più alto deve essere maggiore o uguale al numero di livelli totale. Questo per poter rappresentare,
-come vedremo in seguito, ogni possibile destinazione interna ad un gnodo.
+Ricordiamo inoltre, sempre dal documento di analisi, che abbiamo precisato dei vincoli nella
+scelta della topologia della rete:
 
-Facciamo l'esempio di una rete IPv4, quindi nella classe 10.0.0.0/8.
+*   La dimensione di ogni g-nodo, detta *gsize*, deve essere una potenza di 2.
+*   La somma degli esponenti di tutti i livelli (cioè il numero di bit necessari a codificare
+    un indirizzo Netsukuku *reale*) non deve superare *t* - 2, dove *t* è il numero di bit
+    a disposizione nella classe di indirizzi IP che si intende destinare alla rete Netsukuku.  
+    Ad esempio, se si destina alla rete Netsukuku la classe 10.0.0.0/8 di IPv4, tale
+    somma non deve superare il numero 22.
+*   La *gsize* del livello più alto deve essere maggiore o uguale al numero dei livelli.
 
-Abbiamo 24 bit a disposizione.
+I due bit subito più alti del numero di bit necessari a codificare un indirizzo Netsukuku *reale*
+sono riservati. Ad esempio, supponiamo di definire una topologia che sfrutta tutti i 22 bit disponibili
+nella classe 10.0.0.0/8 di IPv4. Quindi per codificare un indirizzo Netsukuku *reale* si usano i
+bit da 0 a 21. Allora questi due bit subito più alti di cui parliamo sono il 23 e il 22.
 
-Tolto 1 per le rappresentazioni interne e 1 per l'anonimato abbiamo 22 bit.
+Il numero riportato in questi due bit indica il tipo di indirizzo IP:
 
-Facciamo una rete di 4 livelli. Diamo 2 bit al livello 3, 4 bit al livello 2, 8 bit ai livelli 1 e 0.
+*   0 - In binario `|0|0|`. Indirizzo IP globale.
+*   1 - In binario `|0|1|`. Indirizzo IP interno ad un g-nodo.
+*   2 - In binario `|1|0|`. Indirizzo IP globale anonimizzante.
+*   3 - In binario `|1|1|`. Riservato ad usi futuri.
 
-Il *gsize* del livello più alto soddisfa il vincolo di essere maggiore o uguale al numero di livelli totale, cioè 4. Infatti ha 2 bit.
+Indichiamo con *l* il numero dei livelli. Indichiamo con *gsize(i)* la dimensione dei g-nodi di livello
+*i* + 1, che abbiamo detto è una potenza di 2. Indichiamo con *g-exp(i)* l'esponente della potenza
+di 2 equivalente a *gsize(i)*.
+
+Una volta scelti i valori di *l* e di *g-exp(i)* rispettando i vincoli prima ricordati, vediamo come si
+calcolano i vari tipi di indirizzo IP partendo da un indirizzo Netsukuku (di nodo o di g-nodo).
+
+### <a name="Indirizzo_globale_nodo"/>Indirizzo IP globale di un nodo
+
+Sia *n* l'indirizzo Netsukuku di un nodo. Indichiamo con *n<sub>0</sub>* l'identificativo del nodo
+all'interno del suo g-nodo di livello 1. E a seguire con *n<sub>i</sub>* l'identificativo del g-nodo di
+livello *i* a cui appartiene *n* all'interno del suo g-nodo di livello *i* + 1. L'indirizzo completo sarà
+*n<sub>l-1</sub>·...·n<sub>1</sub>·n<sub>0</sub>*.
+
+Il valore *n<sub>0</sub>* viene riportato nei bit meno significativi dell'indirizzo IP che stiamo
+componendo, cioè partendo dal bit 0 per un numero di *g-exp*(0) bit. Il valore *n<sub>1</sub>* viene
+riportato nei successivi bit, cioè partendo da *g-exp*(0) per un numero di *g-exp*(1) bit. E così di
+seguito, l'identificativo *n<sub>i</sub>* (con *i* che arriva fino a *l* - 1) viene riportato nei bit
+partendo da 𝛴 *<sub>0 ≤ k < i-1</sub>* *g-exp(k)* per un numero di *g-exp(i)* bit.
+
+I due bit più alti (quelli riservati per indicare il tipo di indirizzo IP) li impostiamo a `|0|0|`.
+
+#### Esempio
+
+Consideriamo una topologia di rete con 4 livelli. Diamo 2 bit al livello 3, 4 bit al livello 2, 8 bit
+ai livelli 1 e 0. Sono soddisfatti i due vincoli esposti sopra.
+
+Consideriamo il nodo *n* con indirizzo Netsukuku 3·10·123·45. L'indirizzo IP globale di *n* è 10.58.123.45.
+
+### <a name="Indirizzo_globale_gnodo"/>Indirizzo IP globale di un g-nodo
+
+Sia *g* l'indirizzo Netsukuku di un g-nodo di livello *i*. L'indirizzo completo sarà
+*g<sub>l-1</sub>·...·g<sub>i</sub>*.
+
+Il valore *g<sub>i</sub>* viene riportato nell'indirizzo IP che stiamo componendo partendo dal
+bit 𝛴 *<sub>0 ≤ k < i-1</sub>* *g-exp(k)* per un numero di *g-exp*(i) bit. I bit meno significativi
+sono messi a 0. Quei bit non saranno comunque presi in considerazione a causa dal prefisso di routing
+della notazione CIDR, trattandosi dell'indirizzo IP di un intero g-nodo considerato come una IP subnet.
+
+I valori dei bit più alti si calcolano come visto prima per l'indirizzo di un singolo nodo. Infine si
+aggiunge, come accennato, il prefisso di routing, ottenuto come 32 - 𝛴 *<sub>0 ≤ k < i-1</sub>* *g-exp(k)*.
+
+#### Esempio
+
+Consideriamo il nodo *n* di prima nella topologia di rete di prima. Prendiamo in esame un g-nodo che
+esso vuole indirizzare, ad esempio *g* = (2, 1) cioè il g-nodo di livello 2 e identificativo 1 che
+appartiene al suo stesso g-nodo di livello 3.
+
+L'indirizzo Netsukuku di *g* è 3·1. L'indirizzo IP globale di *g* in notazione CIDR è 10.49.0.0/16.
+
+### <a name="Indirizzo_interno_nodo"/>Indirizzo IP di un nodo interno ad un suo g-nodo
+
+Sia *n* un nodo con indirizzo *n<sub>l-1</sub>·...·n<sub>1</sub>·n<sub>0</sub>*. Sia *g* il suo g-nodo
+di livello *i* con 0 < *i* < *l*. Quindi *g* ha indirizzo *n<sub>l-1</sub>·...·n<sub>i</sub>*. Vogliamo
+comporre un indirizzo IP di *n* che sia univoco internamente a *g*.
+
+I valori da *n<sub>0</sub>* a *n<sub>i-1</sub>* sono riportati come visto prima nei relativi bit
+dell'indirizzo IP che stiamo componendo. Il valore *i* viene riportato nei bit che sarebbero stati
+destinati all'identificativo di livello più alto, cioè *n<sub>l-1</sub>*. Gli altri bit sono lasciati a 0.
+
+I due bit più alti li impostiamo a `|0|1|`.
+
+#### Esempio
+
+Consideriamo il nodo *n* di prima nella topologia di rete di prima. Aggiungiamo anche il nodo *m* con
+indirizzo Netsukuku 3·10·67·89.
+
+Fin da subito il nodo *n* si è assegnato, oltre all'indirizzo IP globale 10.58.123.45, anche l'indirizzo
+IP interno al g-nodo di livello 2, che è 10.96.123.45. Analogamente, il nodo *m* si è assegnato, oltre
+all'indirizzo IP globale 10.58.67.89, anche l'indirizzo IP interno al g-nodo di livello 2, che è 10.96.67.89.
+
+### <a name="Indirizzo_interno_gnodo"/>Indirizzo IP di un g-nodo interno al suo g-nodo direttamente superiore
+
+Sia *g* un g-nodo di livello *i* con indirizzo *g<sub>l-1</sub>·...·g<sub>i</sub>* con *i* < *l* - 1.
+Sia *h* il suo g-nodo di livello *i* + 1. Quindi *h* ha indirizzo *g<sub>l-1</sub>·...·g<sub>i+1</sub>*.
+Vogliamo comporre un indirizzo IP in notazione CIDR di *g* che sia univoco internamente a *h*.
+
+Il valore di *g<sub>i</sub>* è riportato come visto prima nei relativi bit dell'indirizzo IP che stiamo
+componendo. Il valore *i* + 1 viene riportato nei bit che sarebbero stati destinati all'identificativo di
+livello più alto, cioè *g<sub>l-1</sub>*. Gli altri bit sono lasciati a 0.
+
+I due bit più alti li impostiamo a `|0|1|`.
+
+#### Esempio
+
+Consideriamo i nodi *n* e *m* di prima. Dal punto di vista di *n*, il nodo *m* si trova nel g-nodo
+*g* 3·10·67 che ha in comune con lui il g-nodo direttamente superiore *h* 3·10.
+
+Il g-nodo *g* all'interno di *h* viene individuato con l'indirizzo IP 10.96.67.0/24. Questo significa che
+il nodo *n* ha nelle tabelle di routing una rotta per 10.96.67.0/24 che scaturisce dal percorso che gli è
+noto verso la destinazione *g*. Quindi, se il nodo *n* trasmette un pacchetto IP all'indirizzo 10.96.67.89
+(che *m* si era assegnato nell'esempio sopra) tale pacchetto prende quella rotta.
+
+### <a name="Indirizzo_anonimizzante"/>Indirizzo IP di un nodo o g-nodo contattabile in forma anonima
+
+Sia *n* un nodo con indirizzo *n<sub>l-1</sub>·...·n<sub>1</sub>·n<sub>0</sub>*. Vogliamo comporre
+un indirizzo IP per tale risorsa tale che un client lo possa usare per contattare il nodo mantenendo
+l'anonimato. Chiamiamo un tale indirizzo *anonimizzante*.
+
+I valori da *n<sub>0</sub>* a *n<sub>l-1</sub>* sono riportati come visto prima nei relativi bit
+dell'indirizzo IP che stiamo componendo.
+
+I due bit più alti li impostiamo a `|1|0|`.
+
+Nel caso di un g-nodo, per produrre un indirizzo anonimizzante in notazione CIDR si procede in modo
+analogo, aggiungendo il prefisso come visto prima.
+
+#### Esempio
+
+Consideriamo il nodo *n* di prima. L'indirizzo IP globale anonimizzante di *n* è 10.186.123.45.
+
+Se il nodo *n* ammette la possibilità di venire contattato in forma anonima (questa è una sua scelta) si
+assegna anche questo indirizzo.
+
+## Dimensione massima della mappa di un nodo del grafo
+
+Prendiamo in esame l'esempio di topologia usato sopra. Cioè una rete con 4 livelli. In essa abbiamo
+2 bit al livello 3, 4 bit al livello 2, 8 bit ai livelli 1 e 0.
 
 Gli indirizzi validi sono 2<sup>22</sup>, cioè circa 4 milioni.
 
@@ -50,40 +175,27 @@ in quanto il suo stesso g-nodo di livello 1 non sarà mai una destinazione. Allo
 0 è 256; ma per tale livello ogni nodo dovrà memorizzare al massimo 255 diversi singoli nodi destinazione
 in quanto esso stesso non sarà mai una destinazione.
 
-Per ogni destinazione di cui viene a conoscenza il protocollo memorizzerà
-un massimo di *k* percorsi disgiunti. Solo il migliore di essi verrà riportato nelle tabelle di
-routing del kernel, indicando il solo gateway.
-
-**Nota:** Questo esempio è volutamente semplice. Il numero di possibili indirizzi Netsukuku di
+**Nota:** La topologia portata ad esempio qui sopra era volutamente semplice. Il numero di possibili indirizzi Netsukuku di
 destinazione rimane molto alto. La suddivisione ottimale (che riduce al minimo tale numero) verrà descritta dopo.
-
-Ogni indirizzo Netsukuku di destinazione, cioè ogni g-nodo di livello *i* con 0 ≤ *i* < *l*, verrà
-riportato nelle tabelle del kernel come indirizzo IP in 3 forme:
-
-*   (A) Come indirizzo senza anonimato, univoco a livello globale.
-*   (B) Come indirizzo senza anonimato, univoco all'interno del gnodo di livello *i* + 1. Questa forma
-    non si applicherà alle destinazioni di livello *i* = *l* - 1.
-*   (C) Come indirizzo con richiesta di anonimato, univoco a livello globale.
-
-Gli indirizzi (C) hanno, come detto, il bit più alto impostato a 1 e il secondo bit più alto
-impostato a 0. Gli altri bit compongono l'indirizzo di una destinazione identificata univocamente
-all'interno di tutta la rete.
-
-Gli indirizzi (B) hanno il bit più alto impostato a 0 e il secondo bit più alto impostato a 1. Il
-numero codificato nei successivi 2 bit è un intero *k*, con 0 < *k* < *l*. Gli altri bit compongono
-l'indirizzo di una destinazione identificata univocamente all'interno del gnodo di livello *k*.
 
 ## Esempio
 
+Abbiamo già descritto nel documento di analisi quali sono i tipi di indirizzo IP che un
+*nodo del grafo* assegna a se stesso sulla base del suo indirizzo Netsukuku. Abbiamo anche visto quali
+indirizzi IP vengono aggiunti come destinazioni nelle tabelle di routing del kernel sulla
+base delle conoscenze nella sua mappa.
+
+Riportiamo un esempio di questi calcoli.
+
 Prendiamo 3 nodi. Il nodo *n* è quello di cui esaminiamo le tabelle di  routing. Il nodo *m* è un
-nodo con cui *n* ha un qualche gnodo in comune. Il nodo *o* è un nodo con cui *n* non ha in comune nemmeno
-il gnodo più alto. Vediamo quali informazioni mantiene il nodo *n*.
+nodo con cui *n* ha un qualche g-nodo in comune. Il nodo *o* è un nodo con cui *n* non ha in comune nemmeno
+il g-nodo più alto. Vediamo quali informazioni mantiene il nodo *n*.
 
 ### Nodo *n*
 
 Per il nodo *n* sia l'indirizzo Netsukuku 3·5·241·79.
 
-Computiamo il nostro IP globale e i 3 IP validi internamente ad un gnodo.
+Computiamo il nostro IP globale e i 3 IP validi internamente ad un g-nodo.
 
 ```
 Globale di *n*:
@@ -94,25 +206,25 @@ Globale di *n*:
   79                                                   0 1 0 0 1 1 1 1
  = 10.53.241.79
 
-Interno di *n* nel suo gnodo di livello 3:
+Interno di *n* nel suo g-nodo di livello 3:
 [0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello gnodo        1 1
+  livello g-nodo       1 1
    5                       0 1 0 1
  241                                 1 1 1 1 0 0 0 1
   79                                                   0 1 0 0 1 1 1 1
  = 10.117.241.79
 
-Interno di *n* nel suo gnodo di livello 2:
+Interno di *n* nel suo g-nodo di livello 2:
 [0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello gnodo        1 0
+  livello g-nodo       1 0
    N/A                     0 0 0 0
  241                                 1 1 1 1 0 0 0 1
   79                                                   0 1 0 0 1 1 1 1
  = 10.96.241.79
 
-Interno di *n* nel suo gnodo di livello 1:
+Interno di *n* nel suo g-nodo di livello 1:
 [0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello gnodo        0 1
+  livello g-nodo       0 1
    N/A                     0 0 0 0
    N/A                               0 0 0 0 0 0 0 0
   79                                                   0 1 0 0 1 1 1 1
@@ -130,7 +242,7 @@ Interno di *n* nel suo gnodo di livello 1:
 
 Per il nodo *m* sia l'indirizzo Netsukuku 3·5·14·204.
 
-Computiamo il suo indirizzo IP globale e quello interno al gnodo di livello 2 (quello in comune con *n*).
+Computiamo il suo indirizzo IP globale e quello interno al g-nodo di livello 2 (quello in comune con *n*).
 
 ```
 Globale di *m*:
@@ -141,17 +253,17 @@ Globale di *m*:
  204                                                   1 1 0 0 1 1 0 0
  = 10.53.14.204
 
-Interno di *m* nel suo gnodo di livello 2:
+Interno di *m* nel suo g-nodo di livello 2:
 [0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello gnodo        1 0
+  livello g-nodo       1 0
    N/A                     0 0 0 0
   14                                 0 0 0 0 1 1 1 0
  204                                                   1 1 0 0 1 1 0 0
  = 10.96.14.204
 ```
 
-Quando *n* riceve un ETP che contiene il gnodo con *m* esso lo vede come (1, 14) cioè come gnodo *g*
-di livello 1 appartenente al suo stesso gnodo di livello 2 e con identificativo 14 (a livello 1).
+Quando *n* riceve un ETP che contiene il g-nodo con *m* esso lo vede come (1, 14) cioè come g-nodo *g*
+di livello 1 appartenente al suo stesso g-nodo di livello 2 e con identificativo 14 (a livello 1).
 
 Per il g-nodo *g* l'indirizzo Netsukuku è 3·5·14.
 
@@ -165,9 +277,9 @@ Globale di *g*:
   14                                 0 0 0 0 1 1 1 0
  = 10.53.14.0/24
 
-Interno di *g* nel suo gnodo di livello 2:
+Interno di *g* nel suo g-nodo di livello 2:
 [0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[0|0|0|0|0|0|0|0]
-  livello gnodo        1 0
+  livello g-nodo       1 0
    N/A                     0 0 0 0
   14                                 0 0 0 0 1 1 1 0
  = 10.96.14.0/24
@@ -186,14 +298,14 @@ Quando il nodo *n* richiede la risoluzione del nome "morfeo.ntk" il resolver cer
 ANDNA il nome "morfeo" e trova l'indirizzo Netsukuku 3·5·14·204.
 
 Invece di computare il relativo indirizzo IP globale 10.53.14.204, il resolver vede rispetto al proprio indirizzo
-Netsukuku (quello dell'identità principale) qual'è il minimo comune gnodo (in questo caso 2) e computa
-il relativo indirizzo IP interno in quel gnodo: 10.96.14.204.
+Netsukuku (quello dell'identità principale) qual'è il minimo comune g-nodo (in questo caso 2) e computa
+il relativo indirizzo IP interno in quel g-nodo: 10.96.14.204.
 
 Questo nella route table corrisponde a 10.96.14.0/24 quindi *n* manda il pacchetto al suo gateway
 indicando come proprio IP 10.96.241.79.
 
 Una volta realizzata una connessione TCP tra questi due indirizzi IP, questa connessione continuerebbe a funzionare anche
-se un gnodo di livello superiore migrasse, anche gradualmente un nodo alla volta, ad un altra posizione di pari livello.
+se un g-nodo di livello superiore migrasse, anche gradualmente un nodo alla volta, ad un altra posizione di pari livello.
 
 Ad esempio se il g-nodo 3·5 migrasse dal g-nodo 3 al g-nodo 1 assumendo in esso l'identificativo 1·2.
 Oppure se il g-nodo 3 in blocco facesse ingresso in una diversa rete assumendo in essa l'identificativo (di livello 3) 1.
@@ -216,7 +328,7 @@ Globale di *o*:
  = 10.42.237.242
 ```
 
-Quando *n* riceve un ETP che contiene il gnodo con *o* esso lo vede come (3, 2) cioè come gnodo *h*
+Quando *n* riceve un ETP che contiene il g-nodo con *o* esso lo vede come (3, 2) cioè come g-nodo *h*
 di livello 3 con identificativo 2.
 
 Per il g-nodo *h* l'indirizzo Netsukuku è 2.
@@ -247,16 +359,7 @@ Per esempio il nodo *n*:
 *   Aggiunge la rotta `10.160.0.0/12 src 10.53.241.79`.
 
 Infine, i nodi che sono disposti a anonimizzare i vicini che ne fanno richiesta, impostano le regole di
-masquerade del firewall. Precisamente, i pacchetti da inoltrare verso 10.128.0.0/10 vanno mascherati
-(Source NATting). Naturalmente anche il pacchetto inoltrato avrà codificata la richiesta di essere anonimizzato negli hop successivi.
-
-Quando il nodo *n* vuole contattare un server in forma anonima, lo può fare se il server accetta di
-essere contattato con un indirizzo *anonimizzante*. In questo caso *n* invia i suoi pacchetti a tale
-indirizzo. Durante il tragitto tutti gli hop disposti a farlo maschereranno il source IP.
-
-Quest'ultima impostazione (sulle regole di masquerade del firewall) è facoltativa. Se un nodo con poche
-risorse di memoria, ad esempio, non vuole mascherare i pacchetti che inoltra, comunque l'operazione avrà
-l'effetto desiderato se qualcuno degli hop durante il percorso sarà disposto a farlo.
+masquerade del firewall come descritto nel documento di analisi.
 
 ## Disposizione ottimale
 
