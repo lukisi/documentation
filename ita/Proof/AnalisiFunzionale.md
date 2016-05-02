@@ -329,7 +329,7 @@ Se è *reale*, riguardo questo indirizzo Netsukuku *n*:
             un percorso verso *d*.
         *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
             *   Il nodo imposta una rotta in *inoltro* verso *d<sub>g</sub>* per i pacchetti
-                provenienti da *m*. In essa l'indirizzo usato come *src* è l'indirizzo IP globale di *n*.  
+                provenienti da *m*.  
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
                 destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
                 La destinazione *d<sub>g</sub>* può essere "non raggiungibile" per i pacchetti
@@ -347,7 +347,7 @@ Se è *reale*, riguardo questo indirizzo Netsukuku *n*:
             destinazione. La destinazione *d<sub>g</sub>* non può essere "non raggiungibile".
         *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
             *   Il nodo imposta una rotta in *inoltro* verso *d<sub>a</sub>* per i pacchetti
-                provenienti da *m*. In essa l'indirizzo usato come *src* è l'indirizzo IP globale di *n*.  
+                provenienti da *m*.  
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
                 destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
                 La destinazione *d<sub>g</sub>* può essere "non raggiungibile" per i pacchetti
@@ -362,7 +362,7 @@ Se è *reale*, riguardo questo indirizzo Netsukuku *n*:
             destinazione. La destinazione *d<sub>g</sub>* non può essere "non raggiungibile".
         *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
             *   Il nodo imposta una rotta in *inoltro* verso *d<sub>i</sub>* per i pacchetti
-                provenienti da *m*. In essa l'indirizzo usato come *src* è l'indirizzo IP interno al livello *j* + 1 di *n*.  
+                provenienti da *m*.  
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
                 destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
                 La destinazione *d<sub>i</sub>* può essere "non raggiungibile" per i pacchetti
