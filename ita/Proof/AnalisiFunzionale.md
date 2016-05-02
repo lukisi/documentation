@@ -540,33 +540,11 @@ In questo caso, riguardo questo indirizzo Netsukuku *n*:
             Viene impostata la rotta identificata dal miglior percorso noto per quella
             destinazione. La destinazione *d<sub>i</sub>* non può essere "non raggiungibile".
 
-## <a name="Indirizzi_del_nodo"/>Indirizzi del nodo
+## <a name="Indirizzi_del_nodo"/>Indirizzi IP di ogni identità nel nodo
 
-Per assegnarsi un indirizzo IPv4, un nodo parte dal suo indirizzo Netsukuku, che è una sequenza di
-posizioni all'interno dei vari g-nodi di appartenenza ad ogni livello. Il nodo calcola per prima
-cosa il suo indirizzo globale *N*, che è un indirizzo IPv4 che identificherà in modo univoco quel
-nodo in tutta la rete.
-
-Poi il nodo calcola un indirizzo *N<sub>i</sub>*, che è sempre un indirizzo IPv4, che identificherà
-in modo univoco quel nodo nel suo g-nodo di livello *i*; questo per ogni *i* da 1 a *l* - 1.
-
-Tutti questi indirizzi il nodo se li assegna.
-
-Inoltre, opzionalmente, il nodo può calcolare per ognuno di questi indirizzi (*N*, *N<sub>1</sub>*,
-*N<sub>2</sub>*, ...) un altro indirizzo corrispettivo per i pacchetti che gli sono destinati in
-*forma anonima*. Si tratta sempre di ulteriori indirizzi IPv4 che identificano questo nodo in modo
-univoco (a livello globale o all'interno di un suo g-nodo). Questi però saranno usati, come vedremo
-in seguito, dai client per contattare questo nodo senza rivelare il proprio indirizzo. Il nodo quindi
-può assegnarsi questi indirizzi oppure no. Se lo fa significa che vuole dare la possibilità ai client
-di usare questo meccanismo per contattarlo e fargli richieste senza essere identificati.
-
-L'opzione di accettare richieste anonime è distinta e indipendente dall'opzione di rendere anonimi
-i pacchetti che transitano per il nodo nel percorso verso un'altra destinazione. Quest'altra opzione verrà
-discussa in seguito.
-
-In un altro documento viene spiegato come questi indirizzi vengono calcolati a partire dall'indirizzo Netsukuku. **TODO**
-
-* * *
+Come abbiamo visto prima, in un nodo possono esistere diverse identità. Ogni identità detiene un
+indirizzo Netsukuku. A seconda del tipo, sulla base del suo indirizzo Netsukuku ogni identità
+può volersi assegnare zero o più indirizzi IPv4.
 
 Vediamo come queste impostazioni si configurano in un sistema Linux e quindi quali operazioni fa il programma *qspnclient*.
 
@@ -580,10 +558,10 @@ Si noti che il fatto di associare un indirizzo IP ad una specifica interfaccia d
 ha la sua importanza in relazione al protocollo di risoluzione degli indirizzi IP in
 indirizzi MAC ([Address Resolution Protocol](https://en.wikipedia.org/wiki/Address_Resolution_Protocol)).
 Infatti quando un nodo *a* vuole trasmettere un pacchetto IP ad un suo diretto vicino *b*, esso conosce
-l'indirizzo IP di *b* e l'interfaccia di rete di *a* dove trasmettere. Il nodo *a* trasmette in broadcast
+l'indirizzo IP di *b* e l'interfaccia di rete di *a* dove trasmettere. Il nodo *a* trasmette un frame Ethernet broadcast
 su quel segmento di rete una richiesta: «chi ha l'indirizzo IP XYZ?». Il nodo *b* risponde indicando al
 nodo *a* l'indirizzo MAC della sua interfaccia di rete. Quindi il nodo *a* può incapsulare il pacchetto
-IP in un frame Ethernet che riporta gli indirizzi MAC dell'interfaccia che trasmette e dell'interfaccia che deve ricevere.
+IP in un frame Ethernet unicast che riporta gli indirizzi MAC dell'interfaccia che trasmette e dell'interfaccia che deve ricevere.
 
 Se il nodo *b* ha diverse interfacce di rete tutte collegate allo stesso segmento di rete, il fatto
 di associare diversi indirizzi IP a diverse interfacce può fornire un modo di identificare una precisa
@@ -593,10 +571,11 @@ su ogni interfaccia e sulle pseudo-interfacce.
 
 Fatta questa premessa, come si comporta il programma?
 
-Il programma, all'avvio, computa tutti i suoi indirizzi (nello spazio Netsukuku) e li associa tutti
-a ognuna delle interfacce di rete che gestisce.
+Il programma *qspnclient*, quando crea una *identità*, a seconda del tipo di identità e del suo indirizzo
+Netsukuku, come visto prima, computa gli indirizzi IP che si deve assegnare e li associa tutti
+a ognuna delle interfacce di rete che gestisce quell'identità.
 
-Inoltre, prima di terminare, li rimuove da tutte le interfacce che gestisce.
+Inoltre, prima di rimuovere una identità, li rimuove da tutte le interfacce che gestisce quell'identità.
 
 ## <a name="Rotte_nelle_tabelle_di_routing"/>Rotte nelle tabelle di routing
 
