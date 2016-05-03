@@ -469,23 +469,28 @@ Inoltre, prima di rimuovere una identità, li rimuove da tutte le interfacce che
 Il programma deve istruire le policy di routing del sistema (che di norma significa impostare delle
 rotte nelle tabelle di routing) in modo da garantire questi comportamenti:
 
-*   Se un processo locale vuole inviare un pacchetto ad un indirizzo *d* nello spazio di Netsukuku:
+*   Se un processo locale vuole inviare un pacchetto ad un indirizzo IP *x* nello spazio destinato alla rete Netsukuku:
+    *   L'indirizzo IP *x* identifica un indirizzo Netsukuku reale *d*. Può trattarsi di un
+        indirizzo IP globale, globale anonimizzante o interno.
     *   Se il modulo QSPN non ha alcun percorso verso la destinazione *d*:
         *   Il sistema non trova nelle tabelle del kernel alcuna rotta e segnala al processo
-            che la destinazione *d* è irraggiungibile.
+            che la destinazione *x* è irraggiungibile.
     *   Altrimenti:
         *   Il sistema trova nelle tabelle del kernel una rotta il cui gateway è costituito dal
             primo hop del miglior percorso (fra tutti quelli che il modulo QSPN ha scoperto) verso
             la destinazione *d*.
-*   Se un pacchetto è ricevuto da un vicino *v* ed è destinato ad un altro indirizzo *d* nello spazio di Netsukuku:
+*   Se un pacchetto è ricevuto da un vicino *v* ed è destinato ad un indirizzo IP *x* nello spazio
+    destinato alla rete Netsukuku che non è un indirizzo IP del nodo:
+    *   L'indirizzo IP *x* identifica un indirizzo Netsukuku reale *d*. Può trattarsi di un
+        indirizzo IP globale, globale anonimizzante o interno.
     *   Se il modulo QSPN non ha alcun percorso verso la destinazione *d*, tale che non contenga
         fra i suoi hop il *massimo distinto g-nodo* del vicino *v*:
         *   Il sistema non trova nelle tabelle del kernel alcuna rotta; quindi scarta il pacchetto
-            e invia un pacchetto ICMP «host *d* irraggiungibile» al mittente.
+            e invia un pacchetto ICMP «host *x* irraggiungibile» al mittente.
     *   Altrimenti:
         *   Il sistema trova nelle tabelle del kernel una rotta il cui gateway è costituito dal primo
             hop per il miglior percorso verso la destinazione *d*, tale che non contenga il g-nodo del vicino.
-        *   Se l'indirizzo *d* è nello spazio di indirizzi che codificano la richiesta di anonimato:
+        *   Se l'indirizzo IP *x* è globale anonimizzante:
             *   Opzionalmente, il sistema trova una regola che gli impone di mascherare l'indirizzo
                 del mittente (cioè di indicare se stesso come mittente e inoltrare le comunicazioni di
                 risposta che riceverà al vero mittente).
