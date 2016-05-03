@@ -62,7 +62,7 @@ Il valore *n<sub>0</sub>* viene riportato nei bit meno significativi dell'indiri
 componendo, cioè partendo dal bit 0 per un numero di *g-exp*(0) bit. Il valore *n<sub>1</sub>* viene
 riportato nei successivi bit, cioè partendo da *g-exp*(0) per un numero di *g-exp*(1) bit. E così di
 seguito, l'identificativo *n<sub>i</sub>* (con *i* che arriva fino a *l* - 1) viene riportato nei bit
-partendo da 𝛴 *<sub>0 ≤ k < i-1</sub>* *g-exp(k)* per un numero di *g-exp(i)* bit.
+partendo da 𝛴 *<sub>0 ≤ k ≤ i-1</sub>* *g-exp(k)* per un numero di *g-exp(i)* bit.
 
 I due bit più alti (quelli riservati per indicare il tipo di indirizzo IP) li impostiamo a `|0|0|`.
 
@@ -79,12 +79,12 @@ Sia *g* l'indirizzo Netsukuku di un g-nodo di livello *i*. L'indirizzo completo 
 *g<sub>l-1</sub>·...·g<sub>i</sub>*.
 
 Il valore *g<sub>i</sub>* viene riportato nell'indirizzo IP che stiamo componendo partendo dal
-bit 𝛴 *<sub>0 ≤ k < i-1</sub>* *g-exp(k)* per un numero di *g-exp*(i) bit. I bit meno significativi
+bit 𝛴 *<sub>0 ≤ k ≤ i-1</sub>* *g-exp(k)* per un numero di *g-exp*(i) bit. I bit meno significativi
 sono messi a 0. Quei bit non saranno comunque presi in considerazione a causa dal prefisso di routing
 della notazione CIDR, trattandosi dell'indirizzo IP di un intero g-nodo considerato come una IP subnet.
 
 I valori dei bit più alti si calcolano come visto prima per l'indirizzo di un singolo nodo. Infine si
-aggiunge, come accennato, il prefisso di routing, ottenuto come 32 - 𝛴 *<sub>0 ≤ k < i-1</sub>* *g-exp(k)*.
+aggiunge, come accennato, il prefisso di routing, ottenuto come 32 - 𝛴 *<sub>0 ≤ k ≤ i-1</sub>* *g-exp(k)*.
 
 #### Esempio
 
