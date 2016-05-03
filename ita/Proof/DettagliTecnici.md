@@ -68,6 +68,21 @@ Per comodità, il programma *qspnclient* assume che la topologia di rete usata s
 nodi che prendono parte al testbed. Questo significa che quando l'utente richiederà l'ingresso di un nodo
 in una diversa rete (vedere sotto il comando interattivo *enter_net*) la topologia non dovrà essere di nuovo specificata.
 
+Quando si forma una nuova identità (qui e anche con il comando interattivo *add_identity*) il programma *qspnclient*
+crea una istanza della classe *LinuxRoute* con la quale intende gestire gli aspetti delle routing
+policy nel network namespace associato a quella identità.
+
+Quando viene creata una istanza di QspnManager (qui e anche con il comando interattivo *enter_net*)
+come prima operazione con la classe *LinuxRoute* appena istanziata il programma *qspnclient* assegna al nodo
+(nell'ambito del network namespace associato a questa identità) gli indirizzi IP che servono. In questo
+caso specifico del costruttore *create_net*, siamo di fronte ad una identità principale che detiene un
+indirizzo Netsukuku *reale* *n*. Quindi il programma assegna al nodo:
+
+*   L'indirizzo IP globale di *n*.
+*   L'indirizzo IP globale anonimizzante di *n*.
+*   Per tutti i livelli *j* da 0 a *l* - 2 (indicando con *l* il numero dei livelli della topologia):
+    *   L'indirizzo IP interno al livello *j* + 1 di *n*.
+
 * * *
 
 Quando il programma riceve dal modulo Neighborhood la notifica che un arco è stato realizzato, esso mostra
@@ -137,6 +152,12 @@ Come risultato viene creata una nuova identità nel nodo A. Il nuovo NodeID vien
 dalla chiamata *add_identity*. Il programma associa tale NodeID al prossimo valore dell'indice
 autoincrementante *nodeid_nextindex*, nel dizionario *nodeids*. In questo esempio sia 1.
 
+Ricordiamo che ad ogni identità il programma *qspnclient* associa una istanza di *LinuxRoute* per
+gestire le routing policy nel relativo network namespace. Qui la vecchia identità passa a gestire
+un nuovo network namespace e la nuova identità inizia a gestire il vecchio network namespace. Questo
+comporta che il programma *qspnclient* deve creare una nuova istanza di *LinuxRoute* e fare in
+modo che le due istanze si scambino il network namespace di riferimento.
+
 Inoltre avverrà anche che nel nodo B si rileva la creazione di un nuovo arco-identità tra l'identità che
 già era in B e la nuova identità in A. Verrà mostrato a video nella console del programma in esecuzione
 nel nodo B insieme al relativo indice di *identityarcs*. In questo esempio sia 1.
@@ -175,7 +196,14 @@ interattivo *enter_net*) per chiamare il costruttore *enter_net* di QspnManager 
 *   `List<string> idarc_address_set`. Una lista compagna della precedente, con i relativi indirizzi
     Netsukuku dei vicini collegati da questi archi. In questo esempio ["4.1.0.1"].
 
-Allo stesso momento — o per lo meno in tempi molto rapidi perché il modulo QSPN prevede un tempo massimo
+Subito dopo aver costruito la nuova istanza di QspnManager, il comando interattivo *enter_net*
+per mezzo delle istanze di *LinuxRoute* associate alle due identità esegue queste operazioni:
+
+*   La vecchia identità rimuove dal suo vecchio network namespace i relativi indirizzi IP.
+*   La nuova identità si assegna nel network namespace (precedentemente gestito dalla vecchia) i relativi indirizzi IP.
+*   La vecchia identità si assegna nel suo nuovo network namespace i relativi indirizzi IP.
+
+Successivamente — ma in tempi molto rapidi perché il modulo QSPN prevede un tempo massimo
 di rilevamento dell'arco, che è fissato dal programma *qspnclient* a 10 secondi — sulla console del nodo
 B il programma *qspnclient* deve essere istruito dall'utente ad aggiungere un IQspnArc al suo QspnManager
 con il metodo *arc_add*. Le informazioni da dare (nel comando interattivo *add_qspnarc*) per questo sono:
