@@ -6,7 +6,7 @@
 1.  [Identità](#Identita)
     1.  [Identità principale](#Identita_principale)
     1.  [Identità di connettività](#Identita_di_connettivita)
-1.  [Indirizzi del nodo](#Indirizzi_del_nodo)
+1.  [Indirizzi IP di ogni identità nel nodo](#Indirizzi_del_nodo)
 1.  [Rotte nelle tabelle di routing](#Rotte_nelle_tabelle_di_routing)
     1.  [Source NATting](#Source_natting)
     1.  [Routing](#Routing)
@@ -193,10 +193,10 @@ Netsukuku *definitivo* che può essere *reale* o *virtuale*.
 
 Se è *reale*, riguardo questo indirizzo Netsukuku *n*:
 
-*   Il nodo si assegna, su ogni interfaccia gestita, l'indirizzo IP globale di *n*.
-*   Il nodo può (opzionalmente) assegnarsi, su ogni interfaccia gestita, l'indirizzo IP globale anonimizzante di *n*.
+*   Il nodo si assegna l'indirizzo IP globale di *n*.
+*   Il nodo può (opzionalmente) assegnarsi l'indirizzo IP globale anonimizzante di *n*.
 *   Per ogni livello *j* da 0 a *l* - 1:
-    *   Il nodo si assegna, su ogni interfaccia gestita, l'indirizzo IP interno al livello *j* + 1 di *n*
+    *   Il nodo si assegna l'indirizzo IP interno al livello *j* + 1 di *n*
         (non quando *j* + 1 = *l*; in quel caso abbiamo solo l'indirizzo IP globale).
     *   Per ogni g-nodo *d* di livello *j* che il nodo conosce, e solo quelli la cui
         componente (a livello *j*) è *reale*:
@@ -266,7 +266,7 @@ In questo caso, riguardo questo indirizzo Netsukuku *n*:
 *   NON esiste un indirizzo IP globale di *n*.
 *   NON esiste un indirizzo IP globale anonimizzante di *n*.
 *   Per ogni livello *j* da 0 a *i*-1:
-    *   Il nodo si assegna, su ogni interfaccia gestita, l'indirizzo IP interno al livello *j* + 1 di *n*.
+    *   Il nodo si assegna l'indirizzo IP interno al livello *j* + 1 di *n*.
     *   Per ogni g-nodo *d* di livello *j* che il nodo conosce, e solo quelli la cui
         componente (a livello *j*) è *reale*:
         *   Il nodo computa questi indirizzi IP:
@@ -449,7 +449,8 @@ su quel segmento di rete una richiesta: «chi ha l'indirizzo IP XYZ?». Il nodo 
 nodo *a* l'indirizzo MAC della sua interfaccia di rete. Quindi il nodo *a* può incapsulare il pacchetto
 IP in un frame Ethernet unicast che riporta gli indirizzi MAC dell'interfaccia che trasmette e dell'interfaccia che deve ricevere.
 
-Se il nodo *b* ha diverse interfacce di rete tutte collegate allo stesso segmento di rete, il fatto
+Se il nodo *b* ha diverse interfacce di rete (all'interno di un unico network namespace) tutte
+collegate allo stesso segmento di rete, il fatto
 di associare diversi indirizzi IP a diverse interfacce può fornire un modo di identificare una precisa
 interfaccia di rete a cui un pacchetto va trasmesso. Questo è usato dal modulo Qspn per distinguere
 i pacchetti che vanno ricevuti da una pseudo-interfaccia, per questo gli indirizzi link-local sono diversi
@@ -537,68 +538,25 @@ L'opzione di rendere anonimi i pacchetti che transitano per il nodo nel percorso
     di memoria venissero meno, in questo caso la comunicazione in corso ne verrebbe compromessa.
 
 Se il nodo decide di implementare il source natting, calcola lo spazio di indirizzi che indicano una
-risorsa da raggiungere in forma anonima. Una volta calcolato il numero di bit necessari a ricoprire i vari
-livelli della nostra rete -si rilegga il paragrafo sopra sullo spazio di indirizzi Netsukuku- vanno considerati
-altri 2 bit in testa; il primo di questi va impostato e tutti gli altri sono liberi. Se ad esempio si usano
-tutti i 22 bit a disposizione per gli indirizzi, allora il range di indirizzi che indicano una risorsa da
-raggiungere in forma anonima è 10.128.0.0/9.
+risorsa da raggiungere in forma anonima. Una volta calcolato il numero di bit necessari a codificare
+un indirizzo Netsukuku *reale* nella topologia della nostra rete, va considerato che nei successivi
+2 bit in testa va codificato (per gli indirizzi IP globali *anonimizzanti*) il numero 2, in binario `|1|0|`.
 
-Poi il range viene ulteriormente scomposto in un numero di sottoclassi pari al numero dei livelli nella
-rete. Il primo blocco costituisce gli indirizzi globali delle risorse da raggiungere in forma anonima; si
-caratterizza per avere NON impostato il secondo bit. Nel nostro esempio, il range di questo blocco è 10.128.0.0/10.
+Facciamo un esempio. Supponiamo di destinare alla rete Netsukuku tutta la classe 10.0.0.0/8 di IPv4.
+Consideriamo una topologia di rete con 4 livelli. Diamo 2 bit al livello 3, 4 bit al livello 2, 8 bit
+ai livelli 1 e 0. Sono soddisfatti i vincoli esposti sopra.
 
-Prendiamo ora ogni livello *i* della nostra rete, da 1 a *l* - 1 inclusi, dove *l* è il numero di
-livelli. Il blocco del livello *i* costituisce gli indirizzi interni al nostro g-nodo di livello *i* delle
-risorse (interne al suddetto g-nodo) da raggiungere in forma anonima; si caratterizza per avere impostato
-il secondo bit e per avere codificato il numero *i* nei bit destinati all'identificativo del livello più alto.
+In questo esempio, il range di indirizzi che individuano a livello globale una risorsa da
+raggiungere in forma anonima è `10.128.0.0/10`.
 
-Riprendiamo il nostro esempio e supponiamo che ci siano nella rete 10 livelli e il più alto abbia
-dimensione 16, vale a dire gsize(9) = 16, g-exp(9) = 4. Allora il blocco del livello *i* ha impostato
-il primo e il secondo bit ed ha codificato il numero *i* nei 4 bit dalla posizione 3 alla 6 incluse. Questi sono quindi i blocchi:
+Supponiamo che l'indirizzo Netsukuku del nostro nodo in questa topologia sia 3·10·123·45.
+L'indirizzo IP globale del nodo è 10.58.123.45. L'indirizzo IP globale *anonimizzante* del nodo è 10.186.123.45.
+
+Allora il programma istruisce il kernel di modificare i pacchetti destinati al range `10.128.0.0/10`
+indicando come nuovo indirizzo mittente il suo indirizzo globale (non quello *anonimizzante*). Il comando è il seguente:
 
 ```
- . 10.196.0.0/14
- . 10.200.0.0/14
- . 10.204.0.0/14
- . 10.208.0.0/14
- . 10.212.0.0/14
- . 10.216.0.0/14
- . 10.220.0.0/14
- . 10.224.0.0/14
- . 10.228.0.0/14
-```
-
-Supponiamo ora che il nostro nodo sia nel g-nodo di livello 9 con posizione 5 e, per semplicità,
-supponiamo posizione 0 a tutti gli altri livelli. Quindi -si rilegga il paragrafo sopra sugli
-indirizzi del nodo- il nostro nodo ha assegnati a se questi indirizzi (in forma non anonima):
-
-```
- . 10.20.0.0 (come indirizzo globale)
- . 10.68.0.0 (come interno al suo g-nodo di livello 1)
- . 10.72.0.0
- . 10.76.0.0
- . 10.80.0.0
- . 10.84.0.0
- . 10.88.0.0
- . 10.92.0.0
- . 10.96.0.0
- . 10.100.0.0 (come interno al suo g-nodo di livello 9)
-```
-
-Allora il programma istruisce il kernel di modificare i pacchetti destinati ai seguenti range
-indicando come nuovo indirizzo mittente uno dei propri indirizzi, come segue:
-
-```
-   iptables -t nat -A POSTROUTING -d 10.128.0.0/10 -j SNAT --to 10.20.0.0
-   iptables -t nat -A POSTROUTING -d 10.196.0.0/14 -j SNAT --to 10.68.0.0
-   iptables -t nat -A POSTROUTING -d 10.200.0.0/14 -j SNAT --to 10.72.0.0
-   iptables -t nat -A POSTROUTING -d 10.204.0.0/14 -j SNAT --to 10.76.0.0
-   iptables -t nat -A POSTROUTING -d 10.208.0.0/14 -j SNAT --to 10.80.0.0
-   iptables -t nat -A POSTROUTING -d 10.212.0.0/14 -j SNAT --to 10.84.0.0
-   iptables -t nat -A POSTROUTING -d 10.216.0.0/14 -j SNAT --to 10.88.0.0
-   iptables -t nat -A POSTROUTING -d 10.220.0.0/14 -j SNAT --to 10.92.0.0
-   iptables -t nat -A POSTROUTING -d 10.224.0.0/14 -j SNAT --to 10.96.0.0
-   iptables -t nat -A POSTROUTING -d 10.228.0.0/14 -j SNAT --to 10.100.0.0
+   iptables -t nat -A POSTROUTING -d 10.128.0.0/10 -j SNAT --to 10.58.123.45
 ```
 
 Quando il programma termina, se aveva istruito il kernel per fare il source natting, rimuove le regole
@@ -670,20 +628,17 @@ si può risalire all'indirizzo di scheda del vicino. Le rotte nelle tabelle `ntk
 devono avere come campo gateway (gw) l'indirizzo di scheda del vicino, non il suo indirizzo Netsukuku.
 
 Per ogni percorso scelto dal programma *qspnclient* per entrare in una tabella, in realtà il programma
-inserisce nella tabella fino a 4 rotte. Sia *i* il livello del g-nodo destinazione del percorso. Queste
+inserisce nella tabella fino a 3 rotte. Sia *i* il livello del g-nodo destinazione del percorso. Queste
 sono le rotte:
 
 *   Globale. La destinazione di questa rotta è l'indirizzo del g-nodo nella sua forma globale, il
     suo "src" è il mio indirizzo nella sua forma globale.
 *   Anonimo globale. La destinazione di questa rotta è l'indirizzo del g-nodo nella sua forma globale
     e con anonimato, il suo "src" è il mio indirizzo nella sua forma globale.
-*   Se *i* < *levels* - 1:
-    *   Interno al nostro g-nodo di livello *i* + 1. La destinazione di questa rotta è l'indirizzo
-        del g-nodo nella sua forma interna al g-nodo di livello *i* + 1, il suo "src" è il mio indirizzo
-        nella sua forma interna al g-nodo di livello *i* + 1.
-    *   Anonimo interno al nostro g-nodo di livello *i* + 1. La destinazione di questa rotta è l'indirizzo
-        del g-nodo nella sua forma interna al g-nodo di livello *i* + 1 e con anonimato, il suo "src" è il
-        mio indirizzo nella sua forma interna al g-nodo di livello *i* + 1.
+*   Se *i* < *levels* - 1:
+    *   Interno al nostro g-nodo di livello *i* + 1. La destinazione di questa rotta è l'indirizzo
+        del g-nodo nella sua forma interna al g-nodo di livello *i* + 1, il suo "src" è il mio indirizzo
+        nella sua forma interna al g-nodo di livello *i* + 1.
 
 Quando il programma ha finito di usare una tabella (ad esempio se un arco che conosceva non è più presente,
 oppure se il programma termina) svuota la tabella, poi rimuove la regola, poi rimuove il record

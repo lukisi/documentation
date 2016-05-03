@@ -6,10 +6,12 @@
     popolare le tabelle di routing tenendo conto delle convenzioni descritte in questo documento.  
     Ci sono riferimenti al presente documento in alcuni punti:
 
-    *   Nell'analisi funzionale del modulo PeerServices si parla di "connessione TCP con un percorso interno".
-    *   Nei dettagli tecnici del modulo PeerServices si fa riferimento al "documento livelli e bits".
-    *   Nell'allegato RoutingIndirizziInterni all'analisi del modulo QSPN si fa riferimento al "documento livelli e bits".
-    *   Nell'analisi funzionale del proof-of-concept si fa riferimento al "documento livelli e bits".
+    *   Nell'analisi funzionale del modulo PeerServices si parla di "connessione TCP con un percorso interno".  
+        Andrà modificata quella parte.
+    *   Nei dettagli tecnici del modulo PeerServices si fa riferimento al "documento livelli e bits".  
+        Andrà modificata quella parte.
+    *   Nell'allegato RoutingIndirizziInterni all'analisi del modulo QSPN si fa riferimento al "documento livelli e bits".  
+        Andrà aggiornato il link.
 
 ## Calcolo degli indirizzi IP
 
