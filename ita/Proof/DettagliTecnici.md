@@ -191,8 +191,9 @@ con il metodo *arc_add*. Le informazioni da dare (nel comando interattivo *add_q
 *   **show_nodeids**
 *   **show_neighborhood_arcs**
 *   **add_nodearc**
-    *   `string my_mac`
-    *   `string peer_mac`
+    *   `string key`  
+        La chiave è composta dal MAC della mia interfaccia e il MAC dell'interfaccia del
+        vicino, separati da un trattino. Come compare a video con il comando `show_neighborhood_arcs`.
     *   `int cost`
 *   **show_nodearcs**
 *   **show_identityarcs**
