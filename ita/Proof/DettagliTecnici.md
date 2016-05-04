@@ -15,7 +15,7 @@ delle interfacce di rete da gestire.
 
 Questo elenco di nomi di interfacce viene immediatamente passato al modulo Neighborhood (con il
 metodo *start_monitor* di NeighborhoodManager) nello stesso ordine in cui è stato proposto dall'utente.
-Non c'è bisogno per il programma di tenerli in memoria altrove.
+Il programma tiene anche in memoria questo elenco di nomi di interfacce nella lista *real_nics*.
 
 Il modulo Neighborhood, in base all'ordine in cui gli sono passati, produce una serie di chiamate
 al metodo *add_address* di INeighborhoodIPRouteManager. Poi emette il segnale *nic_address_set*. Quando
