@@ -248,3 +248,47 @@ con il metodo *arc_add*. Le informazioni da dare (nel comando interattivo *add_q
     *   `int identityarc_index`
     *   `string identityarc_address`
 
+## Metodi di LinuxRoute
+
+Elenchiamo le funzionalità che si vogliono implementare nella classe LinuxRoute.
+
+*   Abbiamo una istanza di questa classe per ogni identità. Quindi una istanza per ogni
+    network namespace. Una identità può cambiare nel tempo il namespace che gestisce.  
+    Quando cambia il namespace cambia anche il suo indirizzo Netsukuku. Infatti diventa
+    una identità *di connettività* per un livello in cui prima non lo era.  
+    Ad esempio possiamo avere nel nodo *n* l'identità *n0* con indirizzo 3·2·3·1 in una topologia 4·4·4·4.
+    Questo è un indirizzo *reale* quindi si tratta di una identità principale. Poi il g-nodo 3·2
+    migra in 1·0, restando dentro il g-nodo 3 con l'identificativo *virtuale* 3·5.
+    Quindi *n* assume l'identità *n1* basata su *n0* con indirizzo 1·0·3·1 (che nasce come
+    identità principale con un indirizzo Netsukuku *reale*) mentre l'identità *n0* diventa
+    *di connettività* al livello 3 con indirizzo 3·5·3·1.  
+    Ora supponiamo che il nodo 3·5·3·1 vuole migrare in 3·5·2·2, restando nel g-nodo 3·5·3
+    con l'identificativo *virtuale* 3·5·3·6.
+    Quindi *n* assume l'identità *n2* basata su *n1* con indirizzo 3·5·2·2 (che nasce come
+    identità *di connettività* al livello 3) mentre l'identità *n1* diventa
+    *di connettività* al livello 1 con indirizzo 3·5·3·6.  
+
+*   Quando si costruisce una istanza di LinuxRoute (significa che è nata una identità)
+    si assegna un network namespace. Possono esserci questi casi:
+
+    *   Inizio. Il network namespace assegnato non era gestito in precedenza
+        da un'altra identità.  
+        L'istanza di LinuxRoute *r0* riceve nel costruttore la stringa `ns` che identifica il
+        namespace. Di norma è il default, cioè `""`, ma ce lo facciamo passare.  
+        Sull'istanza di LinuxRoute *r0* viene chiamato il metodo `add_address(address, dev)` varie
+        volte per assegnare un indirizzo IP alle [pseudo]interfacce gestite nel network
+        namespace relativo.  
+        Sull'istanza di LinuxRoute *r0* viene chiamato il metodo `add_route` o `change_route`
+        o `remove_route` per ogni cambiamento alle policy di routing nel network
+        namespace relativo.
+    *   Migrazione. L'identità *1* costruita sull'identità *0*. Il network namespace
+        assegnato alla *1* è quello che prima era stato gestito dalla *0*.  
+        Ora all'identità *0* viene assegnato un diverso namespace *x*.  
+        L'istanza di LinuxRoute *r1* riceve nel costruttore l'istanza
+        *r0* come argomento `prev_route` (dal quale può recuperare la stringa `prev_ns`)
+        e la stringa `new_ns="x"`.  
+        Sull'istanza di LinuxRoute *r0* viene chiamato il metodo `change_namespace(new_ns="x")`.  
+
+
+
+
