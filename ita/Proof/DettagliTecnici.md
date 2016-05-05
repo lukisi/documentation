@@ -60,9 +60,9 @@ Questa prima istanza di QspnManager viene realizzata col costruttore *create_net
 costruttore, al programma serve solo conoscere la topologia della rete e l'indirizzo Netsukuku del nodo. Queste
 due informazioni sono passate al programma dalla riga di comando tramite i primi due argomenti.
 
-*   args[1] = topologia. Ad esempio la stringa "8.2.2.2" indica una rete a 4 livelli, dove la gsize al livello 3
-    è 8 e agli altri livelli è 2.
-*   args[2] = indirizzo. Ad esempio la stringa "4.1.0.1" indica un indirizzo valido nella suddetta topologia.
+*   args\[1] = topologia. Ad esempio la stringa "4.16.256.256" indica una rete a 4 livelli, dove la gsize al livello 3
+    è 4, ecc. ecc.
+*   args\[2] = indirizzo. Ad esempio la stringa "3.10.123.45" indica un indirizzo valido nella suddetta topologia.
 
 Per comodità, il programma *qspnclient* assume che la topologia di rete usata sia la stessa per tutti i
 nodi che prendono parte al testbed. Questo significa che quando l'utente richiederà l'ingresso di un nodo
@@ -167,7 +167,7 @@ nella console del programma in esecuzione nel nodo A insieme al relativo indice 
 
 Poi l'utente chiederà dalla console di B di vedere le informazioni di indirizzo e anzianità ai vari livelli
 di B. L'utente dovrà prima recuperare l'indice del *nodeid* dove si vuole fare ingresso (supponiamo sia ancora 0).
-Alla domanda il programma *qspnclient* visualizzerà ad esempio "indirizzo 4.1.0.1, anzianità 0.0.0.0".
+Alla domanda il programma *qspnclient* visualizzerà ad esempio "indirizzo 3·10·123·45, anzianità 0·0·0·0".
 Il comando interattivo per questo scopo è *show_ntkaddress*.
 
 Poi l'utente, simulando un accordo tra il nodo A e il nodo B (e un eventuale dialogo tra il nodo B e il
@@ -175,11 +175,11 @@ Coordinator di uno dei suoi g-nodi), determina un posto in un g-nodo della rete 
 per A. Quindi istruirà il programma *qspnclient* nel nodo A con le informazioni che servono affinché esso
 crei una nuova istanza di QspnManager con il costruttore *enter_net* da assegnare alla nuova identità.
 
-Ad esempio simuliamo che il posto riservato sia "indirizzo 4.1.1, anzianità 0.0.1" di livello 1 (riservato
-dal Coordinator del g-nodo esistente "4.1" di livello 2). Supponiamo che il vecchio indirizzo di A
-era "indirizzo 3.0.0.1, anzianità 0.0.0.0". Allora il nuovo indirizzo di A (secondo le regole illustrate
+Ad esempio simuliamo che il posto riservato sia "indirizzo 3·10·67, anzianità 0·0·1" di livello 1 (riservato
+dal Coordinator del g-nodo esistente "3·10" di livello 2). Supponiamo che il vecchio indirizzo di A
+era "indirizzo 3·11·230·89, anzianità 0·0·0·0". Allora il nuovo indirizzo di A (secondo le regole illustrate
 nella trattazione del modulo QSPN al punto [Ingresso](../ModuloQSPN/DettagliTecnici.md#Ingresso)) sarà
-"indirizzo 4.1.1.1, anzianità 0.0.1.0".
+"indirizzo 3·10·67·89, anzianità 0·0·1·0".
 
 Fatta questa scelta, le informazioni da dare al programma *qspnclient* nel nodo A (nel comando
 interattivo *enter_net*) per chiamare il costruttore *enter_net* di QspnManager sono:
@@ -187,14 +187,14 @@ interattivo *enter_net*) per chiamare il costruttore *enter_net* di QspnManager 
 *   `int new_nodeid_index`. L'indice del nuovo NodeID di A. In questo esempio l'indice 1.
 *   `int previous_nodeid_index`. L'indice del precedente NodeID di A. Serve per copiare i percorsi e
     il tipo di indirizzo (definitivo). In questo esempio l'indice 0.
-*   `string address_new_gnode`. L'indirizzo del nuovo g-nodo. In questo esempio la stringa "4.1.1".
+*   `string address_new_gnode`. L'indirizzo del nuovo g-nodo. In questo esempio la stringa "3.10.67".
 *   `string elderships_new_gnode`. Le anzianità del nuovo g-nodo. In questo esempio la stringa "0.0.1".
 *   `int hooking_gnode_level`. Il livello del g-nodo che fa ingresso. In questo esempio 0.
 *   `int into_gnode_level`. Il livello del g-nodo in cui fa ingresso. In questo esempio 2.
 *   `List<int> idarc_index_set`. Una lista degli indici degli archi-identità sui quali va costruita la
-    lista di IQspnArc. In questo esempio [1], cioè una lista con un elemento 1.
+    lista di IQspnArc. In questo esempio \[1], cioè una lista con un elemento 1.
 *   `List<string> idarc_address_set`. Una lista compagna della precedente, con i relativi indirizzi
-    Netsukuku dei vicini collegati da questi archi. In questo esempio ["4.1.0.1"].
+    Netsukuku dei vicini collegati da questi archi. In questo esempio \["3.10.123.45"].
 
 Subito dopo aver costruito la nuova istanza di QspnManager, il comando interattivo *enter_net*
 per mezzo delle istanze di *LinuxRoute* associate alle due identità esegue queste operazioni:

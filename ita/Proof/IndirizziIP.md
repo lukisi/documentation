@@ -195,7 +195,7 @@ il g-nodo più alto. Vediamo quali informazioni mantiene il nodo *n*.
 
 ### Nodo *n*
 
-Per il nodo *n* sia l'indirizzo Netsukuku 3·5·241·79.
+Per il nodo *n* sia l'indirizzo Netsukuku 3·10·123·45.
 
 Computiamo il nostro IP globale e i 3 IP validi internamente ad un g-nodo.
 
@@ -203,46 +203,46 @@ Computiamo il nostro IP globale e i 3 IP validi internamente ad un g-nodo.
 Globale di *n*:
 [0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
    3                   1 1
-   5                       0 1 0 1
- 241                                 1 1 1 1 0 0 0 1
-  79                                                   0 1 0 0 1 1 1 1
- = 10.53.241.79
+  10                       1 0 1 0
+ 123                                 0 1 1 1 1 0 1 1
+  45                                                   0 0 1 0 1 1 0 1
+ = 10.58.123.45
 
 Interno di *n* nel suo g-nodo di livello 3:
 [0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
   livello g-nodo       1 1
-   5                       0 1 0 1
- 241                                 1 1 1 1 0 0 0 1
-  79                                                   0 1 0 0 1 1 1 1
- = 10.117.241.79
+  10                       1 0 1 0
+ 123                                 0 1 1 1 1 0 1 1
+  45                                                   0 0 1 0 1 1 0 1
+ = 10.122.123.45
 
 Interno di *n* nel suo g-nodo di livello 2:
 [0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
   livello g-nodo       1 0
    N/A                     0 0 0 0
- 241                                 1 1 1 1 0 0 0 1
-  79                                                   0 1 0 0 1 1 1 1
- = 10.96.241.79
+ 123                                 0 1 1 1 1 0 1 1
+  45                                                   0 0 1 0 1 1 0 1
+ = 10.96.123.45
 
 Interno di *n* nel suo g-nodo di livello 1:
 [0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
   livello g-nodo       0 1
    N/A                     0 0 0 0
    N/A                               0 0 0 0 0 0 0 0
-  79                                                   0 1 0 0 1 1 1 1
- = 10.80.0.79
+  45                                                   0 0 1 0 1 1 0 1
+ = 10.80.0.45
 ```
 
 *n* si assegna quindi questi IP:
 
-*   il globale: 10.53.241.79
-*   l'interno nel livello 3: 10.117.241.79
-*   l'interno nel livello 2: 10.96.241.79
-*   l'interno nel livello 1: 10.80.0.79
+*   il globale: 10.58.123.45
+*   l'interno nel livello 3: 10.122.123.45
+*   l'interno nel livello 2: 10.96.123.45
+*   l'interno nel livello 1: 10.80.0.45
 
 ### Nodo *m*
 
-Per il nodo *m* sia l'indirizzo Netsukuku 3·5·14·204.
+Per il nodo *m* sia l'indirizzo Netsukuku 3·10·67·89.
 
 Computiamo il suo indirizzo IP globale e quello interno al g-nodo di livello 2 (quello in comune con *n*).
 
@@ -250,24 +250,24 @@ Computiamo il suo indirizzo IP globale e quello interno al g-nodo di livello 2 (
 Globale di *m*:
 [0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
    3                   1 1
-   5                       0 1 0 1
-  14                                 0 0 0 0 1 1 1 0
- 204                                                   1 1 0 0 1 1 0 0
- = 10.53.14.204
+  10                       1 0 1 0
+  67                                 0 1 0 0 0 0 1 1
+  89                                                   0 1 0 1 1 0 0 1
+ = 10.58.67.89
 
 Interno di *m* nel suo g-nodo di livello 2:
 [0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
   livello g-nodo       1 0
    N/A                     0 0 0 0
-  14                                 0 0 0 0 1 1 1 0
- 204                                                   1 1 0 0 1 1 0 0
- = 10.96.14.204
+  67                                 0 1 0 0 0 0 1 1
+  89                                                   0 1 0 1 1 0 0 1
+ = 10.96.67.89
 ```
 
-Quando *n* riceve un ETP che contiene il g-nodo con *m* esso lo vede come (1, 14) cioè come g-nodo *g*
-di livello 1 appartenente al suo stesso g-nodo di livello 2 e con identificativo 14 (a livello 1).
+Quando *n* riceve un ETP che contiene il g-nodo con *m* esso lo vede come (1, 67) cioè come g-nodo *g*
+di livello 1 appartenente al suo stesso g-nodo di livello 2 e con identificativo 67 (a livello 1).
 
-Per il g-nodo *g* l'indirizzo Netsukuku è 3·5·14.
+Per il g-nodo *g* l'indirizzo Netsukuku è 3·10·67.
 
 Il nodo *n* computa:
 
@@ -275,36 +275,36 @@ Il nodo *n* computa:
 Globale di *g*:
 [0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[0|0|0|0|0|0|0|0]
    3                   1 1
-   5                       0 1 0 1
-  14                                 0 0 0 0 1 1 1 0
- = 10.53.14.0/24
+  10                       1 0 1 0
+  67                                 0 1 0 0 0 0 1 1
+ = 10.58.67.0/24
 
 Interno di *g* nel suo g-nodo di livello 2:
 [0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[0|0|0|0|0|0|0|0]
   livello g-nodo       1 0
    N/A                     0 0 0 0
-  14                                 0 0 0 0 1 1 1 0
- = 10.96.14.0/24
+  67                                 0 1 0 0 0 0 1 1
+ = 10.96.67.0/24
 ```
 
 Quindi *n* imposta:
 
-*   la rotta globale: 10.53.14.0/24 via xx dev yy src 10.53.241.79
-*   la rotta interna al g-nodo di livello 2: 10.96.14.0/24 via xx dev yy src 10.96.241.79
+*   la rotta globale: 10.58.67.0/24 via xx dev yy src 10.58.123.45
+*   la rotta interna al g-nodo di livello 2: 10.96.67.0/24 via xx dev yy src 10.96.123.45
 
 Ipotiziamo ora di sfruttare il momento della risoluzione *hostname → IP address* per intervenire sulle
 operazioni del nodo *n* quando questo vuole iniziare una connessione (o una trasmissione) con il
 nodo *m*. Supponiamo che il nodo *m* abbia registrato per se il nome "morfeo".
 
 Quando il nodo *n* richiede la risoluzione del nome "morfeo.ntk" il resolver cerca nel database
-ANDNA il nome "morfeo" e trova l'indirizzo Netsukuku 3·5·14·204.
+ANDNA il nome "morfeo" e trova l'indirizzo Netsukuku 3·10·67·89.
 
-Invece di computare il relativo indirizzo IP globale 10.53.14.204, il resolver vede rispetto al proprio indirizzo
+Invece di computare il relativo indirizzo IP globale 10.58.67.89, il resolver vede rispetto al proprio indirizzo
 Netsukuku (quello dell'identità principale) qual'è il minimo comune g-nodo (in questo caso 2) e computa
-il relativo indirizzo IP interno in quel g-nodo: 10.96.14.204.
+il relativo indirizzo IP interno in quel g-nodo: 10.96.67.89.
 
-Questo nella route table corrisponde a 10.96.14.0/24 quindi *n* manda il pacchetto al suo gateway
-indicando come proprio IP 10.96.241.79.
+Questo nella route table corrisponde a 10.96.67.0/24 quindi *n* manda il pacchetto al suo gateway
+indicando come proprio IP 10.96.123.45.
 
 Una volta realizzata una connessione TCP tra questi due indirizzi IP, questa connessione continuerebbe a funzionare anche
 se un g-nodo di livello superiore migrasse, anche gradualmente un nodo alla volta, ad un altra posizione di pari livello.
@@ -313,10 +313,10 @@ Ad esempio se il g-nodo 3·5 migrasse dal g-nodo 3 al g-nodo 1 assumendo in esso
 Oppure se il g-nodo 3 in blocco facesse ingresso in una diversa rete assumendo in essa l'identificativo (di livello 3) 1.
 
 Va detto che il nodo *n* sarà comunque in grado di inviare pacchetti e/o realizzare una connessione TCP direttamente
-con l'indirizzo IP globale se lo conosce, cioè 10.53.14.204, ma in questo caso la connessione si romperebbe durante una tale migrazione.
+con l'indirizzo IP globale se lo conosce, cioè 10.58.67.89, ma in questo caso la connessione si romperebbe durante una tale migrazione.
 
 La risoluzione inversa non subirebbe alterazioni. Quando il nodo *n* vuole sapere il nome dell'host che
-ha indirizzo IP 10.96.14.204 (oppure 10.53.14.204) il resolver lo contatta e riceve la lista di nomi
+ha indirizzo IP 10.96.67.89 (oppure 10.58.67.89) il resolver lo contatta e riceve la lista di nomi
 che il nodo *m* ha registrato.
 
 ### Nodo *o*
@@ -344,7 +344,7 @@ Globale di *h*:
  = 10.32.0.0/12
 ```
 
-Quindi *n* imposta solo la rotta globale: 10.32.0.0/12 via xx dev yy src 10.53.241.79
+Quindi *n* imposta solo la rotta globale: 10.32.0.0/12 via xx dev yy src 10.10.58.123.45
 
 ### Richiesta di anonimato
 
@@ -356,9 +356,9 @@ l'indirizzo IP *anonimizzante* relativo.
 
 Per esempio il nodo *n*:
 
-*   Opzionalmente, si assegna l'indirizzo IP `10.181.241.79`.
-*   Aggiunge la rotta `10.181.14.0/24 src 10.53.241.79`.
-*   Aggiunge la rotta `10.160.0.0/12 src 10.53.241.79`.
+*   Opzionalmente, si assegna l'indirizzo IP `10.186.123.45`.
+*   Aggiunge la rotta `10.186.67.0/24 src 10.58.123.45`.
+*   Aggiunge la rotta `10.160.0.0/12 src 10.58.123.45`.
 
 Infine, i nodi che sono disposti a anonimizzare i vicini che ne fanno richiesta, impostano le regole di
 masquerade del firewall come descritto nel documento di analisi.
