@@ -276,7 +276,7 @@ Elenchiamo le funzionalità che si vogliono implementare nella classe LinuxRoute
         L'istanza di LinuxRoute *r0* riceve nel costruttore la stringa `ns` che identifica il
         namespace. Di norma è il default, cioè `""`, ma ce lo facciamo passare.  
         Sull'istanza di LinuxRoute *r0* viene chiamato il metodo `add_address(address, dev)` varie
-        volte per assegnare un indirizzo IP alle [pseudo]interfacce gestite nel network
+        volte per assegnare un indirizzo IP alle \[pseudo]interfacce gestite nel network
         namespace relativo.  
         Sull'istanza di LinuxRoute *r0* viene chiamato il metodo `add_route` o `change_route`
         o `remove_route` per ogni cambiamento alle policy di routing nel network
@@ -289,6 +289,18 @@ Elenchiamo le funzionalità che si vogliono implementare nella classe LinuxRoute
         e la stringa `new_ns="x"`.  
         Sull'istanza di LinuxRoute *r0* viene chiamato il metodo `change_namespace(new_ns="x")`.  
 
-
+*   Una istanza di LinuxRoute ha impostato (con `add_address`) tutti gli indirizzi IP
+    che nel tempo sono stati assegnati alle varie \[pseudo]interfacce gestite in un
+    particolare network namespace. Per questo motivo tale istanza di LinuxRoute è in grado
+    di sapere quali indirizzi IP rimuovere quando l'*identità* che le è associata cessa
+    di esistere.  
+    Per i network namespace diversi dal default questo non è necessario, in quanto tutte
+    le pseudo-interfacce in essi contenute vengono distrutte e anche i network namespace
+    vengono distrutti.  
+    Per il network namespace default invece questo è importante. Sull'istanza di LinuxRoute
+    associata all'*identità* che gestisce il network namespace default, viene chiamato
+    il metodo `remove_addresses` quando il programma *qspnclient* termina. In esso tutti
+    gli indirizzi IP attualmente assegnati (dal programma) alle varie interfacce di rete reali vengono
+    rimossi.
 
 
