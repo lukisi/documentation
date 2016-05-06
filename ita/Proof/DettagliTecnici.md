@@ -291,16 +291,29 @@ Elenchiamo le funzionalità che si vogliono implementare nella classe LinuxRoute
 
 *   Una istanza di LinuxRoute ha impostato (con `add_address`) tutti gli indirizzi IP
     che nel tempo sono stati assegnati alle varie \[pseudo]interfacce gestite in un
-    particolare network namespace. Per questo motivo tale istanza di LinuxRoute è in grado
-    di sapere quali indirizzi IP rimuovere quando l'*identità* che le è associata cessa
-    di esistere.  
-    Per i network namespace diversi dal default questo non è necessario, in quanto tutte
-    le pseudo-interfacce in essi contenute vengono distrutte e anche i network namespace
-    vengono distrutti.  
-    Per il network namespace default invece questo è importante. Sull'istanza di LinuxRoute
-    associata all'*identità* che gestisce il network namespace default, viene chiamato
-    il metodo `remove_addresses` quando il programma *qspnclient* termina. In esso tutti
-    gli indirizzi IP attualmente assegnati (dal programma) alle varie interfacce di rete reali vengono
-    rimossi.
+    particolare network namespace da una particolare *identità*.  
+    Quando questa *identità* cessa di gestire questo network namespace (perché cessa
+    di esistere oppure perché le viene assegnato un diverso network namespace) questa istanza
+    di LinuxRoute è in grado di sapere quali indirizzi IP rimuovere. Quindi in questo
+    momento viene chiamato il metodo `remove_addresses` di questa istanza. In esso tutti
+    gli indirizzi IP attualmente assegnati (dal programma) alle varie \[pseudo]interfacce
+    vengono rimossi.  
+    Distinguiamo i seguenti casi:
+
+    *   Quando una *identità* migra (poteva essere l'identità *principale* del nodo oppure
+        un'identità *di connettività*) essa abbandona un network namespace che sarà in
+        seguito gestito da una diversa *identità*. In questo caso l'operazione `remove_addresses`
+        è **strettamente** necessaria, sia che si tratti del network namespace default,
+        sia di un altro.
+    *   Quando una *identità di connettività* cessa di esistere (ad esempio perché non
+        è più necessaria la sua presenza per garantire la connettività dei g-nodi, oppure
+        perché nel sistema il programma *qspnclient* termina) essa abbandona un
+        network namespace che in seguito non sarà più gestito nemmeno da altre *identità*
+        ma verrà distrutto con tutte le relative pseudo-interfacce. In questo caso
+        l'operazione `remove_addresses` non è necessaria.
+    *   Quando l'*identità principale* cessa di esistere perché nel sistema il programma
+        *qspnclient* termina, essa abbandona il network namespace default. In questo caso
+        l'operazione `remove_addresses` è necessaria a ripulire il sistema.
+
 
 
