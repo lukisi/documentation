@@ -36,7 +36,7 @@ al modulo QSPN le informazioni che ha raccolto e mostrarle all'utente.
 ### <a name="Interazione_programma_utente"/>Interazione programma-utente
 
 Il programma *qspnclient* prevede che l'utente immetta, come argomenti della riga di comando e in modo
-interattivo dalla console durante la sua esecuzione, tutti i requisiti del modulo.
+interattivo dalla console durante la sua esecuzione, tutti i requisiti dei moduli di cui si avvale.
 
 Ai parametri che saranno individuati in modo autonomo dai moduli (ad esempio gli identificativi del
 nodo, gli indirizzi di scheda, ...) verranno associati degli indici progressivi che saranno visualizzati
@@ -45,13 +45,14 @@ riproducibili gli ambienti di test.
 
 * * *
 
-All'avvio del nodo viene creata l'istanza di NeighborhoodManager e gli sono passati i nomi delle
-interfacce di rete che dovrà gestire. Ad ogni interfaccia, il modulo Neighborhood associa un
+All'avvio del nodo viene creata l'istanza di NeighborhoodManager. Poi gli sono passati i nomi delle
+interfacce di rete che dovrà gestire, tramite il metodo *start_monitor*. Ad ogni interfaccia, il modulo Neighborhood associa un
 indirizzo IP link-local scelto a caso. In realtà l'assegnazione dell'indirizzo è fatta proprio
 dal programma attraverso una classe che implementa l'interfaccia INeighborhoodIPRouteManager passata
-al modulo Neighborhood. Quello che fa il modulo Neighborhood è scegliere l'indirizzo. Quindi il
-programma si avvede dell'indirizzo scelto proprio perché viene chiamato il metodo *add_address* di
-INeighborhoodIPRouteManager. Il programma associa questo proprio indirizzo link-local all'indice
+al modulo Neighborhood. Quello che fa il modulo Neighborhood è scegliere l'indirizzo.
+
+Il programma si avvede dell'indirizzo scelto perché il NeighborhoodManager lo notifica con il segnale
+*nic_address_set*. Il programma associa questo proprio indirizzo link-local all'indice
 autoincrementante *linklocal_nextindex*, che parte da 0.
 
 * * *
@@ -61,7 +62,7 @@ Il programma *qspnclient* specifica un numero elevato. Nonostante questo, ogni a
 Neighborhood realizza passa al vaglio dell'utente che decide se utilizzarlo o meno. Questo permette
 di dirigere il proprio ambiente di test a piacimento anche in particolari scenari, come ad esempio
 un gruppo di macchine virtuali che condividono un unico dominio di broadcast ma vogliono simulare un
-gruppo di nodi wireless posizionati secondo una determinata disposizione.
+gruppo di nodi wireless disposti in un determinato modo.
 
 Per ogni arco che il modulo Neighborhood realizza, le informazioni a disposizione (i due link-local e
 i due MAC address) sono visualizzate all'utente. Soltanto agli archi che l'utente decide di accettare
@@ -88,19 +89,23 @@ dare dalla console comandi concernenti una certa identità.
 Alla creazione di una nuova identità, il modulo Identities crea un nuovo network namespace. In realtà la creazione
 del network namespace è fatta proprio dal programma attraverso una classe che implementa l'interfaccia
 IIdmgmtNetnsManager passata al modulo Identities. Quello che fa il modulo Identities è scegliere il nome di
-tale namespace. Quindi il programma si avvede del nome scelto proprio perché viene chiamato il metodo
-*create_namespace* di IIdmgmtNetnsManager.
+tale namespace.
 
 Il nome di tale namespace è già costruito con un indice progressivo, quindi il programma non gli associa un
-indice ma semplicemente lo mostra all'utente. Questi potrà usare direttamente il nome del namespace nei
-comandi che dà sulla console.
+indice.
+
+Comunque (per il momento) non c'è nessun comando interattivo in cui l'utente debba specificare un
+namespace. Quindi tale nome non è nemmeno mostrato all'utente.
 
 * * *
 
 Sempre alla creazione di una nuova identità, il modulo Identities, di nuovo con chiamate all'interfaccia
-IIdmgmtNetnsManager, crea per ogni interfaccia di rete reale un pseudo-interfaccia. Anche qui il nome
+IIdmgmtNetnsManager, crea per ogni interfaccia di rete reale una pseudo-interfaccia. Anche qui il nome
 della pseudo-interfaccia non è casuale ma generato con lo stesso indice progressivo usato per il
-network namespace, quindi il programma lo mostra semplicemente all'utente.
+network namespace, quindi il programma non gli associa un indice.
+
+Inoltre (per il momento) non c'è nessun comando interattivo in cui l'utente debba specificare una
+pseudo-interfaccia. Quindi tale nome non è nemmeno mostrato all'utente.
 
 Invece il modulo Identities genera casualmente un indirizzo IP link-local e lo associa alla pseudo-interfaccia
 col metodo *add_address* di IIdmgmtNetnsManager. Il programma vede tale indirizzo e lo associa all'indice
