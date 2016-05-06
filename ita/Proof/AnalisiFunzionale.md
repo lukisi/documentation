@@ -133,15 +133,49 @@ che nel tempo può cambiare. Ricordiamo che dall' "arco-identità" si può risal
 
 * * *
 
-All'avvio del nodo viene creata la prima istanza di QspnManager con il costruttore *create_net*. Ogni nodo
-costruisce inizialmente una rete nuova che comprende solo la sua prima identità principale. Per questo
-devono essere passati fin dall'inizio dall'utente al programma *qspnclient* i dati della topologia e il
+All'avvio del nodo viene creata la prima istanza di QspnManager con il costruttore *create_net* e viene
+associata alla prima *identità principale* del nodo. Così si costruisce inizialmente una rete nuova che
+comprende solo questa identità. I dati che servono sono forniti dall'utente sulla riga di comando: i dati della topologia e il
 primo indirizzo Netsukuku che il nodo si assegna. L'identificativo del fingerprint a livello 0 è scelto
 a caso dal programma e le anzianità sono a zero (primo g-nodo) a tutti i livelli.
 
 Siccome il QSPN è un modulo di identità, ogni istanza di QspnManager viene memorizzata come membro di una
 identità nel modulo Identities. Quindi non è necessario un ulteriore indice perché l'utente possa
 referenziare una istanza di QspnManager: è sufficiente l'indice *nodeid_nextindex*.
+
+* * *
+
+Supponiamo ora che l'utente nel nodo *A* vuole simulare l'ingresso dell'identità *A<sub>0</sub>* in un'altra rete esistente
+attraverso un arco tra i nodi *A* e *B* e in particolare che collega le identità *A<sub>0</sub>* e *B<sub>0</sub>*.
+
+L'utente chiederà al programma in esecuzione su *A* di costruire una nuova *identità* *A<sub>1</sub>*
+basata su *A<sub>0</sub>*. Facendo questo si duplica anche l'arco-identità *A<sub>0</sub>*-*B<sub>0</sub>*
+in un nuovo arco-identità *A<sub>1</sub>*-*B<sub>0</sub>* e di questo fatto si avvede autonomamente
+l'IdentityManager sia nel nodo *A*, sia nel nodo *B*.
+
+Poi l'utente chiederà al programma in esecuzione su *A*, con un comando interattivo che chiamiamo
+*enter_net*, di costruire per essa una nuova istanza di QspnManager con il costruttore *enter_net*. I dati che
+servono sono forniti dall'utente in modo interattivo: l'indirizzo del nuovo g-nodo prenotato nella
+rete appena scoperta, la sua anzianità, gli archi-identità che ci collegano alla nuova rete, e altri.
+
+Esaminiamo gli archi-identità. Per l'arco-identità *A<sub>1</sub>*-*B<sub>0</sub>* che in questo caso l'utente specifica (tramite
+il suo indice) quando da il comando *enter_net* sul nodo *A*, il programma crea una istanza di IQspnArc
+tale che il modulo QSPN di *A<sub>1</sub>* possa effettuare comunicazioni con il modulo QSPN
+di *B<sub>0</sub>*.
+
+Immediatamente l'utente dovrà dare un comando al programma in esecuzione su *B*, che chiamiamo *add_qspnarc*,
+con il quale gli chiede di costruire e passare al QspnManager di *B<sub>0</sub>* una istanza di IQspnArc
+tale che il modulo QSPN di *B<sub>0</sub>* possa effettuare comunicazioni con il modulo QSPN
+di *A<sub>1</sub>*.
+
+* * *
+
+Per ogni *identità* creata, nel relativo network namespace, sulla base dell'indirizzo Netsukuku
+ad essa associato, il programma computa un numero di indirizzi IP (in seguito verrà dettagliato
+come siano computati) e se li assegna.
+
+Inoltre, sempre per ogni *identità* e nel relativo network namespace, basandosi sui segnali notificati
+dalla relativa istanza di QspnManager, il programma popola le tabelle di routing del kernel.
 
 * * *
 
@@ -514,7 +548,15 @@ rotte nelle tabelle di routing) in modo da garantire questi comportamenti:
 * * *
 
 Vediamo come queste impostazioni si configurano in un sistema Linux e quindi quali operazioni fa
-il programma *qspnclient*. Esaminiamo prima l'aspetto del source natting e poi del routing.
+il programma *qspnclient*.
+
+Abbiamo già avuto modo di evidenziare che un sistema Linux è in grado di replicare il suo
+intero network stack in molti distinti network namespace. E che i moduli che stiamo esaminando
+assumono come requisito una capacità di questo tipo. Nella trattazione che segue parliamo sempre
+di concetti (come le tabelle di routing, l'assegnazione degli indirizzi alle interfacce di rete,
+la manipolazione dei pacchetti, ...) che sono da riferirsi ad un particolare network stack.
+
+Esaminiamo prima l'aspetto del source natting e poi del routing.
 
 ### <a name="Source_natting"/>Source NATting
 
@@ -616,10 +658,10 @@ fatta da una parte del kernel che può essere istruita usando l'azione `MARK` de
 
 Fatta questa premessa, come si comporta il programma?
 
-Per ogni arco verso un vicino, il programma memorizza una rotta diretta (cioè senza gateway) nella
-tabella `main`, indicando come destinazione l'indirizzo di scheda del vicino e come mittente preferito
-il proprio indirizzo di scheda. Questo lo abbiamo visto poco sopra; infatti il comando `ip route add`
-senza specificare un nome di tabella si riferisce alla tabella `main`.
+Il programma, attraverso i moduli Neighborhood e Identities, ha già automaticamente ottenuto
+che nella tabella `main` di ogni network namespace siano memorizzate rotte dirette (cioè senza gateway)
+verso ogni suo diretto vicino (più precisamente verso ogni *identità* sua vicina). In queste rotte
+sono indicati gli indirizzi di scheda delle proprie interfacce e di quelle dei vicini.
 
 Il programma crea una tabella `ntk` con identificativo `YYY`, dove `YYY` è il primo identificativo
 libero nel file `/etc/iproute2/rt_tables`. Tale tabella sarà inizialmente vuota; in essa il programma
