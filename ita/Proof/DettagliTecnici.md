@@ -275,9 +275,9 @@ Elenchiamo le funzionalità che si vogliono implementare nella classe LinuxRoute
         da un'altra identità.  
         L'istanza di LinuxRoute *r0* riceve nel costruttore la stringa `ns` che identifica il
         namespace. In questo caso di norma è il default, cioè `""`.  
-        In seguito, sull'istanza di LinuxRoute *r0* viene chiamato il metodo `add_address(address, dev)` varie
-        volte per assegnare un indirizzo IP alle \[pseudo]interfacce gestite nel network
-        namespace relativo.  
+        In seguito, sull'istanza di LinuxRoute *r0*, se essa gestisce il network namespace default,
+        viene chiamato il metodo `add_address(address, dev)` varie
+        volte per assegnare un indirizzo IP alle interfacce di rete reali.  
         Nel tempo, sull'istanza di LinuxRoute *r0* come risposta ai segnali notificati dal
         QspnManager della relativa *identità*, vengono chiamati i metodi `add_route` o `change_route`
         o `remove_route` per ogni cambiamento alle policy di routing nel network
@@ -293,12 +293,12 @@ Elenchiamo le funzionalità che si vogliono implementare nella classe LinuxRoute
         parametro `new_ns="x"` che identifica il namespace ora gestito dall'identità *0*.
         In questo metodo viene dapprima chiamato il metodo `remove_addresses`, per il motivo
         descritto poco sotto. In seguito viene memorizzato il nome del nuovo namespace da gestire.  
-        In seguito, sull'istanza di LinuxRoute *r0* viene chiamato il metodo `add_address(address, dev)` varie
-        volte per assegnare un indirizzo IP alle pseudo-interfacce gestite nel network
-        namespace relativo (che di sicuro non è il default).  
-        In seguito, sull'istanza di LinuxRoute *r1* viene chiamato il metodo `add_address(address, dev)` varie
-        volte per assegnare un indirizzo IP alle \[pseudo]interfacce gestite nel network
-        namespace relativo.  
+        Non è necessario, sull'istanza di LinuxRoute *r0*, chiamare il metodo `add_address`
+        in quanto nei network namespace diversi dal default il sistema non detiene mai
+        un indirizzo IP proprio, nemmeno interno ad un livello.  
+        In seguito, sull'istanza di LinuxRoute *r1*, se essa gestisce il network namespace default,
+        viene chiamato il metodo `add_address(address, dev)` varie
+        volte per assegnare un indirizzo IP alle interfacce di rete reali.  
         Nel tempo, su entrambe le istanze *r0* e *r1* come risposta ai segnali notificati dal
         QspnManager della relativa *identità*, vengono chiamati i metodi `add_route` o `change_route`
         o `remove_route` per ogni cambiamento alle policy di routing nel network
