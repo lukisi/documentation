@@ -176,7 +176,18 @@ Inoltre dobbiamo assicurarci che *gsize(l-1)* ≥ *l*. Cioè che nello spazio de
 sia possibile rappresentare un numero da 0 a *l* - 1. Questo pure ci serve per la notazione usata per il
 routing interno ai g-nodi.
 
-Una volta scelti i valori di *l* e di *g-exp(i)* rispettando i vincoli prima esposti, gli algoritmi di
+Una volta scelti i valori di *l* e di *g-exp(i)* rispettando i vincoli prima esposti, le caratteristiche
+di questa mappatura sono queste. Partendo da un indirizzo Netsukuku *reale* si risale ad un numero
+di indirizzi IP:
+
+*   Un indirizzo IP globale.
+*   Un indirizzo IP globale *anonimizzante*.
+*   Un indirizzo IP interno al livello *i* per ogni valore di *i* da 1 a *l* - 1.
+
+Partendo da una porzione *reale* di un indirizzo Netsukuku *virtuale*, composta dagli
+identificativi *reali* da 0 a *i*, si risale ad un indirizzo IP interno al livello *i*.
+
+Gli algoritmi di
 calcolo dei vari tipi di indirizzo IP sono descritti nel documento [IndirizziIP](IndirizziIP.md).
 
 ## <a name="Identita"/>Identità

@@ -274,20 +274,35 @@ Elenchiamo le funzionalità che si vogliono implementare nella classe LinuxRoute
     *   Inizio. Il network namespace assegnato non era gestito in precedenza
         da un'altra identità.  
         L'istanza di LinuxRoute *r0* riceve nel costruttore la stringa `ns` che identifica il
-        namespace. Di norma è il default, cioè `""`, ma ce lo facciamo passare.  
-        Sull'istanza di LinuxRoute *r0* viene chiamato il metodo `add_address(address, dev)` varie
+        namespace. In questo caso di norma è il default, cioè `""`.  
+        In seguito, sull'istanza di LinuxRoute *r0* viene chiamato il metodo `add_address(address, dev)` varie
         volte per assegnare un indirizzo IP alle \[pseudo]interfacce gestite nel network
         namespace relativo.  
-        Sull'istanza di LinuxRoute *r0* viene chiamato il metodo `add_route` o `change_route`
+        Nel tempo, sull'istanza di LinuxRoute *r0* come risposta ai segnali notificati dal
+        QspnManager della relativa *identità*, vengono chiamati i metodi `add_route` o `change_route`
         o `remove_route` per ogni cambiamento alle policy di routing nel network
         namespace relativo.
     *   Migrazione. L'identità *1* costruita sull'identità *0*. Il network namespace
-        assegnato alla *1* è quello che prima era stato gestito dalla *0*.  
-        Ora all'identità *0* viene assegnato un diverso namespace *x*.  
-        L'istanza di LinuxRoute *r1* riceve nel costruttore l'istanza
-        *r0* come argomento `prev_route` (dal quale può recuperare la stringa `prev_ns`)
-        e la stringa `new_ns="x"`.  
-        Sull'istanza di LinuxRoute *r0* viene chiamato il metodo `change_namespace(new_ns="x")`.  
+        assegnato alla *1* da parte dell'IdentityManager è quello che prima era stato gestito
+        dalla *0*. Il programma lo può recuperare usando il metodo `get_namespace` dell'IdentityManager.  
+        Ora all'identità *0* è stato assegnato un diverso namespace *x* da parte dell'IdentityManager.
+        Il programma lo può recuperare usando il metodo `get_namespace`.  
+        L'istanza di LinuxRoute *r1* riceve nel costruttore la stringa `ns` che identifica il
+        namespace ora gestito dall'identità *1*.  
+        Sull'istanza di LinuxRoute *r0* viene chiamato il metodo `change_namespace` con il
+        parametro `new_ns="x"` che identifica il namespace ora gestito dall'identità *0*.
+        In questo metodo viene dapprima chiamato il metodo `remove_addresses`, per il motivo
+        descritto poco sotto. In seguito viene memorizzato il nome del nuovo namespace da gestire.  
+        In seguito, sull'istanza di LinuxRoute *r0* viene chiamato il metodo `add_address(address, dev)` varie
+        volte per assegnare un indirizzo IP alle pseudo-interfacce gestite nel network
+        namespace relativo (che di sicuro non è il default).  
+        In seguito, sull'istanza di LinuxRoute *r1* viene chiamato il metodo `add_address(address, dev)` varie
+        volte per assegnare un indirizzo IP alle \[pseudo]interfacce gestite nel network
+        namespace relativo.  
+        Nel tempo, su entrambe le istanze *r0* e *r1* come risposta ai segnali notificati dal
+        QspnManager della relativa *identità*, vengono chiamati i metodi `add_route` o `change_route`
+        o `remove_route` per ogni cambiamento alle policy di routing nel network
+        namespace relativo.
 
 *   Una istanza di LinuxRoute ha impostato (con `add_address`) tutti gli indirizzi IP
     che nel tempo sono stati assegnati alle varie \[pseudo]interfacce gestite in un
