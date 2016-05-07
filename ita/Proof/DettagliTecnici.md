@@ -166,28 +166,28 @@ recupera l'indice del *nodeid* che vuole fare ingresso (in questo esempio sia 0)
 *add_identity(1234,nodeids[0])* di IdentityManager. I comandi interattivi per questo scopo
 sono *prepare_add_identity* e *add_identity*.
 
-Come risultato viene creata una nuova identità *i1* nel nodo A basata sulla precedente identità *i0*,
+Come risultato viene creata una nuova identità *i<sub>1</sub>* nel nodo A basata sulla precedente identità *i<sub>0</sub>*,
 il cui nuovo NodeID viene restituito al programma dalla chiamata *add_identity*. Il programma
-crea una nuova istanza di IdentityData per tenere traccia di *i1*; la associa al prossimo valore dell'indice
+crea una nuova istanza di IdentityData per tenere traccia di *i<sub>1</sub>*; la associa al prossimo valore dell'indice
 autoincrementante *nodeid_nextindex*, nel dizionario *nodeids*. In questo esempio sia 1.
 
-Inoltre è stato anche realizzato un nuovo network namespace temporaneo; l'identità *i1* inizierà ora a gestire il
-vecchio namespace che era gestito da *i0*, mentre l'identità *i0* avrà in gestione
-il nuovo network namespace. Ne consegue che l'istanza di LinuxRoute, chiamiamola *r_alfa*, che si trovava
-memorizzata nell'istanza di IdentityData associata a *i0*, nel membro *route*, viene ora memorizzata nella
-nuova istanza di IdentityData associata a *i1*; nell'istanza di IdentityData associata
-a *i0* verrà invece memorizzata una nuova istanza di LinuxRoute, chiamiamola *r_beta*, creata per il nuovo
+Inoltre è stato anche realizzato un nuovo network namespace temporaneo; l'identità *i<sub>1</sub>* inizierà ora a gestire il
+vecchio namespace che era gestito da *i<sub>0</sub>*, mentre l'identità *i<sub>0</sub>* avrà in gestione
+il nuovo network namespace. Ne consegue che l'istanza di LinuxRoute, chiamiamola *r<sub>𝛼</sub>*, che si trovava
+memorizzata nell'istanza di IdentityData associata a *i<sub>0</sub>*, nel membro *route*, viene ora memorizzata nella
+nuova istanza di IdentityData associata a *i<sub>1</sub>*; nell'istanza di IdentityData associata
+a *i<sub>0</sub>* verrà invece memorizzata una nuova istanza di LinuxRoute, chiamiamola *r<sub>𝛽</sub>*, creata per il nuovo
 network namespace.
 
-Tutte le rotte impostate da *r_alfa* nel suo network namespace non sono più valide, poiché ora
+Tutte le rotte impostate da *r<sub>𝛼</sub>* nel suo network namespace non sono più valide, poiché ora
 quel network namespace è gestito da una diversa identità. Per questo il programma chiama su
-*r_alfa* il metodo `flush_routes`. **_Nota_**: questo metodo dovrebbe svuotare (e eliminare) anche
+*r<sub>𝛼</sub>* il metodo `flush_routes`. **_Nota_**: questo metodo dovrebbe svuotare (e eliminare) anche
 le table `ntk_from_XXX`.
 
-L'istanza *r_alfa* era stata usata per impostare (con `add_address`) tutti gli indirizzi IP
-che nel tempo sono stati assegnati alle varie \[pseudo]interfacce gestite da *i0* nel suo
-vecchio network namespace. Quindi l'istanza *r_alfa* è in grado di sapere quali indirizzi IP
-rimuovere. Per questo il programma chiama su *r_alfa* il metodo `remove_addresses`.
+L'istanza *r<sub>𝛼</sub>* era stata usata per impostare (con `add_address`) tutti gli indirizzi IP
+che nel tempo sono stati assegnati alle varie \[pseudo]interfacce gestite da *i<sub>0</sub>* nel suo
+vecchio network namespace. Quindi l'istanza *r<sub>𝛼</sub>* è in grado di sapere quali indirizzi IP
+rimuovere. Per questo il programma chiama su *r<sub>𝛼</sub>* il metodo `remove_addresses`.
 
 Inoltre avverrà anche che nel nodo B si rileva la creazione di un nuovo arco-identità tra l'identità che
 già era in B e la nuova identità in A. Verrà mostrato a video nella console del programma in esecuzione
@@ -230,8 +230,8 @@ interattivo *enter_net*) per chiamare il costruttore *enter_net* di QspnManager 
 Subito dopo aver costruito la nuova istanza di QspnManager, il comando interattivo *enter_net*
 per mezzo delle istanze di LinuxRoute associate alle due identità esegue queste operazioni:
 
-*   L'identità *i1* usa la sua istanza di LinuxRoute (che ora è *r_alfa*) per assegnarsi i relativi indirizzi IP.
-*   L'identità *i0* usa la sua istanza di LinuxRoute (che ora è *r_beta*) per assegnarsi i relativi indirizzi IP.
+*   L'identità *i<sub>1</sub>* usa la sua istanza di LinuxRoute (che ora è *r<sub>𝛼</sub>*) per assegnarsi i relativi indirizzi IP.
+*   L'identità *i<sub>0</sub>* usa la sua istanza di LinuxRoute (che ora è *r<sub>𝛽</sub>*) per assegnarsi i relativi indirizzi IP.
 
 Successivamente — ma in tempi molto rapidi perché il modulo QSPN prevede un tempo massimo
 di rilevamento dell'arco, che è fissato dal programma *qspnclient* a 10 secondi — sulla console del nodo
@@ -287,13 +287,13 @@ Elenchiamo le funzionalità che si vogliono implementare nella classe LinuxRoute
     *identità*, che è anche la *principale*. Nell'istanza della classe IdentityData
     che si riferisce a questa identità viene memorizzata, nel membro *route*, l'istanza di
     LinuxRoute che è stata creata per il network namespace default.  
-    Quando il programma crea una nuova identità *i1* basata sulla precedente identità *i0*
-    viene creato un nuovo network namespace; l'identità *i1* inizierà ora a gestire il
-    vecchio namespace che era gestito da *i0*, mentre l'identità *i0* avrà in gestione
+    Quando il programma crea una nuova identità *i<sub>1</sub>* basata sulla precedente identità *i<sub>0</sub>*
+    viene creato un nuovo network namespace; l'identità *i<sub>1</sub>* inizierà ora a gestire il
+    vecchio namespace che era gestito da *i<sub>0</sub>*, mentre l'identità *i<sub>0</sub>* avrà in gestione
     il nuovo network namespace. Ne consegue che l'istanza di LinuxRoute che si trovava
-    nell'istanza di IdentityData associata a *i0* viene ora memorizzata nella
-    nuova istanza di IdentityData associata a *i1*; nell'istanza di IdentityData associata
-    a *i0* verrà invece memorizzata una nuova istanza di LinuxRoute, creata per il nuovo
+    nell'istanza di IdentityData associata a *i<sub>0</sub>* viene ora memorizzata nella
+    nuova istanza di IdentityData associata a *i<sub>1</sub>*; nell'istanza di IdentityData associata
+    a *i<sub>0</sub>* verrà invece memorizzata una nuova istanza di LinuxRoute, creata per il nuovo
     network namespace.
 
 *   Una identità, oltre a gestire un particolare network namespace, detiene un particolare
@@ -302,10 +302,10 @@ Elenchiamo le funzionalità che si vogliono implementare nella classe LinuxRoute
     momento è memorizzata nel membro *route* dell'istanza di IdentityData associata
     a questa identità, ha assegnato a quel network namespace un numero di indirizzi IP
     propri e ha impostato nelle sue tabelle un numero di rotte verso altri indirizzi IP.  
-    Quando il programma crea una nuova identità *i1* basata sulla precedente identità *i0*
-    avviene che l'identità *i0* vede cambiare il proprio indirizzo Netsukuku. Infatti diventa
+    Quando il programma crea una nuova identità *i<sub>1</sub>* basata sulla precedente identità *i<sub>0</sub>*
+    avviene che l'identità *i<sub>0</sub>* vede cambiare il proprio indirizzo Netsukuku. Infatti diventa
     una identità *di connettività* per un livello in cui prima non lo era. Inoltre la
-    nuova identità *i1* deterrà un nuovo indirizzo Netsukuku ancora diverso.
+    nuova identità *i<sub>1</sub>* deterrà un nuovo indirizzo Netsukuku ancora diverso.
 
     Ad esempio possiamo avere nel nodo *n* l'identità *n0* con indirizzo 3·2·3·1 in una topologia 4·4·4·4.
     Questo è un indirizzo *reale* quindi si tratta di una identità principale.  
@@ -330,12 +330,12 @@ Elenchiamo le funzionalità che si vogliono implementare nella classe LinuxRoute
 
     *   Inizio. Il network namespace assegnato alla prima identità *n0* non era gestito in precedenza
         da un'altra identità.  
-        L'istanza di LinuxRoute *r_alfa* riceve nel costruttore la stringa `ns` che identifica il
+        L'istanza di LinuxRoute *r<sub>𝛼</sub>* riceve nel costruttore la stringa `ns` che identifica il
         namespace. In questo caso di norma è il default, cioè `""`.  
-        In seguito, sull'istanza di LinuxRoute *r_alfa*, siccome essa gestisce il network namespace default,
+        In seguito, sull'istanza di LinuxRoute *r<sub>𝛼</sub>*, siccome essa gestisce il network namespace default,
         viene chiamato il metodo `add_address(address, dev)` varie
         volte per assegnare un indirizzo IP alle interfacce di rete reali.  
-        Nel tempo, sull'istanza di LinuxRoute *r_alfa* come risposta ai segnali notificati dal
+        Nel tempo, sull'istanza di LinuxRoute *r<sub>𝛼</sub>* come risposta ai segnali notificati dal
         QspnManager della relativa *identità*, vengono chiamati i metodi `add_route` o `change_route`
         o `remove_route` per ogni cambiamento alle policy di routing nel network
         namespace relativo.
@@ -344,20 +344,20 @@ Elenchiamo le funzionalità che si vogliono implementare nella classe LinuxRoute
         dalla *n0*. Il programma lo può recuperare usando il metodo `get_namespace` dell'IdentityManager.  
         Ora all'identità *n0* è stato assegnato un diverso namespace *x* da parte dell'IdentityManager.
         Il programma lo può recuperare usando il metodo `get_namespace`.  
-        All'identità *n1* viene ora associata l'istanza di LinuxRoute *r_alfa*.  
-        Una nuova istanza di LinuxRoute, *r_beta*, viene creata e riceve nel costruttore la stringa `ns` che identifica il
-        namespace *x* ora gestito dall'identità *n0*. Poi all'identità *n0* viene associata l'istanza *r_beta*.  
-        Sull'istanza *r_alfa*, cioè quella associata a *n1*, viene chiamato il metodo `remove_addresses`
+        All'identità *n1* viene ora associata l'istanza di LinuxRoute *r<sub>𝛼</sub>*.  
+        Una nuova istanza di LinuxRoute, *r<sub>𝛽</sub>*, viene creata e riceve nel costruttore la stringa `ns` che identifica il
+        namespace *x* ora gestito dall'identità *n0*. Poi all'identità *n0* viene associata l'istanza *r<sub>𝛽</sub>*.  
+        Sull'istanza *r<sub>𝛼</sub>*, cioè quella associata a *n1*, viene chiamato il metodo `remove_addresses`
         per rimuovere tutti gli indirizzi IP propri che aveva assegnato al suo network namespace:
-        infatti proprio *r_alfa* li aveva assegnati (con `add_address`) alle varie \[pseudo]interfacce
+        infatti proprio *r<sub>𝛼</sub>* li aveva assegnati (con `add_address`) alle varie \[pseudo]interfacce
         gestite nel suo network namespace, quando era ancora associata a *n0*.  
-        In seguito, sull'istanza di LinuxRoute *r_alfa*, cioè quella associata a *n1*, se essa gestisce il network namespace default,
+        In seguito, sull'istanza di LinuxRoute *r<sub>𝛼</sub>*, cioè quella associata a *n1*, se essa gestisce il network namespace default,
         viene chiamato il metodo `add_address(address, dev)` varie
         volte per assegnare un indirizzo IP alle interfacce di rete reali.  
-        Non è necessario, sull'istanza di LinuxRoute *r_beta*, cioè quella associata a *n0*, chiamare mai il metodo `add_address`
+        Non è necessario, sull'istanza di LinuxRoute *r<sub>𝛽</sub>*, cioè quella associata a *n0*, chiamare mai il metodo `add_address`
         in quanto nei network namespace diversi dal default il sistema non detiene mai
         un indirizzo IP proprio, nemmeno interno ad un livello.  
-        Nel tempo, su entrambe le istanze *r_alfa* e *r_beta* come risposta ai segnali notificati dal
+        Nel tempo, su entrambe le istanze *r<sub>𝛼</sub>* e *r<sub>𝛽</sub>* come risposta ai segnali notificati dal
         QspnManager della relativa *identità*, vengono chiamati i metodi `add_route` o `change_route`
         o `remove_route` per ogni cambiamento alle policy di routing nel network
         namespace relativo.
