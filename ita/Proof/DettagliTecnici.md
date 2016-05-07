@@ -44,12 +44,24 @@ ancora il segnale *nic_address_set* di INeighborhoodIPRouteManager, mentre cioè
 Dopo aver costruito IdentityManager il programma si mette in ascolto dei suoi segnali *identity_arc_added*,
 *changed* e *removed*.
 
-Poi il programma chiama il metodo *get_main_id* di IdentityManager per recuperare il NodeID che il modulo
-Identities ha assegnato alla prima identità. Associa tale NodeID al prossimo valore dell'indice
-autoincrementante *nodeid_nextindex*, nel dizionario *nodeids*.
+Il programma *qspnclient* vuole tenere traccia delle identità che sono nel nodo. Lo fa tramite il
+dizionario *nodeids*, in cui la chiave è l'indice autoincrementante *nodeid_nextindex* e il valore è
+una istanza della classe *IdentityData*. Dentro questa classe il programma mantiene alcune informazioni, tra le quali:
+
+*   `NodeID nodeid` - L'identificativo che il modulo Identities ha assegnato all'identità.
+*   `my_addr` - L'indirizzo Netsukuku.
+*   `my_fp` - Il fingerprint e le anzianità a livello 0.
+*   `LinuxRoute route` - Una classe che, vedremo dopo, aiuta a gestire il network namespace.
+
+Per valorizzare la prima istanza di IdentityData, nel dizionario con indice 0 e associata alla
+prima identità del nodo, il programma chiama il metodo *get_main_id* di IdentityManager per
+recuperare il NodeID che il modulo Identities ha assegnato alla prima identità.
 
 In questo stesso momento il NodeID viene mostrato a video con il relativo indice. In seguito l'utente può
 rivederli con il comando interattivo *show_nodeids*.
+
+Inoltre in questa prima istanza di IdentityData viene memorizzata la prima istanza di *LinuxRoute* che
+gestisce il network namespace default.
 
 * * *
 
@@ -68,14 +80,20 @@ Per comodità, il programma *qspnclient* assume che la topologia di rete usata s
 nodi che prendono parte al testbed. Questo significa che quando l'utente richiederà l'ingresso di un nodo
 in una diversa rete (vedere sotto il comando interattivo *enter_net*) la topologia non dovrà essere di nuovo specificata.
 
-Quando si forma una nuova identità (qui e anche con il comando interattivo *add_identity*) il programma *qspnclient*
-crea una istanza della classe *LinuxRoute* con la quale intende gestire gli aspetti delle routing
-policy nel network namespace associato a quella identità.
+Qui il programma *qspnclient* crea la prima istanza della classe *LinuxRoute*, che è destinata
+al network namespace default. Con la classe LinuxRoute si intende gestire gli aspetti delle routing
+policy di un dato network namespace.
+
+In seguito, quando si forma una nuova identità (con il comando interattivo *add_identity*),
+necessariamente viene anche creato un nuovo network namespace temporaneo. Allora il programma *qspnclient*
+creerà una nuova istanza della classe LinuxRoute destinata a quel network namespace.
 
 Quando viene creata una istanza di QspnManager (qui e anche con il comando interattivo *enter_net*)
-come prima operazione con la classe *LinuxRoute* appena istanziata il programma *qspnclient* assegna al nodo
-(nell'ambito del network namespace associato a questa identità) gli indirizzi IP che servono. In questo
-caso specifico del costruttore *create_net*, siamo di fronte ad una identità principale che detiene un
+come prima operazione con l'istanza di LinuxRoute che gestisce il network namespace associato
+a questa identità, il programma *qspnclient* assegna al nodo gli indirizzi IP che servono. Usa per questo
+il metodo `add_address` di LinuxRoute.
+
+In questo caso specifico del costruttore *create_net*, siamo di fronte ad una identità principale che detiene un
 indirizzo Netsukuku *reale* *n*. Quindi il programma assegna al nodo:
 
 *   L'indirizzo IP globale di *n*.
@@ -148,15 +166,18 @@ recupera l'indice del *nodeid* che vuole fare ingresso (in questo esempio sia 0)
 *add_identity(1234,nodeids[0])* di IdentityManager. I comandi interattivi per questo scopo
 sono *prepare_add_identity* e *add_identity*.
 
-Come risultato viene creata una nuova identità nel nodo A. Il nuovo NodeID viene restituito al programma
-dalla chiamata *add_identity*. Il programma associa tale NodeID al prossimo valore dell'indice
+Come risultato viene creata una nuova identità *i1* nel nodo A basata sulla precedente identità *i0*,
+il cui nuovo NodeID viene restituito al programma dalla chiamata *add_identity*. Il programma
+crea una nuova istanza di IdentityData per tenere traccia di *i1*; la associa al prossimo valore dell'indice
 autoincrementante *nodeid_nextindex*, nel dizionario *nodeids*. In questo esempio sia 1.
 
-Ricordiamo che ad ogni identità il programma *qspnclient* associa una istanza di *LinuxRoute* per
-gestire le routing policy nel relativo network namespace. Qui la vecchia identità passa a gestire
-un nuovo network namespace e la nuova identità inizia a gestire il vecchio network namespace. Questo
-comporta che il programma *qspnclient* deve creare una nuova istanza di *LinuxRoute* e fare in
-modo che le due istanze si scambino il network namespace di riferimento.
+Inoltre è stato anche realizzato un nuovo network namespace temporaneo; l'identità *i1* inizierà ora a gestire il
+vecchio namespace che era gestito da *i0*, mentre l'identità *i0* avrà in gestione
+il nuovo network namespace. Ne consegue che l'istanza di LinuxRoute che si trovava
+memorizzata nell'istanza di IdentityData associata a *i0*, nel membro *route*, viene ora memorizzata nella
+nuova istanza di IdentityData associata a *i1*; nell'istanza di IdentityData associata
+a *i0* verrà invece memorizzata una nuova istanza di LinuxRoute, creata per il nuovo
+network namespace.
 
 Inoltre avverrà anche che nel nodo B si rileva la creazione di un nuovo arco-identità tra l'identità che
 già era in B e la nuova identità in A. Verrà mostrato a video nella console del programma in esecuzione
@@ -197,7 +218,7 @@ interattivo *enter_net*) per chiamare il costruttore *enter_net* di QspnManager 
     Netsukuku dei vicini collegati da questi archi. In questo esempio \["3.10.123.45"].
 
 Subito dopo aver costruito la nuova istanza di QspnManager, il comando interattivo *enter_net*
-per mezzo delle istanze di *LinuxRoute* associate alle due identità esegue queste operazioni:
+per mezzo delle istanze di LinuxRoute associate alle due identità esegue queste operazioni:
 
 *   La vecchia identità rimuove dal suo vecchio network namespace i relativi indirizzi IP.
 *   La nuova identità si assegna nel network namespace (precedentemente gestito dalla vecchia) i relativi indirizzi IP.
@@ -254,7 +275,7 @@ Elenchiamo le funzionalità che si vogliono implementare nella classe LinuxRoute
 
 *   Abbiamo una istanza di questa classe per ogni network namespace gestito dal programma.  
     Inizialmente il programma gestisce il network namespace default con la sua prima
-    *identità*, che è anche la *principale*. Nell'istanza della classe IdentityData (**TODO** accennare a tale classe)
+    *identità*, che è anche la *principale*. Nell'istanza della classe IdentityData
     che si riferisce a questa identità viene memorizzata, nel membro *route*, l'istanza di
     LinuxRoute che è stata creata per il network namespace default.  
     Quando il programma crea una nuova identità *i1* basata sulla precedente identità *i0*
