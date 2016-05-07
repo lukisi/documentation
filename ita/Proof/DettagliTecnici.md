@@ -173,11 +173,21 @@ autoincrementante *nodeid_nextindex*, nel dizionario *nodeids*. In questo esempi
 
 Inoltre è stato anche realizzato un nuovo network namespace temporaneo; l'identità *i1* inizierà ora a gestire il
 vecchio namespace che era gestito da *i0*, mentre l'identità *i0* avrà in gestione
-il nuovo network namespace. Ne consegue che l'istanza di LinuxRoute che si trovava
+il nuovo network namespace. Ne consegue che l'istanza di LinuxRoute, chiamiamola *r_alfa*, che si trovava
 memorizzata nell'istanza di IdentityData associata a *i0*, nel membro *route*, viene ora memorizzata nella
 nuova istanza di IdentityData associata a *i1*; nell'istanza di IdentityData associata
-a *i0* verrà invece memorizzata una nuova istanza di LinuxRoute, creata per il nuovo
+a *i0* verrà invece memorizzata una nuova istanza di LinuxRoute, chiamiamola *r_beta*, creata per il nuovo
 network namespace.
+
+Tutte le rotte impostate da *r_alfa* nel suo network namespace non sono più valide, poiché ora
+quel network namespace è gestito da una diversa identità. Per questo il programma chiama su
+*r_alfa* il metodo `flush_routes`. **_Nota_**: questo metodo dovrebbe svuotare (e eliminare) anche
+le table `ntk_from_XXX`.
+
+L'istanza *r_alfa* era stata usata per impostare (con `add_address`) tutti gli indirizzi IP
+che nel tempo sono stati assegnati alle varie \[pseudo]interfacce gestite da *i0* nel suo
+vecchio network namespace. Quindi l'istanza *r_alfa* è in grado di sapere quali indirizzi IP
+rimuovere. Per questo il programma chiama su *r_alfa* il metodo `remove_addresses`.
 
 Inoltre avverrà anche che nel nodo B si rileva la creazione di un nuovo arco-identità tra l'identità che
 già era in B e la nuova identità in A. Verrà mostrato a video nella console del programma in esecuzione
@@ -220,9 +230,8 @@ interattivo *enter_net*) per chiamare il costruttore *enter_net* di QspnManager 
 Subito dopo aver costruito la nuova istanza di QspnManager, il comando interattivo *enter_net*
 per mezzo delle istanze di LinuxRoute associate alle due identità esegue queste operazioni:
 
-*   La vecchia identità rimuove dal suo vecchio network namespace i relativi indirizzi IP.
-*   La nuova identità si assegna nel network namespace (precedentemente gestito dalla vecchia) i relativi indirizzi IP.
-*   La vecchia identità si assegna nel suo nuovo network namespace i relativi indirizzi IP.
+*   L'identità *i1* usa la sua istanza di LinuxRoute (che ora è *r_alfa*) per assegnarsi i relativi indirizzi IP.
+*   L'identità *i0* usa la sua istanza di LinuxRoute (che ora è *r_beta*) per assegnarsi i relativi indirizzi IP.
 
 Successivamente — ma in tempi molto rapidi perché il modulo QSPN prevede un tempo massimo
 di rilevamento dell'arco, che è fissato dal programma *qspnclient* a 10 secondi — sulla console del nodo
@@ -232,7 +241,7 @@ con il metodo *arc_add*. Le informazioni da dare (nel comando interattivo *add_q
 *   `int nodeid_index`. L'indice del NodeID di B. Per recuperare l'istanza di QspnManager su cui
     operare. In questo esempio l'indice 0.
 *   `int idarc_index`. L'indice dell'arco-identità sul quale va costruito il IQspnArc. In questo esempio 1.
-*   `string idarc_address`. L'indirizzo Netsukuku del vicino collegato da questo arco. In questo esempio la stringa "4.1.1.1".
+*   `string idarc_address`. L'indirizzo Netsukuku del vicino collegato da questo arco. In questo esempio la stringa "3.10.67.89".
 
 ## Elenco comandi interattivi
 
@@ -406,6 +415,10 @@ nella parte alta del documento.
     Questo metodo **TODO**...
 
 *   **remove_addresses**  
+    Argomenti: nessuno.  
+    Questo metodo **TODO**...
+
+*   **flush_routes**  
     Argomenti: nessuno.  
     Questo metodo **TODO**...
 
