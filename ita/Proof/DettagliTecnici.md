@@ -231,7 +231,8 @@ Subito dopo aver costruito la nuova istanza di QspnManager, il comando interatti
 per mezzo delle istanze di LinuxRoute associate alle due identità esegue queste operazioni:
 
 *   L'identità *i<sub>1</sub>* usa la sua istanza di LinuxRoute (che ora è *r<sub>𝛼</sub>*) per assegnarsi i relativi indirizzi IP.
-*   L'identità *i<sub>0</sub>* usa la sua istanza di LinuxRoute (che ora è *r<sub>𝛽</sub>*) per assegnarsi i relativi indirizzi IP.
+*   L'identità *i<sub>0</sub>* usa la sua istanza di LinuxRoute (che ora è *r<sub>𝛽</sub>*) per assegnarsi i relativi indirizzi IP.  
+    In realtà, essendo *i<sub>0</sub>* una identità *di connettività*, secondo l'analisi non dovrà assegnarsi nessun indirizzo IP.
 
 Successivamente — ma in tempi molto rapidi perché il modulo QSPN prevede un tempo massimo
 di rilevamento dell'arco, che è fissato dal programma *qspnclient* a 10 secondi — sulla console del nodo
@@ -365,7 +366,7 @@ Elenchiamo le funzionalità che si vogliono implementare nella classe LinuxRoute
 *   Una istanza di LinuxRoute ha impostato (con `add_address`) tutti gli indirizzi IP
     che nel tempo sono stati assegnati alle varie \[pseudo]interfacce gestite in un
     particolare network namespace da una particolare *identità*.  
-    In realtà abbiamo già detto che questo avviene solo nel network namespace default, poiché
+    In realtà abbiamo già detto nell'analisi che questo avviene solo nel network namespace default, poiché
     non serve assegnare un indirizzo IP proprio (nemmeno interno ad un g-nodo) ad una identità
     *di connettività*; comunque la classe LinuxRoute lo permetterebbe, se volessimo.  
     Quando questa *identità* cessa di gestire questo network namespace (perché cessa
