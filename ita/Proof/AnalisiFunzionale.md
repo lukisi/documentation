@@ -280,13 +280,13 @@ Se è *reale*, riguardo questo indirizzo Netsukuku *n*:
         *   Il nodo imposta una rotta in *partenza* verso *d<sub>a</sub>*. In essa l'indirizzo
             usato come *src* è l'indirizzo IP globale di *n*.  
             Viene impostata la rotta identificata dal miglior percorso noto per quella
-            destinazione. La destinazione *d<sub>g</sub>* non può essere "non raggiungibile".
+            destinazione. La destinazione *d<sub>a</sub>* non può essere "non raggiungibile".
         *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
             *   Il nodo imposta una rotta in *inoltro* verso *d<sub>a</sub>* per i pacchetti
                 provenienti da *m*.  
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
                 destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
-                La destinazione *d<sub>g</sub>* può essere "non raggiungibile" per i pacchetti
+                La destinazione *d<sub>a</sub>* può essere "non raggiungibile" per i pacchetti
                 in *inoltro* provenienti da *m*.
         *   Il nodo dovrebbe impostare una rotta in *inoltro* verso *d<sub>a</sub>* per i pacchetti
             provenienti da un MAC address che non è fra quelli che il nodo conosce. Ma come detto
@@ -295,7 +295,7 @@ Se è *reale*, riguardo questo indirizzo Netsukuku *n*:
         *   Il nodo imposta una rotta in *partenza* verso *d<sub>i</sub>*. In essa l'indirizzo
             usato come *src* è l'indirizzo IP interno al livello *j* + 1 di *n*.  
             Viene impostata la rotta identificata dal miglior percorso noto per quella
-            destinazione. La destinazione *d<sub>g</sub>* non può essere "non raggiungibile".
+            destinazione. La destinazione *d<sub>i</sub>* non può essere "non raggiungibile".
         *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
             *   Il nodo imposta una rotta in *inoltro* verso *d<sub>i</sub>* per i pacchetti
                 provenienti da *m*.  
@@ -324,7 +324,7 @@ In questo caso, riguardo questo indirizzo Netsukuku *n*:
         *   Il nodo imposta una rotta in *partenza* verso *d<sub>i</sub>*. In essa l'indirizzo
             usato come *src* è l'indirizzo IP interno al livello *j* + 1 di *n*.  
             Viene impostata la rotta identificata dal miglior percorso noto per quella
-            destinazione. La destinazione *d<sub>g</sub>* non può essere "non raggiungibile".
+            destinazione. La destinazione *d<sub>i</sub>* non può essere "non raggiungibile".
         *   Per ogni MAC address *m* di diretto vicino che il nodo conosce:
             *   Il nodo imposta una rotta in *inoltro* verso *d<sub>i</sub>* per i pacchetti
                 provenienti da *m*.  
