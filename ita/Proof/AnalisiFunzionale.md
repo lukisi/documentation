@@ -656,6 +656,11 @@ senso che i dati del pacchetto non sono affatto modificati, ma solo il sistema l
 marcato; ed è sempre il sistema locale che lo ha precedentemente marcato. Questa marcatura viene
 fatta da una parte del kernel che può essere istruita usando l'azione `MARK` del comando `iptables`.
 
+Occorre evidenziare che, in presenza di molteplici network namespace, (di default) il file che
+associa il nome mnemonico della tabella al suo numero, `/etc/iproute2/rt_tables`, è comune a tutti
+i namespace. Invece le regole di scelta della tabella da esaminare e il contenuto delle tabelle
+è distinto in ogni namespace.
+
 Fatta questa premessa, come si comporta il programma?
 
 Il programma, attraverso i moduli Neighborhood e Identities, ha già automaticamente ottenuto
