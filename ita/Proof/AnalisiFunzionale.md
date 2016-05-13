@@ -259,6 +259,9 @@ Se è *reale*, riguardo questo indirizzo Netsukuku *n*:
                 indirizzo IP, allora come *src* preferito dovrà usare l'indirizzo IP globale di *n*.
             *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
                 *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
+                    In questo caso è garantito che tutte le componenti dell'indirizzo di *n*
+                    dal livello *j* + 1 al livello *t* - 1 sono *reali*, cosa necessaria affinché
+                    l'indirizzo IP interno al livello *t* del g-nodo *d* abbia significato.  
                     Si tenga presente che se un processo locale vuole inviare un pacchetto a questo
                     indirizzo IP, allora come *src* preferito dovrà usare l'indirizzo IP
                     di *n* interno al livello *t*.
@@ -302,6 +305,9 @@ In questo caso, riguardo questo indirizzo Netsukuku *n*:
         *   Il nodo computa questi indirizzi IP:
             *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
                 *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
+                    Questo indirizzo IP va calcolato solo se tutte le componenti dell'indirizzo di *n*
+                    dal livello *j* + 1 al livello *t* - 1 sono *reali*, cosa necessaria affinché
+                    l'indirizzo IP interno al livello *t* del g-nodo *d* abbia significato.  
                     Si tenga presente che se un processo locale vuole inviare un pacchetto a questo
                     indirizzo IP, allora come *src* preferito dovrà usare l'indirizzo IP
                     di *n* interno al livello *t*.
@@ -330,6 +336,8 @@ In questo caso, riguardo questo indirizzo Netsukuku *n*:
         *   Il nodo computa questi indirizzi IP:
             *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
                 *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
+                    Questo indirizzo IP va calcolato solo se tutte le componenti dell'indirizzo di *n*
+                    dal livello *j* + 1 al livello *t* - 1 sono *reali*.  
                     In questo caso è impossibile per un processo locale inviare un pacchetto a questo
                     indirizzo IP, non potendo usare un indirizzo IP
                     di *n* interno al livello *t*.
@@ -360,6 +368,8 @@ In questo caso, riguardo questo indirizzo Netsukuku *n*:
                 indirizzo IP, non potendo usare l'indirizzo IP globale di *n*.
             *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
                 *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
+                    In questo caso è garantito che tutte le componenti dell'indirizzo di *n*
+                    dal livello *j* + 1 al livello *t* - 1 sono *reali*.  
                     In questo caso è impossibile per un processo locale inviare un pacchetto a questo
                     indirizzo IP, non potendo usare un indirizzo IP
                     di *n* interno al livello *t*.
@@ -397,6 +407,8 @@ In questo caso, riguardo questo indirizzo Netsukuku *n*:
         *   Il nodo computa questi indirizzi IP:
             *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
                 *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
+                    Questo indirizzo IP va calcolato solo se tutte le componenti dell'indirizzo di *n*
+                    dal livello *j* + 1 al livello *t* - 1 sono *reali*.  
                     In questo caso è impossibile che un processo locale voglia inviare un pacchetto a questo
                     indirizzo IP, poiché questa identità non è nel network namespace default.
         *   Esaminiamo ognuno di questi indirizzi IP. Indichiamo con *d<sub>x</sub>*
@@ -424,6 +436,8 @@ In questo caso, riguardo questo indirizzo Netsukuku *n*:
             *   *d<sub>a</sub>* - Indirizzo IP globale anonimizzante del g-nodo *d*.  
             *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
                 *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
+                    In questo caso è garantito che tutte le componenti dell'indirizzo di *n*
+                    dal livello *j* + 1 al livello *t* - 1 sono *reali*.
         *   Esaminiamo ognuno di questi indirizzi IP. Indichiamo con *d<sub>x</sub>*
             questo indirizzo riferito a *d*.
             *   Il nodo NON ha una rotta in *partenza* verso *d<sub>x</sub>*.
