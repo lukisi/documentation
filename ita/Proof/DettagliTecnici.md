@@ -51,7 +51,8 @@ una istanza della classe *IdentityData*. Dentro questa classe il programma manti
 *   `NodeID nodeid` - L'identificativo che il modulo Identities ha assegnato all'identità.
 *   `my_addr` - L'indirizzo Netsukuku.
 *   `my_fp` - Il fingerprint e le anzianità a livello 0.
-*   `LinuxRoute route` - Una classe che, vedremo dopo, aiuta a gestire il network namespace.
+*   `LinuxRoute route` - Una classe, che dettaglieremo dopo, con la quale si intende gestire gli
+    aspetti delle routing policy di un dato network namespace.
 
 Per valorizzare la prima istanza di IdentityData, nel dizionario con indice 0 e associata alla
 prima identità del nodo, il programma chiama il metodo *get_main_id* di IdentityManager per
@@ -80,9 +81,8 @@ Per comodità, il programma *qspnclient* assume che la topologia di rete usata s
 nodi che prendono parte al testbed. Questo significa che quando l'utente richiederà l'ingresso di un nodo
 in una diversa rete (vedere sotto il comando interattivo *enter_net*) la topologia non dovrà essere di nuovo specificata.
 
-Qui il programma *qspnclient* crea la prima istanza della classe *LinuxRoute*, che è destinata
-al network namespace default. Con la classe LinuxRoute si intende gestire gli aspetti delle routing
-policy di un dato network namespace.
+Abbiamo già detto che alla prima *identità* il programma *qspnclient* associa la prima istanza della classe
+*LinuxRoute*, che è destinata al network namespace default.
 
 In seguito, quando si forma una nuova identità (con il comando interattivo *add_identity*),
 necessariamente viene anche creato un nuovo network namespace temporaneo. Allora il programma *qspnclient*
@@ -179,15 +179,18 @@ nuova istanza di IdentityData associata a *i<sub>1</sub>*; nell'istanza di Ident
 a *i<sub>0</sub>* verrà invece memorizzata una nuova istanza di LinuxRoute, chiamiamola *r<sub>𝛽</sub>*, creata per il nuovo
 network namespace.
 
-Tutte le rotte impostate da *r<sub>𝛼</sub>* nel suo network namespace non sono più valide, poiché ora
-quel network namespace è gestito da una diversa identità. Per questo il programma chiama su
-*r<sub>𝛼</sub>* il metodo `flush_routes`. **_Nota_**: questo metodo dovrebbe svuotare (e eliminare) anche
-le table `ntk_from_XXX`.
-
-L'istanza *r<sub>𝛼</sub>* era stata usata per impostare (con `add_address`) tutti gli indirizzi IP
-che nel tempo sono stati assegnati alle varie \[pseudo]interfacce gestite da *i<sub>0</sub>* nel suo
-vecchio network namespace. Quindi l'istanza *r<sub>𝛼</sub>* è in grado di sapere quali indirizzi IP
-rimuovere. Per questo il programma chiama su *r<sub>𝛼</sub>* il metodo `remove_addresses`.
+Alcune delle rotte impostate da *r<sub>𝛼</sub>* nel suo network namespace dovranno presto essere
+rimosse, mentre altre dovranno rimanere. Analogamente, alcuni indirizzi IP, che nel tempo sono stati impostati
+da *r<sub>𝛼</sub>* nel suo network namespace assegnandoli alle varie \[pseudo]interfacce gestite,
+dovranno presto essere rimossi, mentre altri dovranno rimanere. Tutto questo deriva dal fatto che ora
+quel network namespace è gestito da una diversa identità *i<sub>1</sub>*.  
+Quando l'utente dà il comando interattivo *add_identity* non sappiamo ancora quale sia il g-nodo
+che in blocco entra in una nuova rete oppure migra in un diverso g-nodo. In base al livello
+del g-nodo che *si muove* e al livello del g-nodo in cui esso entra, alcuni indirizzi IP interni
+e le relative rotte dovranno restare in esistenza nel network namespace gestito da *r<sub>𝛼</sub>*
+mentre altri dovranno essere rimossi.  
+Quindi rinviamo queste considerazioni ad un prossimo momento: in questo caso, al momento in cui
+l'utente dà il comando interattivo *enter_net*.
 
 Inoltre avverrà anche che nel nodo B si rileva la creazione di un nuovo arco-identità tra l'identità che
 già era in B e la nuova identità in A. Verrà mostrato a video nella console del programma in esecuzione
@@ -227,10 +230,27 @@ interattivo *enter_net*) per chiamare il costruttore *enter_net* di QspnManager 
 *   `List<string> idarc_address_set`. Una lista compagna della precedente, con i relativi indirizzi
     Netsukuku dei vicini collegati da questi archi. In questo esempio \["3.10.123.45"].
 
-Subito dopo aver costruito la nuova istanza di QspnManager, il comando interattivo *enter_net*
+A questo punto, come dicevamo prima, il programma *qspnclient* conosce i dettagli di questo ingresso
+in una nuova rete. È il momento giusto per dare istruzioni all'istanza di LinuxRoute *r<sub>𝛼</sub>* (che ora è
+associata all'identità *i<sub>1</sub>*) di rimuovere le rotte e gli indirizzi IP propri che non sono
+più validi, lasciando in vigore le rotte (e relativi indirizzi propri) che sono validi in quanto
+interni ad un livello inferiore a quello del g-nodo che migra.
+
+Le rotte verso indirizzi IP globali e le rotte verso indirizzi IP interni ad un livello *k* tale
+che *k* > `hooking_gnode_level` vanno rimosse. Per farlo il programma *qspnclient* fa diverse
+chiamate al metodo `remove_destination` di *r<sub>𝛼</sub>* sulla base dei percorsi che sono
+noti al precedente QspnManager.
+
+L'indirizzo IP proprio globale e quelli interni ad un livello *k* tale
+che *k* > `into_gnode_level-1` vanno rimossi. Per farlo il programma *qspnclient* fa diverse
+chiamate al metodo `remove_address` di *r<sub>𝛼</sub>* sulla base dell'indirzzo Netsukuku che era
+detenuto dalla precente identità (memorizzato nella classe IdentityData).
+
+Subito dopo, il comando interattivo *enter_net* costruisce la nuova istanza di QspnManager. Poi,
 per mezzo delle istanze di LinuxRoute associate alle due identità esegue queste operazioni:
 
-*   L'identità *i<sub>1</sub>* usa la sua istanza di LinuxRoute (che ora è *r<sub>𝛼</sub>*) per assegnarsi i relativi indirizzi IP.
+*   L'identità *i<sub>1</sub>* usa la sua istanza di LinuxRoute (che ora è *r<sub>𝛼</sub>*) per assegnarsi i relativi indirizzi IP.  
+    Per l'esattezza, l'indirizzo IP globale e quelli interni ai livelli da `into_gnode_level` in su.
 *   L'identità *i<sub>0</sub>* usa la sua istanza di LinuxRoute (che ora è *r<sub>𝛽</sub>*) per assegnarsi i relativi indirizzi IP.  
     In realtà, essendo *i<sub>0</sub>* una identità *di connettività*, secondo l'analisi non dovrà assegnarsi nessun indirizzo IP.
 
@@ -283,19 +303,7 @@ con il metodo *arc_add*. Le informazioni da dare (nel comando interattivo *add_q
 
 Elenchiamo le funzionalità che si vogliono implementare nella classe LinuxRoute.
 
-*   Abbiamo una istanza di questa classe per ogni network namespace gestito dal programma.  
-    Inizialmente il programma gestisce il network namespace default con la sua prima
-    *identità*, che è anche la *principale*. Nell'istanza della classe IdentityData
-    che si riferisce a questa identità viene memorizzata, nel membro *route*, l'istanza di
-    LinuxRoute che è stata creata per il network namespace default.  
-    Quando il programma crea una nuova identità *i<sub>1</sub>* basata sulla precedente identità *i<sub>0</sub>*
-    viene creato un nuovo network namespace; l'identità *i<sub>1</sub>* inizierà ora a gestire il
-    vecchio namespace che era gestito da *i<sub>0</sub>*, mentre l'identità *i<sub>0</sub>* avrà in gestione
-    il nuovo network namespace. Ne consegue che l'istanza di LinuxRoute che si trovava
-    nell'istanza di IdentityData associata a *i<sub>0</sub>* viene ora memorizzata nella
-    nuova istanza di IdentityData associata a *i<sub>1</sub>*; nell'istanza di IdentityData associata
-    a *i<sub>0</sub>* verrà invece memorizzata una nuova istanza di LinuxRoute, creata per il nuovo
-    network namespace.
+*   Abbiamo una istanza di questa classe per ogni network namespace gestito dal programma.
 
 *   Una identità, oltre a gestire un particolare network namespace, detiene un particolare
     indirizzo Netsukuku e mantiene una mappa di percorsi verso destinazioni note.  
@@ -402,8 +410,9 @@ nella parte alta del documento.
 
     *   `string ns`  
         Il nome del network namespace gestito attraverso questa nuova istanza.
-
-    Questo costruttore **TODO**...
+    *   `string whole_network`  
+        Il range di indirizzi IP (in notazione CIDR) riservato per la rete Netsukuku
+        in base alla topologia scelta.
 
 *   **add_address**  
     Argomenti:
@@ -415,12 +424,52 @@ nella parte alta del documento.
 
     Questo metodo **TODO**...
 
-*   **remove_addresses**  
-    Argomenti: nessuno.  
+*   **remove_address**  
+    Argomenti:
+
+    *   `string address`  
+        Indirizzo IP da assegnare.
+    *   `string dev`  
+        Interfaccia (o pseudo) di rete gestita.
+
     Questo metodo **TODO**...
 
-*   **flush_routes**  
-    Argomenti: nessuno.  
+*   **add_destination**  
+    Argomenti:
+
+    *   `string dest`  
+        Indirizzo IP (in notazione CIDR) destinazione.
+
     Questo metodo **TODO**...
 
+*   **remove_destination**  
+    Argomenti:
+
+    *   `string dest`  
+        Indirizzo IP (in notazione CIDR) destinazione.
+
+    Questo metodo **TODO**...
+
+*   **change_best_path**  
+    Argomenti:
+
+    *   `string dest`  
+        Indirizzo IP (in notazione CIDR) destinazione.
+    *   `string? dev`  
+        Interfaccia (o pseudo) di rete tramite cui raggiungere il gateway.  
+        Vale `null` se questa destinazione è irraggiungibile.
+    *   `string? gw`  
+        Interfaccia (o pseudo) di rete tramite cui raggiungere il gateway.  
+        Vale `null` se questa destinazione è irraggiungibile.
+    *   `string? src`  
+        Indirizzo IP proprio da usare come *src* preferito.  
+        Viene ignorato se questa destinazione è irraggiungibile.  
+        Vale `null` se con questa operazione si vuole solo impostare una rotta
+        da usare per i pacchetti in *inoltro*.
+    *   `string? neighbour_mac`  
+        MAC address di provenienza.  
+        Vale `null` se con questa operazione si vuole impostare la rotta principale
+        da usare per i pacchetti in *partenza*.
+
+    Questo metodo **TODO**...
 
