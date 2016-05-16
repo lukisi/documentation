@@ -28,6 +28,7 @@ scelta della topologia della rete:
 *   La somma degli esponenti di tutti i livelli (cioè il numero di bit necessari a codificare
     un indirizzo Netsukuku *reale*) non deve superare *t* - 2, dove *t* è il numero di bit
     a disposizione nella classe di indirizzi IP che si intende destinare alla rete Netsukuku.  
+    In altre parole, bisogna lasciare 2 bit liberi nello spazio degli indirizzi IP.  
     Ad esempio, se si destina alla rete Netsukuku la classe 10.0.0.0/8 di IPv4, tale
     somma non deve superare il numero 22.
 *   La *gsize* del livello più alto deve essere maggiore o uguale al numero dei livelli.
@@ -102,7 +103,8 @@ comporre un indirizzo IP di *n* che sia univoco internamente a *g*.
 
 I valori da *n<sub>0</sub>* a *n<sub>i-1</sub>* sono riportati come visto prima nei relativi bit
 dell'indirizzo IP che stiamo componendo. Il valore *i* viene riportato nei bit che sarebbero stati
-destinati all'identificativo di livello più alto, cioè *n<sub>l-1</sub>*. Gli altri bit sono lasciati a 0.
+destinati all'identificativo di livello più alto, cioè *n<sub>l-1</sub>*. Gli altri bit, quelli che
+avrebbero ospitato gli identificativi da *i* a *l* - 2, sono lasciati a 0.
 
 I due bit più alti li impostiamo a `|0|1|`.
 
@@ -115,27 +117,30 @@ Fin da subito il nodo *n* si è assegnato, oltre all'indirizzo IP globale 10.58.
 IP interno al g-nodo di livello 2, che è 10.96.123.45. Analogamente, il nodo *m* si è assegnato, oltre
 all'indirizzo IP globale 10.58.67.89, anche l'indirizzo IP interno al g-nodo di livello 2, che è 10.96.67.89.
 
-### <a name="Indirizzo_interno_gnodo"/>Indirizzo IP di un g-nodo interno al suo g-nodo direttamente superiore
+### <a name="Indirizzo_interno_gnodo"/>Indirizzo IP di un g-nodo interno ad un suo g-nodo superiore
 
 Sia *g* un g-nodo di livello *i* con indirizzo *g<sub>l-1</sub>·...·g<sub>i</sub>* con *i* < *l* - 1.
-Sia *h* il suo g-nodo di livello *i* + 1. Quindi *h* ha indirizzo *g<sub>l-1</sub>·...·g<sub>i+1</sub>*.
-Vogliamo comporre un indirizzo IP in notazione CIDR di *g* che sia univoco internamente a *h*.
+Sia *h* un suo g-nodo superiore di livello *k*. Quindi *h* ha indirizzo *g<sub>l-1</sub>·...·g<sub>k</sub>*, con
+*k* > *i*. Vogliamo comporre un indirizzo IP in notazione CIDR di *g* che sia univoco internamente a *h*.
 
-Il valore di *g<sub>i</sub>* è riportato come visto prima nei relativi bit dell'indirizzo IP che stiamo
-componendo. Il valore *i* + 1 viene riportato nei bit che sarebbero stati destinati all'identificativo di
-livello più alto, cioè *g<sub>l-1</sub>*. Gli altri bit sono lasciati a 0.
+Per ogni valore *t* da *i* a *k* - 1, il valore di *g<sub>t</sub>* è riportato come visto prima nei relativi
+bit dell'indirizzo IP che stiamo componendo. Il valore *k* viene riportato nei bit che sarebbero stati
+destinati all'identificativo di livello più alto, cioè *g<sub>l-1</sub>*. Gli altri bit sono lasciati a 0.
 
 I due bit più alti li impostiamo a `|0|1|`.
 
 #### Esempio
 
 Consideriamo i nodi *n* e *m* di prima. Dal punto di vista di *n*, il nodo *m* si trova nel g-nodo
-*g* 3·10·67 che ha in comune con lui il g-nodo direttamente superiore *h* 3·10.
+*g* 3·10·67.
 
-Il g-nodo *g* all'interno di *h* viene individuato con l'indirizzo IP 10.96.67.0/24. Questo significa che
-il nodo *n* ha nelle tabelle di routing una rotta per 10.96.67.0/24 che scaturisce dal percorso che gli è
-noto verso la destinazione *g*. Quindi, se il nodo *n* trasmette un pacchetto IP all'indirizzo 10.96.67.89
-(che *m* si era assegnato nell'esempio sopra) tale pacchetto prende quella rotta.
+Il nodo *n* ha in comune con *g* il g-nodo direttamente superiore *h* 3·10. Il g-nodo *g* all'interno di
+*h* viene individuato con l'indirizzo IP 10.96.67.0/24. Quindi *n* imposta nelle tabelle di routing una rotta
+per 10.96.67.0/24 a casua del percorso che gli è noto verso la destinazione *g*.
+
+Inoltre il nodo *n* ha in comune con *g* il g-nodo *h'* 3. Il g-nodo *g* all'interno di
+*h'* viene individuato con l'indirizzo IP 10.122.67.0/24. Quindi *n* imposta nelle tabelle di routing anche una rotta
+per 10.122.67.0/24 a casua del medesimo percorso verso *g*.
 
 ### <a name="Indirizzo_anonimizzante"/>Indirizzo IP di un nodo o g-nodo contattabile in forma anonima
 
@@ -157,6 +162,11 @@ Consideriamo il nodo *n* di prima. L'indirizzo IP globale anonimizzante di *n* �
 
 Se il nodo *n* ammette la possibilità di venire contattato in forma anonima (questa è una sua scelta) si
 assegna anche questo indirizzo.
+
+Inoltre, siccome il nodo *n* conosce un percorso per il g-nodo *g* 3·10·67, imposta nelle tabelle di
+routing anche una rotta per 10.186.67.0/24. Questo lo fa indipendentemente dal fatto che si sia
+assegnato o meno il suo indirizzo anonimizzante. In ogni caso, quando il nodo *n* usa la rotta verso
+10.186.67.0/24, usa come indirizzo IP *src* il suo indirizzo globale 10.58.123.45.
 
 ## Dimensione massima della mappa di un nodo del grafo
 
