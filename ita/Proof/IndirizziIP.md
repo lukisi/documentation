@@ -136,11 +136,11 @@ Consideriamo i nodi *n* e *m* di prima. Dal punto di vista di *n*, il nodo *m* s
 
 Il nodo *n* ha in comune con *g* il g-nodo direttamente superiore *h* 3·10. Il g-nodo *g* all'interno di
 *h* viene individuato con l'indirizzo IP 10.96.67.0/24. Quindi *n* imposta nelle tabelle di routing una rotta
-per 10.96.67.0/24 a casua del percorso che gli è noto verso la destinazione *g*.
+per 10.96.67.0/24 a causa del percorso che gli è noto verso la destinazione *g*.
 
 Inoltre il nodo *n* ha in comune con *g* il g-nodo *h'* 3. Il g-nodo *g* all'interno di
 *h'* viene individuato con l'indirizzo IP 10.122.67.0/24. Quindi *n* imposta nelle tabelle di routing anche una rotta
-per 10.122.67.0/24 a casua del medesimo percorso verso *g*.
+per 10.122.67.0/24 a causa del medesimo percorso verso *g*.
 
 ### <a name="Indirizzo_anonimizzante"/>Indirizzo IP di un nodo o g-nodo contattabile in forma anonima
 
