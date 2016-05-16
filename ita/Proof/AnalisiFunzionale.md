@@ -15,7 +15,7 @@ Ci proponiamo di realizzare un programma, **qspnclient**, che si avvale del modu
 moduli a sostegno (Neighborhood, Identities) per stabilire come impostare le rotte nelle tabelle
 di routing del kernel di una macchina. Si tratta di un programma specifico per un sistema Linux.
 
-## <a name="Ruolo_del_qspnclient"/>Ruolo del qspnclient
+## <a name="Ruolo_del_qspnclient"></a>Ruolo del qspnclient
 
 Questo programma permette all'utente di fare le veci del demone *ntkd*, simulando le sue operazioni
 e quelle di pertinenza di altri moduli:
@@ -33,7 +33,7 @@ sistema riesca effettivamente a stabilire connessioni con gli altri nodi della r
 siano quelle che ci si attende, eccetera. Inoltre il programma interattivamente consente di chiedere
 al modulo QSPN le informazioni che ha raccolto e mostrarle all'utente.
 
-### <a name="Interazione_programma_utente"/>Interazione programma-utente
+### <a name="Interazione_programma_utente"></a>Interazione programma-utente
 
 Il programma *qspnclient* prevede che l'utente immetta, come argomenti della riga di comando e in modo
 interattivo dalla console durante la sua esecuzione, tutti i requisiti dei moduli di cui si avvale.
@@ -186,7 +186,7 @@ di default del programma, se l'utente non indica alcun flag a riguardo, è di:
 *   abilitare l'anonimizzazione dei pacchetti che transitano per il nodo;
 *   non accettare richieste indirizzate al nodo da un client in forma anonima.
 
-## <a name="Mappatura_indirizzi_ip"/>Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IPv4
+## <a name="Mappatura_indirizzi_ip"></a>Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IPv4
 
 Gli indirizzi Netsukuku dei *nodi del grafo* vanno mappati in un range di indirizzi IP che si
 decide di destinare alla rete Netsukuku. Nell'attuale implementazione si presume che questo
@@ -229,14 +229,14 @@ identificativi *reali* da 0 a *i*, si risale ad un indirizzo IP interno al livel
 Gli algoritmi di
 calcolo dei vari tipi di indirizzo IP sono descritti nel documento [IndirizziIP](IndirizziIP.md).
 
-## <a name="Identita"/>Identità
+## <a name="Identita"></a>Identità
 
 Ogni identità che vive nel nodo ha un suo indirizzo Netsukuku. Inoltre ha una mappa di percorsi, ognuno
 che ha come destinazione (e come passi) un g-nodo *visibile* dal suo indirizzo Netsukuku.
 
 Un nodo ha sempre una identità principale e zero o più identità di connettività.
 
-### <a name="Identita_principale"/>Identità principale
+### <a name="Identita_principale"></a>Identità principale
 
 L'identità principale gestisce il network namespace default. L'identità principale ha un indirizzo
 Netsukuku *definitivo* che può essere *reale* o *virtuale*.
@@ -388,7 +388,7 @@ In questo caso, riguardo questo indirizzo Netsukuku *n*:
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
                 destinazione. La destinazione *d<sub>x</sub>* non può essere "non raggiungibile".
 
-### <a name="Identita_di_connettivita"/>Identità di connettività
+### <a name="Identita_di_connettivita"></a>Identità di connettività
 
 Un nodo può avere 0 o più identità di connettività. L'identità di connettività gestisce un certo
 network namespace. L'identità di connettività ha un indirizzo Netsukuku *di connettività* che è *virtuale*.
@@ -453,7 +453,7 @@ In questo caso, riguardo questo indirizzo Netsukuku *n*:
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
                 destinazione. La destinazione *d<sub>x</sub>* non può essere "non raggiungibile".
 
-## <a name="Indirizzi_del_nodo"/>Indirizzi IP di ogni identità nel nodo
+## <a name="Indirizzi_del_nodo"></a>Indirizzi IP di ogni identità nel nodo
 
 Come abbiamo visto prima, in un nodo possono esistere diverse identità. Ogni identità detiene un
 indirizzo Netsukuku. A seconda del tipo, sulla base del suo indirizzo Netsukuku ogni identità
@@ -491,7 +491,7 @@ a ognuna delle interfacce di rete che gestisce quell'identità.
 
 Inoltre, prima di rimuovere una identità, li rimuove da tutte le interfacce che gestisce quell'identità.
 
-## <a name="Rotte_nelle_tabelle_di_routing"/>Rotte nelle tabelle di routing
+## <a name="Rotte_nelle_tabelle_di_routing"></a>Rotte nelle tabelle di routing
 
 Il programma deve istruire le policy di routing del sistema (che di norma significa impostare delle
 rotte nelle tabelle di routing) in modo da garantire questi comportamenti:
@@ -535,7 +535,7 @@ la manipolazione dei pacchetti, ...) che sono da riferirsi ad un particolare net
 
 Esaminiamo prima l'aspetto del source natting e poi del routing.
 
-### <a name="Source_natting"/>Source NATting
+### <a name="Source_natting"></a>Source NATting
 
 Il [source NATting](https://en.wikipedia.org/wiki/Network_address_translation) in un sistema Linux
 può essere realizzato istruendo il kernel con il comando `iptables` (utilizzando una regola con
@@ -602,7 +602,7 @@ indicando come nuovo indirizzo mittente il suo indirizzo globale (non quello *an
 Quando il programma termina, se aveva istruito il kernel per fare il source natting, rimuove le regole
 che aveva messe nella catena `POSTROUTING` della tabella `nat`.
 
-### <a name="Routing"/>Routing
+### <a name="Routing"></a>Routing
 
 In un sistema Linux le rotte vengono memorizzate in diverse tabelle. Queste tabelle hanno un
 identificativo che è un numero da 0 a 255. Hanno anche un nome descrittivo: l'associazione del

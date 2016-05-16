@@ -52,7 +52,7 @@ di 2 equivalente a *gsize(i)*.
 Una volta scelti i valori di *l* e di *g-exp(i)* rispettando i vincoli prima ricordati, vediamo come si
 calcolano i vari tipi di indirizzo IP partendo da un indirizzo Netsukuku (di nodo o di g-nodo).
 
-### <a name="Indirizzo_globale_nodo"/>Indirizzo IP globale di un nodo
+### <a name="Indirizzo_globale_nodo"></a>Indirizzo IP globale di un nodo
 
 Sia *n* l'indirizzo Netsukuku di un nodo. Indichiamo con *n<sub>0</sub>* l'identificativo del nodo
 all'interno del suo g-nodo di livello 1. E a seguire con *n<sub>i</sub>* l'identificativo del g-nodo di
@@ -74,7 +74,7 @@ ai livelli 1 e 0. Sono soddisfatti i due vincoli esposti sopra.
 
 Consideriamo il nodo *n* con indirizzo Netsukuku 3·10·123·45. L'indirizzo IP globale di *n* è 10.58.123.45.
 
-### <a name="Indirizzo_globale_gnodo"/>Indirizzo IP globale di un g-nodo
+### <a name="Indirizzo_globale_gnodo"></a>Indirizzo IP globale di un g-nodo
 
 Sia *g* l'indirizzo Netsukuku di un g-nodo di livello *i*. L'indirizzo completo sarà
 *g<sub>l-1</sub>·...·g<sub>i</sub>*.
@@ -95,7 +95,7 @@ appartiene al suo stesso g-nodo di livello 3.
 
 L'indirizzo Netsukuku di *g* è 3·1. L'indirizzo IP globale di *g* in notazione CIDR è 10.49.0.0/16.
 
-### <a name="Indirizzo_interno_nodo"/>Indirizzo IP di un nodo interno ad un suo g-nodo
+### <a name="Indirizzo_interno_nodo"></a>Indirizzo IP di un nodo interno ad un suo g-nodo
 
 Sia *n* un nodo con indirizzo *n<sub>l-1</sub>·...·n<sub>1</sub>·n<sub>0</sub>*. Sia *g* il suo g-nodo
 di livello *i* con 0 < *i* < *l*. Quindi *g* ha indirizzo *n<sub>l-1</sub>·...·n<sub>i</sub>*. Vogliamo
@@ -117,7 +117,7 @@ Fin da subito il nodo *n* si è assegnato, oltre all'indirizzo IP globale 10.58.
 IP interno al g-nodo di livello 2, che è 10.96.123.45. Analogamente, il nodo *m* si è assegnato, oltre
 all'indirizzo IP globale 10.58.67.89, anche l'indirizzo IP interno al g-nodo di livello 2, che è 10.96.67.89.
 
-### <a name="Indirizzo_interno_gnodo"/>Indirizzo IP di un g-nodo interno ad un suo g-nodo superiore
+### <a name="Indirizzo_interno_gnodo"></a>Indirizzo IP di un g-nodo interno ad un suo g-nodo superiore
 
 Sia *g* un g-nodo di livello *i* con indirizzo *g<sub>l-1</sub>·...·g<sub>i</sub>* con *i* < *l* - 1.
 Sia *h* un suo g-nodo superiore di livello *k*. Quindi *h* ha indirizzo *g<sub>l-1</sub>·...·g<sub>k</sub>*, con
@@ -142,7 +142,7 @@ Inoltre il nodo *n* ha in comune con *g* il g-nodo *h'* 3. Il g-nodo *g* all'int
 *h'* viene individuato con l'indirizzo IP 10.122.67.0/24. Quindi *n* imposta nelle tabelle di routing anche una rotta
 per 10.122.67.0/24 a causa del medesimo percorso verso *g*.
 
-### <a name="Indirizzo_anonimizzante"/>Indirizzo IP di un nodo o g-nodo contattabile in forma anonima
+### <a name="Indirizzo_anonimizzante"></a>Indirizzo IP di un nodo o g-nodo contattabile in forma anonima
 
 Sia *n* un nodo con indirizzo *n<sub>l-1</sub>·...·n<sub>1</sub>·n<sub>0</sub>*. Vogliamo comporre
 un indirizzo IP per tale risorsa tale che un client lo possa usare per contattare il nodo mantenendo
