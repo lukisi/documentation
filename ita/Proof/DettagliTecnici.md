@@ -264,6 +264,19 @@ con il metodo *arc_add*. Le informazioni da dare (nel comando interattivo *add_q
 *   `int idarc_index`. L'indice dell'arco-identità sul quale va costruito il IQspnArc. In questo esempio 1.
 *   `string idarc_address`. L'indirizzo Netsukuku del vicino collegato da questo arco. In questo esempio la stringa "3.10.67.89".
 
+* * *
+
+Quando l'utente termina l'applicazione con il comando `quit` (o con Ctrl-C) il programma *qspnclient* istruisce
+l'istanza di IdentityManager di rimuovere tutte le identità di connettività. In questo modo tutte le
+pseudo-interfacce e tutti i network namespace creati dal programma vengono rimossi.
+
+Per pulire il network namespace default, invece, il programma chiama sull'istanza di LinuxRoute relativa
+dapprima il metodo `stop_management`. Con questo rimuove le tabelle (`ntk` e le varie `ntk_from_XXX`) che
+aveva creato e popolato.
+
+Poi, per rimuovere gli indirizzi IP propri, il programma chiama sull'istanza di LinuxRoute relativa
+il metodo `remove_address` una volta per ogni indirizzo IP e per ognuna delle sue interfacce di rete reali.
+
 ## Elenco comandi interattivi
 
 *   **show_linklocals**
@@ -440,109 +453,9 @@ destinazioni note e opera quanto è necessario per impostare le rotte relative i
 
 ## Metodi di LinuxRoute
 
-Elenchiamo le funzionalità che si vogliono implementare nella classe LinuxRoute.
-
-*   Abbiamo una istanza di questa classe per ogni network namespace gestito dal programma.
-
-*   Una identità, oltre a gestire un particolare network namespace, detiene un particolare
-    indirizzo Netsukuku e mantiene una mappa di percorsi verso destinazioni note.  
-    Come conseguenza, l'istanza di LinuxRoute che gestisce quel network namespace e che al
-    momento è memorizzata nel membro *route* dell'istanza di IdentityData associata
-    a questa identità, ha assegnato a quel network namespace un numero di indirizzi IP
-    propri e ha impostato nelle sue tabelle un numero di rotte verso altri indirizzi IP.  
-    Quando il programma crea una nuova identità *i<sub>1</sub>* basata sulla precedente identità *i<sub>0</sub>*
-    avviene che l'identità *i<sub>0</sub>* vede cambiare il proprio indirizzo Netsukuku. Infatti diventa
-    una identità *di connettività* per un livello in cui prima non lo era. Inoltre la
-    nuova identità *i<sub>1</sub>* deterrà un nuovo indirizzo Netsukuku ancora diverso.
-
-    Ad esempio possiamo avere nel nodo *n* l'identità *n0* con indirizzo 3·2·3·1 in una topologia 4·4·4·4.
-    Questo è un indirizzo *reale* quindi si tratta di una identità principale.  
-    Ora supponiamo che il nodo 3·2·3·1 vuole migrare in 3·2·2·2, restando nel g-nodo 3·2·3
-    con l'identificativo *virtuale* 3·2·3·6.  
-    Quindi dentro *n* si aggiunge l'identità *n1* basata su *n0* con indirizzo 3·2·2·2  (che nasce come
-    identità principale con un indirizzo Netsukuku *reale*) mentre l'identità *n0* diventa
-    *di connettività* al livello 1 con indirizzo 3·2·3·6.  
-    Poi supponiamo che il g-nodo 3·2
-    migra in 1·0, restando dentro il g-nodo 3 con l'identificativo *virtuale* 3·5. Dentro il
-    g-nodo 3·2 abbiamo sia il nodo 3·2·2·2 (cioè l'identità *n1* dentro *n*) sia il
-    nodo 3·2·3·6 (cioè l'identità *n0* dentro *n*).  
-    Quindi dentro *n* si aggiunge l'identità *n2* basata su *n0* con indirizzo 1·0·3·6 (che nasce come
-    identità *di connettività* al livello 1) mentre l'identità *n0* diventa
-    *di connettività* al livello 3 con indirizzo 3·5·3·6.  
-    Inoltre dentro *n* si aggiunge l'identità *n3* basata su *n1* con indirizzo 1·0·2·2 (che nasce come
-    identità principale con un indirizzo Netsukuku *reale*) mentre l'identità *n1* diventa
-    *di connettività* al livello 3 con indirizzo 3·5·2·2.
-
-*   Quando si costruisce una istanza di LinuxRoute, significa che è stato creato un nuovo
-    network namespace. Possono esserci questi casi:
-
-    *   Inizio. Il network namespace assegnato alla prima identità *n0* non era gestito in precedenza
-        da un'altra identità.  
-        L'istanza di LinuxRoute *r<sub>𝛼</sub>* riceve nel costruttore la stringa `ns` che identifica il
-        namespace. In questo caso di norma è il default, cioè `""`.  
-        In seguito, sull'istanza di LinuxRoute *r<sub>𝛼</sub>*, siccome essa gestisce il network namespace default,
-        viene chiamato il metodo `add_address(address, dev)` varie
-        volte per assegnare un indirizzo IP alle interfacce di rete reali.  
-        Nel tempo, sull'istanza di LinuxRoute *r<sub>𝛼</sub>* come risposta ai segnali notificati dal
-        QspnManager della relativa *identità*, vengono chiamati i metodi `add_route` o `change_route`
-        o `remove_route` per ogni cambiamento alle policy di routing nel network
-        namespace relativo.
-    *   Migrazione. L'identità *n1* costruita sull'identità *n0*. Il network namespace
-        assegnato alla *n1* da parte dell'IdentityManager è quello che prima era stato gestito
-        dalla *n0*. Il programma lo può recuperare usando il metodo `get_namespace` dell'IdentityManager.  
-        Ora all'identità *n0* è stato assegnato un diverso namespace *x* da parte dell'IdentityManager.
-        Il programma lo può recuperare usando il metodo `get_namespace`.  
-        All'identità *n1* viene ora associata l'istanza di LinuxRoute *r<sub>𝛼</sub>*.  
-        Una nuova istanza di LinuxRoute, *r<sub>𝛽</sub>*, viene creata e riceve nel costruttore la stringa `ns` che identifica il
-        namespace *x* ora gestito dall'identità *n0*. Poi all'identità *n0* viene associata l'istanza *r<sub>𝛽</sub>*.  
-        Sull'istanza *r<sub>𝛼</sub>*, cioè quella associata a *n1*, viene chiamato il metodo `remove_addresses`
-        per rimuovere tutti gli indirizzi IP propri che aveva assegnato al suo network namespace:
-        infatti proprio *r<sub>𝛼</sub>* li aveva assegnati (con `add_address`) alle varie \[pseudo]interfacce
-        gestite nel suo network namespace, quando era ancora associata a *n0*.  
-        In seguito, sull'istanza di LinuxRoute *r<sub>𝛼</sub>*, cioè quella associata a *n1*, se essa gestisce il network namespace default,
-        viene chiamato il metodo `add_address(address, dev)` varie
-        volte per assegnare un indirizzo IP alle interfacce di rete reali.  
-        Non è necessario, sull'istanza di LinuxRoute *r<sub>𝛽</sub>*, cioè quella associata a *n0*, chiamare mai il metodo `add_address`
-        in quanto nei network namespace diversi dal default il sistema non detiene mai
-        un indirizzo IP proprio, nemmeno interno ad un livello.  
-        Nel tempo, su entrambe le istanze *r<sub>𝛼</sub>* e *r<sub>𝛽</sub>* come risposta ai segnali notificati dal
-        QspnManager della relativa *identità*, vengono chiamati i metodi `add_route` o `change_route`
-        o `remove_route` per ogni cambiamento alle policy di routing nel network
-        namespace relativo.
-
-*   Una istanza di LinuxRoute ha impostato (con `add_address`) tutti gli indirizzi IP
-    che nel tempo sono stati assegnati alle varie \[pseudo]interfacce gestite in un
-    particolare network namespace da una particolare *identità*.  
-    In realtà abbiamo già detto nell'analisi che questo avviene solo nel network namespace default, poiché
-    non serve assegnare un indirizzo IP proprio (nemmeno interno ad un g-nodo) ad una identità
-    *di connettività*; comunque la classe LinuxRoute lo permetterebbe, se volessimo.  
-    Quando questa *identità* cessa di gestire questo network namespace (perché cessa
-    di esistere oppure perché le viene assegnato un diverso network namespace) questa istanza
-    di LinuxRoute è in grado di sapere quali indirizzi IP rimuovere. Quindi in questo
-    momento viene chiamato il metodo `remove_addresses` di questa istanza. In esso tutti
-    gli indirizzi IP attualmente assegnati (dal programma) alle varie \[pseudo]interfacce
-    vengono rimossi.  
-    Distinguiamo i seguenti casi:
-
-    *   Quando una *identità* migra (poteva essere l'identità *principale* del nodo oppure
-        un'identità *di connettività*) essa abbandona un network namespace che sarà in
-        seguito gestito da una diversa *identità*. In questo caso l'operazione `remove_addresses`
-        è **strettamente** necessaria, sia che si tratti del network namespace default,
-        sia di un altro.
-    *   Quando una *identità di connettività* cessa di esistere (ad esempio perché non
-        è più necessaria la sua presenza per garantire la connettività dei g-nodi, oppure
-        perché nel sistema il programma *qspnclient* termina) essa abbandona un
-        network namespace che in seguito non sarà più gestito nemmeno da altre *identità*
-        ma verrà distrutto con tutte le relative pseudo-interfacce. In questo caso
-        l'operazione `remove_addresses` non è necessaria.
-    *   Quando l'*identità principale* cessa di esistere perché nel sistema il programma
-        *qspnclient* termina, essa abbandona il network namespace default. In questo caso
-        l'operazione `remove_addresses` è necessaria a ripulire il sistema.
-
-### Prontuario sintetico
-
-La parte descrittiva sopra verrà rimossa se/quando tutti gli esempi saranno stati integrati
-nella parte alta del documento.
+Una istanza di LinuxRoute viene creata per ogni network namespace. Cioè, la prima per gestire
+il network namespace default, e in seguito una per ogni nuovo network namespace che viene
+creato.
 
 *   **costruttore**  
     Argomenti:
@@ -609,6 +522,11 @@ nella parte alta del documento.
         MAC address di provenienza.  
         Vale `null` se con questa operazione si vuole impostare la rotta principale
         da usare per i pacchetti in *partenza*.
+
+    Questo metodo **TODO**...
+
+*   **stop_management**  
+    Argomenti: nessuno.
 
     Questo metodo **TODO**...
 
