@@ -299,6 +299,145 @@ con il metodo *arc_add*. Le informazioni da dare (nel comando interattivo *add_q
     *   `int identityarc_index`
     *   `string identityarc_address`
 
+## Esempio di migrazione/ingresso
+
+Una identità detiene un particolare indirizzo Netsukuku e mantiene una mappa di percorsi verso
+destinazioni note che sono in effetti *coordinate gerarchiche* basate su di esso.
+
+Con queste conoscenze, una identità gestisce un particolare network namespace. Cioè, in tale
+network namespace si assegna un numero di indirizzi IP e imposta un numero di rotte verso
+destinazioni che sono indirizzi IP in notazione CIDR.
+
+Quando il programma crea una nuova identità *i<sub>1</sub>* basata sulla precedente identità *i<sub>0</sub>*
+avviene che l'identità *i<sub>0</sub>* vede cambiare il proprio indirizzo Netsukuku. Infatti diventa
+una identità *di connettività* per un livello in cui prima non lo era. Inoltre la
+nuova identità *i<sub>1</sub>* deterrà un nuovo indirizzo Netsukuku ancora diverso.
+
+Inoltre ancora, l'identità *i<sub>1</sub>* avrà in eredità un network namespace *r<sub>𝛼</sub>* preesistente
+che era stato configurato sulla base delle passate conoscenze di *i<sub>0</sub>*. Alcune di
+queste configurazioni vanno subito rimosse da *r<sub>𝛼</sub>*, altre invece devono rimanere perché
+alcune conoscenze di *i<sub>0</sub>* vanno copiate su *i<sub>1</sub>*. In seguito tramite il QSPN
+l'identità *i<sub>1</sub>* acquisirà nuove conoscenze e queste produrranno nuove configurazioni
+che andranno aggiunte a *r<sub>𝛼</sub>*.
+
+Invece l'identità *i<sub>0</sub>* avrà assegnato un nuovo network namespace *r<sub>𝛽</sub>*. Alcune
+delle conoscenze di *i<sub>0</sub>* vengono annullate, altre rimangono valide. Quelle che rimangono valide
+vanno subito aggiunte come configurazioni a *r<sub>𝛽</sub>*. In seguito tramite il QSPN
+l'identità *i<sub>0</sub>* acquisirà nuove conoscenze e queste produrranno nuove configurazioni
+che andranno aggiunte a *r<sub>𝛽</sub>*.
+
+Ad esempio possiamo avere in un *sistema* *n* l'identità *n<sub>0</sub>* con indirizzo 3·2·3·1 in una topologia 4·4·4·4.
+Questo è un indirizzo *reale* quindi si tratta di una identità principale nel network namespace default (indichiamo
+la relativa istanza di LinuxRoute con *r<sub>𝛼</sub>*).  
+Ora supponiamo che il nodo 3·2·3·1 vuole migrare in 3·2·2·2, restando nel g-nodo 3·2·3
+con l'identificativo *virtuale* 3·2·3·6.  
+Quindi dentro *n* si aggiunge l'identità *n<sub>1</sub>* basata su *n<sub>0</sub>* con indirizzo 3·2·2·2  (che nasce come
+identità principale con un indirizzo Netsukuku *reale* ed eredita il network namespace default)
+mentre l'identità *n<sub>0</sub>* diventa *di connettività* al livello 1 con indirizzo 3·2·3·6
+e gli viene associato il nuovo namespace *r<sub>𝛽</sub>*.
+
+Poi supponiamo che il g-nodo 3·2 migra in 1·0, restando dentro il g-nodo 3 con l'identificativo *virtuale* 3·5. Dentro il
+g-nodo 3·2 abbiamo sia il nodo 3·2·2·2 (cioè l'identità *n<sub>1</sub>* dentro *n*) sia il
+nodo 3·2·3·6 (cioè l'identità *n<sub>0</sub>* dentro *n*).  
+Quindi dentro *n* si aggiunge l'identità *n<sub>2</sub>* basata su *n<sub>0</sub>* con indirizzo 1·0·3·6 (che nasce come
+identità *di connettività* al livello 1 ed eredita il network namespace *r<sub>𝛽</sub>*) mentre l'identità *n<sub>0</sub>* diventa
+*di connettività* al livello 3 con indirizzo 3·5·3·6 e gli viene associato il nuovo namespace *r<sub>𝛾</sub>*.  
+Inoltre dentro *n* si aggiunge l'identità *n<sub>3</sub>* basata su *n<sub>1</sub>* con indirizzo 1·0·2·2 (che nasce come
+identità principale con un indirizzo Netsukuku *reale* ed eredita il network namespace default) mentre l'identità *n<sub>1</sub>* diventa
+*di connettività* al livello 3 con indirizzo 3·5·2·2 e gli viene associato il nuovo namespace *r<sub>𝛿</sub>*.
+
+Esaminiamo cosa avviene nella prima migrazione, quando si aggiunge l'identità *n<sub>1</sub>* basata su *n<sub>0</sub>*. In questo
+caso il livello del g-nodo che migra, `hooking_gnode_level`, è 0. Il programma chiede al precedente QspnManager (quello associato
+a *n<sub>0</sub>*) quali destinazioni conosce, a tutti i livelli. Ad esempio diciamo che erano noti
+alcuni percorsi verso la destinazione 3·2·3·3, cioè in coordinate gerarchiche (0,3) rispetto a 3·2·3·1.
+Ora il programma calcola per questa destinazione l'indirizzo IP globale, quello anonimizzante e quelli
+interni al livello *k* con *k* > 0. Per ognuno di questi indirizzi IP il programma chiama il metodo
+`remove_destination` di *r<sub>𝛼</sub>*. In conclusione, non rimane nessuna rotta in *r<sub>𝛼</sub>*.
+
+Ora ricordiamo che il livello del g-nodo in cui si entra, `into_gnode_level`, è 1.
+Il programma, relativamente all'indirizzo proprio 3·2·3·1, calcola l'indirizzo IP globale,
+quello anonimizzante solo se il *sistema* *n* intendeva rispondere a richieste anonime, e quelli
+interni al livello *k* con *k* > 0. Per ognuno di questi indirizzi IP il programma chiama il metodo
+`remove_address` di *r<sub>𝛼</sub>*. In conclusione, non rimane nessun indirizzo proprio in *r<sub>𝛼</sub>*.
+
+Da adesso *r<sub>𝛼</sub>* sarà assegnato a *n<sub>1</sub>* mentre *r<sub>𝛽</sub>* sarà assegnato a *n<sub>0</sub>*.
+
+L'identità *n<sub>0</sub>* ora detiene un nuovo indirizzo Netsukuku per il quale nessun indirizzo
+IP proprio si può computare, essendo divenuta una identità *di connettività*. Quindi a questo
+proposito nessuna configurazione va aggiunta a *r<sub>𝛽</sub>*.
+
+Le vecchie conoscenze di *n<sub>0</sub>* rimangono tuttavia valide. Riprendiamo ad esempio i
+percorsi che erano noti verso la destinazione 3·2·3·3, cioè in coordinate gerarchiche (0,3) rispetto a 3·2·3·6.
+Ora queste configurazioni vanno aggiunte a *r<sub>𝛽</sub>*. Il programma guarda innanzitutto se
+il QspnManager associato a *n<sub>0</sub>* ha completato il bootstrap (altrimenti non aveva
+impostato ancora nessuna rotta in *r<sub>𝛼</sub>* e nessuna rotta va ancora impostata nemmeno
+in *r<sub>𝛽</sub>*). Se il bootstrap è stato completato, il programma chiede quali sono le
+destinazioni note e opera quanto è necessario per impostare le rotte relative in *r<sub>𝛽</sub>*.
+
+Ora vediamo cosa avviene nella seconda migrazione. Prima osserviamo quando si aggiunge l'identità
+*n<sub>3</sub>* basata su *n<sub>1</sub>*, in quanto questo riguarda il network namespace default
+ed è la parte più complessa. In questo caso il livello del g-nodo che migra, `hooking_gnode_level`, è 2.
+Il programma chiede al precedente QspnManager (quello associato a *n<sub>1</sub>*) quali
+destinazioni conosce, a tutti i livelli. Ad esempio diciamo che erano noti alcuni percorsi
+verso la destinazione 3·2·3·3, cioè in coordinate gerarchiche (1,3) rispetto a 3·2·2·2.
+Ora il programma calcola per questa destinazione l'indirizzo IP globale, quello anonimizzante e quelli
+interni al livello *k* con *k* > 2. Per ognuno di questi indirizzi IP il programma chiama il metodo
+`remove_destination` di *r<sub>𝛼</sub>*. In conclusione, in *r<sub>𝛼</sub>* rimangono quelle
+rotte verso (1,3) che usano l'indirizzo IP interno al livello 2. Questo è corretto, poiché nella
+migrazione è coinvolto tutto il g-nodo 3·2.
+
+Ora ricordiamo che il livello del g-nodo in cui si entra, `into_gnode_level`, è 3.
+Il programma, relativamente all'indirizzo proprio 3·2·2·2, calcola l'indirizzo IP globale,
+quello anonimizzante solo se il *sistema* *n* intendeva rispondere a richieste anonime, e quelli
+interni al livello *k* con *k* > 2. Per ognuno di questi indirizzi IP il programma chiama il metodo
+`remove_address` di *r<sub>𝛼</sub>*. In conclusione, rimane in *r<sub>𝛼</sub>* l'indirizzo IP
+proprio interno al livello 2 e quello interno al livello 1. Questo è corretto e necessario,
+poiché abbiamo mantenuto in *r<sub>𝛼</sub>* alcune rotte che hanno questi indirizzi IP propri
+come *src* preferito.
+
+Da adesso *r<sub>𝛼</sub>* sarà assegnato a *n<sub>3</sub>* mentre *r<sub>𝛿</sub>* sarà assegnato a *n<sub>1</sub>*.
+
+L'identità *n<sub>1</sub>* ora detiene un nuovo indirizzo Netsukuku per il quale nessun indirizzo
+IP proprio si può computare, essendo divenuta una identità *di connettività*. Quindi a questo
+proposito nessuna configurazione va aggiunta a *r<sub>𝛿</sub>*.
+
+Le vecchie conoscenze di *n<sub>1</sub>* rimangono tuttavia valide.
+Ora queste configurazioni vanno aggiunte a *r<sub>𝛿</sub>*. Il programma guarda innanzitutto se
+il QspnManager associato a *n<sub>1</sub>* ha completato il bootstrap (altrimenti non aveva
+impostato ancora nessuna rotta in *r<sub>𝛼</sub>* e nessuna rotta va ancora impostata nemmeno
+in *r<sub>𝛿</sub>*). Se il bootstrap è stato completato, il programma chiede quali sono le
+destinazioni note e opera quanto è necessario per impostare le rotte relative in *r<sub>𝛿</sub>*.
+
+Infine osserviamo cosa avviene quando si aggiunge l'identità *n<sub>2</sub>* basata su *n<sub>0</sub>*. In questo
+caso il livello del g-nodo che migra, `hooking_gnode_level`, è 2. Il programma chiede al precedente QspnManager (quello associato
+a *n<sub>0</sub>*) quali destinazioni conosce, a tutti i livelli. Ad esempio diciamo che erano noti
+alcuni percorsi verso la destinazione 3·2·3·3, cioè in coordinate gerarchiche (0,3) rispetto a 3·2·3·6.
+Ora il programma calcola per questa destinazione l'indirizzo IP globale, quello anonimizzante e quelli
+interni al livello *k* con *k* > 2. Per ognuno di questi indirizzi IP il programma chiama il metodo
+`remove_destination` di *r<sub>𝛽</sub>*. In conclusione, in *r<sub>𝛽</sub>* rimangono quelle
+rotte verso (0,3) che usano l'indirizzo IP interno al livello 1 e l'indirizzo IP interno al
+livello 2. Questo è corretto, poiché nella migrazione è coinvolto tutto il g-nodo 3·2.
+
+Ora ricordiamo che il livello del g-nodo in cui si entra, `into_gnode_level`, è 3.
+Il programma, relativamente all'indirizzo proprio 3·2·3·6, calcola l'indirizzo IP globale,
+quello anonimizzante solo se il *sistema* *n* intendeva rispondere a richieste anonime, e quelli
+interni al livello *k* con *k* > 2. In questo caso nessuno di questi indirizzi IP si può computare
+in quanto la precedente identità *n<sub>0</sub>* era già una identità *di connettività*. Quindi
+non andrà mai chiamato il metodo `remove_address` di *r<sub>𝛽</sub>*.
+
+Da adesso *r<sub>𝛽</sub>* sarà assegnato a *n<sub>2</sub>* mentre *r<sub>𝛾</sub>* sarà assegnato a *n<sub>0</sub>*.
+
+L'identità *n<sub>0</sub>* ora detiene un nuovo indirizzo Netsukuku per il quale nessun indirizzo
+IP proprio si può computare, essendo divenuta una identità *di connettività*. Quindi a questo
+proposito nessuna configurazione va aggiunta a *r<sub>𝛾</sub>*.
+
+Le vecchie conoscenze di *n<sub>0</sub>* rimangono tuttavia valide.
+Ora queste configurazioni vanno aggiunte a *r<sub>𝛾</sub>*. Il programma guarda innanzitutto se
+il QspnManager associato a *n<sub>0</sub>* ha completato il bootstrap (altrimenti non aveva
+impostato ancora nessuna rotta in *r<sub>𝛽</sub>* e nessuna rotta va ancora impostata nemmeno
+in *r<sub>𝛾</sub>*). Se il bootstrap è stato completato, il programma chiede quali sono le
+destinazioni note e opera quanto è necessario per impostare le rotte relative in *r<sub>𝛾</sub>*.
+
 ## Metodi di LinuxRoute
 
 Elenchiamo le funzionalità che si vogliono implementare nella classe LinuxRoute.
