@@ -215,16 +215,25 @@ Inoltre dobbiamo assicurarci che *gsize(l-1)* ≥ *l*. Cioè che nello spazio de
 sia possibile rappresentare un numero da 0 a *l* - 1. Questo pure ci serve per la notazione usata per il
 routing interno ai g-nodi.
 
-Una volta scelti i valori di *l* e di *g-exp(i)* rispettando i vincoli prima esposti, le caratteristiche
-di questa mappatura sono queste. Partendo da un indirizzo Netsukuku *reale* si risale ad un numero
-di indirizzi IP:
+Una volta scelti i valori di *l* e di *g-exp(i)* rispettando i vincoli prima esposti, questa mappatura
+associa ad un indirizzo Netsukuku *reale* un numero di indirizzi IP:
 
-*   Un indirizzo IP globale.
-*   Un indirizzo IP globale *anonimizzante*.
-*   Un indirizzo IP interno al livello *i* per ogni valore di *i* da 1 a *l* - 1.
-
-Partendo da una porzione *reale* di un indirizzo Netsukuku *virtuale*, composta dagli
-identificativi *reali* da 0 a *i*, si risale ad un indirizzo IP interno al livello *i*.
+*   Un indirizzo IP globale.  
+    Questo indirizzo IP identifica un preciso *nodo del grafo* univocamente all'interno
+    di tutta la rete.
+*   Un indirizzo IP globale *anonimizzante*.  
+    Questo indirizzo IP identifica un preciso *nodo del grafo* univocamente all'interno
+    di tutta la rete. È una diversa rappresentazione, rispetto all'indirizzo IP globale,
+    che identifica lo stesso nodo; ma questa convoglia in più l'informazione che si vuole
+    contattare quel nodo restando anonimi.
+*   Un indirizzo IP interno al livello *i* per ogni valore di *i* da 1 a *l* - 1.  
+    Questo indirizzo IP identifica un preciso *nodo del grafo* univocamente all'interno
+    di un g-nodo *g* di livello *i*. Questo indirizzo IP si può utilizzare come indirizzo di
+    destinazione di un pacchetto IP quando sia il nodo mittente che il nodo
+    identificato (il destinatario) appartengono allo stesso g-nodo *g* di livello *i*. La
+    peculiarità di questi indirizzi IP (e anche dei pacchetti dati trasmessi a questi
+    indirizzi) è che essi non cambiano quando il g-nodo *g* o uno dei suoi g-nodi superiori
+    *migra* all'interno della rete o anche in una diversa rete Netsukuku.
 
 Gli algoritmi di
 calcolo dei vari tipi di indirizzo IP sono descritti nel documento [IndirizziIP](IndirizziIP.md).
