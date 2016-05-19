@@ -140,6 +140,13 @@ istanza di ProofOfConcept.Arc. Così il programma in seguito partendo dall'indic
 In questo stesso momento tutti questi dati sono mostrati a video con il relativo indice. In seguito
 l'utente può rivederli con il comando interattivo *show_nodearcs*.
 
+Successivamente l'utente potrà modificare il costo associato ad un arco che era stato in precedenza
+accettato. Lo fa con il comando interattivo `change_nodearc` specificando il nuovo costo e individuando
+l'arco tramite il suo *nodearc_index*.
+
+L'utente potrà anche rimuovere un arco che era stato in precedenza accettato. Lo fa con il comando
+interattivo `remove_nodearc` individuando l'arco tramite il suo *nodearc_index*.
+
 * * *
 
 Quando riceve il segnale *identity_arc_added* di IdentityManager, il programma crea una istanza di
@@ -316,6 +323,11 @@ il metodo `remove_address` una volta per ogni indirizzo IP e per ognuna delle su
         vicino, separati da un trattino. Come compare a video con il comando `show_neighborhood_arcs`.
     *   `int cost`
 *   **show_nodearcs**
+*   **change_nodearc**
+    *   `int nodearc_index`
+    *   `int cost`
+*   **remove_nodearc**
+    *   `int nodearc_index`
 *   **show_identityarcs**
 *   **show_ntkaddress**
     *   `int nodeid_index`
