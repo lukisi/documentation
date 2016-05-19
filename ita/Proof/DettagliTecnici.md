@@ -266,6 +266,34 @@ con il metodo *arc_add*. Le informazioni da dare (nel comando interattivo *add_q
 
 * * *
 
+Quando vuole costruire un IQspnArc da fornire ad una istanza di QspnManager, il programma *qspnclient*
+crea una istanza della classe ProofOfConcept.QspnArc. Essa ha questi membri:
+
+*   `ProofOfConcept.Arc arc`. L'istanza di arco su cui si poggia l'arco-identità.
+*   `NodeID sourceid`. L'identificativo dell'identità nel sistema vicino.
+*   `NodeID destid`. L'identificativo dell'identità nel proprio sistema.
+*   `ProofOfConcept.Naddr neighbour_naddr`. L'indirizzo Netsukuku del vicino, rappresentato da una classe
+    che implementa IQspnNaddr.
+
+I primi 3 dati sono inclusi nell'istanza di arco-identità per la quale il programma intende
+costruire un QspnArc. L'indirizzo Netsukuku del vicino, invece, viene fornito dall'utente che
+fa le veci di un diverso modulo che si occupa di reperirlo dialogando con l'identità nel sistema
+vicino.
+
+I dati che servono per implementare i metodi di IQspnArc sono:
+
+*   *i_qspn_get_cost()* – `arc.cost`.
+*   *i_qspn_get_naddr()* – `neighbour_naddr`.
+*   *i_qspn_equals(IQspnArc other)* – Si usa l'uguaglianza dell'istanza.
+*   *i_qspn_comes_from(CallerInfo rpc_caller)* – `arc.neighborhood_arc.neighbour_nic_addr` deve essere equivalente
+    all'indirizzo IP riportato come `peer_address` dall'istanza di CallerInfo `rpc_caller`.
+
+Quando una istanza di QspnArc viene passata alla QspnStubFactory i suoi dati sono sufficienti
+a realizzare uno stub per un modulo di identità con i metodi `get_stub_identity_aware_*` di
+NeigborhoodManager.
+
+* * *
+
 Quando l'utente termina l'applicazione con il comando `quit` (o con Ctrl-C) il programma *qspnclient* istruisce
 l'istanza di IdentityManager di rimuovere tutte le identità di connettività. In questo modo tutte le
 pseudo-interfacce e tutti i network namespace creati dal programma vengono rimossi.
