@@ -144,6 +144,10 @@ Successivamente l'utente potrà modificare il costo associato ad un arco che era
 accettato. Lo fa con il comando interattivo `change_nodearc` specificando il nuovo costo e individuando
 l'arco tramite il suo *nodearc_index*.
 
+In questo momento il programma *qspnclient* guarda quali delle sue identità hanno una
+istanza di QspnArc (di cui parliamo sotto) associata a questo arco. Per ognuna di esse il
+programma notifica questa variazione di costo alla relativa istanza di QspnManager.
+
 L'utente potrà anche rimuovere un arco che era stato in precedenza accettato. Lo fa con il comando
 interattivo `remove_nodearc` individuando l'arco tramite il suo *nodearc_index*.
 
