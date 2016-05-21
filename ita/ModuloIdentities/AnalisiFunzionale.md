@@ -22,7 +22,7 @@ Il modulo Identities si occupa di organizzare le diverse identità che vivono ne
 
 Il modulo Identities consente la creazione di una prima *identità* all'avvio del programma nel sistema.
 
-In seguito il modulo, data una identità *j*, consente di creare una nuova identità *i* che prende il posto di *j*. In questo momento l'identità *j* resta in vita, ma in modo temporaneo. L'identità *j* diventa una identità *di connettività*. Si veda la trattazione del modulo [QSPN](Netsukuku/ita/docs/ModuloQSPN/AnalisiFunzionale#Nodi_virtuali) per comprendere la funzione di una identità *di connettività* e per quale motivo essa sia temporanea.
+In seguito il modulo, data una identità *j*, consente di creare una nuova identità *i* che prende il posto di *j*. In questo momento l'identità *j* resta in vita, ma in modo temporaneo. L'identità *j* diventa una identità *di connettività*. Si veda la trattazione del modulo [QSPN](../ModuloQSPN/AnalisiFunzionale.md#Nodi_virtuali) per comprendere la funzione di una identità *di connettività* e per quale motivo essa sia temporanea.
 
 In contrapposizione al significato di una identità *di connettività* introduciamo il concetto di *identità principale*. Un sistema ha sempre una e una sola identità *principale*. La prima identità del sistema che viene creata all'avvio è dunque l'identità *principale* del sistema.
 
@@ -67,13 +67,13 @@ Aggiungiamo infine che, siccome vedremo in seguito che nel tempo nel sistema *b*
 
 ## <a name="Operazioni"></a>Operazioni
 
-Il modulo fa uso delle [tasklet](Netsukuku/ita/docs/Librerie/TaskletSystem), un sistema di multithreading cooperativo.
+Il modulo fa uso delle [tasklet](../Librerie/TaskletSystem.md), un sistema di multithreading cooperativo.
 
-Il modulo fa uso del framework [ZCD](Netsukuku/ita/docs/Librerie/ZCD), precisamente appoggiandosi alla libreria di livello intermedio *ntkdrpc* prodotta con questo framework per formalizzare i metodi remoti usati nel demone *ntkd*.
+Il modulo fa uso del framework [ZCD](../Librerie/ZCD.md), precisamente appoggiandosi alla libreria di livello intermedio *ntkdrpc* prodotta con questo framework per formalizzare i metodi remoti usati nel demone *ntkd*.
 
 Le operazioni del modulo sono implementate per la maggior parte in metodi di una classe chiamata IdentityManager. Di essa viene creata una sola istanza dall'applicazione in esecuzione su un sistema. Di seguito ci possiamo riferire a tale istanza semplicemente con il termine *manager*.
 
-Poiché il manager è uno solo nel sistema, diciamo che il modulo Identities è un modulo *di sistema*. Si veda nella trattazione del modulo [Neighborhood](Netsukuku/ita/docs/ModuloNeighborhood/AnalisiFunzionale#Identit.2BAOA_multiple_in_un_sistema) la differenza tra moduli *di sistema* e moduli *di identità*.
+Poiché il manager è uno solo nel sistema, diciamo che il modulo Identities è un modulo *di sistema*. Si veda nella trattazione del modulo [Neighborhood](../ModuloNeighborhood/AnalisiFunzionale#Identit.2BAOA_multiple_in_un_sistema) la differenza tra moduli *di sistema* e moduli *di identità*.
 
 Nel costruire l'istanza del manager, l'utilizzatore del modulo specifica quali sono i nomi delle interfacce di rete reali gestite dal sistema, i relativi MAC e gli indirizzi link-local (che gli sono stati definitivamente assegnati dal modulo Neighborhood). Inoltre gli passa un manager di network namespace, o *netns-manager*, cioè un oggetto (si veda sotto la descrizione dell'interfaccia IIdmgmtNetnsManager) per svolgere le operazioni sui network namespace e le interfacce di rete. Inoltre gli passa una *stub-factory*, cioè un oggetto (si veda sotto la descrizione dell'interfaccia IIdmgmtStubFactory) per ottenere uno stub per comunicare con un vicino attraverso un arco.
 
@@ -211,7 +211,7 @@ Nella classe Identity vengono memorizzate le istanze delle classi dei moduli *di
 
 * * *
 
-La classe usata per l'identificativo di una identità, cioè NodeID, è una classe serializzabile definita nella libreria [Common](Netsukuku/ita/docs/Librerie/Common). Il modulo Neighborhood ha una dipendenza su questa libreria, quindi conosce tale classe.
+La classe usata per l'identificativo di una identità, cioè NodeID, è una classe serializzabile definita nella libreria [Common](../Librerie/Common.md). Il modulo Neighborhood ha una dipendenza su questa libreria, quindi conosce tale classe.
 
 Il modulo Identities crea le istanze di questa classe relative alle identità di questo sistema.
 

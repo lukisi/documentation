@@ -3,7 +3,7 @@
 1.  [Ruolo del modulo](#Ruolo_del_modulo)
 1.  [Operazioni di base](#Operazioni_di_base)
 1.  [Caratteristiche degli archi](#Caratteristiche_degli_archi)
-1.  [Identità multiple in un nodo](#Identit.2BAOA_multiple_in_un_nodo)
+1.  [Identità multiple in un sistema](#Identit.2BAOA_multiple_in_un_sistema)
     1.  [Costituzione della prima identità - Associazioni mantenute dal
         nodo](#Costituzione_della_prima_identit.2BAOA_-_Associazioni_mantenute_dal_nodo)
     1.  [Creazione di una nuova identità](#Creazione_di_una_nuova_identit.2BAOA-)
@@ -138,7 +138,7 @@ la larghezza di banda in uscita.
 
 Quando un nodo rimuove un arco tenta di comunicarlo al vertice collegato perché faccia altrettanto.
 
-## <a name="Identit.2BAOA_multiple_in_un_nodo"></a>Identità multiple in un nodo
+## <a name="Identit.2BAOA_multiple_in_un_sistema"></a>Identità multiple in un sistema
 
 Introduciamo il concetto di *identità*. In un singolo nodo possono in dati momenti sussistere diverse
 *identità*. La ragione di essere di queste identità sarà discussa in dettaglio nella trattazione del modulo
