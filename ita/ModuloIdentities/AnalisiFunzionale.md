@@ -311,11 +311,11 @@ Il modulo Identities risponde a queste richieste:
 
 *   `NodeID get_main_id()` - Ottenere il NodeID della identità *principale* del sistema.
 *   `Gee.List<NodeID> get_id_list()` - Ottenere i NodeID di tutte le identità del sistema.
-*   `string get_namespace(NodeID id<sub>0</sub>)` - Ottenere il nome del network namespace gestito dalla identità *id<sub>0</sub>*.
-*   `string? get_pseudodev(NodeID id<sub>0</sub>, string dev)` - Ottenere il nome dell'interfaccia di rete
-    (reale o pseudo) gestita dalla identità *id<sub>0</sub>* al posto dell'interfaccia reale *dev*. Oppure
+*   `string get_namespace(NodeID id)` - Ottenere il nome del network namespace gestito dalla identità *id<sub>0</sub>*.
+*   `string? get_pseudodev(NodeID id, string dev)` - Ottenere il nome dell'interfaccia di rete
+    (reale o pseudo) gestita dalla identità *id* al posto dell'interfaccia reale *dev*. Oppure
     `null` se questa identità non ha una pseudo-interfaccia su *dev*.
-*   `Gee.List<IIdmgmtIdentityArc> get_identity_arcs(IIdmgmtArc arc<sub>0</sub>, NodeID id<sub>0</sub>)` - Dato un arco
+*   `Gee.List<IIdmgmtIdentityArc> get_identity_arcs(IIdmgmtArc arc, NodeID id)` - Dato un arco
     e una identità nel sistema (passata come NodeID) ottenere i dati di tutti gli *archi-identità* formati su
     questo arco da questa identità.
 
