@@ -189,18 +189,21 @@ avviene modificando i valori dell'associazione *namespaces* mantenuta dal modulo
 Questo significa anche che se *id<sub>j</sub>* era la precedente identità principale, ora non lo è più e lo
 è diventata l'identità *id<sub>i</sub>*. Quindi può essere necessario modificare anche il valore di *main_id*.
 
-Poi il manager, per ogni interfaccia di rete reale *r* che il sistema gestisce, tramite il *netns-manager*
+Poi il manager, per ogni interfaccia di rete reale *r* che il sistema gestisce e che era associata ad una
+\[pseudo]interfaccia gestita dall'identità *id<sub>j</sub>*, tramite il *netns-manager*
 costruisce una nuova pseudo-interfaccia *p(r)* sopra *r* e la sposta nel network namespace *n<sub>temp</sub>*.
-Inoltre il modulo assegna a *p(r)* un nuovo indirizzo IP link-local scelto a caso. Avviene anche qui uno
-scambio. Il manager assegna alla vecchia identità *id<sub>j</sub>* le nuove pseudo-interfacce di rete e alla nuova
-identità *id<sub>i</sub>* le interfacce (reali o pseudo) che prima erano assegnate a *id<sub>j</sub>*.
-Concretamente, questo scambio di assegnazioni avviene modificando i valori dell'associazione *handled_nics* mantenuta dal modulo.
+Inoltre il modulo assegna a *p(r)* un nuovo indirizzo IP link-local scelto a caso.
 
 *   **Nota.** L'indirizzo link-local deve essere univoco a livello dei domini di broadcast dei diretti vicini
     del sistema. Questo significa che deve essere univoco nel sistema stesso e che nessuno dei suoi diretti vicini
     deve avere *attualmente* conoscenza di un link-local equivalente. Per una prima implementazione possiamo
     assumere che uno scelto a caso sia sufficiente a questo scopo, ma in futuro potrebbe essere fatta
     una implementazione che offre maggiori garanzie.
+
+Avviene anche qui uno
+scambio. Il manager assegna alla vecchia identità *id<sub>j</sub>* le nuove pseudo-interfacce di rete e alla nuova
+identità *id<sub>i</sub>* le interfacce (reali o pseudo) che prima erano assegnate a *id<sub>j</sub>*.
+Concretamente, questo scambio di assegnazioni avviene modificando i valori dell'associazione *handled_nics* mantenuta dal modulo.
 
 Il manager adesso può popolare del tutto l'istanza di *MigrationData* e raccoglie in essa le seguenti informazioni:
 *   *migration_id* - Identificativo numerico univoco per la migrazione.
