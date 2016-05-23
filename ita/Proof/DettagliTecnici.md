@@ -331,11 +331,24 @@ in questo segnale anche un booleano `bad_link` che dice se la ragione è un link
 Il modulo Qspn chiama *arc_remove* anche quando è stato chiamato il suo metodo *remove_outer_arcs*. Anche
 in questo caso il modulo notifica il segnale `arc_removed`, ovviamente con `bad_link=false`.
 
-Se viene chiamato dall'esterno il metodo *arc_remove*, il segnale `arc_removed` non viene emesso.
-Questo dovrebbe avvenire quando l'utilizzatore del modulo Qspn si avvede autonomamente che un arco
-non funziona più e decide di rimuoverlo. In questo momento il programma rimuove i relativi
-archi-identità (probabilmente usando il modulo Identities) e di conseguenza (reagendo alle
-notifiche del modulo Identities) rimuove le istanze di IQspnArc con questo metodo di QspnManager.
+Se viene chiamato dall'esterno il metodo *arc_remove*, il segnale `arc_removed` non viene emesso.  
+Ad esempio, supponiamo che su un arco *a* che parte dal nostro sistema siano stati realizzati diversi
+archi-identità (*ai<sub>1</sub>* e *ai<sub>2</sub>*) per via di diverse identità (*i<sub>1</sub>* e *i<sub>2</sub>*) che
+vivono nel nostro sistema. Supponiamo che l'arco *a* diventi inutilizzabile, e che l'istanza di
+QspnManager della nostra identità *i<sub>1</sub>* se ne avvede per prima. Questa istanza di QspnManager
+chiama internamente il metodo *arc_remove* e notifica il segnale `arc_removed(ai1, bad_link=true)`.  
+Come conseguenza il programma *qspnclient* rimuove l'arco *a* dal modulo Neighborhood con il suo
+metodo *remove_my_arc*. Il modulo Neighborhood emette il segnale `arc_removed`.  
+Come conseguenza il programma *qspnclient* rimuove l'arco *a* dal modulo Identities con il suo metodo *remove_arc*. Il modulo
+Identities rimuove gli archi-identità *ai<sub>1</sub>* e *ai<sub>2</sub>* emettendo i segnali `identity_arc_removed`
+relativi.  
+Come conseguenza del segnale `identity_arc_removed(a, i1, ...)` il programma *qspnclient* dovrebbe
+rimuovere *ai<sub>1</sub>* dal QspnManager di *i<sub>1</sub>*; ma siccome sa che è già stato rimosso
+proprio su sua iniziativa, non fa nulla.  
+Come conseguenza del segnale `identity_arc_removed(a, i2, ...)` il programma *qspnclient*
+rimuove *ai<sub>2</sub>* dal QspnManager di *i<sub>2</sub>* chiamando dall'esterno il suo
+metodo *arc_remove*. Questa chiamata, come abbiamo detto, non comporta una ulteriore notifica
+del segnale `arc_removed`.
 
 Il modulo Identities chiama *remove_arc* (che è anche public) quando una comunicazione sull'arco fallisce
 durante il metodo *add_identity* o lo stesso metodo *add_arc*. Questo metodo rimuove di conseguenza tutti
@@ -358,15 +371,66 @@ virtuali che non vedranno mai collegamenti malfunzionanti, possiamo fare un elen
 che si vogliono gestire.
 
  * L'utente da il comando `remove_nodearc` che deve simulare la rimozione di un arco, ad esempio
-   perché i due sistemi non sono più a distanza di rilevamento con le loro schede wireless.
+   perché i due sistemi non sono più a distanza di rilevamento con le loro schede wireless.  
    Per implementarlo in modo semplicistico si può chiamare il metodo *remove_my_arc* di Neighborhood.
  * In un sistema il qspnclient va in crash. Nei sistemi vicini viene prima o poi richiamato
    il metodo *remove_my_arc* di Neighborhood. Può anche verificarsi prima che viene chiamato il
-   metodo *arc_remove* di Qspn.
+   metodo *arc_remove* di Qspn. Oppure, anche se meno probabile, il metodo *remove_arc* di Identities.
  * Su una identità di connettività viene chiamato (comando dato dall'utente) *remove_outer_arcs*.
  * Una identità di connettività viene rimossa (comando dato dall'utente) in quanto non serve più alla connettività.
  * Su una identità (qualsiasi) il Qspn riceve da remoto l'ordine di rimuovere un arco-identità.
  * L'utente da il comando `quit`.
+
+Analiziamo una alla volta questi casi.
+
+* * *
+
+L'utente da il comando `remove_nodearc`. Il programma *qspnclient* richiama il metodo *remove_my_arc* di Neighborhood.
+Il modulo Neighborhood rimuove l'arco da entrambi i sistemi e emette il segnale `arc_removed`.
+
+Il programma *qspnclient* in risposta al segnale `arc_removed` di Neighborhood deve rimuovere
+l'arco dal dizionario *neighborhood_arcs* e segnalarlo a video (indicando la chiave stringa
+composta dai due MAC address).
+
+Se in precedenza questo arco non era stato *accettato* con il comando interattivo `add_nodearc`,
+le operazioni si concludono qui.
+
+Altrimenti, il programma reperisce l'istanza di ProofOfConcept.Arc, la
+rimuove dal dizionario *nodearcs* e lo segnala a video (indicando il *nodearc_index*).
+
+Inoltre chiama il metodo *remove_arc* sul modulo Identities passandogli l'istanza di IIdmgmtArc
+referenziata nell'istanza di ProofOfConcept.Arc. Questo a sua volta farà sì che il modulo Identities
+attui delle operazioni riguardanti tutti gli archi-identità che si appoggiavano ad esso e in seguito
+emetta, per ognuno, il segnale `identity_arc_removed`. Nella gestione di questo segnale, come vedremo dopo,
+il programma *qspnclient* rimuove, se c'era, l'istanza di IQspnArc dal QspnManager di quella identità.
+
+* * *
+
+In un sistema il qspnclient va in crash. Un sistema vicino se ne può accorgere in diverse occasioni.
+Supponiamo che se ne avvede il modulo Neighborhood per primo e quindi richiama il suo metodo
+*remove_my_arc*.
+
+In questo caso il modulo Neighborhood rimuove l'arco su questo sistema. Quindi emette il segnale
+`arc_removed`. Tutto procede come abbiamo visto prima.
+
+Supponiamo invece che se ne avvede per primo il modulo Qspn. Il modulo richiama il suo metodo
+*arc_remove* e poi emette il segnale `arc_removed` specificando `bad_link=true`.
+
+Il programma *qspnclient* in risposta al segnale `arc_removed(bad_link=true)` di Qspn deve
+chiamare il metodo *remove_my_arc* di Neighborhood. Poi tutto procede come abbiamo visto prima.  
+Bisogna però ricordare che quando parleremo della gestione del segnale `identity_arc_removed`
+del modulo Identities occorre considerare che l'arco-identità in oggetto potrebbe essere già
+stato rimosso dal modulo Qspn.
+
+Supponiamo invece che se ne avvede per primo il modulo Identities. Il modulo richiama il suo
+metodo *remove_arc*, di conseguenza rimuove tutti gli archi-identità che si appoggiavano ad
+esso e emette, per ognuno, il segnale `identity_arc_removed`. Dopo aver chiamato il suo
+metodo *remove_arc*, il modulo emette anche il segnale `arc_removed`.
+
+Il programma *qspnclient* in risposta al segnale `identity_arc_removed` di Identities
+rimuove l'istanza di IQspnArc dal QspnManager di quella identità.  
+Poi, in risposta al segnale `arc_removed` di Identities, il programma chiama il metodo *remove_my_arc*
+di Neighborhood. Poi tutto procede come abbiamo visto prima.
 
 ### Operazioni dell'utilizzatore dei moduli
 
