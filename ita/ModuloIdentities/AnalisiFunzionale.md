@@ -190,7 +190,12 @@ Nel tempo, l'utilizzatore può:
 *   Aggiungere una interfaccia di rete reale a quelle gestite dal sistema. In questo caso indica il nome, il MAC e l'indirizzo link-local.
 *   Rimuovere una interfaccia di rete reale da quelle gestite dal sistema. In questo caso indica il nome.
 
-Può capitare (vedremo fra poco in quali occasioni) che il modulo Identities in autonomia aggiunga o rimuova o modifichi un arco-identità. Questo evento è notificato all'utilizzatore del modulo con un segnale che esso può ascoltare.
+Può capitare (vedremo fra poco in quali occasioni) che il modulo Identities in autonomia aggiunga o rimuova o
+modifichi un arco-identità. Questo evento è notificato all'utilizzatore del modulo con un segnale che esso può ascoltare.
+
+Può capitare anche che il modulo Identities in autonomia rimuova un arco. Avviene quando esso si avvede,
+per via di un tentativo di comunicazione con un sistema vicino, che l'arco non è più funzionante. Questo
+evento è notificato all'utilizzatore del modulo con un segnale che esso può ascoltare.
 
 * * *
 
@@ -291,8 +296,10 @@ Durante il tempo l'utilizzatore potrà fornire al modulo altre informazioni:
 *   Aggiungere una interfaccia di rete reale gestita dal sistema.  
     L'interfaccia appena aggiunta sarà immediatamente usata solo dalla identità *principale*. Se ci fossero al
     momento altre identità nel sistema, ognuna con un suo network namespace, non viene creata un pseudo-interfaccia per
-    ogni identità *di connettività*.
+    ogni identità *di connettività*. Infatti questa identità esiste per mantenere connesso un g-nodo che già
+    esisteva senza l'apporto di questa nuova interfaccia di rete reale.
 *   Rimuovere una interfaccia di rete reale che non è più gestita dal sistema.  
+    L'utilizzatore del modulo deve prima rimuovere tutti gli archi che erano stati realizzati su questa interfaccia.  
     Questo causa la rimozione anche di tutte le pseudo-interfacce costruite su di essa e al momento in uso da
     eventuali identità *di connettività*.
 *   Aggiungere un arco che il sistema ha realizzato.
@@ -305,8 +312,9 @@ Il modulo Identities risponde a queste richieste:
 *   `NodeID get_main_id()` - Ottenere il NodeID della identità *principale* del sistema.
 *   `Gee.List<NodeID> get_id_list()` - Ottenere i NodeID di tutte le identità del sistema.
 *   `string get_namespace(NodeID id<sub>0</sub>)` - Ottenere il nome del network namespace gestito dalla identità *id<sub>0</sub>*.
-*   `string get_pseudodev(NodeID id<sub>0</sub>, string dev)` - Ottenere il nome dell'interfaccia di rete
-    (reale o pseudo) gestita dalla identità *id<sub>0</sub>* al posto dell'interfaccia reale *dev*.
+*   `string? get_pseudodev(NodeID id<sub>0</sub>, string dev)` - Ottenere il nome dell'interfaccia di rete
+    (reale o pseudo) gestita dalla identità *id<sub>0</sub>* al posto dell'interfaccia reale *dev*. Oppure
+    `null` se questa identità non ha una pseudo-interfaccia su *dev*.
 *   `Gee.List<IIdmgmtIdentityArc> get_identity_arcs(IIdmgmtArc arc<sub>0</sub>, NodeID id<sub>0</sub>)` - Dato un arco
     e una identità nel sistema (passata come NodeID) ottenere i dati di tutti gli *archi-identità* formati su
     questo arco da questa identità.
@@ -331,6 +339,8 @@ Il modulo Identities segnala questi eventi:
     una diretta richiesta da parte dell'utilizzatore del modulo. Segnale *identity_arc_changed*.
 *   Rimozione di un arco-identità. Questo può anche avvenire senza che ci sia stata una diretta richiesta da
     parte dell'utilizzatore del modulo. Segnale *identity_arc_removed*.
+*   Rimozione di un arco non più funzionante. Il modulo avrà prima attuato e segnalato la
+    rimozione di tutti gli archi-identità che esistevano sopra questo arco. Segnale *arc_removed*.
 
 ## <a name="Classi_e_interfacce"></a>Classi e interfacce
 

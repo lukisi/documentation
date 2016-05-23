@@ -66,8 +66,9 @@ mantenute in memoria nel modulo.
     Restituisce la lista dei NodeID di tutte le identità del sistema.
 *   `string get_namespace(NodeID id)`.  
     Restituisce il nome del network namespace gestito da una data identità.
-*   `string get_pseudodev(NodeID id, string dev)`.  
-    Restituisce il nome dell'interfaccia di rete (reale o pseudo) gestita da una data identità al posto di una data interfaccia reale.
+*   `string? get_pseudodev(NodeID id, string dev)`.  
+    Restituisce il nome dell'interfaccia di rete (reale o pseudo) gestita da una data identità al posto di una data
+    interfaccia reale. Oppure `null` se questa identità non ha una pseudo-interfaccia su questa interfaccia reale.
 *   `Gee.List<IIdmgmtIdentityArc> get_identity_arcs(IIdmgmtArc arc, NodeID id)`.  
     Dato un arco *arc* (che quindi identifica anche un sistema diretto vicino *b*) e una identità
     *id* nel sistema corrente, restituisce i dati di tutti gli *archi-identità* formati su *arc*
@@ -107,6 +108,8 @@ La classe IdentityManager è provvista dei seguenti segnali per notificare degli
     avvenire solo in autonomia.
 *   `identity_arc_removed(IIdmgmtArc arc, NodeID id, NodeID peer_nodeid)`.  
     Un arco-identità è stato rimosso. Può avvenire su richiesta dell'utilizzatore o in autonomia.
+*   `arc_removed(IIdmgmtArc arc)`.  
+    Un arco è stato rimosso perché non più funzionante. Può avvenire solo in autonomia.
 
 ## <a name="Dettagli"></a>Dettagli
 
