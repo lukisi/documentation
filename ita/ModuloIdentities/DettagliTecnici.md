@@ -21,7 +21,7 @@ Inoltre vengono passati:
 *   Elenco delle interfacce di rete reali gestite dal sistema, coi relativi MAC e indirizzi link-local.  
     Queste informazioni vengono passate con 3 liste di stinghe (dev, mac, linklocal) che devono avere
     uguale lunghezza. Possono anche essere tutte vuote.
-*   Manager dei network namespace. Istanza di una classe che implementa IIdmgmtNetnsManager.
+*   Manager dei network namespace, o *netns-manager*. Istanza di una classe che implementa IIdmgmtNetnsManager.
 *   Factory per creare uno stub dato un arco. Istanza di una classe che implementa IIdmgmtStubFactory.
 
 Durante il tempo l'utilizzatore potrà fornire al modulo altre informazioni con questi metodi:
@@ -71,7 +71,7 @@ mantenute in memoria nel modulo.
     interfaccia reale. Oppure `null` se questa identità non ha una pseudo-interfaccia su questa interfaccia reale.
 *   `Gee.List<IIdmgmtIdentityArc> get_identity_arcs(IIdmgmtArc arc, NodeID id)`.  
     Dato un arco *arc* (che quindi identifica anche un sistema diretto vicino *b*) e una identità
-    *id* nel sistema corrente, restituisce i dati di tutti gli *archi-identità* formati su *arc*
+    *id* nel sistema corrente, restituisce i dati di tutti gli archi-identità formati su *arc*
     che partono dall'identità *id*.
 
 La classe IdentityManager è provvista dei seguenti metodi per svolgere delle operazioni su richiesta
@@ -109,7 +109,8 @@ La classe IdentityManager è provvista dei seguenti segnali per notificare degli
 *   `identity_arc_removed(IIdmgmtArc arc, NodeID id, NodeID peer_nodeid)`.  
     Un arco-identità è stato rimosso. Può avvenire su richiesta dell'utilizzatore o in autonomia.
 *   `arc_removed(IIdmgmtArc arc)`.  
-    Un arco è stato rimosso perché non più funzionante. Può avvenire solo in autonomia.
+    Un arco è stato rimosso perché non più funzionante. Questo segnale non viene emesso se la richiesta
+    di rimuovere l'arco è stata fatta dall'utilizzatore del modulo, ma solo se è avvenuta in autonomia.
 
 ## <a name="Dettagli"></a>Dettagli
 
@@ -153,7 +154,7 @@ Per ogni identità, per ogni arco realizzato dal sistema, il modulo mantiene un 
 IdentityArc. Ogni IdentityArc è una struttura dati con alcune informazioni (*peer_nodeid*, *peer_mac*,
 *peer_linklocal*). Sono i dati della interfaccia di rete (che può essere vera o pseudo) gestita da una
 particolare identità del sistema vicino raggiunto con quello specifico arco. Se esiste nel contenitore una
-istanza di IdentityArc significa che esiste un *arco-identità* tra i due sistemi.
+istanza di IdentityArc significa che esiste un arco-identità tra i due sistemi.
 
 L'associazione *identity_arcs* tra una coppia *id<sub>0</sub>-arc<sub>0</sub>* (una identità e un arco) e
 il relativo contenitore di istanze di IdentityArc è realizzata con un dizionario (HashMap) che ha per
@@ -190,7 +191,7 @@ Questo significa anche che se *id<sub>j</sub>* era la precedente identità princ
 è diventata l'identità *id<sub>i</sub>*. Quindi può essere necessario modificare anche il valore di *main_id*.
 
 Poi il manager, per ogni interfaccia di rete reale *r* che il sistema gestisce e che era associata ad una
-\[pseudo]interfaccia gestita dall'identità *id<sub>j</sub>*, tramite il *netns-manager*
+\[pseudo]interfaccia gestita dall'identità *id<sub>j</sub>*, tramite il netns-manager
 costruisce una nuova pseudo-interfaccia *p(r)* sopra *r* e la sposta nel network namespace *n<sub>temp</sub>*.
 Inoltre il modulo assegna a *p(r)* un nuovo indirizzo IP link-local scelto a caso.
 
@@ -241,7 +242,8 @@ Per ogni arco *arc* in *arc_list*:
         *   *identity_arcs(id<sub>i</sub>-arc<sub>0</sub>).add(w<sub>1</sub>);*
     *   Il manager nel sistema *a* deve comunicare al manager nel sistema *b* attraverso l'arco *arc<sub>0</sub>*
         il *migration_id* visto prima e le informazioni dell'istanza di MigrationDeviceData relativa all'interfaccia
-        *ir(arc<sub>0</sub>)*. In questa stessa comunicazione il sistema *b*, se la sua identità interessata
+        *arc<sub>0</sub>.get_dev()*, cioè l'interfaccia di rete reale su cui è formato
+        l'arco. In questa stessa comunicazione il sistema *b*, se la sua identità interessata
         *b<sub>j</sub>* ha partecipato alla stessa migrazione, risponde con l'identificativo della nuova identità
         basata su *b<sub>j</sub>* e le informazioni della pseudo-interfaccia gestita ora da *b<sub>j</sub>* relativa
         all'interfaccia reale su cui ha ricevuto il messaggio.  
@@ -288,20 +290,20 @@ Per ogni arco *arc* in *arc_list*:
             *   *w<sub>0</sub>.peer_linklocal = peer_old_id_new_linklocal*.
         *   Il manager nel sistema *a* cambia i dati dell'arco assegnato ad *id<sub>i</sub>* relativamente alla *identità* remota:
             *   *w<sub>1</sub>.peer_nodeid* = Il NodeID di *b<sub>k</sub>*.
-    *   Il manager nel sistema *a* tramite il *netns-manager* aggiunge alle tabelle nel network namespace
+    *   Il manager nel sistema *a* tramite il netns-manager aggiunge alle tabelle nel network namespace
         *namespaces(id<sub>j</sub>)* la rotta verso *w<sub>0</sub>.peer_linklocal* partendo da *old_id_new_linklocal*
-        su *handled_nics(id<sub>j</sub>)(ir(arc<sub>0</sub>)).dev*.
+        su *handled_nics(id<sub>j</sub>)(arc<sub>0</sub>.get_dev()).dev*.
     *   Il manager nel sistema *b* a sua volta, ora sa che l'identità *id<sub>j</sub>* in *a* ha migrato e ha
-        dato luogo a *id<sub>i</sub>*. Sa anche che la sua identità *b<sub>j</sub>* aveva un *arco-identità*
+        dato luogo a *id<sub>i</sub>*. Sa anche che la sua identità *b<sub>j</sub>* aveva un arco-identità
         con *id<sub>j</sub>* in *a* appoggiato sull'arco con *a* che parte da *if_b*. Ovviamente sa anche se
         l'identità *b<sub>j</sub>* ha partecipato anch'essa alla migrazione formando *b<sub>k</sub>*.
     *   Se *b<sub>j</sub>* ha partecipato alla migrazione:
         *   Il manager nel sistema *b* non ha bisogno di fare nulla in questo momento. Le sue variazioni le
             apporterà di sua iniziativa poiché anche in esso è avvenuta la migrazione di *b<sub>j</sub>* in *b<sub>k</sub>*.
     *   Altrimenti:
-        *   Il manager nel sistema *b*, in autonomia come accennato sopra, forma un nuovo *arco-identità*
+        *   Il manager nel sistema *b*, in autonomia come accennato sopra, forma un nuovo arco-identità
             *b<sub>j</sub>*-*id<sub>i</sub>* e lo segnala al suo utilizzatore.
-        *   Cambia i dati dell' *arco-identità* *b<sub>j</sub>*-*id<sub>j</sub>*, cioè MAC e linklocal, e lo
+        *   Cambia i dati dell' arco-identità *b<sub>j</sub>*-*id<sub>j</sub>*, cioè MAC e linklocal, e lo
             segnala al suo utilizzatore.
         *   Aggiunge una rotta nelle tabelle di un suo namespace (quello gestito da *b<sub>j</sub>*) per
             l'arco *b<sub>j</sub>*-*id<sub>j</sub>*.
@@ -336,12 +338,12 @@ Il manager, per ogni identità *id* in *id_list* tranne la principale *main_id*:
     *   Significa che esiste una pseudo-interfaccia costruita su *dev* gestita da *id*.
     *   Poniamo *ns = namespaces[id]* il namespace gestito da *id*.
     *   Poniamo *pseudodev = handled_nics[id-dev].dev* la pseudo-interfaccia relativa a *dev* gestita da *id*.
-    *   Il manager usa il *netns-manager* per eliminare la pseudo-interfaccia (metodo *delete_pseudodev(ns, pseudodev)*).
+    *   Il manager usa il netns-manager per eliminare la pseudo-interfaccia (metodo *delete_pseudodev(ns, pseudodev)*).
     *   Poi la rimuove dall'associazione *handled_nics* di questa identità *di connettività*.
     *   Se questo fa restare tale identità senza alcuna pseudo-interfaccia gestita, allora quella identità
-        andrà rimossa. Viene avviata una tasklet che se ne prenderà cura tra pochi istanti.
+        andrà rimossa. Viene avviata una tasklet che se ne prenderà cura tra pochi istanti. **TODO** Verificare.
 
-Poi il manager rimuove l'interfaccia dall'associazione *handled_nics* dell'identità *principale*.
+Poi il manager rimuove l'interfaccia dall'associazione *handled_nics* dell'identità principale.
 
 Infine rimuove l'interfaccia dalla lista *devs_list*.
 
@@ -362,7 +364,7 @@ In seguito il manager può usare l'arco per ottenere uno stub e comunicare con i
 tramite l'oggetto arco può anche vedere la propria interfaccia di rete reale su cui esso è costruito e
 l'indirizzo link-local del sistema vicino sull'interfaccia di rete reale in cui è raggiunto tramite questo
 arco. Attraverso queste informazioni il modulo in autonomia forma sopra questo arco il primo
-*arco-identità principale*.
+arco-identità *principale*.
 
 Il modulo fa questa operazione in questo modo:
 *   Ottiene uno stub tramite l'arco *arc*.
@@ -378,7 +380,7 @@ Il metodo *remove_arc(arc)* viene richiamato dall'utilizzatore del modulo per se
 
 Compito di questo metodo è rimuovere tutti gli archi-identità che esistono su questo arco. Vanno rimossi
 dalle associazioni che il modulo mantiene gli archi-identità formati su questo arco. Per ogni arco-identità
-tranne l'arco-identità *principale* di *arc*, si deve usare il *netns-manager* per rimuovere il collegamento
+tranne l'arco-identità principale di *arc*, si deve usare il netns-manager per rimuovere il collegamento
 diretto nel relativo network namespace.
 
 La rimozione del collegamento diretto per l'arco-identità principale nel network namespace default non è compito del modulo Identities.
@@ -403,21 +405,21 @@ Infine, il manager rimuove l'arco da *arc_list*.
 Il metodo *add_identity_arc(arc, id, peer_id, peer_mac, peer_linklocal)* aggiunge un arco-identità sopra un
 arco. La prima chiamata a questo metodo relativamente all'arco *arc* avviene in modo automatico quando il
 sistema segnala la presenza di *arc* con il metodo *add_arc*. In questa chiamata viene richiesta la realizzazione
-dell'arco-identità *principale* dell'arco *arc*.
+dell'arco-identità principale dell'arco *arc*.
 
-Il modulo in questo metodo deve saper riconoscere che l'arco-identità richiesto è l'arco-identità *principale*
-di *arc*. Perché in questo caso l'aggiunta del nuovo *arco-identità* non deve comportare la realizzazione con
-il *netns-manager* di un nuovo collegamento diretto. Infatti il modulo assume che il collegamento diretto tra i
-relativi indirizzi link-local che concretizza l'arco-identità *principale* di un arco *arc* è stato realizzato
-(sul *network namespace default*) senza il suo intervento.
+Il modulo in questo metodo deve saper riconoscere che l'arco-identità richiesto è l'arco-identità principale
+di *arc*. Perché in questo caso l'aggiunta del nuovo arco-identità non deve comportare la realizzazione con
+il netns-manager di un nuovo collegamento diretto. Infatti il modulo assume che il collegamento diretto tra i
+relativi indirizzi link-local che concretizza l'arco-identità principale di un arco *arc* è stato realizzato
+(sul network namespace default) senza il suo intervento.
 
-Ovviamente il modulo sa verificare se l'identità *id* nel suo sistema è quella *principale*. Per verificare se
-l'identità *peer_id* nel sistema vicino è quella *principale* il modulo usa il metodo *get_peer_linklocal*
+Ovviamente il modulo sa verificare se l'identità *id* nel suo sistema è quella principale. Per verificare se
+l'identità *peer_id* nel sistema vicino è quella principale il modulo usa il metodo *get_peer_linklocal*
 dell'oggetto *arc* e lo confronta con l'argomento passato *peer_linklocal* e se coincidono allora assume che
-*peer_id* nel sistema vicino è la *principale*. Se entrambe le identità risultano essere la *principale* del
-sistema, allora l'arco-identità richiesto è l'arco-identità *principale* di *arc*.
+*peer_id* nel sistema vicino è la principale. Se entrambe le identità risultano essere la principale del
+sistema, allora l'arco-identità richiesto è l'arco-identità principale di *arc*.
 
-Di norma l'utilizzatore del modulo non chiama mai esplicitamente questo metodo. Infatti l'arco-identità *principale*
+Di norma l'utilizzatore del modulo non chiama mai esplicitamente questo metodo. Infatti l'arco-identità principale
 viene aggiunto automaticamente. Gli altri archi-identità vengono realizzati in autonomia dal modulo a seguito di una migrazione.
 
 Tuttavia il modulo non vieta al suo utilizzatore di richiedere esplicitamente la realizzazione sopra un arco
@@ -431,29 +433,29 @@ Riguardo gli archi-identità aggiunti in autonomia dal modulo, nel dettaglio pos
     anche usare i dati (MAC address e indirizzo link-local) del vecchio arco *a<sub>0</sub>-b<sub>0</sub>* nel
     nuovo arco *a<sub>0</sub>-b<sub>1</sub>*; inoltre deve modificare i dati del vecchio arco
     *a<sub>0</sub>-b<sub>0</sub>* come gli sono stati notificati adesso; infine deve aggiungere un collegamento
-    diretto usando il *netns-manager* con i nuovi dati ora assegnati al vecchio arco. In questo caso non si
+    diretto usando il netns-manager con i nuovi dati ora assegnati al vecchio arco. In questo caso non si
     chiama il metodo *add_identity_arc*.
 *   Una identità *a<sub>0</sub>* del sistema corrente ha migrato ed è stata replicata in *a<sub>1</sub>*. In
     questo caso la sequenza di operazioni da fare è un po' diversa ed è stata dettagliata nella descrizione
     dei metodi *prepare_add_identity* e *add_identity*. In questo caso non si chiama il metodo *add_identity_arc*.
 
 Fatta questa premessa, il manager in questo metodo aggiunge il nuovo arco-identità alle sue associazioni. Se
-necessario, cioè se non si tratta dell'arco-identità *principale* di *arc*, usa il *netns-manager* per realizzare
+necessario, cioè se non si tratta dell'arco-identità principale di *arc*, usa il netns-manager per realizzare
 un nuovo collegamento diretto.
 
 * * *
 
 <a name="remove_identity_arc"></a>
 
-Il metodo *remove_identity_arc(arc, id, peer_id)* rimuove un certo *arco-identità*.
+Il metodo *remove_identity_arc(arc, id, peer_id)* rimuove un certo arco-identità.
 
 Di norma, se è l'utilizzatore del modulo a fare questa esplicita richiesta, la richiesta non riguarda
-l'arco-identità *principale* di *arc*.
+l'arco-identità principale di *arc*.
 
 Ci sono altre situazioni in cui questo metodo può venire chiamato:
 *   Il sistema corrente si avvede che un arco cessa di funzionare.  
     In questo caso il sistema chiama il metodo *remove_arc* del manager del modulo Identities. Il metodo
-    *remove_arc* richiama il metodo *remove_identity_arc* per ogni arco-identità formato sull'arco. Anche quello *principale*.
+    *remove_arc* richiama il metodo *remove_identity_arc* per ogni arco-identità formato sull'arco. Anche quello principale.
 *   Il sistema corrente rimuove una sua interfaccia di rete reale da quelle gestite.  
     In questo caso il sistema chiama prima il metodo *remove_arc* per ogni singolo arco formato tramite
     quella interfaccia di rete; poi richiamerà il metodo *remove_handled_nic*. Ogni chiamata di *remove_arc*,
@@ -467,7 +469,7 @@ Ci sono altre situazioni in cui questo metodo può venire chiamato:
     semplicemente con un ciclo per tutte le *id* in *id_list*.
 
 Fatta questa premessa, il manager in questo metodo rimuove l'arco-identità dalle sue associazioni. Usa se
-necessario, cioè se non si tratta dell'arco-identità *principale* di *arc*, il *netns-manager* per eliminare
+necessario, cioè se non si tratta dell'arco-identità principale di *arc*, il netns-manager per eliminare
 un collegamento diretto.
 
 Il manager fa queste operazioni:
@@ -477,7 +479,7 @@ Il manager fa queste operazioni:
     *identity_arcs(id-arc)*. Se non lo trova ignora questa richiesta.
 *   Poniamo *peer_linklocal = id_arc.peer_linklocal* l'indirizzo link-local dell'altro vertice di *id_arc*.
 *   Poniamo *pseudodev = handled_nics[id-dev].dev* la interfaccia (reale o pseudo) relativa a *dev* gestita da *id*.
-*   Il manager, se *id_arc* non è l'arco-identità *principale* di *arc*, usa il *netns-manager* per
+*   Il manager, se *id_arc* non è l'arco-identità principale di *arc*, usa il netns-manager per
     rimuovere il collegamento diretto (metodo *remove_gateway(ns, linklocal, peer_linklocal, pseudodev)*) rappresentato da *id_arc*.
 *   Poi il manager rimuove *id_arc* dalla lista contenuta nell'associazione *identity_arcs(id-arc)*.
 
@@ -487,7 +489,7 @@ Il manager fa queste operazioni:
 
 Il metodo *remove_identity(id)* può essere chiamato dall'utilizzatore del modulo per rimuovere una certa *identità di connettività*.
 
-Questo non può essere fatto per l'identità *principale*. Il modulo lo controlla: se riceve questa richiesta abortisce il programma.
+Questo non può essere fatto per l'identità principale. Il modulo lo controlla: se riceve questa richiesta abortisce il programma.
 
 Il manager in questo metodo:
 *   Per ogni arco *arc* in *arc_list*:
@@ -497,8 +499,8 @@ Il manager in questo metodo:
         questa chiamata sullo stub concedendole solo un certo tempo. Se il sistema vicino termina la
         connessione, o risponde male, o non risponde entro un certo tempo, il manager prosegue lo stesso.
     *   Rimuove la collezione di IdentityArc contenuta nell'associazione *identity_arcs(id-arc)*.
-*   Svuota la routing table del relativo network namespace, usando il *netns-manager*.
-*   Elimina le relative pseudo-interfacce, usando il *netns-manager* e le rimuove dall'associazione *handled_nics(id-dev)*.
-*   Elimina il network namespace relativo, usando il *netns-manager* e la rimuove dall'associazione *namespaces(id)*.
+*   Svuota la routing table del relativo network namespace, usando il netns-manager.
+*   Elimina le relative pseudo-interfacce, usando il netns-manager e le rimuove dall'associazione *handled_nics(id-dev)*.
+*   Elimina il network namespace relativo, usando il netns-manager e la rimuove dall'associazione *namespaces(id)*.
 *   Rimuove l'identità dalla lista *id_list*.
 
