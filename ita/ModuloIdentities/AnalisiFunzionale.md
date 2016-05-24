@@ -324,7 +324,7 @@ Il modulo Identities permette queste operazioni:
 *   Creazione della prima identità. Nel costruttore.
 *   Duplicazione di una identità a seguito di una migrazione. Eventualmente in due fasi se la migrazione è di un
     g-nodo. Metodi *prepare_add_identity* e *add_identity*.
-*   Associazione di un oggetto ad una identità. Metodi *set_identity_module* e *get_identity_module*.  
+*   Associazione di un oggetto ad una identità. Metodi *set_identity_module*, *get_identity_module* e *unset_identity_module*.  
     Come detto prima, ad ogni identità si possono associare diversi oggetti, ognuno identificato da un nome. Di
     norma un oggetto per ogni modulo *di identità*.
 *   Aggiunta di un arco-identità. Metodo *add_identity_arc*.

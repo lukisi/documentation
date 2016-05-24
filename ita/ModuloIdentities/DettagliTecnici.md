@@ -55,6 +55,10 @@ provvista dei seguenti metodi:
     Recupera un oggetto associato in precedenza ad un nome in una identità. Abortisce il programma se
     l'identità indicata non è del sistema corrente. Abortisce il programma se a quel nome non era stato
     in precedenza associato alcun oggetto.
+*   `void unset_identity_module(NodeID id, string name)`.  
+    Rimuove un oggetto in precedenza associato ad un nome in una identità. Abortisce il programma se
+    l'identità indicata non è del sistema corrente. Abortisce il programma se a quel nome non era stato
+    in precedenza associato alcun oggetto.
 
 La classe IdentityManager è provvista dei seguenti metodi per fornire all'utilizzatore del modulo
 informazioni sul suo stato attuale. Si vedano sotto i dettagli sulle [associazioni](#Associazioni)
