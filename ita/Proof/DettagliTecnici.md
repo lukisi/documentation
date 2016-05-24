@@ -462,7 +462,7 @@ proprio su sua iniziativa, non fa nulla.
 L'utente dà il comando `remove_identity` specificando una identità di connettività *i<sub>1</sub>* in quanto non serve
 più alla connettività. Questa simulazione ripercorre i passi che saranno fatti dal demone *ntkd*: nel
 caso di migrazione di un g-nodo e relativa formazione di un g-nodo di connettività, dovrà essere solo
-un singolo *nodo del grafo* a verificare se l'intero g-nodo di connettività può essere rimosso. Quindi
+un singolo *nodo del grafo* a verificare periodicamente se l'intero g-nodo di connettività può essere rimosso. Quindi
 quando l'utente dà il comando `remove_identity` su un sistema l'operazione sarà portata avanti da
 tutto il g-nodo di connettività.
 
@@ -470,14 +470,28 @@ Il programma *qspnclient* fa queste operazioni:
 
 *   Se `connectivity_from_level` (che è un parametro di una identità di connettività che viene impostato
     nel momento in cui l'utente dà il comando `make_connectivity`) è maggiore di 1:
-    *   Chiama il metodo *prepare_destroy* del QspnManager di *i<sub>1</sub>*.
+    *   Chiama il metodo *prepare_destroy* del QspnManager di *i<sub>1</sub>*.  
+        Questo propaga l'informazione a tutti i membri del g-nodo che si sta rimuovendo.
     *   Aspetta 10 secondi.
-*   Chiama il metodo *destroy* del QspnManager di *i<sub>1</sub>*.
+*   Chiama il metodo *destroy* del QspnManager di *i<sub>1</sub>*.  
+    Questo informa i vicini esterni al g-nodo che si sta rimuovendo.
 *   Dismette il QspnManager di *i<sub>1</sub>*.
+*   Dismette tutti i moduli di identità relativi alla stessa identità.  
+    Rimuove ogni riferimento alle istanze memorizzato nel modulo Identities con *unset_identity_module*.
+*   Chiama sul modulo Identities il metodo *remove_identity*. 
 
-Poi, sul modulo Identities, il programma chiama il metodo *remove_identity*.
+Come conseguenza della chiamata *prepare_destroy*, su tutti i *nodi del grafo* membri del g-nodo che si sta rimuovendo,
+ad eccezione della stessa identità di connettività nel sistema in cui l'utente ha dato il comando `remove_identity`, il
+modulo Qspn emetterà tra circa 10 secondi il segnale `remove_identity`. In risposta, il programma *qspnclient* dovrà:
 
-Il modulo Identities cerca di comunicare ai sistemi vicini l'avvenimento con il metodo remoto
+*   Chiamare il metodo *destroy* del QspnManager che ha emesso il segnale.
+*   Dismettere il QspnManager che ha emesso il segnale.
+*   Dismettere tutti i moduli di identità relativi alla stessa identità.  
+    Rimuovere ogni riferimento alle istanze memorizzato nel modulo Identities con *unset_identity_module*.
+*   Chiamare sul modulo Identities il metodo *remove_identity*. 
+
+Il modulo Identities nel metodo *remove_identity*, in ogni sistema in cui è stato chiamato, cerca di
+comunicare ai sistemi vicini l'avvenimento con il metodo remoto
 *notify_identity_removed*. Poi provvede a rimuovere completamente le pseudo-interfacce di rete
 e il network namespace.
 
