@@ -320,18 +320,23 @@ il metodo `remove_address` una volta per ogni indirizzo IP e per ognuna delle su
 
 ### Comportamento dei moduli
 
-Il modulo Neighborhood chiama *remove_my_arc* (che è anche public) se il monitor di un arco rileva un fallimento, o su tutti gli archi se
-una scheda non va più gestita. Questo metodo notifica il segnale `arc_removed` e inoltre tenta di chiamare il metodo
-remoto *remove_arc*, che a sua volta nel sistema vicino richiama *remove_my_arc*.
+Il modulo Neighborhood chiama *remove_my_arc* (che è anche public) se il monitor di un arco rileva
+un fallimento. Il metodo notifica il segnale `arc_removed`. In questo caso la chiamata è fatta con
+`do_tell=false`, quindi il metodo non tenta di comunicare con il sistema vicino.
+
+Il modulo Neighborhood chiama *remove_my_arc* anche quando una interfaccia di rete non va più
+gestita. In questo caso fa la chiamata su tutti gli archi che partono da quella interfaccia di rete.
+Il metodo notifica il segnale `arc_removed`. In questo caso la chiamata è fatta con `do_tell=true`, quindi
+il metodo tenta di chiamare il metodo remoto *remove_arc*, che a sua volta nel sistema vicino richiama *remove_my_arc*.
 
 Il modulo Qspn chiama *arc_remove* (che è anche public) quando una comunicazione fallisce su un arco-identità.
-Oltre a chiamare il metodo, il modulo in queste occasioni notifica anche il segnale `arc_removed` includendo
+Oltre a chiamare il metodo, il modulo in queste occasioni notifica il segnale `arc_removed` includendo
 in questo segnale anche un booleano `bad_link` che dice se la ragione è un link malfunzionante.
 
 Il modulo Qspn chiama *arc_remove* anche quando è stato chiamato il suo metodo *remove_outer_arcs*. Anche
 in questo caso il modulo notifica il segnale `arc_removed`, ovviamente con `bad_link=false`.
 
-Se viene chiamato dall'esterno il metodo *arc_remove*, il segnale `arc_removed` non viene emesso.  
+Se viene chiamato dall'esterno il metodo *arc_remove* di Qspn, il segnale `arc_removed` non viene emesso.  
 Ad esempio, supponiamo che su un arco *a* che parte dal nostro sistema siano stati realizzati diversi
 archi-identità (*ai<sub>1</sub>* e *ai<sub>2</sub>*) per via di diverse identità (*i<sub>1</sub>* e *i<sub>2</sub>*) che
 vivono nel nostro sistema. Supponiamo che l'arco *a* diventi inutilizzabile, e che l'istanza di
@@ -352,7 +357,10 @@ del segnale `arc_removed`.
 
 Il modulo Identities chiama *remove_arc* (che è anche public) quando una comunicazione sull'arco fallisce
 durante il metodo *add_identity* o lo stesso metodo *add_arc*. Questo metodo rimuove di conseguenza tutti
-gli archi-identità che vi si appoggiavano e notifica per essi il segnale `identity_arc_removed`.
+gli archi-identità che vi si appoggiavano e notifica per essi il segnale `identity_arc_removed`. Dopo aver
+chiamato il suo metodo *remove_arc*, il modulo in queste occasioni emette anche il segnale `arc_removed`.
+
+Se viene chiamato dall'esterno il metodo *remove_arc* di Identities, il segnale `arc_removed` non viene emesso.  
 
 Quando una identità di connettività viene rimossa con il metodo *remove_identity* di Identities, il modulo cerca
 di notificarlo ai vicini con il metodo remoto *notify_identity_removed* e questo nei vicini fa rimuovere
@@ -370,16 +378,20 @@ Nel caso del programma *qspnclient*, che si presume verrà adoperato su un testb
 virtuali che non vedranno mai collegamenti malfunzionanti, possiamo fare un elenco delle situazioni
 che si vogliono gestire.
 
- * L'utente da il comando `remove_nodearc` che deve simulare la rimozione di un arco, ad esempio
-   perché i due sistemi non sono più a distanza di rilevamento con le loro schede wireless.  
-   Per implementarlo in modo semplicistico si può chiamare il metodo *remove_my_arc* di Neighborhood.
- * In un sistema il qspnclient va in crash. Nei sistemi vicini viene prima o poi richiamato
-   il metodo *remove_my_arc* di Neighborhood. Può anche verificarsi prima che viene chiamato il
-   metodo *arc_remove* di Qspn. Oppure, anche se meno probabile, il metodo *remove_arc* di Identities.
- * Su una identità di connettività viene chiamato (comando dato dall'utente) *remove_outer_arcs*.
- * Una identità di connettività viene rimossa (comando dato dall'utente) in quanto non serve più alla connettività.
- * Su una identità (qualsiasi) il Qspn riceve da remoto l'ordine di rimuovere un arco-identità.
- * L'utente da il comando `quit`.
+*   L'utente da il comando `remove_nodearc` che deve simulare la rimozione di un arco, ad esempio
+    perché i due sistemi non sono più a distanza di rilevamento con le loro schede wireless.  
+    Per implementarlo in modo semplicistico si può chiamare il metodo *remove_my_arc* di Neighborhood.
+*   In un sistema il qspnclient va in crash. Nei sistemi vicini viene prima o poi richiamato
+    il metodo *remove_my_arc* di Neighborhood. Può anche verificarsi prima che viene chiamato il
+    metodo *arc_remove* di Qspn. Oppure, anche se meno probabile, il metodo *remove_arc* di Identities.
+*   L'utente da il comando `remove_outer_arcs` ad una identità di connettività. Sul QspnManager
+    associato ad essa, il programma chiama il metodo *remove_outer_arcs*.
+*   L'utente da il comando `remove_identity` riguardo una identità di connettività in quanto non serve
+    più alla connettività. Sul modulo Identities, il programma chiama il metodo *remove_identity*.
+*   Su una identità (qualsiasi) il Qspn riceve da remoto l'ordine di rimuovere un arco-identità.  
+    **TODO** Sulla base di come si dipanano gli eventi nei due casi sopra (`remove_outer_arcs`
+    e `remove_identity`) vedere quali comunicazioni riceve un sistema vicino.
+*   L'utente da il comando `quit`.
 
 Analiziamo una alla volta questi casi.
 
