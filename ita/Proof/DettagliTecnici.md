@@ -378,27 +378,28 @@ Nel caso del programma *qspnclient*, che si presume verrà adoperato su un testb
 virtuali che non vedranno mai collegamenti malfunzionanti, possiamo fare un elenco delle situazioni
 che si vogliono gestire.
 
-*   L'utente da il comando `remove_nodearc` che deve simulare la rimozione di un arco, ad esempio
+*   L'utente dà il comando `remove_nodearc` che deve simulare la rimozione di un arco, ad esempio
     perché i due sistemi non sono più a distanza di rilevamento con le loro schede wireless.  
-    Per implementarlo in modo semplicistico si può chiamare il metodo *remove_my_arc* di Neighborhood.
+    Per implementarlo in modo semplicistico si può chiamare il metodo *remove_my_arc* di Neighborhood con
+    `do_tell=false`.
 *   In un sistema il qspnclient va in crash. Nei sistemi vicini viene prima o poi richiamato
     il metodo *remove_my_arc* di Neighborhood. Può anche verificarsi prima che viene chiamato il
     metodo *arc_remove* di Qspn. Oppure, anche se meno probabile, il metodo *remove_arc* di Identities.
-*   L'utente da il comando `remove_outer_arcs` ad una identità di connettività. Sul QspnManager
+*   L'utente dà il comando `remove_outer_arcs` ad una identità di connettività. Sul QspnManager
     associato ad essa, il programma chiama il metodo *remove_outer_arcs*.
-*   L'utente da il comando `remove_identity` riguardo una identità di connettività in quanto non serve
+*   L'utente dà il comando `remove_identity` riguardo una identità di connettività in quanto non serve
     più alla connettività. Sul modulo Identities, il programma chiama il metodo *remove_identity*.
 *   Su una identità (qualsiasi) il Qspn riceve da remoto l'ordine di rimuovere un arco-identità.  
     **TODO** Sulla base di come si dipanano gli eventi nei due casi sopra (`remove_outer_arcs`
     e `remove_identity`) vedere quali comunicazioni riceve un sistema vicino.
-*   L'utente da il comando `quit`.
+*   L'utente dà il comando `quit`.
 
 Analiziamo una alla volta questi casi.
 
 * * *
 
-L'utente da il comando `remove_nodearc`. Il programma *qspnclient* richiama il metodo *remove_my_arc* di Neighborhood.
-Il modulo Neighborhood rimuove l'arco da entrambi i sistemi e emette il segnale `arc_removed`.
+L'utente dà il comando `remove_nodearc`. Il programma *qspnclient* richiama il metodo *remove_my_arc* di Neighborhood con
+`do_tell=false`. Il modulo Neighborhood rimuove l'arco e emette il segnale `arc_removed`.
 
 Il programma *qspnclient* in risposta al segnale `arc_removed` di Neighborhood deve rimuovere
 l'arco dal dizionario *neighborhood_arcs* e segnalarlo a video (indicando la chiave stringa
@@ -443,6 +444,42 @@ Il programma *qspnclient* in risposta al segnale `identity_arc_removed` di Ident
 rimuove l'istanza di IQspnArc dal QspnManager di quella identità.  
 Poi, in risposta al segnale `arc_removed` di Identities, il programma chiama il metodo *remove_my_arc*
 di Neighborhood. Poi tutto procede come abbiamo visto prima.
+
+* * *
+
+L'utente dà il comando `remove_outer_arcs` specificando una identità di connettività *i<sub>1</sub>*. Il
+programma *qspnclient* sulla relativa istanza di QspnManager richiama il metodo *remove_outer_arcs*.
+
+Supponiamo che in tale metodo il modulo Qspn decida di rimuovere un arco *ai<sub>1</sub>*. Il modulo notifica il
+segnale `arc_removed` per l'arco *ai<sub>1</sub>* con `bad_link=false`. In risposta il programma richiama
+il metodo *remove_identity_arc* sul modulo Identities. Il modulo Identities notifica il segnale
+`identity_arc_removed(a, i1, ...)`. Come conseguenza il programma *qspnclient* dovrebbe
+rimuovere *ai<sub>1</sub>* dal QspnManager di *i<sub>1</sub>*; ma siccome sa che è già stato rimosso
+proprio su sua iniziativa, non fa nulla.
+
+* * *
+
+L'utente dà il comando `remove_identity` specificando una identità di connettività *i<sub>1</sub>* in quanto non serve
+più alla connettività. Questa simulazione ripercorre i passi che saranno fatti dal demone *ntkd*: nel
+caso di migrazione di un g-nodo e relativa formazione di un g-nodo di connettività, dovrà essere solo
+un singolo *nodo del grafo* a verificare se l'intero g-nodo di connettività può essere rimosso. Quindi
+quando l'utente dà il comando `remove_identity` su un sistema l'operazione sarà portata avanti da
+tutto il g-nodo di connettività.
+
+Il programma *qspnclient* fa queste operazioni:
+
+*   Se `connectivity_from_level` (che è un parametro di una identità di connettività che viene impostato
+    nel momento in cui l'utente dà il comando `make_connectivity`) è maggiore di 1:
+    *   Chiama il metodo *prepare_destroy* del QspnManager di *i<sub>1</sub>*.
+    *   Aspetta 10 secondi.
+*   Chiama il metodo *destroy* del QspnManager di *i<sub>1</sub>*.
+*   Dismette il QspnManager di *i<sub>1</sub>*.
+
+Poi, sul modulo Identities, il programma chiama il metodo *remove_identity*.
+
+Il modulo Identities cerca di comunicare ai sistemi vicini l'avvenimento con il metodo remoto
+*notify_identity_removed*. Poi provvede a rimuovere completamente le pseudo-interfacce di rete
+e il network namespace.
 
 ### Operazioni dell'utilizzatore dei moduli
 
