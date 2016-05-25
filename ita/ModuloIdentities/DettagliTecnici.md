@@ -464,13 +464,12 @@ Ci sono altre situazioni in cui questo metodo può venire chiamato:
     In questo caso il sistema chiama prima il metodo *remove_arc* per ogni singolo arco formato tramite
     quella interfaccia di rete; poi richiamerà il metodo *remove_handled_nic*. Ogni chiamata di *remove_arc*,
     come visto sopra, produce varie chiamate a *remove_identity_arc*.
-*   Un sistema vicino notifica la rimozione di una sua identità *di connettività*.  
-    In questo caso il modulo Identities riceve la chiamata remota *notify_identity_removed(peer_id)* su
+*   Un sistema vicino notifica la rimozione di un suo arco-identità. Questo può avvenire perché una
+    identità *di connettività* nel vicino viene del tutto rimossa, oppure perché una
+    identità *di connettività* nel vicino rimuove i suoi *outer_arcs*.  
+    In questo caso il modulo Identities riceve la chiamata remota *notify_identity_arc_removed(peer_id, my_id)* su
     un certo arco *arc*. In risposta a questo evento il modulo richiama il metodo *remove_identity_arc* per
-    ogni arco-identità che collega una sua identità *id* a *peer_id* tramite *arc*.  
-    Visto che il metodo *remove_identity_arc* semplicemente ignora la richiesta se non esiste un
-    arco-identità che collega *id* e *peer_id* tramite *arc*, allora quanto appena detto si può implementare
-    semplicemente con un ciclo per tutte le *id* in *id_list*.
+    l'arco-identità (se esiste) che collega la sua identità *my_id* a *peer_id* tramite *arc*.
 
 Fatta questa premessa, il manager in questo metodo rimuove l'arco-identità dalle sue associazioni. Usa se
 necessario, cioè se non si tratta dell'arco-identità principale di *arc*, il netns-manager per eliminare
@@ -497,11 +496,12 @@ Questo non può essere fatto per l'identità principale. Il modulo lo controlla:
 
 Il manager in questo metodo:
 *   Per ogni arco *arc* in *arc_list*:
-    *   Segnala al vicino (con chiamata unicast reliable tramite *arc*) questa rimozione con il metodo
-        remoto *notify_identity_removed(id)*.  
-        Analogamente a quanto visto sopra per la chiamata remota *match_duplication*, il manager avvia
-        questa chiamata sullo stub concedendole solo un certo tempo. Se il sistema vicino termina la
-        connessione, o risponde male, o non risponde entro un certo tempo, il manager prosegue lo stesso.
+    *   Per ogni arco-identità *id_arc* realizzato su *arc* dall'identità *id*:
+        *   Segnala al vicino (con chiamata unicast reliable tramite *arc*) questa rimozione con il metodo
+            remoto *notify_identity_arc_removed(id, id_arc.peer_id)*.  
+            Analogamente a quanto visto sopra per la chiamata remota *match_duplication*, il manager avvia
+            questa chiamata sullo stub concedendole solo un certo tempo. Se il sistema vicino termina la
+            connessione, o risponde male, o non risponde entro un certo tempo, il manager interrompe questo ciclo.
     *   Rimuove la collezione di IdentityArc contenuta nell'associazione *identity_arcs(id-arc)*.
 *   Svuota la routing table del relativo network namespace, usando il netns-manager.
 *   Elimina le relative pseudo-interfacce, usando il netns-manager e le rimuove dall'associazione *handled_nics(id-dev)*.
