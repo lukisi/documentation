@@ -355,8 +355,8 @@ rimuove *ai<sub>2</sub>* dal QspnManager di *i<sub>2</sub>* chiamando dall'ester
 metodo *arc_remove*. Questa chiamata, come abbiamo detto, non comporta una ulteriore notifica
 del segnale `arc_removed`.
 
-Il modulo Identities chiama *remove_arc* (che è anche public) quando una comunicazione sull'arco fallisce
-durante il metodo *add_identity* o lo stesso metodo *add_arc*. Questo metodo rimuove di conseguenza tutti
+Il modulo Identities chiama *remove_arc* (che è anche public) quando una comunicazione sull'arco fallisce.
+Questo metodo rimuove di conseguenza tutti
 gli archi-identità che vi si appoggiavano e notifica per essi il segnale `identity_arc_removed`. Dopo aver
 chiamato il suo metodo *remove_arc*, il modulo in queste occasioni emette anche il segnale `arc_removed`.
 
@@ -385,10 +385,11 @@ che si vogliono gestire.
 *   In un sistema il qspnclient va in crash. Nei sistemi vicini viene prima o poi richiamato
     il metodo *remove_my_arc* di Neighborhood. Può anche verificarsi prima che viene chiamato il
     metodo *arc_remove* di Qspn. Oppure, anche se meno probabile, il metodo *remove_arc* di Identities.
-*   L'utente dà il comando `remove_outer_arcs` ad una identità di connettività. Sul QspnManager
-    associato ad essa, il programma chiama il metodo *remove_outer_arcs*.
+*   L'utente dà il comando `remove_outer_arcs` ad una identità di connettività. Il programma *qspnclient*
+    chiama il metodo *remove_outer_arcs* sul QspnManager associato a questa identità.
 *   L'utente dà il comando `remove_identity` riguardo una identità di connettività in quanto non serve
-    più alla connettività. Sul modulo Identities, il programma chiama il metodo *remove_identity*.
+    più alla connettività. Il programma *qspnclient* chiama il metodo *remove_identity* sul modulo Identities
+    per rimuovere questa identità.
 *   Su una identità (qualsiasi) il Qspn riceve da remoto l'ordine di rimuovere un arco-identità.  
     **TODO** Sulla base di come si dipanano gli eventi nei due casi sopra (`remove_outer_arcs`
     e `remove_identity`) vedere quali comunicazioni riceve un sistema vicino.
@@ -441,9 +442,13 @@ esso e emette, per ognuno, il segnale `identity_arc_removed`. Dopo aver chiamato
 metodo *remove_arc*, il modulo emette anche il segnale `arc_removed`.
 
 Il programma *qspnclient* in risposta al segnale `identity_arc_removed` di Identities
-rimuove l'istanza di IQspnArc dal QspnManager di quella identità.  
+rimuove l'istanza di IQspnArc dal QspnManager di quella identità.
+
 Poi, in risposta al segnale `arc_removed` di Identities, il programma chiama il metodo *remove_my_arc*
-di Neighborhood. Poi tutto procede come abbiamo visto prima.
+di Neighborhood con `do_tell=false`. Qui il modulo Neighborhood rimuove l'arco e emette il segnale `arc_removed`.
+Di conseguenza il programma rimuove l'arco dal dizionario *neighborhood_arcs*, individua l'istanza di ProofOfConcept.Arc
+e la rimuove dal dizionario *nodearcs*. Questa volta però deve ricordarsi che l'arco è già stato rimosso
+dal modulo Identities, quindi non va richiamato il suo metodo *remove_arc*.
 
 * * *
 
@@ -475,9 +480,9 @@ Il programma *qspnclient* fa queste operazioni:
     *   Aspetta 10 secondi.
 *   Chiama il metodo *destroy* del QspnManager di *i<sub>1</sub>*.  
     Questo informa i vicini esterni al g-nodo che si sta rimuovendo.
-*   Dismette il QspnManager di *i<sub>1</sub>*.
-*   Dismette tutti i moduli di identità relativi alla stessa identità.  
-    Rimuove ogni riferimento alle istanze memorizzato nel modulo Identities con *unset_identity_module*.
+*   Dismette il QspnManager di *i<sub>1</sub>*.  
+    Il demone *ntkd* dovrebbe dismettere tutti i moduli di identità relativi alla stessa identità.  
+    Va rimosso ogni riferimento alle istanze memorizzato nel modulo Identities con *unset_identity_module*.
 *   Chiama sul modulo Identities il metodo *remove_identity*. 
 
 Come conseguenza della chiamata *prepare_destroy*, su tutti i *nodi del grafo* membri del g-nodo che si sta rimuovendo,
@@ -485,9 +490,9 @@ ad eccezione della stessa identità di connettività nel sistema in cui l'utente
 modulo Qspn emetterà tra circa 10 secondi il segnale `remove_identity`. In risposta, il programma *qspnclient* dovrà:
 
 *   Chiamare il metodo *destroy* del QspnManager che ha emesso il segnale.
-*   Dismettere il QspnManager che ha emesso il segnale.
-*   Dismettere tutti i moduli di identità relativi alla stessa identità.  
-    Rimuovere ogni riferimento alle istanze memorizzato nel modulo Identities con *unset_identity_module*.
+*   Dismettere il QspnManager che ha emesso il segnale.  
+    Il demone *ntkd* dovrebbe dismettere tutti i moduli di identità relativi alla stessa identità.  
+    Va rimosso ogni riferimento alle istanze memorizzato nel modulo Identities con *unset_identity_module*.
 *   Chiamare sul modulo Identities il metodo *remove_identity*. 
 
 Il modulo Identities nel metodo *remove_identity*, in ogni sistema in cui è stato chiamato, cerca di
