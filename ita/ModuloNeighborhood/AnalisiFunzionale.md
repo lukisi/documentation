@@ -9,7 +9,7 @@
     1.  [Creazione di una nuova identità](#Creazione_di_una_nuova_identit.2BAOA-)
     1.  [Rimozione di un arco-identità](#Rimozione_di_un_arco-identit.2BAOA-)
 1.  [Requisiti](#Requisiti)
-1.  [Deliverables](#Deliverables)
+1.  [Deliverable](#Deliverable)
 1.  [Classi e interfacce](#Classi_e_interfacce)
 
 ## <a name="Ruolo_del_modulo"></a>Ruolo del modulo
@@ -732,11 +732,12 @@ Tutte queste operazioni non coinvolgono direttamente il modulo Neighborhood.
 *   Factory per creare uno "stub" per invocare metodi remoti nei nodi vicini.
 *   Manager di indirizzi e rotte.
 
-## <a name="Deliverables"></a>Deliverables
+## <a name="Deliverable"></a>Deliverable
 
 *   Emette un segnale per:
     *   Avvenuta assegnazione dell'*indirizzo di scheda* ad una interfaccia di rete gestita.
     *   Costituzione di un arco. Significa anche avvenuto inserimento della rotta nelle tabelle.
+    *   Il modulo sta per rimuovere un arco. Significa anche che sta per rimuovere la rotta nelle tabelle.
     *   Rimozione di un arco. Significa anche avvenuta rimozione della rotta nelle tabelle.
     *   Variazione del costo di un arco.
     *   Avvenuta rimozione dell'*indirizzo di scheda* ad una interfaccia di rete che non si gestisce più.

@@ -1,7 +1,7 @@
 # Modulo Neighborhood - Dettagli Tecnici
 
 1.  [Requisiti](#Requisiti)
-1.  [Deliverables](#Deliverables)
+1.  [Deliverable](#Deliverable)
 1.  [Rilevamento dei vicini, costituzione degli archi, misurazione dei costi](#Rilevamento_dei_vicini.2C_costituzione_degli_archi.2C_misurazione_dei_costi)
 1.  [Produzione di uno stub per inviare un messaggio in broadcast](#Produzione_di_uno_stub_per_inviare_un_messaggio_in_broadcast)
 1.  [Produzione di uno stub per inviare un messaggio UDP in unicast](#Produzione_di_uno_stub_per_inviare_un_messaggio_UDP_in_unicast)
@@ -32,7 +32,7 @@ Dopo istanzia il suo NeighborhoodManager passando al costruttore:
 Dopo, per ogni interfaccia di rete che intende gestire, richiama sul NeighborhoodManager il metodo
 *start_monitor(nic)*, dove *nic* è una INeighborhoodNetworkInterface.
 
-## <a name="Deliverables"></a>Deliverables
+## <a name="Deliverable"></a>Deliverable
 
 Il modulo segnala l'avvenuta assegnazione dell'indirizzo di scheda ad una interfaccia di rete gestita
 attraverso il segnale *nic_address_set* di NeighborhoodManager.
@@ -55,7 +55,18 @@ quell'indirizzo di scheda che è riportato nell'istanza di INeighborhoodArc.
 
 * * *
 
-Il modulo segnala la rimozione di un arco attraverso il segnale *arc_removed* di NeighborhoodManager.
+Il modulo segnala che sta per rimuovere un arco attraverso il segnale *arc_removing* di NeighborhoodManager.
+
+In tale segnale viene riportato:
+
+*   L'arco che sta per essere rimosso. Un INeighborhoodArc.
+
+Il segnale significa anche che il modulo sta per rimuovere dalle tabelle (nel network namespace default) la rotta verso
+quell'indirizzo di scheda che è riportato nell'istanza di INeighborhoodArc.
+
+* * *
+
+Il modulo segnala l'avvenuta rimozione di un arco attraverso il segnale *arc_removed* di NeighborhoodManager.
 
 In tale segnale viene riportato:
 
@@ -441,20 +452,20 @@ I comandi che l'utente può dare interattivamente sulla console del programma *n
 
 Il significato di comandi e parametri sarà chiarito in seguito.
 
-### <a name="Creazione_della_identit.2BAOA_principale">Creazione della identità principale
+### <a name="Creazione_della_identit.2BAOA_principale"></a>Creazione della identità principale
 
 La *identità principale* del nodo viene creata automaticamente dal demone *ntkd* all'inizio della sua
 attività. Nel caso del programma *neighborhoodclient*, l'utente specifica sulla linea di comando
 l'identificativo (un intero) da assegnare a tale prima *identità* del nodo.
 
-### <a name="Codice_id-arco">Codice id-arco
+### <a name="Codice_id-arco"></a>Codice id-arco
 
 Quando il modulo Neighborhood segnala al programma *neighborhoodclient* che ha realizzato un arco,
 questo programma gli assegna un numero identificativo che chiamiamo *id-arco* e lo mostra sulla console
 all'utente. Questo numero serve solo all'utente per indicare nei suoi comandi quel particolare arco.
 Non ha un suo corrispettivo in nessun concetto applicabile al demone *ntkd*.
 
-### <a name="Archi_identit.2BAOA-">Archi identità
+### <a name="Archi_identit.2BAOA-"></a>Archi identità
 
 Quando un nodo rileva un diretto vicino tramite una sua interfaccia e forma con esso un arco, su quell'arco
 non appoggia immediatamente nessun *arco-identità*. Su quell'arco possono da subito passare delle comunicazioni
@@ -476,7 +487,7 @@ di scheda *"169.254..."*. Cosa analoga sulla console del nodo *b* che avrà anch
 
 A questo punto su questo *arco-identità* potranno passare anche delle comunicazioni del *modulo di identità*.
 
-### <a name="Creazione_di_nuove_identit.2BAOA.2C_rimozione_di_vecchie_identit.2BAOA-">Creazione di nuove identità, rimozione di vecchie identità
+### <a name="Creazione_di_nuove_identit.2BAOA.2C_rimozione_di_vecchie_identit.2BAOA-"></a>Creazione di nuove identità, rimozione di vecchie identità
 
 Nel demone *ntkd* quando un nodo migra viene creata una nuova identità. In questo proof of concept simuleremo
 le operazioni che il demone *ntkd* dovrà fare in questi scenari.
