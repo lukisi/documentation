@@ -355,22 +355,34 @@ rimuove *ai<sub>2</sub>* dal QspnManager di *i<sub>2</sub>* chiamando dall'ester
 metodo *arc_remove*. Questa chiamata, come abbiamo detto, non comporta una ulteriore notifica
 del segnale `arc_removed`.
 
-Il modulo Identities chiama *remove_arc* (che è anche public) quando una comunicazione sull'arco fallisce.
-Questo metodo rimuove di conseguenza tutti
-gli archi-identità che vi si appoggiavano e notifica per essi il segnale `identity_arc_removed`. Dopo aver
-chiamato il suo metodo *remove_arc*, il modulo in queste occasioni emette anche il segnale `arc_removed`.
+Il modulo Identities chiama *remove_arc* (che è anche public) quando una comunicazione sull'arco fallisce.  
+Il metodo *remove_arc* rimuove tutti gli archi-identità che vi si appoggiavano con una chiamata al metodo *remove_identity_arc*
+in cui si specifica `do_tell=false`. Il metodo *remove_identity_arc* in questo caso rimuove l'arco-identità
+e lo notifica con il segnale `identity_arc_removed`, ma non tenta di comunicare l'avvenimento al sistema vicino.  
+Dopo aver chiamato il suo metodo *remove_arc*, il modulo in queste occasioni emette anche il segnale `arc_removed`.
 
 Se viene chiamato dall'esterno il metodo *remove_arc* di Identities, il segnale `arc_removed` non viene emesso.  
 
-Quando una identità di connettività viene rimossa con il metodo *remove_identity* di Identities, il modulo cerca
-di notificarlo ai vicini con il metodo remoto *notify_identity_removed* e questo nei vicini fa rimuovere
-l'arco-identità e avvia la notifica `identity_arc_removed`.
-
-Quando l'identità principale viene rimossa (di fatto con la terminazione del modulo Identities) il modulo
-Identities non cerca di fare questa notifica. Però questo avviene quando viene terminato anche il modulo
+Quando una identità di connettività viene rimossa con il metodo *remove_identity* di Identities, il modulo
+rimuove tutti gli archi-identità relativi a quella identità, ma senza chiamare il metodo *remove_identity_arc*.
+Il metodo *remove_identity* tenta prima di notificare la rimozione di ognuno degli archi-identità ai vicini
+con il metodo remoto *notify_identity_arc_removed* e questo nei sistemi vicini fa rimuovere
+l'arco-identità (con una chiamata al metodo *remove_identity_arc* in cui si specifica `do_tell=false`) e fa
+emettere il segnale `identity_arc_removed`. Invece nel sistema corrente non viene emesso il segnale `identity_arc_removed`.  
+Questo meccanismo non viene attivato quando viene rimossa l'identità principale, cioè con la terminazione del
+modulo Identities. Però questo avviene quando viene terminato anche il modulo
 Neigborhood. In questa occasione il modulo Neighborhood rimuove tutti i suoi archi da tutte le sue schede
 e cerca di notificarlo ai vicini con il metodo remoto *remove_arc*, che a sua volta nel sistema vicino
 richiama *remove_my_arc*.
+
+Quando l'utilizzatore del modulo Identities vuole rimuovere uno specifico arco-identità di sua
+iniziativa (di norma questo avviene quando il modulo Qspn lo richiede come risultato dell'operazione
+*remove_outer_arcs*) chiama il metodo *remove_identity_arc*, che di default ha `do_tell=true`.  
+Il metodo *remove_identity_arc* in questo caso, dopo aver rimosso l'arco-identità e prima di emettere
+il segnale `identity_arc_removed`, tenta di comunicare l'avvenimento al sistema vicino
+con il metodo remoto *notify_identity_arc_removed* e questo nel sistema vicino fa rimuovere
+l'arco-identità (con una chiamata al metodo *remove_identity_arc* in cui si specifica `do_tell=false`) e fa
+emettere il segnale `identity_arc_removed`.
 
 ### Casi d'uso
 
