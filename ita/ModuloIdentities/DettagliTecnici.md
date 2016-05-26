@@ -396,7 +396,8 @@ Il manager fa queste operazioni:
     *   Per ogni IdentityArc *id_arc* della lista contenuta nell'associazione *identity_arcs(id-arc)*:
         *   Metti in *peer_id_list* un elemento: *id_arc.peer_nodeid* cioè l'identificativo dell'altro vertice di *id_arc*.
     *   Per ogni NodeID *peer_id* in *peer_id_list*:
-        *   Il manager chiama *remove_identity_arc(arc, id, peer_id)*.
+        *   Il manager emette il segnale `identity_arc_removing`.
+        *   Il manager chiama *remove_identity_arc(arc, id, peer_id)*, che poi emetterà il segnale `identity_arc_removed`.
     *   Alla fine la collezione di IdentityArc in *identity_arcs* associata alla coppia *id-arc* dovrebbe risultare vuota.
     *   Rimuove dall'associazione *identity_arcs* la collezione vuota.
 

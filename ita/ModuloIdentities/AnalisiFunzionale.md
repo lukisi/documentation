@@ -338,7 +338,10 @@ Il modulo Identities segnala questi eventi:
 *   Modifica dei valori *peer_mac* e *peer_linklocal* di un arco-identità. Questo avviene senza che ci sia stata
     una diretta richiesta da parte dell'utilizzatore del modulo. Segnale *identity_arc_changed*.
 *   Sta per avvenire la rimozione di un arco-identità, senza che ci sia stata una diretta richiesta da
-    parte dell'utilizzatore del modulo. Segnale *identity_arc_removing*.
+    parte dell'utilizzatore del modulo. Per l'esattezza questo avviene quando l'arco-identità è
+    stato rimosso su iniziativa del sistema vicino mentre l'arco su cui si appogia è ancora valido;
+    oppure quando l'arco su cui si appoggia l'arco-identità viene rimosso su iniziativa dell'utilizzatore
+    o anche su iniziativa del modulo. Segnale *identity_arc_removing*.
 *   È avvenuta la rimozione di un arco-identità. Questo a prescindere che ci sia stata o meno una diretta richiesta da
     parte dell'utilizzatore del modulo. Segnale *identity_arc_removed*.
 *   Rimozione di un arco non più funzionante. Il modulo avrà prima attuato e segnalato la
