@@ -7,7 +7,7 @@
     1.  [Duplicazione di una identità](#Duplicazione_di_una_identita)
     1.  [Aggiunta o rimozione di una interfaccia di rete reale gestita dal sistema](#Aggiunta_interfaccia)
     1.  [Aggiunta o rimozione di un arco](#Aggiunta_arco)
-    1.  [Aggiunta o rimozione di un arco-identità su richiesta dell'utilizzatore](#Aggiunta_arco_identita)
+    1.  [Aggiunta o rimozione di un arco-identità](#Aggiunta_arco_identita)
     1.  [Rimozione di una identità di connettività](#Rimozione_identita_connettivita)
 
 ## <a name="Requisiti"></a>Requisiti
@@ -402,7 +402,7 @@ Il manager fa queste operazioni:
 
 Infine, il manager rimuove l'arco da *arc_list*.
 
-### <a name="Aggiunta_arco_identita"></a>Aggiunta o rimozione di un arco-identità su richiesta dell'utilizzatore
+### <a name="Aggiunta_arco_identita"></a>Aggiunta o rimozione di un arco-identità
 
 <a name="add_identity_arc"></a>
 
@@ -461,13 +461,13 @@ Ci sono varie situazioni in cui questo metodo può venire chiamato:
     In questo caso il sistema chiama il metodo *remove_identity_arc* su ogni arco-identità che si vuole
     rimuovere. Il modulo rimuove l'arco-identità su *arc* tra *id* e *peer_id*, che in questo caso sicuramente non è
     l'arco principale. Poi tramite l'arco *arc* notifica al vicino questa operazione con il metodo
-    remoto *notify_identity_arc_removed(id, peer_id)*.
+    remoto *notify_identity_arc_removed(id, peer_id)*. Infine emette il segnale `identity_arc_removed`.
 *   Il sistema corrente si avvede che un arco cessa di funzionare.  
     In questo caso il sistema chiama il metodo *remove_arc* del manager del modulo Identities. Il metodo
     *remove_arc* richiama il metodo *remove_identity_arc* per ogni arco-identità formato sull'arco, ma
     specifica anche l'argomento opzionale `do_tell=false`.  
     In questo caso il modulo rimuove l'arco-identità su *arc* tra *id* e *peer_id*. In seguito però
-    non tenta di notificare al vicino questa operazione tramite l'arco *arc*.
+    non tenta di notificare al vicino questa operazione tramite l'arco *arc*. Infine emette il segnale `identity_arc_removed`.
 *   Il sistema corrente rimuove una sua interfaccia di rete reale da quelle gestite.  
     In questo caso il sistema chiama prima il metodo *remove_arc* per ogni singolo arco formato tramite
     quella interfaccia di rete; poi richiamerà il metodo *remove_handled_nic*. Ogni chiamata di *remove_arc*,
@@ -477,8 +477,10 @@ Ci sono varie situazioni in cui questo metodo può venire chiamato:
     previste per una tale rimozione descritte sotto), oppure perché una
     identità *di connettività* nel vicino rimuove i suoi *outer_arcs*.  
     In questo caso il modulo Identities riceve la chiamata remota *notify_identity_arc_removed(peer_id, my_id)* su
-    un certo arco *arc*. In risposta a questo evento il modulo richiama il metodo *remove_identity_arc* per
-    l'arco-identità (se esiste) che collega la sua identità *my_id* a *peer_id* tramite *arc* con `do_tell=false`.
+    un certo arco *arc*. In risposta a questa richiesta il modulo controlla se effettivamente esiste l'arco-identità
+    che collega la sua identità *my_id* a *peer_id* tramite *arc*. Se esiste, emette il segnale `identity_arc_removing` per
+    segnalare questa rimozione, poiché non è di iniziativa del suo utilizzatore. Poi richiama il metodo *remove_identity_arc* per
+    l'arco-identità con `do_tell=false`.
 
 Fatta questa premessa, il manager in questo metodo rimuove l'arco-identità dalle sue associazioni. Usa se
 necessario, cioè se non si tratta dell'arco-identità principale di *arc*, il netns-manager per eliminare
@@ -500,6 +502,7 @@ Il manager fa queste operazioni:
         Analogamente a quanto visto sopra per la chiamata remota *match_duplication*, il manager avvia
         questa chiamata sullo stub concedendole solo un certo tempo. Se il sistema vicino termina la
         connessione, o risponde male, o non risponde entro un certo tempo, il manager lo ignora e prosegue.
+*   Infine il manager emette il segnale `identity_arc_removed`.
 
 ### <a name="Rimozione_identita_connettivita"></a>Rimozione di una identità di connettività
 
