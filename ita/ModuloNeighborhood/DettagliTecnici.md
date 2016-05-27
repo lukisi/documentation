@@ -46,63 +46,70 @@ a *stop_monitor_all* nel distruttore della classe, ma piuttosto demandarla all'u
 ## <a name="Deliverable"></a>Deliverable
 
 Il modulo segnala l'avvenuta assegnazione dell'indirizzo di scheda ad una interfaccia di rete gestita
-attraverso il segnale *nic_address_set* di NeighborhoodManager.
+attraverso il segnale `nic_address_set` di NeighborhoodManager.
 
 In tale segnale viene riportato:
 
-*   Il nome dell'interfaccia di rete. Una stringa. Es. "eth0".
-*   L'indirizzo assegnato. Una stringa. Es. "169.254.23.45".
+*   Il nome dell'interfaccia di rete. Una stringa `dev`. Es. "eth0".
+*   L'indirizzo assegnato. Una stringa `address`. Es. "169.254.23.45".
 
 * * *
 
-Il modulo segnala la costituzione di un arco attraverso il segnale *arc_added* di NeighborhoodManager.
+Il modulo segnala la costituzione di un arco attraverso il segnale `arc_added` di NeighborhoodManager.
 
 In tale segnale viene riportato:
 
-*   L'arco costituito. Un INeighborhoodArc.
+*   L'arco costituito. Un INeighborhoodArc `arc`.
 
 Il segnale significa anche che è stata aggiunta nelle tabelle (nel network namespace default) la rotta verso
 quell'indirizzo di scheda che è riportato nell'istanza di INeighborhoodArc.
 
 * * *
 
-Il modulo segnala che sta per rimuovere un arco attraverso il segnale *arc_removing* di NeighborhoodManager.
+Il modulo segnala che sta per rimuovere un arco attraverso il segnale `arc_removing` di NeighborhoodManager.
 
 In tale segnale viene riportato:
 
-*   L'arco che sta per essere rimosso. Un INeighborhoodArc.
+*   L'arco che sta per essere rimosso. Un INeighborhoodArc `arc`.
+*   Un booleano `is_still_usable` che dice se l'arco è ancora utilizzabile per comunicare con il sistema vicino.
 
-Il segnale significa anche che il modulo sta per rimuovere dalle tabelle (nel network namespace default) la rotta verso
+Il segnale comunica all'utilizzatore che il modulo sta per rimuovere dalle tabelle (nel network namespace default) la rotta verso
 quell'indirizzo di scheda che è riportato nell'istanza di INeighborhoodArc.
+
+Questa notifica avviene in due tipi di situazione. Nel primo caso è perché il modulo si è avveduto da solo
+(oppure il suo utilizzatore glielo ha notificato) che l'arco è effettivamente non funzionante. Nel secondo
+caso è perché l'utilizzatore ha richiesto al modulo di rimuovere l'arco che ancora si presume essere
+funzionante. Il modulo notificando questo segnale `arc_removing` include questa informazione nel booleano
+`is_still_usable`.
 
 * * *
 
-Il modulo segnala l'avvenuta rimozione di un arco attraverso il segnale *arc_removed* di NeighborhoodManager.
+Il modulo segnala l'avvenuta rimozione di un arco attraverso il segnale `arc_removed` di NeighborhoodManager.
 
 In tale segnale viene riportato:
 
-*   L'arco rimosso. Un INeighborhoodArc.
+*   L'arco rimosso. Un INeighborhoodArc `arc`.
 
 Il segnale significa anche che è stata rimossa dalle tabelle (nel network namespace default) la rotta verso
 quell'indirizzo di scheda che è riportato nell'istanza di INeighborhoodArc.
 
 * * *
 
-Il modulo segnala la variazione del costo di un arco attraverso il segnale *arc_changed* di NeighborhoodManager.
+Il modulo segnala la variazione del costo di un arco attraverso il segnale `arc_changed` di NeighborhoodManager.
 
 In tale segnale viene riportato:
 
-*   L'arco. Un INeighborhoodArc.
+*   L'arco. Un INeighborhoodArc `arc`.
 
 * * *
 
 Il modulo segnala l'avvenuta rimozione dell'indirizzo di scheda ad una interfaccia di rete che non si gestisce
-più attraverso il segnale *nic_address_unset* di NeighborhoodManager.
+più attraverso il segnale `nic_address_unset` di NeighborhoodManager.
 
 In tale segnale viene riportato:
 
-*   Il nome dell'interfaccia di rete. Una stringa. Es. "eth0".
-*   L'indirizzo assegnato. Una stringa. Es. "169.254.23.45".
+*   Il nome dell'interfaccia di rete. Una stringa `dev`. Es. "eth0".
+*   L'indirizzo assegnato. Una stringa `address`. Es. "169.254.23.45".
 
 * * *
 
@@ -131,6 +138,10 @@ Il modulo permette di ottenere uno stub per inviare un messaggio in broadcast co
 * * *
 
 Il modulo permette di forzare la rimozione di un arco con il metodo *remove_my_arc* di NeighborhoodManager.
+
+In questo metodo l'utilizzatore del modulo (o anche il modulo stesso che ne fa uso internamente quando
+rileva che l'arco non è più funzionante) può specificare che si possa o meno tentare una ulteriore comunicazione
+sull'arco prima di rimuoverlo. Lo si specifica con l'argomento booleano `do_tell`.
 
 ## <a name="Rilevamento_dei_vicini.2C_costituzione_degli_archi.2C_misurazione_dei_costi"></a>Rilevamento dei vicini, costituzione degli archi, misurazione dei costi
 
