@@ -32,6 +32,17 @@ Dopo istanzia il suo NeighborhoodManager passando al costruttore:
 Dopo, per ogni interfaccia di rete che intende gestire, richiama sul NeighborhoodManager il metodo
 *start_monitor(nic)*, dove *nic* è una INeighborhoodNetworkInterface.
 
+In seguito l'utilizzatore del modulo può aggiungere altre interfacce di rete da gestire, oppure rimuovere
+una interfaccia con il metodo *stop_monitor(dev)*, dove *dev* è il nome dell'interfaccia.
+
+Esiste anche un metodo *stop_monitor_all()* per rimuovere tutte le interfacce chiamando su ognuna
+lo stesso *stop_monitor*. Questo può essere chiamato dall'utilizzatore prima di dismettere il NeighborhoodManager.  
+Il metodo potrebbe anche essere chiamato nel distruttore della classe NeighborhoodManager. Però le
+operazioni delle varie chiamate *stop_monitor* causano l'emissione di segnali che possono essere importanti da
+gestire, come `nic_address_unset`. Tali segnali non sarebbero ricevuti dall'utilizzatore se fossero emessi
+durante l'esecuzione del distruttore della classe. Per questo si preferisce non implementare la chiamata
+a *stop_monitor_all* nel distruttore della classe, ma piuttosto demandarla all'utilizzatore.
+
 ## <a name="Deliverable"></a>Deliverable
 
 Il modulo segnala l'avvenuta assegnazione dell'indirizzo di scheda ad una interfaccia di rete gestita
@@ -91,6 +102,7 @@ più attraverso il segnale *nic_address_unset* di NeighborhoodManager.
 In tale segnale viene riportato:
 
 *   Il nome dell'interfaccia di rete. Una stringa. Es. "eth0".
+*   L'indirizzo assegnato. Una stringa. Es. "169.254.23.45".
 
 * * *
 
