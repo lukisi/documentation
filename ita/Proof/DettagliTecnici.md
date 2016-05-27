@@ -321,13 +321,14 @@ il metodo `remove_address` una volta per ogni indirizzo IP e per ognuna delle su
 ### Comportamento dei moduli
 
 Il modulo Neighborhood chiama *remove_my_arc* (che è anche public) se il monitor di un arco rileva
-un fallimento. Il metodo notifica il segnale `arc_removed`. In questo caso la chiamata è fatta con
+un fallimento. In questo metodo il modulo notifica il segnale `arc_removing`; poi esegue la rimozione
+dell'arco e della rotta nelle tabelle di routing; infine notifica il segnale `arc_removed`. In questo caso la chiamata è fatta con
 `do_tell=false`, quindi il metodo non tenta di comunicare con il sistema vicino.
 
 Il modulo Neighborhood chiama *remove_my_arc* anche quando una interfaccia di rete non va più
 gestita. In questo caso fa la chiamata su tutti gli archi che partono da quella interfaccia di rete.
-Il metodo notifica il segnale `arc_removed`. In questo caso la chiamata è fatta con `do_tell=true`, quindi
-il metodo tenta di chiamare il metodo remoto *remove_arc*, che a sua volta nel sistema vicino richiama *remove_my_arc*.
+In questo caso la chiamata è fatta con `do_tell=true`, quindi il modulo tenta anche
+di chiamare il metodo remoto *remove_arc*, che a sua volta nel sistema vicino richiama *remove_my_arc*.
 
 Il modulo Qspn chiama *arc_remove* (che è anche public) quando una comunicazione fallisce su un arco-identità.
 Oltre a chiamare il metodo, il modulo in queste occasioni notifica il segnale `arc_removed` includendo
@@ -343,7 +344,7 @@ vivono nel nostro sistema. Supponiamo che l'arco *a* diventi inutilizzabile, e c
 QspnManager della nostra identità *i<sub>1</sub>* se ne avvede per prima. Questa istanza di QspnManager
 chiama internamente il metodo *arc_remove* e notifica il segnale `arc_removed(ai1, bad_link=true)`.  
 Come conseguenza il programma *qspnclient* rimuove l'arco *a* dal modulo Neighborhood con il suo
-metodo *remove_my_arc*. Il modulo Neighborhood emette il segnale `arc_removed`.  
+metodo *remove_my_arc*. Il modulo Neighborhood, prima di rimuovere la rotta verso il gateway, emette il segnale `arc_removing`.  
 Come conseguenza il programma *qspnclient* rimuove l'arco *a* dal modulo Identities con il suo metodo *remove_arc*. Il modulo
 Identities rimuove gli archi-identità *ai<sub>1</sub>* e *ai<sub>2</sub>* emettendo i segnali `identity_arc_removed`
 relativi.  
@@ -356,7 +357,8 @@ metodo *arc_remove*. Questa chiamata, come abbiamo detto, non comporta una ulter
 del segnale `arc_removed`.
 
 Il modulo Identities chiama *remove_arc* (che è anche public) quando una comunicazione sull'arco fallisce.  
-Il metodo *remove_arc* rimuove tutti gli archi-identità che vi si appoggiavano con una chiamata al metodo *remove_identity_arc*
+Il metodo *remove_arc* rimuove tutti gli archi-identità che vi si appoggiavano. Per farlo, prima emette il
+segnale `identity_arc_removing`, poi chiama il metodo *remove_identity_arc*
 in cui si specifica `do_tell=false`. Il metodo *remove_identity_arc* in questo caso rimuove l'arco-identità
 e lo notifica con il segnale `identity_arc_removed`, ma non tenta di comunicare l'avvenimento al sistema vicino.  
 Dopo aver chiamato il suo metodo *remove_arc*, il modulo in queste occasioni emette anche il segnale `arc_removed`.
@@ -366,8 +368,8 @@ Se viene chiamato dall'esterno il metodo *remove_arc* di Identities, il segnale 
 Quando una identità di connettività viene rimossa con il metodo *remove_identity* di Identities, il modulo
 rimuove tutti gli archi-identità relativi a quella identità, ma senza chiamare il metodo *remove_identity_arc*.
 Il metodo *remove_identity* tenta prima di notificare la rimozione di ognuno degli archi-identità ai vicini
-con il metodo remoto *notify_identity_arc_removed* e questo nei sistemi vicini fa rimuovere
-l'arco-identità (con una chiamata al metodo *remove_identity_arc* in cui si specifica `do_tell=false`) e fa
+con il metodo remoto *notify_identity_arc_removed* e questo nei sistemi vicini fa emettere il segnale `identity_arc_removing`,
+poi fa rimuovere l'arco-identità (con una chiamata al metodo *remove_identity_arc* in cui si specifica `do_tell=false`) e fa
 emettere il segnale `identity_arc_removed`. Invece nel sistema corrente non viene emesso il segnale `identity_arc_removed`.  
 Questo meccanismo non viene attivato quando viene rimossa l'identità principale, cioè con la terminazione del
 modulo Identities. Però questo avviene quando viene terminato anche il modulo
@@ -380,8 +382,8 @@ iniziativa (di norma questo avviene quando il modulo Qspn lo richiede come risul
 *remove_outer_arcs*) chiama il metodo *remove_identity_arc*, che di default ha `do_tell=true`.  
 Il metodo *remove_identity_arc* in questo caso, dopo aver rimosso l'arco-identità e prima di emettere
 il segnale `identity_arc_removed`, tenta di comunicare l'avvenimento al sistema vicino
-con il metodo remoto *notify_identity_arc_removed* e questo nel sistema vicino fa rimuovere
-l'arco-identità (con una chiamata al metodo *remove_identity_arc* in cui si specifica `do_tell=false`) e fa
+con il metodo remoto *notify_identity_arc_removed* e questo nel sistema vicino fa emettere il segnale `identity_arc_removing`,
+poi fa rimuovere l'arco-identità (con una chiamata al metodo *remove_identity_arc* in cui si specifica `do_tell=false`) e fa
 emettere il segnale `identity_arc_removed`.
 
 ### Casi d'uso
@@ -402,9 +404,9 @@ che si vogliono gestire.
 *   L'utente dà il comando `remove_identity` riguardo una identità di connettività in quanto non serve
     più alla connettività. Il programma *qspnclient* chiama il metodo *remove_identity* sul modulo Identities
     per rimuovere questa identità.
-*   Su una identità (qualsiasi) il Qspn riceve da remoto l'ordine di rimuovere un arco-identità.  
-    **TODO** Sulla base di come si dipanano gli eventi nei due casi sopra (`remove_outer_arcs`
-    e `remove_identity`) vedere quali comunicazioni riceve un sistema vicino.
+*   Su una identità (qualsiasi) il modulo Identities riceve la chiamata al metodo remoto *notify_identity_arc_removed*.  
+    Il modulo Identities emette il segnale `identity_arc_removing`, poi rimuove l'arco-identità, infine
+    emette il segnale `identity_arc_removed`.
 *   L'utente dà il comando `quit`.
 
 Analiziamo una alla volta questi casi.
@@ -426,9 +428,11 @@ rimuove dal dizionario *nodearcs* e lo segnala a video (indicando il *nodearc_in
 
 Inoltre chiama il metodo *remove_arc* sul modulo Identities passandogli l'istanza di IIdmgmtArc
 referenziata nell'istanza di ProofOfConcept.Arc. Questo a sua volta farà sì che il modulo Identities
-attui delle operazioni riguardanti tutti gli archi-identità che si appoggiavano ad esso e in seguito
-emetta, per ognuno, il segnale `identity_arc_removed`. Nella gestione di questo segnale, come vedremo dopo,
-il programma *qspnclient* rimuove, se c'era, l'istanza di IQspnArc dal QspnManager di quella identità.
+rimuova tutti gli archi-identità che si appoggiavano ad esso: dapprima il modulo emette per ognuno il segnale
+`identity_arc_removing`; poi il modulo rimuove gli archi-identità anche con delle operazioni sulle
+tabelle di routing; infine il modulo emette il segnale `identity_arc_removed`.  
+Nella gestione del primo segnale, come vedremo dopo, il programma *qspnclient* rimuove, se c'era,
+l'istanza di IQspnArc dal QspnManager di quella identità.
 
 * * *
 
@@ -469,7 +473,9 @@ programma *qspnclient* sulla relativa istanza di QspnManager richiama il metodo 
 
 Supponiamo che in tale metodo il modulo Qspn decida di rimuovere un arco *ai<sub>1</sub>*. Il modulo notifica il
 segnale `arc_removed` per l'arco *ai<sub>1</sub>* con `bad_link=false`. In risposta il programma richiama
-il metodo *remove_identity_arc* sul modulo Identities. Il modulo Identities notifica il segnale
+il metodo *remove_identity_arc* sul modulo Identities.  
+Il modulo Identities in questo metodo rimuove l'arco-identità. Poi tenta di comunicare al sistema vicino
+l'operazione con il metodo remoto *notify_identity_arc_removed*. Infine notifica il segnale
 `identity_arc_removed(a, i1, ...)`. Come conseguenza il programma *qspnclient* dovrebbe
 rimuovere *ai<sub>1</sub>* dal QspnManager di *i<sub>1</sub>*; ma siccome sa che è già stato rimosso
 proprio su sua iniziativa, non fa nulla.
@@ -508,9 +514,35 @@ modulo Qspn emetterà tra circa 10 secondi il segnale `remove_identity`. In risp
 *   Chiamare sul modulo Identities il metodo *remove_identity*. 
 
 Il modulo Identities nel metodo *remove_identity*, in ogni sistema in cui è stato chiamato, cerca di
-comunicare ai sistemi vicini l'avvenimento con il metodo remoto
-*notify_identity_removed*. Poi provvede a rimuovere completamente le pseudo-interfacce di rete
-e il network namespace.
+comunicare ai sistemi vicini l'avvenimento con una chiamata al metodo remoto *notify_identity_arc_removed*
+per ogni arco-identità. Poi provvede a rimuovere completamente le pseudo-interfacce di rete e il network namespace.
+
+* * *
+
+Su una identità (qualsiasi) il modulo Identities riceve la chiamata al metodo remoto *notify_identity_arc_removed*.
+
+Il modulo Identities emette il segnale `identity_arc_removing`. In questo momento, prima che il modulo
+Identities provveda a rimuovere l'arco verso il gateway dalla tabelle di routing, il programma *qspnclient*
+chiama il metodo *arc_remove* del modulo Qspn. Questa chiamata fa in modo che siano rimosse
+eventuali rotte memorizzate che facevano uso del gateway. Questa chiamata non produce l'emissione del
+segnale `arc_removed` dal modulo Qspn.
+
+Poi il modulo Identities procede con la rimozione del gateway e infine emette il segnale `identity_arc_removed`.
+Questo segnale non va preso in considerazione dal programma *qspnclient* in questo caso.
+
+* * *
+
+Quando l'utente termina l'applicazione con il comando `quit` (o con Ctrl-C) il programma *qspnclient*,
+come abbiamo già detto sopra, istruisce l'istanza di IdentityManager di rimuovere tutte le identità di connettività.
+Questo non solo fa rimuovere tutte le pseudo-interfacce e tutti i network namespace creati dal programma,
+ma inoltre notifica questa rimozione ai sistemi vicini, come visto quando abbiamo illustrato il
+comportamento del metodo *remove_identity*.
+
+Poi il programma istruisce l'istanza di NeighborhoodManager di cessare la gestione di tutte le interfacce di rete
+nel network namespace default con il metodo *stop_monitor_all*. In questo metodo il modulo Neighborhood, come
+visto quando abbiamo illustrato il comportamento dei moduli in questa occasione, chiama il suo
+metodo *remove_my_arc* con `do_tell=true` per ogni arco che aveva realizzato. In questo modo
+notifica questa rimozione ai sistemi vicini.
 
 ### Operazioni dell'utilizzatore dei moduli
 
