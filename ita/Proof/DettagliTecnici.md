@@ -343,16 +343,18 @@ archi-identità (*ai<sub>1</sub>* e *ai<sub>2</sub>*) per via di diverse identit
 vivono nel nostro sistema. Supponiamo che l'arco *a* diventi inutilizzabile, e che l'istanza di
 QspnManager della nostra identità *i<sub>1</sub>* se ne avvede per prima. Questa istanza di QspnManager
 chiama internamente il metodo *arc_remove* e notifica il segnale `arc_removed(ai1, bad_link=true)`.  
-Come conseguenza il programma *qspnclient* rimuove l'arco *a* dal modulo Neighborhood con il suo
-metodo *remove_my_arc* con `do_tell=false`. Il modulo Neighborhood, prima di rimuovere la rotta verso
-il gateway, emette il segnale `arc_removing` con `is_still_usable=false`.  
-Come conseguenza il programma *qspnclient* rimuove l'arco *a* dal modulo Identities con il suo metodo *remove_arc*. Il modulo
+In risposta al segnale `arc_removed(ai1, bad_link=true)` il programma *qspnclient* memorizza che
+l'arco *ai<sub>1</sub>* è stato rimosso dal QspnManager di *i<sub>1</sub>*; poi rimuove l'arco *a* dal modulo
+Neighborhood con il suo metodo *remove_my_arc* con `do_tell=false`. Il modulo Neighborhood, prima di rimuovere la
+rotta verso il gateway, emette il segnale `arc_removing(a, is_still_usable=false)`.  
+In risposta al segnale `arc_removing(a, is_still_usable=false)` il programma *qspnclient*
+rimuove l'arco *a* dal modulo Identities con il suo metodo *remove_arc*. Il modulo
 Identities rimuove gli archi-identità *ai<sub>1</sub>* e *ai<sub>2</sub>*, emettendo prima però i segnali
 `identity_arc_removing` relativi.  
-Come conseguenza del segnale `identity_arc_removing(a, i1, ...)` il programma *qspnclient* dovrebbe
-rimuovere *ai<sub>1</sub>* dal QspnManager di *i<sub>1</sub>*; ma siccome sa che è già stato rimosso
-proprio su sua iniziativa, non fa nulla.  
-Come conseguenza del segnale `identity_arc_removing(a, i2, ...)` il programma *qspnclient*
+In risposta del segnale `identity_arc_removing(a, i1, peer_id_j)` il programma *qspnclient* dovrebbe
+rimuovere *ai<sub>1</sub>* dal QspnManager di *i<sub>1</sub>*; ma siccome ha memoria che è già stato rimosso
+proprio su iniziativa di quel QspnManager, non fa nulla.  
+In risposta del segnale `identity_arc_removing(a, i2, peer_id_k)` il programma *qspnclient*
 rimuove *ai<sub>2</sub>* dal QspnManager di *i<sub>2</sub>* chiamando dall'esterno il suo
 metodo *arc_remove*. Questa chiamata, come abbiamo detto, non comporta una ulteriore notifica
 del segnale `arc_removed`.
