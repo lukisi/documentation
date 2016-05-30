@@ -268,7 +268,7 @@ Un sistema ha sempre una identità principale e zero o più identità di connett
 L'identità principale gestisce il network namespace default. L'identità principale ha un indirizzo
 Netsukuku *definitivo* che può essere *reale* o *virtuale*.
 
-Se è *reale*, riguardo questo indirizzo Netsukuku *n*:
+Se è *reale*, nel network namespace default:
 
 *   Il sistema si assegna l'indirizzo IP globale di *n*.
 *   Il sistema può (opzionalmente) assegnarsi l'indirizzo IP globale anonimizzante di *n*.
@@ -321,7 +321,7 @@ Se è *reale*, riguardo questo indirizzo Netsukuku *n*:
 Se è *virtuale*, significa che l'indirizzo ha una o più componenti virtuali. Sia *i* il livello
 più basso in cui la componente è virtuale. Sia *k* il livello più alto in cui la componente è virtuale.
 
-In questo caso, riguardo questo indirizzo Netsukuku *n*:
+In questo caso, nel network namespace default:
 
 *   NON esiste un indirizzo IP globale di *n*.
 *   NON esiste un indirizzo IP globale anonimizzante di *n*.
@@ -423,7 +423,7 @@ network namespace. L'identità di connettività ha un indirizzo Netsukuku *di co
 Significa che l'indirizzo ha una o più componenti virtuali. Sia *i* il livello più basso in cui
 la componente è virtuale. Sia *k* il livello più alto in cui la componente è virtuale.
 
-In questo caso, riguardo questo indirizzo Netsukuku *n*:
+Nel network namespace gestito da questa identità:
 
 *   NON esiste un indirizzo IP globale di *n*.
 *   NON esiste un indirizzo IP globale anonimizzante di *n*.
