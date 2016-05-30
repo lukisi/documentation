@@ -564,17 +564,6 @@ visto quando abbiamo illustrato il comportamento dei moduli in questa occasione,
 metodo *remove_my_arc* con `do_tell=true` per ogni arco che aveva realizzato. In questo modo
 notifica questa rimozione ai sistemi vicini.
 
-### Operazioni dell'utilizzatore dei moduli
-
-Sul segnale `arc_removed` di una istanza di QspnManager viene collegato il metodo *arc_removed*
-della relativa istanza di IdentityData.
-
-Sul segnale `identity_arc_removed` di IdentityManager viene collegata la funzione *identity_arc_removed*.
-
-Sul segnale `arc_removed` di NeighborhoodManager viene collegata la funzione *arc_removed*.
-
-La funzione *remove_nodearc* viene chiamata dall'utente alla console.
-
 ## Elenco comandi interattivi
 
 *   **show_linklocals**
@@ -600,6 +589,8 @@ La funzione *remove_nodearc* viene chiamata dall'utente alla console.
 *   **add_identity**
     *   `int migration_id`
     *   `int nodeid_index`
+*   **remove_identity**
+    *   `int nodeid_index`
 *   **enter_net**
     *   `int new_nodeid_index`
     *   `int previous_nodeid_index`
@@ -614,6 +605,8 @@ La funzione *remove_nodearc* viene chiamata dall'utente alla console.
     *   `int nodeid_index`
     *   `int identityarc_index`
     *   `string identityarc_address`
+*   **remove_outer_arcs**
+    *   `int nodeid_index`
 
 ## Esempio di migrazione/ingresso
 
