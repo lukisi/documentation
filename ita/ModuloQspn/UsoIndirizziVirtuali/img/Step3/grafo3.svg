@@ -25,7 +25,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -109,31 +109,6 @@
      y2="167.5"
      id="line3808"
      style="fill:none;stroke:#000000" />
-  <path
-     d="m 62.5,68.79604 -1,0 c -2.08488,2.202 -3.51244,4.95751 -5,7.59999 l 0,0.20001 c -1.41514,0.10199 -3.64001,0.0213 -4.04,-1.34 -0.33033,-1.12418 -0.86822,-2.31489 -0.62,-3.46 0.28654,-1.32191 1.08405,-2.59031 2.12,-3.46 0.99587,-0.83604 2.949775,-0.80758 3.9,0.08 2.03121,1.89729 2.86368,4.76519 4.24,7.18 l 0,0.4 0.4,0"
-     id="path3810"
-     inkscape:connector-curvature="0"
-     style="fill:none;stroke:#000000;stroke-width:2" />
-  <path
-     d="m 185.5,181.5 c 2.53156,-1.35875 5.50777,-2.87086 6.62,-5.52 1.88235,-4.48342 2.29232,-9.46633 2.98,-14.28 l 0.2,0 0,-0.4 c 1.18904,-1.0239 3.10169,-1.46614 4.6,-1 l 0.2,0 0,0.2 0.4,0 0.6,0.8 0.2,0 0,0.2 1,1.4 0.2,2.4 -4,1.2 0.4,0.4 1.8,1.4 0.4,0 0,0.2 0.2,0 0,0.2 0.2,0 0,0.4 0.2,0 0,1.6 -0.2,0 0,0.4 -0.2,0 0,0.2 -1.8,1.2 -3.2,0.2 0,0.2"
-     id="path3812"
-     inkscape:connector-curvature="0"
-     style="fill:none;stroke:#000000;stroke-width:2" />
-  <path
-     d="m 285.5677,186.5 c 2.59523,1.14034 4.1467,3.96619 5.6,6.4 0.41393,3.1843 1.27633,6.42443 0.79998,9.6 l -0.20001,1 -0.19997,0 0,0.2 -0.20002,0 0,0.4 -0.19998,0 0,0.2 -0.6,0 0,0.2 -3.4,0 0,-0.2 -0.40003,0 0,-0.4 -0.19997,0 0,-0.2 -0.60002,-0.6 -0.20001,-1 -0.19997,0 c -0.0618,-2.07478 -0.0677,-4.22794 0.58,-6.2 0.41645,-1.26806 1.5282,-2.19243 2.37998,-3.22 2.04392,-2.46568 3.38792,-5.43633 5.04002,-8.18 l -0.20002,0"
-     id="path3814"
-     inkscape:connector-curvature="0"
-     style="fill:none;stroke:#000000;stroke-width:2" />
-  <path
-     d="m 425.5,194.1 c 0.2235,-0.69845 0.41473,-1.5952 0,-2.2 l 0,-0.2 -0.4,0 0,-0.2 c -2.0593,0.45135 -4.2729,0.79103 -6,2 l -1,1.4 1.6,3.2 0,0.4 0.2,0 0,0.2 c 1.4929,1.52762 4.06658,2.95729 6.04,2.14 0.63275,-0.26204 1.01862,-0.9463 1.36,-1.54 l 1.6,-2 c 0.22515,-1.99176 0.5712,-4.0029 0.4,-6 l -0.2,0 0,-0.6 -0.2,0 -0.2,-1.6 -0.8,-1.4 -0.2,-1 -0.8,-1.2 -0.6,-6 0.2,0 0,-0.4 1,-1 0,-0.2 0.2,0 1.8,-1.4"
-     id="path3816"
-     inkscape:connector-curvature="0"
-     style="fill:none;stroke:#000000;stroke-width:2" />
-  <path
-     d="m 490.1,136.5 c 0.49393,-2.16576 2.54905,-3.75821 3.06,-5.92 0.63895,-2.70325 0.6267,-5.52 0.94,-8.28 l 0.2,0 0.2,-1.8 0.2,0 0,-1.2 0.2,0 0.4,8.8 0.2,0 c 0.0989,0.6593 0.6643,1.20319 1.2,1.6 l 2.2,-0.4 0.6,-0.8 0.6,-0.6 0.8,-8.4 0.4,11.4 0.2,0"
-     id="path3818"
-     inkscape:connector-curvature="0"
-     style="fill:none;stroke:#000000;stroke-width:2" />
   <circle
      cx="405"
      cy="176"
@@ -186,11 +161,6 @@
      y2="13.5"
      id="line3834"
      style="fill:none;stroke:#000000;stroke-dasharray:4, 4" />
-  <path
-     d="m 272.3,19.9 -1.2,-0.2 0,-0.2 -2.6,0 -0.6,0.6 -0.2,0 0,0.2 -0.6,0.6 -0.4,0.6 -0.2,0 0,0.4 -0.2,0 0,3.4 0.8,0 0,0.2 0.4,0 0,0.2 0.6,0 0,0.2 0.4,0 0.4,0.4 -0.2,0 2.4,0 0,0.2 -0.4,0 0,0.2 -1,0 0,0.2 -1,0 0,-0.2 -2.4,0.4 0,0.2 -0.2,0 c -0.64507,0.39494 -1.5681,0.739043 -1.72,1.48 -0.20892,1.01915 -0.0533,2.08 -0.08,3.12 l 0.2,0 0.6,0.8 0.4,0 0,0.2 0.2,0 0,0.2 0.2,0 0,0.2 0.4,0 0,0.2 2.2,0 0,0.2 c 1.10666,0.02667 2.23087,0.27803 3.32,0.08 0.4569,-0.08307 0.72,-0.58666 1.08,-0.88 l 0.2,0 0,-0.4 0.2,0 0,-0.2 0.2,0"
-     id="path3836"
-     inkscape:connector-curvature="0"
-     style="fill:none;stroke:#000000;stroke-width:2" />
   <text
      x="279.5"
      y="130.5"
@@ -205,4 +175,70 @@
      font-size="21"
      id="text3840"
      style="font-size:21px;font-family:Verdana">B</text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:27.93395996px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="187.57137"
+     y="174.46542"
+     id="text3452"
+     sodipodi:linespacing="125%"><tspan
+       sodipodi:role="line"
+       id="tspan3454"
+       x="187.57137"
+       y="174.46542">𝛽</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:27.93395996px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="48.526878"
+     y="79.572487"
+     id="text3452-6"
+     sodipodi:linespacing="125%"><tspan
+       sodipodi:role="line"
+       id="tspan3454-7"
+       x="48.526878"
+       y="79.572487">𝛼</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:27.93395996px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="267.96674"
+     y="190.2809"
+     id="text3452-8"
+     sodipodi:linespacing="125%"><tspan
+       sodipodi:role="line"
+       id="tspan3454-5"
+       x="267.96674"
+       y="190.2809">𝛾</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:27.93395996px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="410.30612"
+     y="200.82457"
+     id="text3452-5"
+     sodipodi:linespacing="125%"><tspan
+       sodipodi:role="line"
+       id="tspan3454-4"
+       x="410.30612"
+       y="200.82457">𝛿</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:27.93395996px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="252.81024"
+     y="40.033787"
+     id="text3452-0"
+     sodipodi:linespacing="125%"><tspan
+       sodipodi:role="line"
+       id="tspan3454-2"
+       x="252.81024"
+       y="40.033787">𝜀</tspan></text>
+  <text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:27.93395996px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     x="487.40662"
+     y="130.97282"
+     id="text3452-2"
+     sodipodi:linespacing="125%"><tspan
+       sodipodi:role="line"
+       id="tspan3454-49"
+       x="487.40662"
+       y="130.97282">𝜇</tspan></text>
 </svg>
