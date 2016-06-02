@@ -40,6 +40,26 @@ Gli archi duplicati, invece, mantengono le interfacce di rete su cui sono appogg
 e i relativi indirizzi IP link-local. Quando tali archi sono passati alla nuova identità del modulo QSPN,
 ricevono anche un nuovo *identificativo di arco* ciascuno.
 
+Inoltre il sistema 𝛽 crea un nuovo *network stack*, cioè un suo spazio all'interno del quale le operazioni
+di gestione della rete sono completamente separate e distinte da quelle dello spazio precedente. In un
+sistema Linux questo concetto è implementato con i *network namespace*. La vecchia identità di 𝛽 d'ora in
+poi, fino a che rimarrà in vita, prenderà la gestione del nuovo network namespace, mentre la nuova
+identità gestirà il network namespace che aveva prima in gestione la vecchia.
+
+Tutte queste operazioni producono di fatto la creazione di un nuovo distinto *nodo* della rete. Cioè,
+all'interno del sistema 𝛽 prima esisteva una entità logica, che indichiamo con il termine *nodo del grafo*.
+Chiamiamola 𝛽<sub>0</sub>. Adesso al suo posto esistono, all'interno di 𝛽, due *nodi*, cioè due di queste
+entità o identità: la vecchia 𝛽<sub>0</sub> e la nuova 𝛽<sub>1</sub>.  
+Dal punto di vista delle operazioni "distribuite" portate avanti, per così dire,  dalla rete Netsukuku
+nel suo insieme, questi due *nodi* sono del tutto distinti e separati. Anche se, di fatto, essi
+vivono in un unico sistema, il sistema 𝛽. I collegamenti diretti fisici che il sistema 𝛽 ha a disposizione
+con altri sistemi rimangono ovviamente gli stessi di prima.  
+Nel proseguimento della trattazione di questo esempio, useremo a volte il termine *nodo* o il
+termine *sistema* in modo interscambiabile. Di solito dicendo "sistema 𝛽" si intende il sistema, nel
+suo insieme, in cui è in esecuzione il programma *ntkd*; ma a volte con lo stesso termine ci
+si riferisce in modo improprio ad una particolare identità, probabilmente l'unica identità che vive in
+quel sistema nel contesto della frase.
+
 ### Motivazioni della pseudo-interfaccia di rete
 
 Tutte le comunicazioni che i sistemi si scambiano tra i moduli del demone *ntkd*, sia quelle in UDP broadcast,
@@ -54,11 +74,13 @@ caratteristiche appena descritte fanno si che sia possibile per 𝛼<sub>0</sub>
 e accertarsi che venga processato dalla giusta identità di 𝛽 e che questi sappia identificare la giusta identità
 di 𝛼 come mittente del messaggio. Inoltre è possibile per 𝛼<sub>0</sub> scegliere di avere solo un arco-identità verso
 𝛽<sub>0</sub> oppure solo un arco-identità verso 𝛽<sub>1</sub>, oppure entrambi, oppure nessuno: in ogni caso anche un
-messaggio inviato una sola volta in broadcast sull'arco fisico può essere preparato in modo tale che solo le
-giuste identità di 𝛽 lo processino.
+messaggio che il sistema 𝛼 trasmette una sola volta in broadcast sull'arco fisico che lo collega al sistema 𝛽, può
+essere preparato in modo tale che solo le giuste identità di 𝛽 lo processino.
 
 In conclusione, i messaggi che due sistemi vicini si scambiano tra i moduli del demone *ntkd* possono raggiungere
-la corretta identità dei sistemi senza bisogno di creare nuove pseudo-interfacce di rete.
+la corretta identità dei sistemi senza bisogno di creare nuove pseudo-interfacce di rete. Di fatto, tali messaggi
+sono sempre generati e recepiti all'interno del network namespace default dei relativi sistemi e dalle loro
+interfacce di rete reali.
 
 Ma ci sono dei motivi per cui si rende necessario creare nuove pseudo-interfacce allo scopo di individuare
 la giusta identità del sistema alla quale è stato trasmesso un generico pacchetto IP da inoltrare. Si individuano questi motivi:
@@ -66,20 +88,23 @@ la giusta identità del sistema alla quale è stato trasmesso un generico pacche
 *   Corretto instradamento di pacchetti IP che hanno come destinazione un indirizzo *interno* ad un g-nodo.
 *   Realizzazione di un circuito fisso tra due end-point, per lo sfruttamento dei percorsi disgiunti acquisiti.
 
-### Distinti stack di network
+In particolare, in questa trattazione verrà dimostrato il corretto instradamento di pacchetti IP che hanno
+come destinazione un indirizzo *interno* ad un g-nodo.
+
+#### Gestione di pacchetti IP aventi destinazione interna ad un g-nodo
 
 Quando in un sistema 𝛽 una identità 𝛽<sub>0</sub> determina la creazione di una identità aggiuntiva 𝛽<sub>1</sub>,
 oltre a creare delle pseudo-interfacce apposite coi loro nuovi indirizzi MAC, il sistema 𝛽 crea un nuovo completo stack
-di network, o network namespace. Questo permette alle due distinte identità, le quali esistono in distinti
+di network, o network namespace. Questo permette ai due distinti *nodi del grafo*, i quali esistono in distinti
 g-nodi *g<sub>0</sub>* e *g<sub>1</sub>* di livello *j*, di avere indirizzi IP *interni* al g-nodo di livello *j*
-che non si influenzino a vicenda.
+che non si influenzano a vicenda.
 
 Un pacchetto IP che ha per destinazione un indirizzo IP *interno* al g-nodo *g<sub>0</sub>* può giungere al
 sistema 𝛽 attraverso una delle pseudo-interfacce di *𝛽<sub>0</sub>*. Quindi seguirà le regole iscritte nel network
 namespace gestito dall'identità 𝛽<sub>0</sub>.  
 Anche se l'identità 𝛽<sub>1</sub> dovesse avere in *g<sub>1</sub>* lo stesso indirizzo IP *interno* che il
-pacchetto IP riporta come indirizzo destinazione (oppure sorgente) questo non interferirà con le operazioni che
-il network namespace di 𝛽<sub>0</sub> porta avanti.
+pacchetto IP riporta come indirizzo destinazione (oppure sorgente) questo non interferirà con le operazioni di instradamento
+portate avanti nel network namespace di 𝛽<sub>0</sub>.
 
 ## Passo 1
 Consideriamo un grafo connesso *G* = (*V*, *E*).
