@@ -107,10 +107,11 @@ pacchetto IP riporta come indirizzo destinazione (oppure sorgente) questo non in
 portate avanti nel network namespace di 𝛽<sub>0</sub>.
 
 ## Passo 1
-Consideriamo un grafo connesso *G* = (*V*, *E*).
 
-*   *V* = {𝛼, 𝛽, 𝛾, 𝛿, 𝜇}
-*   *E* = {𝛼-𝛽, 𝛽-𝛾, 𝛾-𝛿, 𝛿-𝜇}
+Consideriamo un grafo connesso *G* = (*V*, *E*).
+
+*   *V* = {𝛼, 𝛽, 𝛾, 𝛿, 𝜇}
+*   *E* = {𝛼-𝛽, 𝛽-𝛾, 𝛾-𝛿, 𝛿-𝜇}
 
 ![grafo1](img/Step1/grafo1.png)
 
@@ -122,11 +123,11 @@ sistemi che sono sufficientemente vicini. Con questo intendo dire che, ad esempi
 
 Scriviamo l'elenco degli indirizzi link-local che i sistemi si sono assegnati sull'interfaccia "eth1":
 
-*   *IP(𝛼,eth1)* = 169.254.69.30
-*   *IP(𝛽,eth1)* = 169.254.96.141
-*   *IP(𝛾,eth1)* = 169.254.94.223
-*   *IP(𝛿,eth1)* = 169.254.253.216
-*   *IP(𝜇,eth1)* = 169.254.119.176
+*   *IP(𝛼,eth1)* = 169.254.69.30
+*   *IP(𝛽,eth1)* = 169.254.96.141
+*   *IP(𝛾,eth1)* = 169.254.94.223
+*   *IP(𝛿,eth1)* = 169.254.253.216
+*   *IP(𝜇,eth1)* = 169.254.119.176
 
 Ricordiamo l'elenco degli archi attualmente formatisi:
 

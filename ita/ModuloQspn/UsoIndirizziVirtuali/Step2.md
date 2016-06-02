@@ -4,8 +4,8 @@
 
 In questo passo specifichiamo la topologia che è usata nella rete.
 
-Consideriamo una topologia a 3 livelli con *gsize* ad ogni livello = 2. Quindi abbiamo a disposizione solo
-2<sup>3</sup> = 8 indirizzi, da 10.0.0.0 a 10.0.0.7 in IPv4.
+Consideriamo una topologia a 3 livelli con *gsize* ad ogni livello = 2. Quindi abbiamo a disposizione solo
+2<sup>3</sup> = 8 indirizzi, da 10.0.0.0 a 10.0.0.7 in IPv4.
 
 Usiamo anche gli indirizzi IP *interni* ai g-nodi:
 
@@ -27,22 +27,22 @@ Indichiamo con la scrittura *g<sub>1</sub>(𝛼)*, *g<sub>2</sub>(𝛼)*, ..., i
 
 Assegnamo questi indirizzi:
 
-*   𝛼 = 0·1·0
-*   𝛽 = 1·1·1
-*   𝛾 = 1·1·0
-*   𝛿 = 1·0·1
-*   𝜇 = 1·0·0
+*   𝛼 = 0·1·0
+*   𝛽 = 1·1·1
+*   𝛾 = 1·1·0
+*   𝛿 = 1·0·1
+*   𝜇 = 1·0·0
 
 Quindi abbiamo che i g-nodi di livello 1 sono:
 
-*   g<sub>1</sub>(𝛼) = 0·1· = {𝛼}
-*   g<sub>1</sub>(𝛽) = 1·1· = {𝛽, 𝛾} e gli archi {𝛽-𝛾} quindi è connesso
-*   g<sub>1</sub>(𝛿) = 1·0· = {𝛿, 𝜇} e gli archi {𝛿-𝜇} quindi è connesso
+*   g<sub>1</sub>(𝛼) = 0·1· = {𝛼}
+*   g<sub>1</sub>(𝛽) = 1·1· = {𝛽, 𝛾} e gli archi {𝛽-𝛾} quindi è connesso
+*   g<sub>1</sub>(𝛿) = 1·0· = {𝛿, 𝜇} e gli archi {𝛿-𝜇} quindi è connesso
 
 mentre i g-nodi di livello 2 sono:
 
-*   g<sub>2</sub>(𝛼) = 0· = {𝛼}
-*   g<sub>2</sub>(𝛽) = 1· = {𝛽, 𝛾, 𝛿, 𝜇} e gli archi {𝛽-𝛾, 𝛾-𝛿, 𝛿-𝜇} quindi è connesso
+*   g<sub>2</sub>(𝛼) = 0· = {𝛼}
+*   g<sub>2</sub>(𝛽) = 1· = {𝛽, 𝛾, 𝛿, 𝜇} e gli archi {𝛽-𝛾, 𝛾-𝛿, 𝛿-𝜇} quindi è connesso
 
 ![grafo2](img/Step2/grafo2.png)
 
