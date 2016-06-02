@@ -40,7 +40,7 @@ ip route add 10.0.2.3/32 src 10.0.2.2 via 169.254.96.141 dev eth1
 ip route add 10.0.1.1/32 src 10.0.1.0 via 169.254.96.141 dev eth1
 ```
 
-Di nuovo, il nodo 𝛽<sub>B</sub> è in grado di comunicare con gli altri nodi della rete.
+Di nuovo, il sistema 𝛽 è in grado di comunicare con gli altri sistemi della rete.
 
 Proseguiamo con il [passo 6](Step6.md).
 
