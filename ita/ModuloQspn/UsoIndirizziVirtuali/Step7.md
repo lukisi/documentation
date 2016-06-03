@@ -2,15 +2,15 @@
 
 ## Passo 7
 
-In questo passo simuliamo l'ingresso di un nuovo nodo che forza la migrazione del g-nodo di livello 1 1·1· nel g-nodo
+In questo passo simuliamo l'ingresso di un nuovo sistema che forza la migrazione del g-nodo di livello 1 1·1· nel g-nodo
 di livello 2 0·, che è non saturo.
 
-Ora nella rete si aggiunge il nodo 𝜆 collegato solo al nodo 𝜀. Esiste l'arco 𝜀-𝜆, ma tale arco non è ancora comunicato
+Ora nella rete si aggiunge il sistema 𝜆 collegato solo al sistema 𝜀. Esiste l'arco 𝜀-𝜆, ma tale arco non è ancora comunicato
 al modulo QSPN in quanto il nodo 𝜆 non fa ancora parte della rete.
 
 ![grafo8](img/Step7/grafo8.png)
 
-Il nuovo nodo si assegna questo indirizzo link-local:
+Il nuovo sistema si assegna questo indirizzo link-local:
 
 *   𝜆 = 169.254.109.22
 
@@ -18,7 +18,7 @@ Si aggiunge questo arco all'elenco:
 
 *   𝜀-𝜆
 
-Diamo questi comandi ai nodi:
+Diamo questi comandi ai sistemi:
 
 **sistema 𝜀**
 ```
@@ -31,9 +31,10 @@ ip address add 169.254.109.22 dev eth1
 ip route add 169.254.163.36 dev eth1 src 169.254.109.22
 ```
 
-Il nodo 𝜆 vuole fare da gateway per una sottorete di due nodi gestita autonomamente. Quindi vuole riservarsi un g-nodo di livello 1.
+Il sistema 𝜆 vuole fare da gateway per una sottorete di due indirizzi gestita autonomamente. Quindi vuole
+riservarsi un g-nodo di livello 1.
 
-Al livello più alto la rete è satura, non si può costituire un nuovo g-nodo di livello 2. Il nodo 𝜆 vuole
+Al livello più alto la rete è satura, non si può costituire un nuovo g-nodo di livello 2. Il sistema 𝜆 vuole
 entrare in g<sub>2</sub>(𝜀) = 1· ma è saturo. Come soluzione si sceglie di far migrare tutto il
 g-nodo 𝜑 = g<sub>1</sub>(𝜀) = 1·1· in 0·, ma che resti come virtuale in 1· prendendo il primo
 identificativo *virtuale* libero nel g-nodo di livello 2 1·, cioè 2. Quindi diventa 1·2·.
@@ -44,7 +45,8 @@ Si noti che il livello più alto in cui i due g-nodi *M* e *N* differiscono è 2
 
 Il g-nodo 𝜑 migra in una operazione atomica, cioè tutti i suoi nodi migrano insieme, senza attendere
 l'uno le operazioni dell'altro. Alcune operazioni sulle proprie strutture dati interne le faranno tutti
-i nodi. Alcuni comandi per il sistema operativo andranno dati su tutti i nodi.
+i nodi. Alcuni comandi per il sistema operativo (ad esempio la creazione di pseudo-interfacce e di un network
+namespace, l'aggiunta di indirizzi link-local e di rotte dirette) andranno dati su tutti i sistemi.
 
 Le trasmissioni di ETP dovute ai cambi di indirizi di 𝜑 invece le faranno solo i border-nodi e le comunicheranno
 solo all'esterno. Le richieste di un ETP completo le faranno solo i border-nodi ai nodi esterni. Con gli ETP
@@ -55,9 +57,11 @@ Procediamo.
 
 Ogni nodo del g-nodo 𝜑, per ognuna delle interfacce di rete gestite dal demone *ntkd* nel network namespace default,
 costruisce una pseudo-interfaccia a cui associa un nuovo indirizzo IP link-local. Poi le sposta in un nuovo network
-namespace (che chiamiamo in questo esempio "ntkv1").
+namespace. In questo esempio per semplicità chiameremo "ntkv1" il namespace nuovo in tutti i nodi di 𝜑; ma questo non
+significa che sia necessario: ad esempio nel sistema 𝛽 potremmo creare il namespace ntkv1, nel sistema 𝛾 potremmo
+creare il namespace ntkv0, e così via.
 
-Diamo questi comandi ai nodi:
+Diamo questi comandi ai sistemi:
 
 **sistema 𝛽**
 ```
@@ -136,7 +140,13 @@ esterno a 𝜑 che vede una modifica realizzata su un suo vecchio arco (cambia l
 che è in 𝜑) deve anche apportare la relativa variazione alle rotte che aveva memorizzato in precedenza e che usavano
 quell'arco come gateway.
 
-Diamo questi comandi ai nodi:
+**Nota:** Tutte queste operazioni (sia quelle che riguardano gli indirizzi link-local nuovi e i
+collegamenti diretti coi link-local vicini, sia quelle che riguardano la modifica delle rotte che usano
+come gateway i nuovi link-local dei vicini) non coinvolgono affatto il modulo Qspn. Esse sono portate avanti
+dalla collaborazione fra il modulo Identities e il suo utilizzatore. Le riportiamo in questo esempio per
+completezza.
+
+Diamo questi comandi ai sistemi:
 
 **sistema 𝛽**
 ```
@@ -198,7 +208,9 @@ ai livelli da 2 a 2. Nel dettaglio:
 Riguardando la regola generale descritta nel passo 3 sulle operazioni da fare con gli indirizzi e le rotte, poiché
 il g-nodo 𝜑 diventa *di connettività* ai livelli da 2 a 2 e quindi *virtuale* al livello 1, i nodi in esso fanno queste operazioni:
 
-*   Vengono copiati nel network namespace ntkv1 gli indirizzi interni ai propri g-nodi di livello minore di 2, cioè quelli in 10.0.1.X.
+*   Vengono copiati nel network namespace ntkv1 gli indirizzi interni ai propri g-nodi di livello minore
+    di 2, cioè quelli in 10.0.1.X.  
+    **TODO:** Passo superfluo.
 *   Le rotte verso nodi contenuti nel nostro g-nodo di livello 1:
     *   Quelle espresse con indirizzi *interni* al g-nodo di livello 1 vanno mantenute nel network namespace vecchio e
         copiate nel network namespace ntkv1. Inoltre, essendo nel network namespace ntkv1, se usano come gateway un nodo
@@ -265,9 +277,10 @@ non appartengono a 𝜑. In questo ETP comunica che non è più possibile raggiu
 ora è possibile raggiungere tramite lui l'indirizzo 1·2·.
 
 Questo ETP viene recepito solo dai nodi del g-nodo di livello 2, trattandosi di due percorsi verso g-nodi di livello 1,
-cioè solo dai nodi 𝛿 e 𝜇. Inoltre la comunicazione relativa all'indirizzo virtuale 2·1· viene recepita ma non comporta alcun comando.
+cioè solo dai nodi 𝛿 e 𝜇. Inoltre la comunicazione relativa all'indirizzo virtuale 2·1· viene recepita ma non comporta
+alcun comando al sistema operativo.
 
-Quindi diamo questi comandi ai nodi: 
+Quindi diamo questi comandi ai sistemi: 
 
 **sistema 𝛿**
 ```
