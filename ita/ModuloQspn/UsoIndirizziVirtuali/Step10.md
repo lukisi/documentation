@@ -40,8 +40,8 @@ Il nodo 𝜆 ha terminato il bootstrap. Esso ora invia un ETP che informa su com
 ricevuto da 𝜀<sub>i(2,2)</sub> (che fa parte di 1·) esso si propaga solo internamente a 1·. In quanto ricevuto
 da 𝜀<sub>N</sub> (che fa parte di 0·) esso informa di un nuovo percorso per raggiungere 1· e si propaga internamente a 0·.
 
-Per brevità, supponiamo che ad eccezione di 𝜀<sub>N</sub>, tutti gli altri nodi di [0] preferiscano il vecchio
-percorso per raggiungere [1].
+Per brevità, supponiamo che ad eccezione di 𝜀<sub>N</sub>, tutti gli altri nodi di 0· preferiscano il vecchio
+percorso per raggiungere 1·.
 
 Diamo questi comandi ai sistemi:
 
@@ -76,14 +76,14 @@ ip route add 10.0.0.6/31 via 169.254.253.216 dev eth1 src 10.0.0.4
 ip route add 10.0.2.2/31 via 169.254.253.216 dev eth1 src 10.0.2.0
 ```
 
-Possiamo verificare che il nodo 𝜆 raggiunge tutti gli indirizzi IP dei nodi esistenti.
+Possiamo verificare che il sistema 𝜆 raggiunge tutti gli indirizzi IP dei nodi esistenti.
 
 Inoltre possiamo verificare che i nodi che hanno assunto una identità ''di connettività'' sono in grado di
 smistare correttamente pacchetti IP aventi per destinazione un indirizzo ''interno''.
 
-*   Se il nodo 𝜀 invia un pacchetto a 10.0.2.0 (cioè verso il nodo x·0·0 nel g-nodo di livello 1 di cui
+*   Se il sistema 𝜀 invia un pacchetto a 10.0.2.0 (cioè verso il nodo x·0·0 nel g-nodo di livello 1 di cui
     fa parte 𝜀) raggiunge 𝛾.
-*   Se il nodo 𝜆 invia un pacchetto a 10.0.2.0 (cioè verso il nodo x·0·0 nel g-nodo di livello 1 di cui
+*   Se il sistema 𝜆 invia un pacchetto a 10.0.2.0 (cioè verso il nodo x·0·0 nel g-nodo di livello 1 di cui
     fa parte 𝜆), sebbene passa da 𝜀 e da 𝛾, raggiunge 𝜇.
 
 Proseguiamo con il [passo 11](Step11.md).
