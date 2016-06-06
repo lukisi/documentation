@@ -78,7 +78,8 @@ Quindi gli effettivi segnali di *arc_changed* del modulo Neighborhood sono in re
 
 * * *
 
-All'avvio del programma nel sistema viene creata l'istanza di IdentityManager e questo crea un NodeID casuale. Il programma
+All'avvio del programma nel sistema viene creata l'istanza di IdentityManager. Questi nel
+costruttore crea la prima identità *principale* del sistema e per essa genera un NodeID casuale. Il programma
 recupera tale NodeID col metodo *get_main_id()* e lo associa all'indice autoincrementante *nodeid_nextindex*,
 che parte da 0. In seguito il programma quando crea una nuova identità col metodo *add_identity* associa la
 nuova istanza di NodeID al prossimo valore di *nodeid_nextindex*. Quindi l'utente può usare questo indice per
