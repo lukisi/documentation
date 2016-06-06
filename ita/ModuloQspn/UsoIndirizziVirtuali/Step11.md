@@ -112,6 +112,6 @@ ip netns exec ntkv1 ip route change 10.0.2.0/31 via 169.254.24.198 dev ntkv1_eth
 ip netns exec ntkv1 ip route del 169.254.42.4 dev ntkv1_eth1 src 169.254.241.153
 ```
 
-Possiamo infine verificare che tutti i nodi raggiungono correttamente tutti gli indirizzi IP globali e gli
+Possiamo infine verificare che tutti i sistemi raggiungono correttamente tutti gli indirizzi IP globali e gli
 indirizzi IP *interni* ai loro g-nodi di livello 1 e 2.
 
