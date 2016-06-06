@@ -169,6 +169,25 @@ con il quale gli chiede di costruire e passare al QspnManager di *B<sub>0</sub>*
 tale che il modulo QSPN di *B<sub>0</sub>* possa effettuare comunicazioni con il modulo QSPN
 di *A<sub>1</sub>*.
 
+Poi l'utente chiederà al programma in esecuzione su *A* di rendere la vecchia *identità* *A<sub>0</sub>*
+una identità di connettività che andrà da lì a breve a scomparire. Per prima cosa l'utente usa il comando
+*make_connectivity*, il quale con l'omonimo metodo del QspnManager di *A<sub>0</sub>* rende quella identità
+di connettività. L'utente specifica a quale livello l'indirizzo Netsukuku di *A<sub>0</sub>* deve diventare
+*virtuale* (nel nostro caso 0), quale indirizzo virtuale deve prendere e con quale anzianità (dati che sarebbero
+da concordare con il Coordinator) e fino a quale livello arriva la migrazione (nel nostro caso equivale al
+numero totale dei livelli poiché si è entrati in una diversa rete).  
+Ora l'utente deve attendere (un breve istante è sufficiente) che l'ETP prodotto per segnalare ai vicini la rimozione
+del vecchio identificativo *reale*, sia da essi elaborato.  
+Poi l'utente con il comando *remove_outer_arcs* chiede al programma di eseguire l'omonimo metodo del
+QspnManager di *A<sub>0</sub>* per rimuovere gli archi-identità, se ci sono, esterni al massimo g-nodo
+per il quale si rimane di supporto alla connettività. In questo caso per forza non vi sono archi, essendo
+questo g-nodo l'intera vecchia rete.  
+Poi l'utente verifica con il comando *check_connectivity*, il quale usa l'omonimo metodo del
+QspnManager di *A<sub>0</sub>*, che la permanenza di quella identità è ora superflua. Il programma
+scriverà a video l'esito di questa verifica.  
+Infine l'utente con il comando *remove_identity* chiederà al programma nel sistema A di rimuovere l'identità
+*A<sub>0</sub>*.
+
 * * *
 
 Per ogni *identità* creata, nel relativo network namespace, sulla base dell'indirizzo Netsukuku
