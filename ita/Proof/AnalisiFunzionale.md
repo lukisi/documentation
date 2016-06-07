@@ -176,8 +176,10 @@ di connettività. L'utente specifica a quale livello l'indirizzo Netsukuku di *A
 *virtuale* (nel nostro caso 0), quale indirizzo virtuale deve prendere e con quale anzianità (dati che sarebbero
 da concordare con il Coordinator) e fino a quale livello arriva la migrazione (nel nostro caso equivale al
 numero totale dei livelli poiché si è entrati in una diversa rete).  
-Ora l'utente deve attendere (un breve istante è sufficiente) che l'ETP prodotto per segnalare ai vicini la rimozione
-del vecchio identificativo *reale*, sia da essi elaborato.  
+Ora l'utente deve attendere un po' (un breve istante è sufficiente) per simulare l'attesa che il demone
+*ntkd* farebbe a questo punto per due motivi: bisogna attendere un istante per permettere che l'ETP prodotto
+da *A<sub>0</sub>* per segnalare ai vicini la rimozione del vecchio identificativo *reale*, venga da essi elaborato;
+bisogna inoltre attendere che *A<sub>1</sub>* notifichi il segnale `presence_notified`.  
 Poi l'utente con il comando *remove_outer_arcs* chiede al programma di eseguire l'omonimo metodo del
 QspnManager di *A<sub>0</sub>* per rimuovere gli archi-identità, se ci sono, esterni al massimo g-nodo
 per il quale si rimane di supporto alla connettività. In questo caso per forza non vi sono archi, essendo
