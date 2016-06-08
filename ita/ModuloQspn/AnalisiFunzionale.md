@@ -104,7 +104,7 @@ Questo problema rende necessario che quando il modulo QSPN in un nodo *v* riceve
 l'arco relativo nella sua lista, prima aspetti un certo tempo e verifichi di nuovo la presenza dell'arco. Dopo questa
 attesa, che chiamiamo *tempo di rilevamento dell'arco*, se l'arco risulta ancora sconosciuto, il modulo potrà ignorare
 la richiesta o rifiutarla con una eccezione. La durata di questa attesa deve essere passata al modulo QSPN dal suo
-utilizzatore, in quanto è esso a conoscere i dettagli dell'iter di misurazione del costo dell'arco.
+utilizzatore, in quanto il modulo non conosce i dettagli dell'iter di misurazione del costo dell'arco.
 
 <a name="StrutturaGerarchica"></a>
 
@@ -129,16 +129,16 @@ E così via. Nel livello più alto *l* è presente un solo gruppo che costituisc
 
 Anche il singolo nodo a volte viene chiamato (impropriamente) un g-nodo di livello 0.
 
-Abbiamo detto che ogni g-nodo di livello *i+1* contiene un numero massimo fissato di g-nodi di livello *i*. Il numero
-massimo di elementi di un g-nodo è detto *gsize*. Ogni livello da *0* a *l-1* può avere un valore *gsize* diverso.
-Chiamiamo *gsize(i)* il numero massimo di g-nodi di livello *i* in un g-nodo di livello *i+1*.
+Abbiamo detto che ogni g-nodo di livello *i* + 1 contiene un numero massimo fissato di g-nodi di livello *i*. Il numero
+massimo di elementi di un g-nodo è detto *gsize*. Ogni livello può avere un valore *gsize* diverso. Chiamiamo
+*gsize(i)*, con *i* da 0 a *l* - 1, il numero massimo di g-nodi di livello *i* in un g-nodo di livello *i* + 1.
 
 Ogni g-nodo di livello *i* ha un identificativo che lo individua univocamente all'interno del suo g-nodo di livello
-*i+1*. Tale identificativo è un numero intero che di norma assume valori da *0* a *gsize(i) - 1*. Vedremo in seguito
+*i* + 1. Tale identificativo è un numero intero che di norma assume valori da 0 a *gsize(i)* - 1. Vedremo in seguito
 che in particolari casi può assumere valori maggiori.
 
 L'indirizzo del singolo nodo va ad essere composto mettendo in sequenza gli identificativi di tutti i g-nodi a cui
-esso appartiene, a partire da quello di livello *l-1* fino a quello di livello *0*. Si noti che ogni singolo nodo,
+esso appartiene, a partire da quello di livello *l* - 1 fino a quello di livello 0. Si noti che ogni singolo nodo,
 dal momento che conosce il proprio  indirizzo, sa di far parte di un preciso g-nodo di livello 1, di un  preciso g-nodo
 di livello 2, e così via, fino al livello più alto.
 
@@ -166,8 +166,8 @@ i g-nodi *di connettività*: il significato di questa espressione sarà chiarito
 In ogni singolo nodo, il modulo QSPN ha il compito di costruire e tenere in memoria una mappa a topologia gerarchica
 della rete.
 
-Per ogni livello *i* della rete, da *0* a *l-1*, un nodo *n* deve memorizzare in tale mappa tutti i g-nodi di
-livello *i* (esclusi i g-nodi *di connettività*) appartenenti al suo stesso g-nodo di livello *i+1* e dei quali
+Per ogni livello *i* della rete, da 0 a *l* - 1, un nodo *n* deve memorizzare in tale mappa tutti i g-nodi di
+livello *i* (esclusi i g-nodi *di connettività*) appartenenti al suo stesso g-nodo di livello *i* + 1 e dei quali
 *n* conosce l'esistenza, cioè conosce almeno un percorso per raggiungerli.  Per ognuno vanno memorizzati tutti i
 percorsi noti e per ogni percorso alcune informazioni che elencheremo più sotto.
 
@@ -182,7 +182,7 @@ perché di esso ha già memorizzato tutti i vertici di cui è composto. Per il l
 nella mappa tutti i g-nodi di livello 2 che conosce che appartengono al g-nodo di livello 3 *n<sub>3</sub>* come se
 fossero singoli vertici. Il nodo *n* non memorizzerà *n<sub>2</sub>* come un singolo vertice perché di esso ha già
 memorizzato tutti i vertici di cui è composto. E così via fino a memorizzare come fossero singoli vertici anche tutti
-i g-nodi di livello *l-1* che conosce, tranne *n<sub>l-1</sub>*.
+i g-nodi di livello *l* - 1 che conosce, tranne *n<sub>l-1</sub>*.
 
 Affinché questa mappa gerarchica sia sufficiente al nodo per raggiungere ogni singolo nodo esistente nella rete, ogni
 g-nodo deve essere internamente connesso. È compito del modulo  QSPN scoprire e segnalare se un g-nodo di cui si
@@ -195,10 +195,10 @@ fingerprint e come viene "assegnato" ad un g-nodo.
 ### <a name="Fingerprint"></a>Fingerprint
 
 A livello 0, il fingerprint di un nodo è composto da un identificativo del nodo, univoco a livello  di rete, e da una
-lista di valori che  rappresentano l'anzianità ai vari livelli dal livello 0 al livello *l-1*. L'anzianità a livello
+lista di valori che  rappresentano l'anzianità ai vari livelli dal livello 0 al livello *l* - 1. L'anzianità a livello
 0 indica quanto è vecchio il nodo  rispetto agli altri nodi del suo stesso g-nodo di livello 1; a livello *i* indica
 quanto è vecchio il suo g-nodo di livello *i* rispetto agli altri g-nodi di livello *i* del suo stesso g-nodo di
-livello *i+1*. L'oggetto fingerprint del nodo viene passato al modulo QSPN dal suo utilizzatore; quindi come vengano
+livello *i* + 1. L'oggetto fingerprint del nodo viene passato al modulo QSPN dal suo utilizzatore; quindi come vengano
 generati o recuperati i dati in esso contenuti non è di pertinenza del modulo, e nemmeno in che modo sia implementato
 il confronto fra due valori di anzianità.
 
@@ -212,18 +212,18 @@ cioè viene a conoscenza di un percorso per raggiungerlo, viene anche portato a 
 Di conseguenza ogni nodo, potendo confrontare le rispettive anzianità di tali nodi, è in grado di computare il
 fingerprint del suo g-nodo di livello 1.
 
-Il fingerprint di un g-nodo di livello *i* ha come identificativo l'identificativo del g-nodo di livello *i-1* più
+Il fingerprint di un g-nodo di livello *i* ha come identificativo l'identificativo del g-nodo di livello *i* - 1 più
 anziano in esso contenuto e i suoi stessi  valori di anzianità dal livello *i* in su (valori che risultano  gli stessi
-per tutti i g-nodi di livello *i-1* del g-nodo). Inoltre, il fingerprint di un g-nodo di livello *i* ricorda anche
-l'anzianità del g-nodo di livello *i-1* in esso contenuto che gli ha dato il suo identificativo, l'anzianità del
-g-nodo di livello *i-2* in esso contenuto che gli ha dato il suo identificativo, e così via fino al livello 0. Anche
-a livello *i* abbiamo che  quando un nodo viene a conoscenza dell'esistenza di un altro g-nodo di  livello *i-1* nel
+per tutti i g-nodi di livello *i* - 1 del g-nodo). Inoltre, il fingerprint di un g-nodo di livello *i* ricorda anche
+l'anzianità del g-nodo di livello *i* - 1 in esso contenuto che gli ha dato il suo identificativo, l'anzianità del
+g-nodo di livello *i* - 2 in esso contenuto che gli ha dato il suo identificativo, e così via fino al livello 0. Anche
+a livello *i* abbiamo che  quando un nodo viene a conoscenza dell'esistenza di un altro g-nodo di  livello *i* - 1 nel
 suo g-nodo di livello *i*, cioè viene a conoscenza di un  percorso per raggiungerlo, viene anche portato a conoscenza
 del  fingerprint di quel g-nodo. Di conseguenza ogni nodo è in grado di  computare il fingerprint del suo g-nodo di
 livello *i*.
 
 Il fingerprint a livello *l* non ha valori di anzianità e nemmeno necessita di ricordare l'anzianità del g-nodo di
-livello *l-1* in esso contenuto che gli ha dato il suo identificativo. Il fingerprint a livello *l* ha solo un
+livello *l* - 1 in esso contenuto che gli ha dato il suo identificativo. Il fingerprint a livello *l* ha solo un
 identificativo. Questo è l'identificativo della rete.
 
 Questo  meccanismo di costruzione del fingerprint di un g-nodo a partire da  quelli dei g-nodi in esso contenuti
@@ -312,7 +312,7 @@ per ogni diverso fingerprint di *d* che gli viene segnalato attraverso gli ETP r
 Riassumendo, per ogni g-nodo (esclusi i g-nodi *di connettività*) nella topologia gerarchica del nodo corrente, la mappa
 mantiene queste informazioni:
 
-*   Livello (*lvl*) e identificativo all'interno di quel livello (*pos* : numero da *0* a *gsize(lvl) - 1*). Il modulo
+*   Livello (*lvl*) e identificativo all'interno di quel livello (*pos* : numero da 0 a *gsize(lvl)* - 1). Il modulo
     QSPN lo rappresenta con una istanza della classe [HCoord](#HCoord).  
     Una istanza di HCoord in generale può rappresentare un g-nodo virtuale. Cioè può avere come *pos* un numero maggiore
     o uguale a *gsize(lvl)*. Però mai come destinazione: soltanto come passo nel percorso verso una destinazione.
@@ -339,8 +339,8 @@ essere noti i parametri della topologia gerarchica della rete:
 *   numero di livelli in cui la rete è suddivisa ( *l* );
 *   per ogni livello *i*, numero di posizioni in quel livello ( *gsize(i)* ).
 
-Dati questi parametri, un indirizzo di nodo è composto da un identificativo per ogni livello da *l* - 1 a 0. Invece,
-un indirizzo di g-nodo di livello *i* è composto da un identificativo per ogni livello da *l* - 1 a *i*.
+Dati questi parametri, un indirizzo di nodo è composto da un identificativo per ogni livello da *l* - 1 a 0. Invece,
+un indirizzo di g-nodo di livello *i* è composto da un identificativo per ogni livello da *l* - 1 a *i*.
 
 Per convenienza, diciamo che i parametri della topologia fanno parte dell'indirizzo.
 
@@ -350,7 +350,7 @@ solo la sua interfaccia IQspnNaddr, come verrà dettagliato sotto.
 Il modulo QSPN in un nodo *n* conosce, per requisito, il suo indirizzo. Per il tramite di messaggi ETP, esso viene
 a conoscenza degli indirizzi dei suoi vicini e di altri g-nodi che può raggiungere, ma solo di g-nodi che hanno in
 comune il loro livello direttamente superiore con uno dei g-nodi di cui il nodo *n* è membro. Cioè, solo i g-nodi di
-livello *i* che appartengono allo stesso g-nodo di livello *i* + 1 a cui appartiene il nodo *n* saranno individuati
+livello *i* che appartengono allo stesso g-nodo di livello *i* + 1 a cui appartiene il nodo *n* saranno individuati
 e memorizzati. Per questo per rappresentare gli indirizzi di g-nodi il modulo QSPN usa la classe HCoord (coordinate gerarchiche).
 
 ### <a name="Migrazioni_e_indirizzi_interni"></a>Migrazioni e indirizzi IP interni
@@ -384,11 +384,11 @@ alcune considerazioni sul routing di pacchetti con tali indirizzi.
 ### <a name="Nodi_virtuali"></a>Nodi virtuali
 
 Abbiamo detto in precedenza che ogni g-nodo di livello *i* ha un identificativo che lo individua univocamente all'interno
-del suo g-nodo di livello *i+1* e che tale identificativo è un numero intero da *0* a *gsize(i) - 1*.
+del suo g-nodo di livello *i* + 1 e che tale identificativo è un numero intero da 0 a *gsize(i)* - 1.
 
-In realtà possono esserci casi in cui si vuole temporaneamente includere in un g-nodo di livello *i+1* un numero di g-nodi
+In realtà possono esserci casi in cui si vuole temporaneamente includere in un g-nodo di livello *i* + 1 un numero di g-nodi
 di livello *i* superiore a *gsize(i)*. In questi casi si vuole dare ad uno specifico g-nodo di livello *i* un
-identificativo che è un numero maggiore di *gsize(i) - 1*.
+identificativo che è un numero maggiore di *gsize(i)* - 1.
 
 Si noti che il g-nodo, o meglio i nodi al suo interno, comporranno ciascuno il proprio Netsukuku address mettendo in
 sequenza gli identificativi dei vari g-nodi a cui appartengono. Ma se la topologia gerarchica della rete (cioè il numero
@@ -402,11 +402,11 @@ per semplicità, ma vedremo poi che i ragionamenti si possono estendere ai vari 
 
 Sia un nodo *n* border-nodo di un g-nodo *g* di livello 1 verso un altro g-nodo *h*. Supponiamo che *n* voglia migrare
 da *g* ad *h*. Sia *j* il più alto livello tale che *g* ed *h* non appartengono allo stesso g-nodo di livello *j*,
-con 1 ≤ *j* < *l*. Sia *U(g)* il g-nodo di livello *j* a cui appartiene *g*. Sia *U(h)* il g-nodo di livello *j* a cui
+con 1 ≤ *j* < *l*. Sia *U(g)* il g-nodo di livello *j* a cui appartiene *g*. Sia *U(h)* il g-nodo di livello *j* a cui
 appartiene *h*. Il g-nodo *g*, o uno dei suoi g-nodi superiori fino a *U(g)* compreso, può risultare disconnesso (split)
 a causa della migrazione di *n*. Per evitare questo effetto collaterale, quando *n* migra dal g-nodo *g* al g-nodo *h*,
 oltre ad assumere un identificativo in *h*, mantiene temporaneamente un identificativo *virtuale* in *g*. Un
-identificativo *virtuale* all'interno di un g-nodo di livello *i* + 1 è un numero maggiore di *gsize(i)* - 1.
+identificativo *virtuale* all'interno di un g-nodo di livello *i* + 1 è un numero maggiore di *gsize(i)* - 1.
 
 Questa migrazione non è realizzata dal modulo QSPN, ma dal suo utilizzatore attraverso altri meccanismi. Sia la scelta
 del g-nodo *h* in cui entrare, sia la scelta dell'identificativo in *h*, sia la scelta dell'identificativo *virtuale*
@@ -436,7 +436,7 @@ Diciamo che l'indirizzo che il nodo *n* detiene in *g*, oltre ad essere *virtual
 suoi g-nodi di livello tra 1 e *j*. Per brevità diciamo che è un indirizzo *di connettività* ai livelli da 1 a *j*.
 
 Il nodo *n* ha ora anche un identificativo nella posizione 0 in *h*. Assumiamo che potrebbe essere anche esso
-temporaneamente un identificativo *virtuale*, cioè un numero maggiore di *gsize(0) - 1*. In questo caso anche
+temporaneamente un identificativo *virtuale*, cioè un numero maggiore di *gsize(0)* - 1. In questo caso anche
 l'indirizzo che il nodo *n* detiene in *h* sarebbe *virtuale* al livello 0. Però in questo caso il modulo QSPN
 è autorizzato a mantenere archi con qualunque nodo appartenente a g-nodi esterni di qualunque livello.
 
@@ -566,16 +566,16 @@ la stessa cosa può essere orchestrata, ponendo particolare attenzione a queste 
     *   In base al livello *k* delle destinazioni dei percorsi:
         *   Se *k* > *j*, allora le destinazioni dovrebbero coincidere in *map(id<sub>0</sub>)* e
             *map(id<sub>1</sub>)*. Si possono utilizzare nelle tabelle di routing tutti i percorsi.
-        *   Se *k* = *j*, avremo:
+        *   Se *k* = *j*, avremo:
             *   In *map(id<sub>0</sub>)* percorsi che hanno per destinazione *U(h)*. Questi non vanno utilizzati nelle
                 tabelle di routing, perché ora *n* è membro di *U(h)*.
             *   In *map(id<sub>1</sub>)* percorsi che hanno per destinazione *U(g)*. Questi non vanno utilizzati nelle
                 tabelle di routing, perché *n* è ancora membro di *U(g)*.
             *   Le destinazioni diverse da quelle viste sopra dovrebbero essere presenti in percorsi in *map(id<sub>0</sub>)*
                 e *map(id<sub>1</sub>)*. Si possono utilizzare nelle tabelle di routing tutti i percorsi.
-        *   Se *i* ≤ *k* < *j*, le destinazioni dei percorsi in *map(id<sub>0</sub>)* e *map(id<sub>1</sub>)* sono
+        *   Se *i* ≤ *k* < *j*, le destinazioni dei percorsi in *map(id<sub>0</sub>)* e *map(id<sub>1</sub>)* sono
             distinte. Si **devono** utilizzare nelle tabelle di routing tutti i percorsi.
-        *   Se *k* < *i*, le destinazioni sono interne al g-nodo che ha migrato. I percorsi, anch'essi interni, sono
+        *   Se *k* < *i*, le destinazioni sono interne al g-nodo che ha migrato. I percorsi, anch'essi interni, sono
             identici e vanno utilizzati nelle tabelle di routing solo una volta, prendiamo quelli di *map(id<sub>1</sub>)*.
 *   Per gestire gli indirizzi IP *interni* al proprio g-nodo di livello tra *i* e *j*:
     *   Siccome il nodo *n* appartiene con le sue identità a diversi g-nodi (ad esempio *g0* con la sua identità
@@ -613,7 +613,7 @@ Esaminiamo i nodi in *U(h)* che sono diretti vicini di *n*:
 *   Hanno ora un arco verso il nuovo identificativo di *n* in *U(h)*. Possono usarlo, sulla base degli ETP che ora
     esso trasmette, per raggiungere *U(g)* e, potenzialmente, anche altri g-nodi.
 
-Esaminiamo i nodi in *w*, con *w* ≠ *U(g)* e *w* ≠ *U(h)*, che sono diretti vicini di *n*:
+Esaminiamo i nodi in *w*, con *w* ≠ *U(g)* e *w* ≠ *U(h)*, che sono diretti vicini di *n*:
 
 *   Avevano un arco verso *U(g)*. Potevano usarlo per raggiungere *U(h)* e, potenzialmente, anche altri g-nodi.
 *   Hanno ora un arco verso *U(h)*. Possono usarlo, sulla base degli ETP che ora esso trasmette, per raggiungere
@@ -623,9 +623,9 @@ Esaminiamo i nodi in *w*, con *w* ≠ *U(g)* e *w* ≠ *U(h)*, che sono diretti 
 
 Come abbiamo detto sopra, questi concetti valgono anche per un livello *i* maggiore di 0.
 
-Sia un g-nodo *n’* di livello *i* border-nodo di un g-nodo *g’* di livello *i* + 1. Supponiamo che *n’* voglia migrare
-da *g’* ad un diverso g-nodo *h’*, sempre di livello *i* + 1. Sia *j* il più alto livello tale che *g’* ed *h’* non
-appartengono allo stesso g-nodo di livello *j*, con *i* < *j* < *l*. Sia *U(g’)* il g-nodo di livello *j* a cui
+Sia un g-nodo *n’* di livello *i* border-nodo di un g-nodo *g’* di livello *i* + 1. Supponiamo che *n’* voglia migrare
+da *g’* ad un diverso g-nodo *h’*, sempre di livello *i* + 1. Sia *j* il più alto livello tale che *g’* ed *h’* non
+appartengono allo stesso g-nodo di livello *j*, con *i* < *j* < *l*. Sia *U(g’)* il g-nodo di livello *j* a cui
 appartiene *g’*. Sia *U(h’)* il g-nodo di livello *j* a cui appartiene *h’*.
 
 Riguardo la migrazione di *n’*, diciamo che essa può essere considerata come una operazione atomica, sebbene avvenga
@@ -645,7 +645,7 @@ livello *i* un identificativo *reale*. Da questo si deduce che un indirizzo *vir
 (identificativi) *virtuali*.
 
 L'indirizzo precedente di *id<sub>0</sub>*, inoltre, poteva essere *definitivo* o *di connettività* ai livelli da
-*k1* a *k2*. Comunque l'indirizzo attuale di *id<sub>0</sub>* sarà *di connettività* ai livelli da *i* + 1 a *j*.
+*k1* a *k2*. Comunque l'indirizzo attuale di *id<sub>0</sub>* sarà *di connettività* ai livelli da *i* + 1 a *j*.
 
 Ad eccezione della componente al livello *i* tutte le altre componenti restano invariate.
 
@@ -673,7 +673,7 @@ valgono tutte le osservazioni viste prima. Rimangono da precisare alcuni aspetti
     livello maggiore di *i*, e quindi uscire dalla fase di bootstrap a livello *i*.
 
 Il g-nodo *n’* in *g’* dovrà sparire quando la connettività interna di *g’* e dei suoi g-nodi superiori fino a *U(g’)*,
-cioè ai livelli da *i*+1 a *j*, risulterà garantita da altri collegamenti. Sarebbe bene che un solo nodo, chiamiamolo
+cioè ai livelli da *i* + 1 a *j*, risulterà garantita da altri collegamenti. Sarebbe bene che un solo nodo, chiamiamolo
 *n<sub>0</sub>* in *n’*, facesse in modo periodico la richiesta al modulo QSPN di controllare questo evento e in caso
 di esito positivo lo comunicasse a tutti i nodi in *n’*. **TODO: Verificare** che si possa identificare il Coordinator
 di *n’* per affidargli questo compito. Si può parlare di Coordinator di un g-nodo di connettività?
@@ -700,25 +700,25 @@ da *i* a *j*. Quindi *g<sub>k</sub>(m0)* e *g<sub>k</sub>(m1)* possono essere di
 e *j* compresi, sono equivalenti per i valori di *k* superiori a *j*, sono isomorfi per i valori di *k* inferiori a *i*.
 
 Consideriamo il caso in cui la strategia di ingresso porti il nodo *n* a cercare di entrare in un g-nodo di livello
-*k*, con *k* maggiore di *j*, formando un nuovo g-nodo di livello *k-1*. In questo caso il nodo *n* può sfruttare il
+*k*, con *k* maggiore di *j*, formando un nuovo g-nodo di livello *k* - 1. In questo caso il nodo *n* può sfruttare il
 suo arco con il g-nodo *g<sub>k-1</sub>(m0)* per vedere se può entrare nel g-nodo *g<sub>k</sub>(m0)* (che è equivalente
-al g-nodo *g<sub>k</sub>(m1)*). Se poi il nodo *n* forma un nuovo g-nodo di livello *k-1* nel g-nodo *g<sub>k</sub>(m0)*,
+al g-nodo *g<sub>k</sub>(m1)*). Se poi il nodo *n* forma un nuovo g-nodo di livello *k* - 1 nel g-nodo *g<sub>k</sub>(m0)*,
 allora costituisce un arco con la sola identità *m0*. Se invece entra, grazie ad altri suoi vicini, in un diverso
 g-nodo di livello *k*, anche in questo caso costituisce un arco con la sola identità *m0*.
 
 Consideriamo il caso in cui la strategia di ingresso porti il nodo *n* a cercare di entrare in un g-nodo di livello
-*k*, con *k* tra *i* e *j* compresi, formando un nuovo g-nodo di livello *k-1*. In questo caso il nodo *n* può sfruttare
+*k*, con *k* tra *i* e *j* compresi, formando un nuovo g-nodo di livello *k* - 1. In questo caso il nodo *n* può sfruttare
 il suo arco con il g-nodo *g<sub>k-1</sub>(m0)* per vedere se può entrare nel g-nodo *g<sub>k</sub>(m0)*, o può
 sfruttare il suo arco con il g-nodo *g<sub>k-1</sub>(m1)* per vedere se può entrare nel g-nodo *g<sub>k</sub>(m1)*.
-Se poi il nodo *n* forma un nuovo g-nodo di livello *k-1* nel g-nodo *g<sub>k</sub>(m0)*, allora costituisce un arco
+Se poi il nodo *n* forma un nuovo g-nodo di livello *k* - 1 nel g-nodo *g<sub>k</sub>(m0)*, allora costituisce un arco
 con la sola identità *m0*. Se invece entra nel g-nodo *g<sub>k</sub>(m1)*, allora costituisce un arco con l'identità
 *m1* e anche con la *m0*. Se invece entra, grazie ad altri suoi vicini, in un diverso g-nodo di livello *k*, anche in
 questo caso costituisce un arco con la sola identità *m0*.
 
 Consideriamo infine il caso in cui la strategia di ingresso porti il nodo *n* a cercare di entrare in un g-nodo di
-livello *k*, con *k* minore di *i*, formando un nuovo g-nodo di livello *k-1*. In questo caso il nodo *n* può sfruttare
+livello *k*, con *k* minore di *i*, formando un nuovo g-nodo di livello *k* - 1. In questo caso il nodo *n* può sfruttare
 il suo arco con il g-nodo *g<sub>k-1</sub>(m0)* per vedere se può entrare nel g-nodo *g<sub>k</sub>(m0)* (che è
-isomorfo al g-nodo *g<sub>k</sub>(m1)*). Se poi il nodo *n* forma un nuovo g-nodo di livello *k-1* nel g-nodo
+isomorfo al g-nodo *g<sub>k</sub>(m1)*). Se poi il nodo *n* forma un nuovo g-nodo di livello *k* - 1 nel g-nodo
 *g<sub>k</sub>(m0)*, allora il nodo *n* dovrà assumere una identità *definitiva* *n0* e una *di connettività* *n1*.
 Con la *n0* costituisce un arco con la sola identità *m0*; con la *n1* costituisce un arco con la sola *m1*. Se invece
 entra, grazie ad altri suoi vicini, in un diverso g-nodo di livello *k*, in questo caso assume una sola identità e
@@ -727,8 +727,8 @@ costituisce un arco con la sola identità *m0*.
 * * *
 
 Consideriamo un nodo *n* che appartiene (come border-nodo) ad un g-nodo *g* di livello *k* che migra da *A* in *B* di
-livello *k* + 𝜀. Per ogni vicino *m* che non appartiene a *g* e che detiene almeno una identità *di connettività* a
-un livello minore di *k* + 𝜀, il nodo *n* deve valutare se aggiungere/mantenere/rimuovere un arco con quella identità.
+livello *k* + 𝜀. Per ogni vicino *m* che non appartiene a *g* e che detiene almeno una identità *di connettività* a
+un livello minore di *k* + 𝜀, il nodo *n* deve valutare se aggiungere/mantenere/rimuovere un arco con quella identità.
 
 Si valuta secondo la regola vista in questo paragrafo: se l'identità *m1* di *m* è *di connettività* ai livelli da
 *i* a *j* essa non mantiene archi con nodi che non appartengono al suo g-nodo di livello *j*.
@@ -741,13 +741,13 @@ su quali archi formare va valutata come detto prima.
 
 ### <a name="Rimozione_indirizzo_connettivita"></a>Rimozione dell'indirizzo di connettività di un g-nodo dopo la sua migrazione
 
-Abbiamo visto come la migrazione di un g-nodo *g* di livello *i* (con 0 ≤ *i* < *l* - 1) porta alla creazione di
-una identità *g1* che gestisce un indirizzo *di connettività* ai livelli da *i* + 1 a *j*, con *i* < *j* < *l*.
+Abbiamo visto come la migrazione di un g-nodo *g* di livello *i* (con 0 ≤ *i* < *l* - 1) porta alla creazione di
+una identità *g1* che gestisce un indirizzo *di connettività* ai livelli da *i* + 1 a *j*, con *i* < *j* < *l*.
 
 Sia *n* un singolo nodo appartenente a *g*. Quindi *n* ha una identità *n1* in *g1*. Il nodo *n1* vuole valutare se
-sia possibile rimuovere l'indirizzo *di connettività* ai livelli da *i* + 1 a *j* che *g<sub>i</sub>(n1)* detiene
-in *g<sub>i+1</sub>(n1)*. Quindi *n1* vuole stabilire se la rimozione di *g<sub>i</sub>(n1)* **provoca** o **non provoca**
-lo split di uno dei g-nodi da *g<sub>i+1</sub>(n1)* a *g<sub>j</sub>(n1)*. Non servirà mai verificare in
+sia possibile rimuovere l'indirizzo *di connettività* ai livelli da *i* + 1 a *j* che *g<sub>i</sub>(n1)* detiene
+in *g<sub>i + 1</sub>(n1)*. Quindi *n1* vuole stabilire se la rimozione di *g<sub>i</sub>(n1)* **provoca** o **non provoca**
+lo split di uno dei g-nodi da *g<sub>i + 1</sub>(n1)* a *g<sub>j</sub>(n1)*. Non servirà mai verificare in
 *g<sub>l</sub>(n1)*, vale a dire sapere se provoca uno split di tutta la rete, perché la rimozione è fatta per
 migrare ad un altro g-nodo pur rimanendo nella stessa rete.
 
@@ -756,7 +756,7 @@ Questa domanda può essere posta al QspnManager gestito dall'identità *n1*.
 Mentre il modulo QSPN valuta la risposta con le modalità che illustreremo sotto, il suo utilizzatore deve assicurarsi
 che un altro g-nodo dentro (cioè di livello direttamente inferiore) i g-nodi interessati non faccia le stesse
 considerazioni. Cioè, prima di fare la richiesta al modulo QSPN, il suo utilizzatore deve acquisire un *lock* su
-tutti i g-nodi a cui ora appartiene di livello da *i+1* a *j*. Come questo avviene non è di competenza del modulo QSPN.
+tutti i g-nodi a cui ora appartiene di livello da *i* + 1 a *j*. Come questo avviene non è di competenza del modulo QSPN.
 
 Dopo che il modulo QSPN ha completato la valutazione, se questa ammette la rimozione del g-nodo, il nodo *n* deve
 richiedere ai vari g-nodi interessati di attendere alcuni istanti e poi rimuovere il lock. Intanto, il nodo *n*
@@ -774,19 +774,19 @@ non ottempera alla sua rimozione, comunque il g-nodo non resta bloccato per semp
 
 #### <a name="Rimozione_indirizzo_connettivita_implementazione"></a>Implementazione
 
-Se il g-nodo *g<sub>i</sub>(n1)* non ha alcun vicino in *g<sub>i+1</sub>(n1)*, cioè *g<sub>i+1</sub>(n1)* contiene
-solo *g<sub>i</sub>(n1)*, allora la domanda da porre è direttamente se la rimozione di *g<sub>i+1</sub>(n1)*
-**provoca** o **non provoca** lo split di uno dei g-nodi da *g<sub>i+2</sub>(n1)* a *g<sub>j</sub>(n1)*.
+Se il g-nodo *g<sub>i</sub>(n1)* non ha alcun vicino in *g<sub>i + 1</sub>(n1)*, cioè *g<sub>i + 1</sub>(n1)* contiene
+solo *g<sub>i</sub>(n1)*, allora la domanda da porre è direttamente se la rimozione di *g<sub>i + 1</sub>(n1)*
+**provoca** o **non provoca** lo split di uno dei g-nodi da *g<sub>i + 2</sub>(n1)* a *g<sub>j</sub>(n1)*.
 
-Bisogna analizzare solo i casi in cui il g-nodo *g<sub>i</sub>(n1)* ha uno o più vicini in *g<sub>i+1</sub>(n1)*.
+Bisogna analizzare solo i casi in cui il g-nodo *g<sub>i</sub>(n1)* ha uno o più vicini in *g<sub>i + 1</sub>(n1)*.
 
-La rimozione di *g<sub>i</sub>(n1)* **non provoca** lo split di uno dei g-nodi da *g<sub>i+1</sub>(n1)* a *g<sub>j</sub>(n1)* se:
+La rimozione di *g<sub>i</sub>(n1)* **non provoca** lo split di uno dei g-nodi da *g<sub>i + 1</sub>(n1)* a *g<sub>j</sub>(n1)* se:
 
-*   Per ogni g-nodo *x* di livello da *i* a *j* - 1 che vedo nella mappa di *n1*,
-    cioè *x* ∈ *g<sub>i+1</sub>(n1)* ∪ ... ∪ *g<sub>j</sub>(n1)*:
+*   Per ogni g-nodo *x* di livello da *i* a *j* - 1 che vedo nella mappa di *n1*,
+    cioè *x* ∈ *g<sub>i + 1</sub>(n1)* ∪ ... ∪ *g<sub>j</sub>(n1)*:
     *   Per ogni g-nodo *y* di livello *i* vicino di *g<sub>i</sub>(n1)* e che vedo nella mappa di *n1*,
-        cioè *y* ∈ *𝛤<sub>i</sub>(g<sub>i</sub>(n1))*, *y* ∈ *g<sub>i+1</sub>(n1)*:
-        *   Se *x* ≠ *y*:
+        cioè *y* ∈ *𝛤<sub>i</sub>(g<sub>i</sub>(n1))*, *y* ∈ *g<sub>i + 1</sub>(n1)*:
+        *   Se *x* ≠ *y*:
             *   Esiste un percorso nella mappa di *n1* che ha per destinazione *x* e passa per *y*.
 
 Sicuramente, se *y* ha nella sua mappa dei percorsi per *x* che non passano per *g<sub>i</sub>(n1)*, allora li
@@ -798,7 +798,7 @@ ogni livello *i* da 0 a *d.lvl*, per ogni g-nodo *p* di livello *i* diretto vici
 almeno 1 percorso, se esiste, per *d* che passa per *p*.
 
 Grazie a questo vincolo, se la condizione detta sopra non è soddisfatta, questo è sufficiente ad affermare che la
-rimozione di *g<sub>i</sub>(n1)* **provoca** lo split di uno dei g-nodi da *g<sub>i+1</sub>(n1)* a *g<sub>j</sub>(n1)*.
+rimozione di *g<sub>i</sub>(n1)* **provoca** lo split di uno dei g-nodi da *g<sub>i + 1</sub>(n1)* a *g<sub>j</sub>(n1)*.
 
 ## <a name="requisiti"></a>Requisiti
 
@@ -850,28 +850,28 @@ Ogni istanza del modulo QSPN creata per gestire una precisa identità del nodo:
 *   Fornisce metodi per:
     *   Chiedere se il nodo ha completato il bootstrap nella rete. Restituisce un booleano.
     *   Dato un livello *i*, ottenere l'elenco dei g-nodi *reali* di livello *i* presenti nella mappa
-        (quindi nel mio g-nodo di livello *i + 1*). Restituisce una lista di HCoord. Se il nodo è nella fase
+        (quindi nel mio g-nodo di livello *i* + 1). Restituisce una lista di HCoord. Se il nodo è nella fase
         di bootstrap a livello *i* o inferiore, lancia eccezione QspnBootstrapInProgressError.
     *   Relativamente ad un g-nodo a cui il nodo non appartiene, vale a dire dato un HCoord *dst*, ottenere
         tutti i percorsi a disposizione per raggiungerlo, ordinati per costo crescente e per primi quelli
         disgiunti. Metodo List<IQspnNodePath> *get_paths_to*. Restituisce una lista di IQspnNodePath. Se il
         nodo è nella fase di bootstrap a livello *dst.lvl* o inferiore, lancia eccezione QspnBootstrapInProgressError.
     *   Relativamente ad uno dei g-nodi a cui appartiene il nodo, vale a dire dato un livello *i*
-        da *0* a *l* compresi, ottenere:
+        da 0 a *l* compresi, ottenere:
         *   il fingerprint del g-nodo. Restituisce un IQspnFingerprint. Se il nodo è nella fase di bootstrap
             a livello *i* o inferiore, lancia eccezione QspnBootstrapInProgressError.
         *   una approssimazione del numero di singoli nodi al suo interno. In questo computo non si considerano
             le identità *di connettività*. Restituisce un intero. Se il nodo è nella fase di bootstrap a livello
             *i* o inferiore, lancia eccezione QspnBootstrapInProgressError.
 *   Se l'istanza gestisce una identità *di connettività* ai livelli da *i* a *j* nel g-nodo *w* di livello
-    *i* - 1, fornisce metodi per:
+    *i* - 1, fornisce metodi per:
     *   Rimuovere gli archi verso diretti vicini esterni al proprio g-nodo di livello *j*.
     *   Verificare la connettività dei propri g-nodi di livello da *i* a *j* in assenza del g-nodo *w*.
     *   Istruire i propri vicini interni a *w* che *w* deve essere dismesso. I vicini dovranno propagare
         l'informazione in tutto *w*.
     *   Segnalare ai propri vicini esterni a *w* che *w* sta per essere dismesso.
 *   Se l'istanza gestisce una identità *di connettività* ai livelli da *i* a *j* nel g-nodo *w* di livello
-    *i* - 1, emette un segnale per:
+    *i* - 1, emette un segnale per:
     *   L'identità che detiene questa istanza del modulo QSPN va rimossa, perché *w* viene dismesso.
 
 ## <a name="Classi_e_interfacce"></a>Classi e interfacce
@@ -885,8 +885,8 @@ l'interfaccia IQspnNaddr.
 Questi i metodi delle interfacce note al modulo:
 
 *   IQspnNaddr
-    *   leggere i parametri della topologia della rete, cioè *l* e *gsize(i)* con *i* da 0 a *l* - 1;
-    *   leggere *pos(i)* di questo indirizzo, con *i* da 0 a *l* - 1.
+    *   leggere i parametri della topologia della rete, cioè *l* e *gsize(i)* con *i* da 0 a *l* - 1;
+    *   leggere *pos(i)* di questo indirizzo, con *i* da 0 a *l* - 1.
 *   IQspnMyNaddr (che richiede IQspnNaddr)
     *   dato un IQspnNaddr (indirizzo di un nodo) ottenere il HCoord riferito al massimo distinto g-nodo
         che lo contiene, distinto rispetto al nostro nodo.
@@ -904,8 +904,8 @@ sua istanza contiene le coordinate gerarchiche di un g-nodo nella mappa del  nod
 I passi che costituiscono un percorso noto verso una destinazione sono rappresentati da una doppia sequenza di *k* elementi:
 
 *   *hops* : sequenza di *k* istanze di HCoord.
-*   *arcs* : sequenza di *k* identificativi di arco, dove arcs[0] indica l'arco che congiunge il nodo corrente
-    a hops[0], e arcs[j], con j > 0, indica l'arco che congiunge hops[j-1] a hops[j].
+*   *arcs* : sequenza di *k* identificativi di arco, dove `arcs[0]` indica l'arco che congiunge il nodo corrente
+    a `hops[0]`, e `arcs[j]`, con *j* > 0, indica l'arco che congiunge `hops[j-1]` a `hops[j]`.
 
 È inclusa in testa la coordinata che rappresenta il vicino che usiamo come gateway (o meglio il suo massimo distinto
 g-nodo rispetto a noi) e in coda la coordinata che rappresenta la destinazione.
@@ -928,22 +928,22 @@ di nodo (a livello 0) e il modulo ne conosce l'interfaccia IQspnFingerprint. Il 
 L'interfaccia IQspnFingerprint consente di:
 
 *   Leggere il livello del g-nodo a cui si riferisce (metodo *i_qspn_get_level*).
-*   Confrontare due fingerprint che si riferiscono a due distinti g-nodi di livello *i-1* appartenenti al mio stesso
-    g-nodo di livello *i*, con *1 ≤ i ≤ l*, dove *l* è il numero di livelli. Decidere quale sia più anziano all'interno
+*   Confrontare due fingerprint che si riferiscono a due distinti g-nodi di livello *i* - 1 appartenenti al mio stesso
+    g-nodo di livello *i*, con 1 ≤ *i* ≤ *l*, dove *l* è il numero di livelli. Decidere quale sia più anziano all'interno
     del mio g-nodo.  
     In effetti questo metodo non è esposto dall'interfaccia IQspnFingerprint, ma solo usato internamente alla classe
     (fornita dall'utilizzatore del modulo) per implementare il metodo *i_qspn_construct* descritto sotto.
-*   Confrontare due fingerprint che si riferiscono ad un unico g-nodo di livello *i-1* appartenente al mio stesso
-    g-nodo di livello *i*, con *1 ≤ i ≤ l*, dove *l* è il numero di livelli, i quali fingerprint sono stati portati
+*   Confrontare due fingerprint che si riferiscono ad un unico g-nodo di livello *i* - 1 appartenente al mio stesso
+    g-nodo di livello *i*, con 1 ≤ *i* ≤ *l*, dove *l* è il numero di livelli, i quali fingerprint sono stati portati
     a conoscenza del mio nodo attraverso distinti percorsi. Stabilire se sono identici (metodo *i_qspn_equals*).
-*   Confrontare due fingerprint che si riferiscono ad un unico g-nodo di livello *i-1* appartenente al mio stesso
-    g-nodo di livello *i*, con *2 ≤ i ≤ l*, dove *l* è il numero di livelli, i quali fingerprint sono stati portati
+*   Confrontare due fingerprint che si riferiscono ad un unico g-nodo di livello *i* - 1 appartenente al mio stesso
+    g-nodo di livello *i*, con 2 ≤ *i* ≤ *l*, dove *l* è il numero di livelli, i quali fingerprint sono stati portati
     a conoscenza del mio nodo attraverso distinti percorsi **e** non sono identici. Stabilire a quale dei due sia
-    stato assegnato l'identificativo dal g-nodo di livello *i-2* più anziano (metodo *i_qspn_elder_seed*).  
+    stato assegnato l'identificativo dal g-nodo di livello *i* - 2 più anziano (metodo *i_qspn_elder_seed*).  
     In questo caso il minimo valore di *i* è 2, in quanto non ha senso confrontare due fingerprint dello stesso singolo
     nodo (g-nodo di livello 0) che certamente non può subire uno split.
-*   Partendo dal fingerprint del proprio g-nodo *g* di livello *i-1*, dati i fingerprint di tutti gli altri g-nodi
-    conosciuti di livello *i-1* dentro il mio g-nodo *h* di livello *i*, con *1 ≤ i ≤ l*, dove *l* è il numero di
+*   Partendo dal fingerprint del proprio g-nodo *g* di livello *i* - 1, dati i fingerprint di tutti gli altri g-nodi
+    conosciuti di livello *i* - 1 dentro il mio g-nodo *h* di livello *i*, con 1 ≤ *i* ≤ *l*, dove *l* è il numero di
     livelli, ottenere l'istanza di fingerprint del g-nodo *h* (metodo *i_qspn_construct*).
 
 * * *
@@ -956,7 +956,7 @@ questo modulo. La sua interfaccia nota al modulo (IQspnCost) gli consente di:
     Il funzionamento di questo comparatore è il seguente. Un oggetto IQspnCost indica una misura del costo di un
     percorso. Quindi dato il costo *a* e il costo *b* si dice che *a* > *b* se inviare un messaggio per il tramite
     di *a* è più "oneroso" che inviarlo per il tramite di *b*. Si traduce questa formula con *a.i_qspn_compare_to(b)* > 0.  
-    Analogamente per gli altri operatori di confronto ( = , < , ≤ , ≥ , ≠ ).
+    Analogamente per gli altri operatori di confronto ( = , < , ≤ , ≥ , ≠ ).
 *   Confrontare due costi (riferiti allo stesso percorso) per valutare se c'è stata una variazione
     significativa (metodo *i_qspn_important_variation*).
 
@@ -977,16 +977,16 @@ costo indipendentemente dalla metrica a cui si riferisce (latenza, larghezza di 
 *c<sub>n</sub>* la costante costo *null*, sia *c<sub>d</sub>* la costante costo *dead* e sia *w* un costo che
 rappresenta una effettiva misurazione di una qualsiasi metrica. Abbiamo queste proprietà:
 
-*   c<sub>n</sub> = c<sub>n</sub>
-*   c<sub>n</sub> < w
-*   c<sub>n</sub> < c<sub>d</sub>
-*   w < c<sub>d</sub>
-*   c<sub>d</sub> = c<sub>d</sub>
-*   c<sub>n</sub> + c<sub>n</sub> = c<sub>n</sub>
-*   c<sub>n</sub> + w = w
-*   c<sub>n</sub> + c<sub>d</sub> = c<sub>d</sub>
-*   c<sub>d</sub> + w = c<sub>d</sub>
-*   c<sub>d</sub> + c<sub>d</sub> = c<sub>d</sub>
+*   c<sub>n</sub> = c<sub>n</sub>
+*   c<sub>n</sub> < w
+*   c<sub>n</sub> < c<sub>d</sub>
+*   w < c<sub>d</sub>
+*   c<sub>d</sub> = c<sub>d</sub>
+*   c<sub>n</sub> + c<sub>n</sub> = c<sub>n</sub>
+*   c<sub>n</sub> + w = w
+*   c<sub>n</sub> + c<sub>d</sub> = c<sub>d</sub>
+*   c<sub>d</sub> + w = c<sub>d</sub>
+*   c<sub>d</sub> + c<sub>d</sub> = c<sub>d</sub>
 
 * * *
 
@@ -1007,9 +1007,9 @@ Un ETP è una istanza della classe EtpMessage che è interna al modulo. Essa è 
 *   L'indirizzo del nodo *n* che produce l'ETP. È una istanza di IQspnNaddr. Il modulo assume che sia
     anche un oggetto serializzabile. L'utilizzatore del modulo deve provvedere che la classe che concretizza
     IQspnNaddr passata come proprio indirizzo nel costruttore sia serializable. Proprietà IQspnNaddr *node_address*.
-*   La lista di fingerprint per i g-nodi di *n* ai livelli da 0 a *l-1*. È una lista di istanze di IQspnFingerprint.
+*   La lista di fingerprint per i g-nodi di *n* ai livelli da 0 a *l* - 1. È una lista di istanze di IQspnFingerprint.
     Il modulo assume che ognuna sia anche un oggetto serializzabile. Proprietà List<IQspnFingerprint> *fingerprints*.
-*   La lista del numero approssimativo di nodi all'interno dei g-nodi di *n* ai livelli da 0 a *l-1*. È una
+*   La lista del numero approssimativo di nodi all'interno dei g-nodi di *n* ai livelli da 0 a *l* - 1. È una
     lista di interi. Proprietà List<int> *nodes_inside*.
 *   La lista dei g-nodi attraversati da questo ETP. Proprietà List<HCoord> *hops*.
 *   La lista *P* dei percorsi. Ogni percorso *p* ∈ *P* è una istanza di EtpPath, descritta sotto. Proprietà
@@ -1030,8 +1030,8 @@ Essa è serializzabile. Contiene:
 *   Il fingerprint del g-nodo *d* come riportato da questo percorso. È una istanza dell'interfaccia IQspnFingerprint.
     Il modulo assume che sia anche un oggetto serializzabile. Proprietà IQspnFingerprint *fingerprint*.
 *   Il numero di nodi nel g-nodo *d* come riportato da questo percorso. Proprietà int *nodes_inside*.
-*   Una lista di *l* booleani il cui elemento *i*-esimo (da 0 a *l-1*) dice se va ignorato questo percorso dai nodi
-    che non appartengono al g-nodo di livello *i* del nodo *n* che ha prodotto l'ETP. In realtà per *i* = 0 il
+*   Una lista di *l* booleani il cui elemento *i*-esimo (da 0 a *l* - 1) dice se va ignorato questo percorso dai nodi
+    che non appartengono al g-nodo di livello *i* del nodo *n* che ha prodotto l'ETP. In realtà per *i* = 0 il
     valore è sempre *false* ma per semplicità teniamo anche questo valore. Proprietà List<bool> *ignore_outside*.
 
 * * *
