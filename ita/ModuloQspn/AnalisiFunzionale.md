@@ -1,5 +1,6 @@
 # Modulo QSPN - Analisi Funzionale
 
+1.  [Terminologia](#Terminologia)
 1.  [Ruolo del modulo](#Ruolo_del_modulo)
 1.  [Conoscenze obiettivo del nodo](#Conoscenze_obiettivo)
     1.  [Vicini del nodo](#Vicini_del_nodo)
@@ -19,6 +20,22 @@
 1.  [Requisiti](#requisiti)
 1.  [Deliverable](#Deliverable)
 1.  [Classi e interfacce](#Classi_e_interfacce)
+
+## <a name="Terminologia"></a>Terminologia
+
+Sappiamo che il programma che usa il modulo Qspn è in esecuzione su un sistema. In tale sistema possono esistere
+diverse *identità*, ognuna delle quali costituisce una singola entità della rete Netsukuku, detta anche *nodo del grafo*
+o più brevemente *nodo*.
+
+Il modulo Qspn è un modulo *di identità*, nel senso che quando parliamo delle sue operazioni, dei dati che
+mantiene in memoria, e così via, facciamo riferimento ad una particolare *istanza* del modulo (concretamente
+una istanza della classe QspnManager) che è associata ad una particolare identità e non al sistema in generale.
+Per ogni identità che esiste nel sistema avremo quindi una istanza del modulo Qspn.
+
+Inoltre, quando il modulo si interfaccia con il medesimo modulo nei sistemi vicini, lo fa sempre identificando
+una particolare identità nel suo sistema e una particolare identità nel sistema vicino.
+
+Per questo nel presente documento si farà principalmente riferimento ai *nodi* della rete.
 
 ## <a name="Ruolo_del_modulo"></a>Ruolo del modulo
 
@@ -181,7 +198,7 @@ A livello 0, il fingerprint di un nodo è composto da un identificativo del nodo
 lista di valori che  rappresentano l'anzianità ai vari livelli dal livello 0 al livello *l-1*. L'anzianità a livello
 0 indica quanto è vecchio il nodo  rispetto agli altri nodi del suo stesso g-nodo di livello 1; a livello *i* indica
 quanto è vecchio il suo g-nodo di livello *i* rispetto agli altri g-nodi di livello *i* del suo stesso g-nodo di
-livello* i+1*. L'oggetto fingerprint del nodo viene passato al modulo QSPN dal suo utilizzatore; quindi come vengano
+livello *i+1*. L'oggetto fingerprint del nodo viene passato al modulo QSPN dal suo utilizzatore; quindi come vengano
 generati o recuperati i dati in esso contenuti non è di pertinenza del modulo, e nemmeno in che modo sia implementato
 il confronto fra due valori di anzianità.
 
