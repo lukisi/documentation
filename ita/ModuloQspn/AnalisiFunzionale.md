@@ -455,24 +455,24 @@ nuova, che rimane, è detta *principale*.
 
 Alcune considerazioni sulle identità *principale* e *di connettività*.
 
-*   Un nodo ha in ogni momento uno e un solo indirizzo *principale*. Può avere, in un particolare momento, 0
-    o 1 o più indirizzi *di connettività* ai livelli da 1 a *x*.
-*   Un indirizzo *di connettività* si crea solo a causa di una migrazione. Quando migra un g-nodo *g* di livello
+*   In un sistema in ogni momento esiste una e una sola identità *principale*. In un sistema possono esistere,
+    in un particolare momento, 0 o 1 o più identità *di connettività* ai livelli da 1 a *x*.
+*   Un'identità *di connettività* si crea solo a causa di una migrazione. Quando migra un g-nodo *g* di livello
     *i*, le componenti del suo indirizzo Netsukuku sono sicuramente tutte *reali*. Quindi l'indirizzo di ogni singolo
     nodo che appartiene al g-nodo *g* ha la componente a livello *i* e quelle superiori che sono sicuramente *reali*,
-    ma le altre componenti ai livelli inferiori potevano anche essere già *virtuali*. Sotto verrà dettagliato come si
+    ma le altre componenti ai livelli inferiori potevano anche essere già *virtuali*. Cioè, un singolo nodo che
+    appartiene a *g* poteva essere l'identità *principale* del suo sistema, oppure poteva già essere una
+    identità *di connettività* del suo sistema. Sotto verrà dettagliato come si
     trasforma l'indirizzo del singolo nodo che appartiene al g-nodo che migra.
-*   Un indirizzo *di connettività* ai livelli da 1 a *x* è sempre anche *virtuale* poiché la sua componente a livello
-    0 è *virtuale*; mentre uno *principale* può essere *virtuale* o *reale*.
+*   Un'identità *di connettività* ai livelli da 1 a *x* ha sempre un indirizzo Netsukuku *virtuale* poiché la sua
+    componente a livello 0 è *virtuale*; mentre un'identità *principale* può avere un indirizzo *virtuale* o *reale*.
 
-Il nodo *n* insieme ai due distinti indirizzi detiene, per quanto riguarda il modulo QSPN, due distinti fingerprint
-a livello 0, due distinti set di archi, due distinte mappe di percorsi e così via. Diciamo che il nodo *n* ha due
-*identità*. Più precisamente, considerando quanto esposto nella trattazione del
+Considerando quanto esposto nella trattazione del
 modulo [Identities](../ModuloIdentities/AnalisiFunzionale.md), diciamo che:
 
-*   Indichiamo con *id<sub>0</sub>* l'identità che aveva il nodo *n* in *g*.
+*   Indichiamo con *id<sub>0</sub>* l'identità che aveva il sistema *n* in *g*.
 *   L'identità di *id<sub>0</sub>* diventa una identità *di connettività* ai livelli da 1 a *j*.
-*   Si aggiunge l'identità *id<sub>1</sub>*, cioè l'identità di *n* in *h*. Essa prende le caratteristiche che erano
+*   Si aggiunge nel sistema *n* l'identità *id<sub>1</sub>*, in *h*. Essa prende le caratteristiche che erano
     prima di *id<sub>0</sub>*: cioè, se *id<sub>0</sub>* era l'identità *principale* ora *id<sub>1</sub>* è
     l'identità *principale*, se *id<sub>0</sub>* era *di connettività* ai livelli da *x* a *y* ora *id<sub>1</sub>*
     è *di connettività* ai livelli da *x* a *y*.
@@ -489,23 +489,25 @@ Bisogna anche ricordare che nell'identità *id<sub>0</sub>* ora il numero appros
 del g-nodo di livello 0 è 0.
 
 Il set di archi di *id<sub>0</sub>* resta invariato, ma ogni arco in esso subisce delle variazioni. Il set di archi
-di *id<sub>1</sub>* è un nuovo set che viene popolato. Vediamo come questo avviene.
+di *id<sub>1</sub>* è un nuovo set che viene popolato.
 
-Si tratta di una operazione che non è di competenza del modulo QSPN, bensì del suo utilizzatore. Inizialmente il nodo,
-come è stato delineato nella trattazione del modulo Identities, per ogni *arco-identità* di *id<sub>0</sub>* crea un
-*arco-identità* di *id<sub>1</sub>*. Si tratta di una operazione che comprende:
+Le modifiche subite dagli archi di *id<sub>0</sub>* non coinvolgono in alcun modo il modulo QSPN. Il suo utilizzatore,
+per il tramite dei servizi del modulo Identities, per ogni *arco-identità* di *id<sub>0</sub>* crea un
+*arco-identità* di *id<sub>1</sub>* e apporta delle variazioni al primo. Si tratta di una operazione che comprende:
 
 *   Realizzazione di un distinto network stack dotato di distinte pseudo-interfacce di rete.
 *   Concertazione coi diretti vicini, i quali possono essere anch'essi interessati dalla migrazione oppure solo vedersi
     aggiungere un nuovo *arco-identità*.
-
-Gli *archi-identità* di *id<sub>0</sub>* subiscono in questo processo una variazione: diventano ora supportati dalla
-pseudo-interfaccia appena creata sul nuovo network stack. Gli oggetti *arco* che sono stati comunicati al modulo QSPN
-per la sua identità *id<sub>0</sub>* rifletteranno questa variazione. Non cambia però il loro identificativo di arco.
-Avevamo detto che l'identificativo dell'arco è un concetto interno al modulo QSPN, di cui l'utilizzatore non si deve occupare.
-
-Invece sugli *archi-identità* nuovi di *id<sub>1</sub>* vengono costruiti ora gli oggetti *arco* da comunicare al modulo
-QSPN per la sua identità *id<sub>1</sub>*. Una volta passati al modulo, essi otterranno un nuovo identificativo di arco.
+*   Gli *archi-identità* di *id<sub>0</sub>* diventano ora supportati dalla pseudo-interfaccia appena creata
+    sul nuovo network stack.  
+    Gli oggetti *arco* che sono stati comunicati al modulo QSPN per la sua identità *id<sub>0</sub>* rifletteranno
+    al loro interno questa variazione, ma tale informazione non influenza le operazioni che sono esposte dall'interfaccia
+    IQspnArc. Cioè, non interessa affatto il modulo Qspn.  
+    Inoltre non cambia il loro identificativo di arco. Avevamo detto che l'identificativo dell'arco è un concetto
+    interno al modulo QSPN, di cui l'utilizzatore non si deve occupare.
+*   Sugli *archi-identità* nuovi di *id<sub>1</sub>* vengono costruiti ora gli oggetti *arco* da comunicare al
+    modulo QSPN per la sua identità *id<sub>1</sub>*. Una volta passati al modulo, essi otterranno un nuovo
+    identificativo di arco.
 
 La mappa di *id<sub>0</sub>* resta invariata. La mappa di *id<sub>1</sub>* è una nuova istanza.
 
@@ -515,9 +517,7 @@ restano validi. Anche i percorsi che ha reso pubblici ai suoi vicini non hanno s
 bisogno di inviare ETP correttivi per essi. Ci sono due informazioni soltanto che deve propagare:
 
 *   Che non è più possibile raggiungere tramite lui il suo vecchio identificativo *reale* in *g*.
-*   Che è possibile raggiungere tramite lui il suo nuovo identificativo *virtuale* in *g*.  
-    Questa informazione è in realtà inutile. Infatti un percorso verso un g-nodo *di connettività* non viene mantenuto
-    nelle mappe dei nodi.
+*   Che è possibile raggiungere tramite lui il suo nuovo identificativo *virtuale* in *g*.
 
 È una informazione che interessa soltanto i nodi che appartengono a *g*. È sufficiente un unico ETP che dice che è
 stato rimosso il percorso verso il vecchio identificativo.
