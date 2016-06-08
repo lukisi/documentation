@@ -9,7 +9,7 @@
     1.  [Mappa gerarchica della rete](#Mappa_gerarchica_rete)
     1.  [Fingerprint](#Fingerprint)
     1.  [Elementi memorizzati nella mappa](#Elementi_memorizzati_mappa)
-    1.  [Netsukuku Address](#Netsukuku_address)
+    1.  [Indirizzo Netsukuku](#Indirizzo_Netsukuku)
     1.  [Migrazioni e indirizzi IP interni](#Migrazioni_e_indirizzi_interni)
     1.  [Nodi virtuali](#Nodi_virtuali)
         1.  [Al livello 0](#Nodi_virtuali_livello_0)
@@ -167,7 +167,7 @@ In ogni singolo nodo, il modulo QSPN ha il compito di costruire e tenere in memo
 della rete.
 
 Per ogni livello *i* della rete, da 0 a *l* - 1, un nodo *n* deve memorizzare in tale mappa tutti i g-nodi di
-livello *i* (esclusi i g-nodi *di connettività*) appartenenti al suo stesso g-nodo di livello *i* + 1 e dei quali
+livello *i* appartenenti al suo stesso g-nodo di livello *i* + 1 e dei quali
 *n* conosce l'esistenza, cioè conosce almeno un percorso per raggiungerli.  Per ognuno vanno memorizzati tutti i
 percorsi noti e per ogni percorso alcune informazioni che elencheremo più sotto.
 
@@ -223,8 +223,8 @@ del  fingerprint di quel g-nodo. Di conseguenza ogni nodo è in grado di  comput
 livello *i*.
 
 Il fingerprint a livello *l* non ha valori di anzianità e nemmeno necessita di ricordare l'anzianità del g-nodo di
-livello *l* - 1 in esso contenuto che gli ha dato il suo identificativo. Il fingerprint a livello *l* ha solo un
-identificativo. Questo è l'identificativo della rete.
+livello *l* - 1 in esso contenuto che gli ha dato il suo identificativo. Il fingerprint a livello *l* ricorda solo
+l'identificativo del g-nodo di livello *l* - 1 più anziano in esso contenuto. Questo, per definizione, è l'identificativo della rete.
 
 Questo  meccanismo di costruzione del fingerprint di un g-nodo a partire da  quelli dei g-nodi in esso contenuti
 (sulla base della conoscenza del  nodo corrente) fa in modo che al variare della rete qualche nodo rilevi
@@ -273,7 +273,7 @@ Basandosi sul fatto che un fingerprint di un g-nogo di livello maggiore di 0 ha 
 che gli ha dato il suo identificativo, il nodo *y* può individuare quale dei due fingerprint sia stato assegnato
 a *g* dal nodo più anziano in *g*. In altre parole, quale isola formatasi con il potenziale split sia da considerarsi
 più anziana. Siccome *y* ha fra i suoi diretti vicini un border-nodo di un'isola di *g* con un fingerprint diverso
-da quello dell'isola più anziana, il modulo QSPN segnalerà al suo esterno questo rilevamento. Al ricevere tale
+da quello dell'isola più anziana, il modulo QSPN segnalerà al suo utilizzatore questo rilevamento. Al ricevere tale
 segnalazione, l'utilizzatore del modulo potrà fare in modo che l'isola scollegata venga avvertita.
 
 Si intuisce che questo meccanismo si ripresenta in maniera analoga qualsiasi sia il livello del g-nodo che diventa
@@ -283,12 +283,12 @@ di rete distinti. Per entrambe le situazioni, come detto in precedenza, il compi
 permetterne il rilevamento. In particolare nel caso di split di un g-nodo, è necessario che lo rilevi almeno un nodo
 diretto vicino di un border-nodo dell'isola (o delle isole) che non contiene il nodo più anziano.
 
-Infine, una nota sui segnali emessi dal modulo QSPN verso l'esterno. Osserviamo cosa succede quando un nodo generico
+Infine, una nota sui segnali emessi dal modulo QSPN. Osserviamo cosa succede quando un nodo generico
 *n* (non solo *x* e *y*) scopre che due percorsi *p1* e *p2* che conosce verso un g-nodo *g* riportano due diversi
 fingerprint. Supponiamo che il nodo *n* individui nel fingerprint riportato dal percorso *p1* quello dell'isola più
 anziana. Il nodo *n* nel suo modulo QSPN mantiene entrambi i percorsi in memoria con i loro fingerprint. Quando deve
 pubblicizzare i suoi percorsi attraverso un ETP il nodo *n* pubblicizza entrambi. Invece, quando il modulo QSPN del
-nodo *n* deve esporre all'esterno i percorsi noti verso la destinazione *g*, allora solo i percorsi con il fingerprint
+nodo *n* deve esporre al suo utilizzatore i percorsi noti verso la destinazione *g*, allora solo i percorsi con il fingerprint
 dell'isola più anziana vengono esposti. Vale a dire che il percorso *p1* viene esposto e il percorso *p2* no.
 
 Se il percorso *p2* era precedentemente valido, quindi in precedenza il modulo aveva segnalato la sua presenza, adesso
@@ -309,18 +309,18 @@ per ogni diverso fingerprint di *d* che gli viene segnalato attraverso gli ETP r
 
 ### <a name="Elementi_memorizzati_mappa"></a>Elementi memorizzati nella mappa
 
-Riassumendo, per ogni g-nodo (esclusi i g-nodi *di connettività*) nella topologia gerarchica del nodo corrente, la mappa
+Riassumendo, per ogni g-nodo nella topologia gerarchica del nodo corrente, la mappa
 mantiene queste informazioni:
 
 *   Livello (*lvl*) e identificativo all'interno di quel livello (*pos* : numero da 0 a *gsize(lvl)* - 1). Il modulo
     QSPN lo rappresenta con una istanza della classe [HCoord](#HCoord).  
     Una istanza di HCoord in generale può rappresentare un g-nodo virtuale. Cioè può avere come *pos* un numero maggiore
-    o uguale a *gsize(lvl)*. Però mai come destinazione: soltanto come passo nel percorso verso una destinazione.
+    o uguale a *gsize(lvl)*.
 *   Tutti i percorsi che il nodo sa di poter usare per raggiungere quel g-nodo. Il modulo li rappresenta con istanze
     della classe [NodePath](#Path). Per ogni percorso vanno mantenute queste informazioni:
 
     *   L'arco verso il gateway.
-    *   Tutti i passi del percorso. Ogni passo è un g-nodo; in questo caso sono inclusi eventuali g-nodi
+    *   Tutti i passi del percorso. Ogni passo è un g-nodo; sono inclusi eventuali g-nodi
         *di connettività*. Ogni g-nodo è espresso con una istanza di HCoord.
     *   Tutti gli identificativi degli archi che collegano un passo al successivo, compreso l'identificativo dell'arco
         verso il gateway.
@@ -331,13 +331,13 @@ mantiene queste informazioni:
     Si consideri che due percorsi di cui il nodo viene a conoscenza sono dal nodo considerati distinti se e solo se non
     riportano le stesse sequenze di passi e di archi.
 
-### <a name="Netsukuku_address"></a>Netsukuku Address
+### <a name="Indirizzo_Netsukuku"></a>Indirizzo Netsukuku
 
-Il Netsukuku address è l'indirizzo di una risorsa all'interno della rete, ad esempio un nodo o un g-nodo. Devono
+L'*indirizzo Netsukuku* è l'indirizzo di una risorsa all'interno della rete, ad esempio un nodo o un g-nodo. Devono
 essere noti i parametri della topologia gerarchica della rete:
 
-*   numero di livelli in cui la rete è suddivisa ( *l* );
-*   per ogni livello *i*, numero di posizioni in quel livello ( *gsize(i)* ).
+*   Numero di livelli in cui la rete è suddivisa: *l*.
+*   Per ogni livello *i*, numero di posizioni in quel livello: *gsize(i)*.
 
 Dati questi parametri, un indirizzo di nodo è composto da un identificativo per ogni livello da *l* - 1 a 0. Invece,
 un indirizzo di g-nodo di livello *i* è composto da un identificativo per ogni livello da *l* - 1 a *i*.
@@ -369,11 +369,12 @@ Però, l'utilizzatore del modulo QSPN può fare sì che ogni nodo in un g-nodo *
 internamente a *g* e che non interferisca con l'indirizzo IP *globale*.
 
 Le informazioni che il modulo Qspn reperisce in un nodo sono sufficienti a comporre le sue regole di routing sia per gli
-indirizzi *globali* che per quelli *interni* a qualsiasi livello *i*.
+indirizzi IP *globali* che per gli indirizzi IP *interni* a qualsiasi livello *i*.
 
 Se il nodo 𝛼 vuole stabilire una connessione con il nodo 𝛽 ed entrambi fanno parte del g-nodo *g*, allora il nodo 𝛼 userà
-gli indirizzi *interni* a *g* di 𝛼 e 𝛽. Qualora il g-nodo *g* o un suo g-nodo superiore per una migrazione cambiasse il
-proprio indirizzo, gli indirizzi *interni* a *g* di 𝛼 e 𝛽 non cambierebbero. Nemmeno le rotte cambierebbero, in quanto il
+gli indirizzi IP *interni* a *g* di 𝛼 e 𝛽. Qualora il g-nodo *g* o un suo g-nodo superiore per una migrazione cambiasse il
+proprio indirizzo Netsukuku, tutti i nodi al suo interno cambierebbero il proprio indirizzo IP *globale*. Ma gli indirizzi
+IP *interni* a *g* di 𝛼 e 𝛽 non cambierebbero. Nemmeno le rotte cambierebbero, in quanto il
 percorso è sicuramente interno a *g*. Cioè la connessione aperta rimarrebbe valida e funzionante.
 
 Questo accorgimento mitiga molto il disagio dovuto al cambio di indirizzo di un intero g-nodo di grandi dimensioni.
@@ -390,7 +391,7 @@ In realtà possono esserci casi in cui si vuole temporaneamente includere in un 
 di livello *i* superiore a *gsize(i)*. In questi casi si vuole dare ad uno specifico g-nodo di livello *i* un
 identificativo che è un numero maggiore di *gsize(i)* - 1.
 
-Si noti che il g-nodo, o meglio i nodi al suo interno, comporranno ciascuno il proprio Netsukuku address mettendo in
+Si noti che il g-nodo, o meglio i nodi al suo interno, comporranno ciascuno il proprio indirizzo Netsukuku mettendo in
 sequenza gli identificativi dei vari g-nodi a cui appartengono. Ma se la topologia gerarchica della rete (cioè il numero
 di livelli e le *gsize*) è stata costruita sulla base del numero di bit a disposizione per gli indirizzi univoci nella
 rete TCP/IP, come di norma succede, questi non potranno avere un corrispettivo indirizzo IP univoco nella rete.
@@ -440,25 +441,29 @@ temporaneamente un identificativo *virtuale*, cioè un numero maggiore di *gsize
 l'indirizzo che il nodo *n* detiene in *h* sarebbe *virtuale* al livello 0. Però in questo caso il modulo QSPN
 è autorizzato a mantenere archi con qualunque nodo appartenente a g-nodi esterni di qualunque livello.
 
-Un'altra differenza tra l'indirizzo assunto in *h* e quello assunto in *g* è che l'indirizzo assunto in *g* è
-destinato a sparire nel momento in cui la connettività interna di *g* e dei suoi g-nodi superiori fino a *U(g)*,
-cioè ai livelli da 1 a *j*, risulta garantita da altri collegamenti. Il nodo *n* periodicamente chiede al modulo
-QSPN, con le modalità che vedremo sotto e che prevedono l'acquisizione di un particolare "lock", di controllare
-se questo è avvenuto. Invece l'indirizzo assunto in *h* è destinato a rimanere e, se era *virtuale*, ad assumere
-una componente *reale* al livello 0. Per questo diciamo che questo indirizzo è *definitivo*, come opposto a
-quello *di connettività*.
+Il nodo *n* insieme ai due distinti indirizzi detiene, per quanto riguarda il modulo QSPN, due distinti fingerprint
+a livello 0, due distinti set di archi, due distinte mappe di percorsi e così via. Diciamo che il nodo *n* ha due
+*identità*. La vecchia identità è quella che mantiene un indirizzo Netsukuku (seppur virtuale) in *g*, mentre la
+nuova identità è quella che prende un indirizzo Netsukuku in *h*.
 
-Alcune considerazioni sugli indirizzi *definitivi* e *di connettività*.
+Una differenza tra la nuova identità in *h* e quella vecchia in *g* è che l'identità in *g* è
+destinata a sparire nel momento in cui la connettività interna di *g* e dei suoi g-nodi superiori fino a *U(g)*,
+cioè ai livelli da 1 a *j*, risulta garantita da altri collegamenti. Invece l'identità in *h* è destinata a
+rimanere e, se aveva preso un indirizzo Netsukuku con la componente al livello 0 *virtuale*, ad assumere
+una componente *reale* al livello 0. L'identità vecchia, temporanea, è detta *di connettività*. L'identità
+nuova, che rimane, è detta *principale*.
 
-*   Un nodo ha in ogni momento uno e un solo indirizzo *definitivo*. Può avere, in un particolare momento, 0
+Alcune considerazioni sulle identità *principale* e *di connettività*.
+
+*   Un nodo ha in ogni momento uno e un solo indirizzo *principale*. Può avere, in un particolare momento, 0
     o 1 o più indirizzi *di connettività* ai livelli da 1 a *x*.
 *   Un indirizzo *di connettività* si crea solo a causa di una migrazione. Quando migra un g-nodo *g* di livello
-    *i*, le componenti del suo Netsukuku address sono sicuramente tutte *reali*. Quindi l'indirizzo di ogni singolo
+    *i*, le componenti del suo indirizzo Netsukuku sono sicuramente tutte *reali*. Quindi l'indirizzo di ogni singolo
     nodo che appartiene al g-nodo *g* ha la componente a livello *i* e quelle superiori che sono sicuramente *reali*,
     ma le altre componenti ai livelli inferiori potevano anche essere già *virtuali*. Sotto verrà dettagliato come si
     trasforma l'indirizzo del singolo nodo che appartiene al g-nodo che migra.
 *   Un indirizzo *di connettività* ai livelli da 1 a *x* è sempre anche *virtuale* poiché la sua componente a livello
-    0 è *virtuale*; mentre uno *definitivo* può essere *virtuale* o *reale*.
+    0 è *virtuale*; mentre uno *principale* può essere *virtuale* o *reale*.
 
 Il nodo *n* insieme ai due distinti indirizzi detiene, per quanto riguarda il modulo QSPN, due distinti fingerprint
 a livello 0, due distinti set di archi, due distinte mappe di percorsi e così via. Diciamo che il nodo *n* ha due
@@ -468,8 +473,8 @@ modulo [Identities](../ModuloIdentities/AnalisiFunzionale.md), diciamo che:
 *   Indichiamo con *id<sub>0</sub>* l'identità che aveva il nodo *n* in *g*.
 *   L'identità di *id<sub>0</sub>* diventa una identità *di connettività* ai livelli da 1 a *j*.
 *   Si aggiunge l'identità *id<sub>1</sub>*, cioè l'identità di *n* in *h*. Essa prende le caratteristiche che erano
-    prima di *id<sub>0</sub>*: cioè, se *id<sub>0</sub>* era l'identità *definitiva* ora *id<sub>1</sub>* è
-    l'identità *definitiva*, se *id<sub>0</sub>* era *di connettività* ai livelli da *x* a *y* ora *id<sub>1</sub>*
+    prima di *id<sub>0</sub>*: cioè, se *id<sub>0</sub>* era l'identità *principale* ora *id<sub>1</sub>* è
+    l'identità *principale*, se *id<sub>0</sub>* era *di connettività* ai livelli da *x* a *y* ora *id<sub>1</sub>*
     è *di connettività* ai livelli da *x* a *y*.
 *   Ora all'identità *id<sub>1</sub>* si associano nuove istanze delle classi dei moduli *di identità*. Nell'esame
     del modulo QSPN diciamo che a *id<sub>1</sub>* si associa una nuova istanza di QspnManager.
@@ -545,7 +550,7 @@ Se invece non aveva ancora completato la fase di bootstrap, questo ETP sarebbe s
 modulo QSPN invierà un ETP completo.
 
 Per quanto riguarda la produzione e la processazione di messaggi ETP, l'identità del modulo QSPN che gestisce
-l'indirizzo *definitivo* e tutte le altre identità del modulo QSPN che gestiscono gli indirizzi *di connettività*
+l'indirizzo *principale* e tutte le altre identità del modulo QSPN che gestiscono gli indirizzi *di connettività*
 si comportano allo stesso modo. Non fa alcuna differenza a questo proposito che un indirizzo sia *virtuale* o *reale*.
 
 Per quanto riguarda i percorsi che ogni identità del modulo QSPN acquisisce, essi sono esposti all'utilizzatore
@@ -579,7 +584,7 @@ la stessa cosa può essere orchestrata, ponendo particolare attenzione a queste 
             identici e vanno utilizzati nelle tabelle di routing solo una volta, prendiamo quelli di *map(id<sub>1</sub>)*.
 *   Per gestire gli indirizzi IP *interni* al proprio g-nodo di livello tra *i* e *j*:
     *   Siccome il nodo *n* appartiene con le sue identità a diversi g-nodi (ad esempio *g0* con la sua identità
-        *definitiva* e *g1* con la sua identità *di connettività*), quando riceve un pacchetto IP che ha per destinazione
+        *principale* e *g1* con la sua identità *di connettività*), quando riceve un pacchetto IP che ha per destinazione
         un indirizzo IP *interno* ad un g-nodo di livello tra *i* e *j* deve capire a quale g-nodo esso fa riferimento
         sulla base dell'interfaccia di rete da cui il pacchetto è stato ricevuto e instradarlo correttamente. Per questo:
         *   Occorre avere diverse tabelle di routing, una per ogni pseudo-interfaccia che è stata creata per gestire un
@@ -644,7 +649,7 @@ Consideriamo che l'indirizzo precedente di *id<sub>0</sub>* poteva essere anche 
 livello *i* un identificativo *reale*. Da questo si deduce che un indirizzo *virtuale* può avere uno o più componenti
 (identificativi) *virtuali*.
 
-L'indirizzo precedente di *id<sub>0</sub>*, inoltre, poteva essere *definitivo* o *di connettività* ai livelli da
+L'indirizzo precedente di *id<sub>0</sub>*, inoltre, poteva essere *principale* o *di connettività* ai livelli da
 *k1* a *k2*. Comunque l'indirizzo attuale di *id<sub>0</sub>* sarà *di connettività* ai livelli da *i* + 1 a *j*.
 
 Ad eccezione della componente al livello *i* tutte le altre componenti restano invariate.
@@ -654,8 +659,8 @@ a *i* sono ovviamente quelle di *h’*. La componente al livello *i* è quella s
 può essere *reale* o temporaneamente *virtuale*. Le componenti ai livelli inferiori sono le stesse che il nodo aveva
 in *g’*.
 
-Inoltre, l'indirizzo precedente di *id<sub>0</sub>* poteva essere *definitivo* o *di connettività* ai livelli da
-*k1* a *k2*; se era *definitivo* allora questo nuovo indirizzo in *h’* sarà *definitivo*, se era *di connettività*
+Inoltre, l'indirizzo precedente di *id<sub>0</sub>* poteva essere *principale* o *di connettività* ai livelli da
+*k1* a *k2*; se era *principale* allora questo nuovo indirizzo in *h’* sarà *principale*, se era *di connettività*
 allora questo nuovo indirizzo in *h’* sarà *di connettività* ai livelli da *k1* a *k2*.
 
 Per tutti gli aspetti inerenti il modulo QSPN, riguardo le identità *id<sub>0</sub>* e *id<sub>1</sub>* del nodo *n*
@@ -691,11 +696,11 @@ ancora un indirizzo in *G* e vuole creare un nuovo g-nodo *n’* (al limite di l
 esistente in *G*, avendo *n* almeno un arco verso un altro nodo *m* che appartiene a *g*. Consideriamo il momento in
 cui il nodo *n* ha appena rilevato l'esistenza della rete *G* di cui ancora esso non fa parte. Il nodo *n* rileva un
 numero di vicini che appartengono a *G*, tra i quali il nodo *m*. Ci chiediamo: se il nodo *m* ha una identità
-*definitiva* e una o più identità *di connettività*, come vengono valutate queste dal nodo *n* nella strategia di
+*principale* e una o più identità *di connettività*, come vengono valutate queste dal nodo *n* nella strategia di
 individuazione del g-nodo *g* in cui fare ingresso? E una volta deciso il g-nodo *g* in cui fare ingresso, con quali
 identità di *m* il nodo *n* costituisce degli archi?
 
-Diciamo che il nodo *m* ha la sua identità *definitiva* *m0* e una identità *m1* che è *di connettività* ai livelli
+Diciamo che il nodo *m* ha la sua identità *principale* *m0* e una identità *m1* che è *di connettività* ai livelli
 da *i* a *j*. Quindi *g<sub>k</sub>(m0)* e *g<sub>k</sub>(m1)* possono essere distinti per ogni valore di *k* tra *i*
 e *j* compresi, sono equivalenti per i valori di *k* superiori a *j*, sono isomorfi per i valori di *k* inferiori a *i*.
 
@@ -719,7 +724,7 @@ Consideriamo infine il caso in cui la strategia di ingresso porti il nodo *n* a 
 livello *k*, con *k* minore di *i*, formando un nuovo g-nodo di livello *k* - 1. In questo caso il nodo *n* può sfruttare
 il suo arco con il g-nodo *g<sub>k-1</sub>(m0)* per vedere se può entrare nel g-nodo *g<sub>k</sub>(m0)* (che è
 isomorfo al g-nodo *g<sub>k</sub>(m1)*). Se poi il nodo *n* forma un nuovo g-nodo di livello *k* - 1 nel g-nodo
-*g<sub>k</sub>(m0)*, allora il nodo *n* dovrà assumere una identità *definitiva* *n0* e una *di connettività* *n1*.
+*g<sub>k</sub>(m0)*, allora il nodo *n* dovrà assumere una identità *principale* *n0* e una *di connettività* *n1*.
 Con la *n0* costituisce un arco con la sola identità *m0*; con la *n1* costituisce un arco con la sola *m1*. Se invece
 entra, grazie ad altri suoi vicini, in un diverso g-nodo di livello *k*, in questo caso assume una sola identità e
 costituisce un arco con la sola identità *m0*.
@@ -736,7 +741,7 @@ Si valuta secondo la regola vista in questo paragrafo: se l'identità *m1* di *m
 * * *
 
 Consideriamo un nodo *n* che forma un nuovo arco, cioè rileva un vicino *m* che prima non era a distanza di
-rilevamento. Entrambi hanno una identità *definitiva* e possono avere una identità *di connettività*. La decisione
+rilevamento. Entrambi hanno una identità *principale* e possono avere una identità *di connettività*. La decisione
 su quali archi formare va valutata come detto prima.
 
 ### <a name="Rimozione_indirizzo_connettivita"></a>Rimozione dell'indirizzo di connettività di un g-nodo dopo la sua migrazione
