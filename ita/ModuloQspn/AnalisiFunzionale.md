@@ -1,8 +1,26 @@
 # Modulo QSPN - Analisi Funzionale
 
-*   **TODO TOC**
+1.  [Ruolo del modulo](#Ruolo_del_modulo)
+1.  [Conoscenze obiettivo del nodo](#Conoscenze_obiettivo)
+    1.  [Vicini del nodo](#Vicini_del_nodo)
+    1.  [Struttura gerarchica della rete](#Struttura_gerarchica_rete)
+        1.  [Partizionamento della rete](#Partizionamento_rete)
+    1.  [Mappa gerarchica della rete](#Mappa_gerarchica_rete)
+    1.  [Fingerprint](#Fingerprint)
+    1.  [Elementi memorizzati nella mappa](#Elementi_memorizzati_mappa)
+    1.  [Netsukuku Address](#Netsukuku_address)
+    1.  [Migrazioni e indirizzi IP interni](#Migrazioni_e_indirizzi_interni)
+    1.  [Nodi virtuali](#Nodi_virtuali)
+        1.  [Al livello 0](#Nodi_virtuali_livello_0)
+        1.  [Ai livelli superiori](#Nodi_virtuali_altri_livelli)
+        1.  [Considerazioni varie](#Nodi_virtuali_considerazioni)
+    1.  [Rimozione dell'indirizzo di connettività di un g-nodo dopo la sua migrazione](#Rimozione_indirizzo_connettivita)
+        1.  [Implementazione](#Rimozione_indirizzo_connettivita_implementazione)
+1.  [Requisiti](#requisiti)
+1.  [Deliverable](#Deliverable)
+1.  [Classi e interfacce](#Classi_e_interfacce)
 
-## Ruolo del modulo
+## <a name="Ruolo_del_modulo"></a>Ruolo del modulo
 
 Il modulo realizza lo scambio di messaggi con i vicini del nodo al fine di esplorare la rete. Tali messaggi sono
 chiamati **ETP**, acronimo di Extended Tracer Packet. In questo documento non illustriamo nel dettaglio come sono
@@ -10,7 +28,7 @@ fatti questi messaggi. Rimandiamo per questo al documento [esplorazione](Esplora
 leggerlo solo dopo aver letto il presente documento. Per ora basta considerare che ogni nodo usa questi messaggi
 per comunicare ai suoi vicini le informazioni riguardanti i percorsi della rete che sono a lui noti.
 
-## Conoscenze obiettivo del nodo
+## <a name="Conoscenze_obiettivo"></a>Conoscenze obiettivo del nodo
 
 L'obiettivo di ogni nodo *n* è di reperire e mantenere per ogni destinazione *dst* fino a *max_paths* percorsi
 disgiunti, che siano i percorsi con costo minore.
@@ -42,7 +60,7 @@ Inoltre *n* vuole mantenere per ogni destinazione *dst*, per ogni livello *l* da
 *p* di livello *l* diretto vicino del suo g-nodo di livello *l*, almeno 1 percorso, se esiste, per *dst* che passa
 per *p*. I concetti qui enunciati di g-nodi e livelli verranno chiariti in seguito.
 
-### Vicini del nodo
+### <a name="Vicini_del_nodo"></a>Vicini del nodo
 
 Il modulo QSPN nel nodo *n* considera *vicino di n* un nodo *v* se è a conoscenza di uno o più archi che collegano
 *n* a *v*. La conoscenza degli archi a disposizione del nodo *n* viene passata al modulo come requisito. Il modulo
@@ -73,7 +91,7 @@ utilizzatore, in quanto è esso a conoscere i dettagli dell'iter di misurazione 
 
 <a name="StrutturaGerarchica"></a>
 
-### Struttura gerarchica della rete
+### <a name="Struttura_gerarchica_rete"></a>Struttura gerarchica della rete
 
 L'assegnazione degli indirizzi ai nodi della rete avviene sulla base di una struttura gerarchica imposta alla rete.
 Tale gerarchia è composta da un numero fisso di livelli: *l*.
@@ -110,7 +128,7 @@ di livello 2, e così via, fino al livello più alto.
 Questa strutturazione gerarchica è adottata per evitare che la mappa della rete che ogni nodo tiene in memoria
 diventi troppo grande.
 
-#### Partizionamento della rete
+#### <a name="Partizionamento_rete"></a>Partizionamento della rete
 
 Come detto, ogni g-nodo di qualsiasi livello *i* può essere considerato come se fosse un unico vertice. Si forma cioè
 per ogni livello *i* una sorta di partizionamento del grafo che costituisce l'intera rete.
@@ -126,7 +144,7 @@ Sia *g* un g-nodo di livello *i*. Indichiamo con *𝛤<sub>i</sub>(g)* l'insieme
 vicini (vertici direttamente collegati) di *g* nel grafo *[G]<sub>i</sub>*. In questo insieme sono inclusi anche
 i g-nodi *di connettività*: il significato di questa espressione sarà chiarito in seguito.
 
-### Mappa gerarchica della rete
+### <a name="Mappa_gerarchica_rete"></a>Mappa gerarchica della rete
 
 In ogni singolo nodo, il modulo QSPN ha il compito di costruire e tenere in memoria una mappa a topologia gerarchica
 della rete.
@@ -157,7 +175,7 @@ rimedio non sono di competenza del modulo.
 A questo scopo ogni g-nodo ha anche un altro identificativo chiamato *fingerprint*. Vediamo come si genera un
 fingerprint e come viene "assegnato" ad un g-nodo.
 
-### Fingerprint
+### <a name="Fingerprint"></a>Fingerprint
 
 A livello 0, il fingerprint di un nodo è composto da un identificativo del nodo, univoco a livello  di rete, e da una
 lista di valori che  rappresentano l'anzianità ai vari livelli dal livello 0 al livello *l-1*. L'anzianità a livello
@@ -272,7 +290,7 @@ disconnesso.</sub>
 <sub>Nota 2: Per questo è importante che un nodo sempre mantenga e trasmetta per ogni destinazione *d* almeno un percorso
 per ogni diverso fingerprint di *d* che gli viene segnalato attraverso gli ETP ricevuti.</sub>
 
-### Elementi memorizzati nella mappa
+### <a name="Elementi_memorizzati_mappa"></a>Elementi memorizzati nella mappa
 
 Riassumendo, per ogni g-nodo (esclusi i g-nodi *di connettività*) nella topologia gerarchica del nodo corrente, la mappa
 mantiene queste informazioni:
@@ -296,7 +314,7 @@ mantiene queste informazioni:
     Si consideri che due percorsi di cui il nodo viene a conoscenza sono dal nodo considerati distinti se e solo se non
     riportano le stesse sequenze di passi e di archi.
 
-### Netsukuku Address
+### <a name="Netsukuku_address"></a>Netsukuku Address
 
 Il Netsukuku address è l'indirizzo di una risorsa all'interno della rete, ad esempio un nodo o un g-nodo. Devono
 essere noti i parametri della topologia gerarchica della rete:
@@ -318,7 +336,7 @@ comune il loro livello direttamente superiore con uno dei g-nodi di cui il nodo 
 livello *i* che appartengono allo stesso g-nodo di livello *i* + 1 a cui appartiene il nodo *n* saranno individuati
 e memorizzati. Per questo per rappresentare gli indirizzi di g-nodi il modulo QSPN usa la classe HCoord (coordinate gerarchiche).
 
-### Migrazioni e indirizzi IP interni
+### <a name="Migrazioni_e_indirizzi_interni"></a>Migrazioni e indirizzi IP interni
 
 Il problema dell'assegnazione degli indirizzi ai nodi non è di pertinenza del modulo QSPN. Non lo trattiamo in questo
 documento, ma diciamo che di certo è un problema che si risolve con un algoritmo distribuito e dinamico. Cioè è
@@ -346,7 +364,7 @@ Questo accorgimento mitiga molto il disagio dovuto al cambio di indirizzo di un 
 Un esempio dell'uso di indirizzi IP *interni* è illustrato in questo [documento](RoutingIndirizziInterni.md) insieme ad
 alcune considerazioni sul routing di pacchetti con tali indirizzi.
 
-### Nodi virtuali
+### <a name="Nodi_virtuali"></a>Nodi virtuali
 
 Abbiamo detto in precedenza che ogni g-nodo di livello *i* ha un identificativo che lo individua univocamente all'interno
 del suo g-nodo di livello *i+1* e che tale identificativo è un numero intero da *0* a *gsize(i) - 1*.
@@ -360,7 +378,7 @@ sequenza gli identificativi dei vari g-nodi a cui appartengono. Ma se la topolog
 di livelli e le *gsize*) è stata costruita sulla base del numero di bit a disposizione per gli indirizzi univoci nella
 rete TCP/IP, come di norma succede, questi non potranno avere un corrispettivo indirizzo IP univoco nella rete.
 
-#### Al livello 0
+#### <a name="Nodi_virtuali_livello_0"></a>Al livello 0
 
 Spieghiamo i motivi che ci spingono ad ammettere questa situazione e le relative conseguenze assumendo *i* uguale a 0,
 per semplicità, ma vedremo poi che i ragionamenti si possono estendere ai vari livelli.
@@ -584,7 +602,7 @@ Esaminiamo i nodi in *w*, con *w* ≠ *U(g)* e *w* ≠ *U(h)*, che sono diretti 
 *   Hanno ora un arco verso *U(h)*. Possono usarlo, sulla base degli ETP che ora esso trasmette, per raggiungere
     *U(g)* e, potenzialmente, anche altri g-nodi.
 
-#### Ai livelli superiori
+#### <a name="Nodi_virtuali_altri_livelli"></a>Ai livelli superiori
 
 Come abbiamo detto sopra, questi concetti valgono anche per un livello *i* maggiore di 0.
 
@@ -649,7 +667,7 @@ informazioni vengono messe a frutto grazie all'utilizzo di indirizzi IP *interni
 
 Un esempio dell'uso di indirizzi *virtuali* e *di connettività* è illustrato in questo [allegato](UsoIndirizziVirtuali/Step1.md).
 
-#### Considerazioni varie
+#### <a name="Nodi_virtuali_considerazioni"></a>Considerazioni varie
 
 Consideriamo un nodo *n* che vuole fare ingresso in una rete *G*. In generale questo significa che il nodo *n* non ha
 ancora un indirizzo in *G* e vuole creare un nuovo g-nodo *n’* (al limite di livello 0) all'interno di un g-nodo *g*
@@ -704,7 +722,7 @@ Consideriamo un nodo *n* che forma un nuovo arco, cioè rileva un vicino *m* che
 rilevamento. Entrambi hanno una identità *definitiva* e possono avere una identità *di connettività*. La decisione
 su quali archi formare va valutata come detto prima.
 
-### Rimozione dell'indirizzo di connettività di un g-nodo dopo la sua migrazione
+### <a name="Rimozione_indirizzo_connettivita"></a>Rimozione dell'indirizzo di connettività di un g-nodo dopo la sua migrazione
 
 Abbiamo visto come la migrazione di un g-nodo *g* di livello *i* (con 0 ≤ *i* < *l* - 1) porta alla creazione di
 una identità *g1* che gestisce un indirizzo *di connettività* ai livelli da *i* + 1 a *j*, con *i* < *j* < *l*.
@@ -737,7 +755,7 @@ non ottempera alla sua rimozione, comunque il g-nodo non resta bloccato per semp
 
 <a name="ImplementazioneVerificaRimozione"></a>
 
-#### Implementazione
+#### <a name="Rimozione_indirizzo_connettivita_implementazione"></a>Implementazione
 
 Se il g-nodo *g<sub>i</sub>(n1)* non ha alcun vicino in *g<sub>i+1</sub>(n1)*, cioè *g<sub>i+1</sub>(n1)* contiene
 solo *g<sub>i</sub>(n1)*, allora la domanda da porre è direttamente se la rimozione di *g<sub>i+1</sub>(n1)*
@@ -765,9 +783,7 @@ almeno 1 percorso, se esiste, per *d* che passa per *p*.
 Grazie a questo vincolo, se la condizione detta sopra non è soddisfatta, questo è sufficiente ad affermare che la
 rimozione di *g<sub>i</sub>(n1)* **provoca** lo split di uno dei g-nodi da *g<sub>i+1</sub>(n1)* a *g<sub>j</sub>(n1)*.
 
-<a name="requisiti"></a>
-
-## Requisiti
+## <a name="requisiti"></a>Requisiti
 
 In generale, indipendentemente dalle identità assunte dal nodo, il modulo ha bisogno di questi requisiti:
 
@@ -802,7 +818,7 @@ In particolare, ogni istanza del modulo creata per gestire una precisa identità
             di livello minore di *k*. Si tratta infatti di percorsi interni all'entità che migra in blocco.
         *   Tipo dell'identità. Cioè *principale* o *di connettività* ai livelli da *i* a *j*.
 
-## Deliverable
+## <a name="Deliverable"></a>Deliverable
 
 Ogni istanza del modulo QSPN creata per gestire una precisa identità del nodo:
 *   Emette un segnale per:
@@ -841,7 +857,7 @@ Ogni istanza del modulo QSPN creata per gestire una precisa identità del nodo:
     *i* - 1, emette un segnale per:
     *   L'identità che detiene questa istanza del modulo QSPN va rimossa, perché *w* viene dismesso.
 
-## Classi e interfacce
+## <a name="Classi_e_interfacce"></a>Classi e interfacce
 
 L'oggetto che rappresenta gli indirizzi dei nodi non è del tutto noto a questo modulo, che conosce alcune
 sue interfacce a seconda dell'uso che può farne.
