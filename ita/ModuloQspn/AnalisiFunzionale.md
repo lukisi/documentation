@@ -519,8 +519,10 @@ bisogno di inviare ETP correttivi per essi. Ci sono due informazioni soltanto ch
 *   Che non è più possibile raggiungere tramite lui il suo vecchio identificativo *reale* in *g*.
 *   Che è possibile raggiungere tramite lui il suo nuovo identificativo *virtuale* in *g*.
 
-È una informazione che interessa soltanto i nodi che appartengono a *g*. È sufficiente un unico ETP che dice che è
-stato rimosso il percorso verso il vecchio identificativo.
+È una informazione che interessa soltanto i nodi che appartengono a *g*. È sufficiente un unico ETP vuoto,
+perché da esso il nodo che lo riceve si accorge che il nodo che lo ha inviato ha modificato il suo indirizzo
+Netsukuku. Riconoscendo l'arco-identità su cui l'ETP è stato ricevuto, il vicino ha memoria del vecchio indirizzo
+Netsukuku e vede quello nuovo.
 
 La mappa di *id<sub>1</sub>* viene inizializzata vuota, in attesa che il modulo QSPN processi nuovi ETP sulla base del
 nuovo indirizzo di *id<sub>1</sub>*. Le attività del modulo QSPN come detentore di questo nuovo indirizzo e della
@@ -649,19 +651,19 @@ Consideriamo che l'indirizzo precedente di *id<sub>0</sub>* poteva essere anche 
 livello *i* un identificativo *reale*. Da questo si deduce che un indirizzo *virtuale* può avere uno o più componenti
 (identificativi) *virtuali*.
 
-L'indirizzo precedente di *id<sub>0</sub>*, inoltre, poteva essere *principale* o *di connettività* ai livelli da
-*k1* a *k2*. Comunque l'indirizzo attuale di *id<sub>0</sub>* sarà *di connettività* ai livelli da *i* + 1 a *j*.
+L'identità *id<sub>0</sub>*, inoltre, poteva essere precedentemente *principale* o *di connettività* ai livelli da
+*k1* a *k2*. Comunque l'identità *id<sub>0</sub>* da adesso sarà *di connettività* ai livelli da *i* + 1 a *j*.
 
 Ad eccezione della componente al livello *i* tutte le altre componenti restano invariate.
 
-La nuova identità *id<sub>1</sub>* del nodo *n* ha ora un nuovo indirizzo in *h’*. Le componenti ai livelli superiori
-a *i* sono ovviamente quelle di *h’*. La componente al livello *i* è quella scelta dal g-nodo per la migrazione, che
-può essere *reale* o temporaneamente *virtuale*. Le componenti ai livelli inferiori sono le stesse che il nodo aveva
-in *g’*.
+La nuova identità *id<sub>1</sub>* del nodo *n* ha ora un indirizzo in *h’*. Le componenti ai livelli superiori
+a *i* sono ovviamente quelle di *h’*. La componente al livello *i* è quella riservata dal g-nodo per l'ingresso di *n’*, che
+può essere *reale* o temporaneamente *virtuale*. Le componenti ai livelli inferiori sono le stesse che componevano
+l'indirizzo di *id<sub>0</sub>* in *g’*.
 
-Inoltre, l'indirizzo precedente di *id<sub>0</sub>* poteva essere *principale* o *di connettività* ai livelli da
-*k1* a *k2*; se era *principale* allora questo nuovo indirizzo in *h’* sarà *principale*, se era *di connettività*
-allora questo nuovo indirizzo in *h’* sarà *di connettività* ai livelli da *k1* a *k2*.
+Inoltre, l'identità *id<sub>0</sub>* poteva essere precedentemente *principale* o *di connettività* ai livelli da
+*k1* a *k2*; se era *principale* allora l'identità *id<sub>1</sub>* sarà *principale*, se era *di connettività*
+allora l'identità *id<sub>1</sub>* sarà *di connettività* ai livelli da *k1* a *k2*.
 
 Per tutti gli aspetti inerenti il modulo QSPN, riguardo le identità *id<sub>0</sub>* e *id<sub>1</sub>* del nodo *n*
 valgono tutte le osservazioni viste prima. Rimangono da precisare alcuni aspetti:
