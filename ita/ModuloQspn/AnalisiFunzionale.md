@@ -818,7 +818,7 @@ In generale, indipendentemente dalle identità assunte dal nodo, il modulo ha bi
 
 In particolare, ogni istanza del modulo creata per gestire una precisa identità del nodo, ha bisogno di questi requisiti:
 
-*   Indirizzo Netsukuku proprio di questa identità.
+*   Indirizzo Netsukuku proprio di questa identità. Istanza di IQspnMyNaddr.
 *   Archi che esistono tra questa identità del nodo e i suoi vicini.  
     Durante le sue operazioni, il modulo viene informato alla costituzione di un nuovo arco; alla rimozione di un
     arco; al cambio di costo di un arco.
@@ -1001,7 +1001,6 @@ Un arco è un oggetto il cui contenuto non è del tutto noto al modulo QSPN. L'i
 nota al modulo (IQspnArc) gli consente di:
 
 *   Verificare se due archi sono identici (metodo *i_qspn_equals*).
-*   Leggere l'indirizzo Netsukuku del vicino (metodo *i_qspn_get_naddr*).
 *   Leggere il costo associato all'arco (metodo *i_qspn_get_cost*).
 *   Data una istanza di CallerInfo, passata all'inizio dell'esecuzione di un metodo remoto
     (vedi framework [ZCD](../Librerie/ZCD.md)), verificare se la chiamata del metodo è stata ricevuta
@@ -1011,16 +1010,17 @@ nota al modulo (IQspnArc) gli consente di:
 
 Un ETP è una istanza della classe EtpMessage che è interna al modulo. Essa è serializzabile. Un ETP contiene:
 
-*   L'indirizzo del nodo *n* che produce l'ETP. È una istanza di IQspnNaddr. Il modulo assume che sia
-    anche un oggetto serializzabile. L'utilizzatore del modulo deve provvedere che la classe che concretizza
-    IQspnNaddr passata come proprio indirizzo nel costruttore sia serializable. Proprietà IQspnNaddr *node_address*.
-*   La lista di fingerprint per i g-nodi di *n* ai livelli da 0 a *l* - 1. È una lista di istanze di IQspnFingerprint.
-    Il modulo assume che ognuna sia anche un oggetto serializzabile. Proprietà List<IQspnFingerprint> *fingerprints*.
-*   La lista del numero approssimativo di nodi all'interno dei g-nodi di *n* ai livelli da 0 a *l* - 1. È una
-    lista di interi. Proprietà List<int> *nodes_inside*.
-*   La lista dei g-nodi attraversati da questo ETP. Proprietà List<HCoord> *hops*.
+*   L'indirizzo del nodo *n* che produce l'ETP. Proprietà `IQspnNaddr node_address`.  
+    Il modulo assume che sia anche un oggetto serializzabile. L'utilizzatore del modulo deve provvedere che la
+    classe che concretizza un IQspnMyNaddr (che è anche un IQspnNaddr) che viene passata come proprio indirizzo
+    nel costruttore sia serializable.
+*   La lista di fingerprint per i g-nodi di *n* ai livelli da 0 a *l* - 1. Proprietà `List<IQspnFingerprint> fingerprints`.  
+    Il modulo assume che ognuna sia anche un oggetto serializzabile.
+*   La lista del numero approssimativo di nodi all'interno dei g-nodi di *n* ai livelli da 0 a *l* - 1. Proprietà
+    `List<int> nodes_inside`.
+*   La lista dei g-nodi attraversati da questo ETP. Proprietà `List<HCoord> hops`.
 *   La lista *P* dei percorsi. Ogni percorso *p* ∈ *P* è una istanza di EtpPath, descritta sotto. Proprietà
-    List<EtpPath> *p_list*.
+    `List<EtpPath> p_list`.
 
 * * *
 
@@ -1031,15 +1031,15 @@ Essa è serializzabile. Contiene:
     si riceve un ETP questa lista non comprende il nostro vicino, cioè il nodo *n* che ha prodotto l'ETP; ma
     dopo aver eseguito la Grouping Rule (descritta nel documento [esplorazione](EsplorazioneRete.md)) conterrà
     anche *n* e in  tale stato verrà memorizzato nella mappa dentro un oggetto NodePath. Si compone delle due
-    proprietà List<HCoord> *hops* e List<int> *arcs*.
+    proprietà `List<HCoord> hops` e `List<int> arcs`.
 *   Il costo di *p* da *n* a *d*. È una istanza dell'interfaccia IQspnCost. Il modulo assume che sia anche un
-    oggetto serializzabile. Proprietà IQspnCost *cost*.
+    oggetto serializzabile. Proprietà `IQspnCost cost`.
 *   Il fingerprint del g-nodo *d* come riportato da questo percorso. È una istanza dell'interfaccia IQspnFingerprint.
-    Il modulo assume che sia anche un oggetto serializzabile. Proprietà IQspnFingerprint *fingerprint*.
-*   Il numero di nodi nel g-nodo *d* come riportato da questo percorso. Proprietà int *nodes_inside*.
+    Il modulo assume che sia anche un oggetto serializzabile. Proprietà `IQspnFingerprint fingerprint`.
+*   Il numero di nodi nel g-nodo *d* come riportato da questo percorso. Proprietà `int nodes_inside`.
 *   Una lista di *l* booleani il cui elemento *i*-esimo (da 0 a *l* - 1) dice se va ignorato questo percorso dai nodi
     che non appartengono al g-nodo di livello *i* del nodo *n* che ha prodotto l'ETP. In realtà per *i* = 0 il
-    valore è sempre *false* ma per semplicità teniamo anche questo valore. Proprietà List<bool> *ignore_outside*.
+    valore è sempre *false* ma per semplicità teniamo anche questo valore. Proprietà `List<bool> ignore_outside`.
 
 * * *
 
@@ -1048,8 +1048,8 @@ Essa è serializzabile. Contiene:
 La classe NodePath è interna al modulo. Una sua istanza rappresenta un percorso da questo nodo alla destinazione
 comprensivo dell'arco dal nodo al vicino che ha pubblicizzato il percorso. Contiene:
 
-*   L'arco da usare per raggiungere il vicino gateway. Proprietà IQspnArc *arc* .
-*   Il percorso come è stato pubblicizzato dal vicino attraverso questo arco. Proprietà EtpPath *path* .
+*   L'arco da usare per raggiungere il vicino gateway. Proprietà `IQspnArc arc`.
+*   Il percorso come è stato pubblicizzato dal vicino attraverso questo arco. Proprietà `EtpPath path`.
 
 * * *
 
