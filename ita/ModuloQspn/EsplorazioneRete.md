@@ -1,14 +1,40 @@
 # Modulo QSPN - Esplorazione della rete
 
-*   **TODO TOC**
+1.  [Concetti e termini](#Concetti_e_termini)
+    1.  [TP - Tracer Packet](#Tracer_packet)
+    1.  [ATP - Acyclic Tracer Packet](#Acyclic_tracer_packet)
+    1.  [CTP - Continuous Tracer Packet](#Continuous_tracer_packet)
+    1.  [Interesting information rule](#Interesting_information_rule)
+    1.  [ETP - Extended Tracer Packet](#Extended_tracer_packet)
+1.  [Implementazione dell'esplorazione](#Implementazione_esplorazione)
+    1.  [Maggiori dettagli sull'ETP](#Dettagli_etp)
+    1.  [Rete completamente esplorata](#Rete_esplorata)
+1.  [Struttura gerarchica degli indirizzi](#Struttura_gerarchica_indirizzi)
+    1.  [Rappresentazione gerarchica degli ID](#Rappresentazione_gerarchica_id)
+    1.  [Informazioni aggiuntive sulla destinazione](#Informazioni_aggiuntive_sulla_destinazione)
+    1.  [Minimo comune g-nodo e massimo distinto g-nodo](#Minimo_comune_gnodo)
+    1.  [Percorso a livelli crescenti](#Percorso_a_livelli_crescenti)
+    1.  [Dichiarazione di percorso da ignorare all'esterno di un g-nodo](#Dichiarazione_percorso_da_ignorare)
+        1.  [Arco di uscita dal g-nodo](#Arco_di_uscita)
+        1.  [Percorsi interni al g-nodo](#Percorsi_interni)
+    1.  [Rimozione dei percorsi da ignorare](#Rimozione_percorsi_da_ignorare)
+    1.  [Definizione di grouping rule](#Definizione_grouping_rule)
+        1.  [Applicazione della grouping rule sulla lista di hops percorsi dall'ETP](#Applicazione_grouping_rule)
+    1.  [Definizione di acyclic rule](#Definizione_acyclic_rule)
+        1.  [Applicazione della acyclic rule sulla lista di hops percorsi dall'ETP](#Applicazione_acyclic_rule)
+    1.  [Contenuto e forma di un messaggio ETP](#Contenuto_forma_messaggio_etp)
+        1.  [Informazioni sui percorsi da ignorare](#Informazioni_sui_percorsi_da_ignorare)
+        1.  [Informazioni aggiuntive riguardo la destinazione](#Informazioni_aggiuntive_destinazione)
+    1.  [Ingresso di un g-nodo in una rete](#Ingresso_gnodo_in_rete)
+        1.  [Osservazione sugli indirizzi IP interni](#Osservazione_indirizzi_ip_interni)
 
-## Concetti e termini
+## <a name="Concetti_e_termini"></a>Concetti e termini
 
 Questa prima parte non descrive quali messaggi vengano effettivamente passati da un nodo all'altro.
 
 In questa prima parte esaminiamo i concetti generali e introduciamo alcuni termini, per avere una idea di quali considerazioni abbiano portato alla scelta dell'effettiva implementazione che sarà descritta più sotto.
 
-#### TP - Tracer Packet
+#### <a name="Tracer_packet"></a>TP - Tracer Packet
 
 Un TP *flood* viene avviato da un nodo *s*. Per farlo *s* genera un TP, ci scrive il suo ID e lo invia a tutti i suoi vicini. Un nodo *n* che riceve il TP vi aggiunge il suo ID, un identificativo univoco dell'arco *a* attraverso il quale lo ha ricevuto e il costo dell'arco *c ( a )* e poi lo inoltra a tutti i suoi vicini tranne quello da cui lo ha ricevuto.
 
@@ -16,23 +42,23 @@ Quando un nodo invia un TP (questo vale sia per il nodo *s* che inizia il flood 
 
 Un nodo *v* può ricevere più di una volta un TP proveniente da uno stesso flood, ma lo inoltra solo se il percorso contenuto risulta essere il percorso con costo minore da *v* ad *s*. Quindi se un nodo *s* inizia un TP flood, tutti i nodi scropriranno per ogni loro vicino il percorso migliore verso *s*.
 
-#### ATP - Acyclic Tracer Packet
+#### <a name="Acyclic_tracer_packet"></a>ATP - Acyclic Tracer Packet
 
 Un ATP è un TP che, quando un nodo lo riceve lo inoltra a tutti i suoi vicini tranne quello da cui lo riceve, anche se il flood era già passato da lì. Un ATP non viene inoltrato da un nodo *n* se l'ID di *n* era già presente in esso. Questo lo rende aciclico. Quindi se un nodo *s* inizia un ATP flood tutti i nodi scopriranno tutti i possibili percorsi verso *s*, senza cicli.
 
-#### CTP - Continuous Tracer Packet
+#### <a name="Continuous_tracer_packet"></a>CTP - Continuous Tracer Packet
 
 Un CTP è un TP che, quando un nodo lo riceve lo inoltra sempre a tutti i suoi vicini tranne quello da cui lo riceve. Inoltre, se il nodo ricevente ha come unico vicino quello che glielo ha inoltrato allora svuota la lista di ID e lo inoltra di nuovo al nodo che glielo aveva inoltrato. Quindi un CTP non cessa mai di esplorare tutti i percorsi della rete.
 
-#### Interesting information rule
+#### <a name="Interesting_information_rule"></a>Interesting information rule
 
 La regola dell'informazione interessante può essere aggiunta alla decisione sull'inoltro di un generico TP (TP o ATP o CTP). Questa regola dice che un TP non va inoltrato se non contiene nessuna informazione interessante per il nodo. Ad esempio nel caso di percorsi se tutti i percorsi in esso presenti erano già noti al nodo.
 
-#### ETP - Extended Tracer Packet
+#### <a name="Extended_tracer_packet"></a>ETP - Extended Tracer Packet
 
 Un ETP è un ATP che contiene una porzione di una mappa, cioè un set *P* di percorsi. Ad esso si associa la regola dell'informazione interessante, considerando tutti i percorsi contenuti come parte dell'informazione. Quindi un nodo *n* che riceve l'ETP lo inoltra (a tutti i suoi vicini tranne quello da cui lo riceve) se l'ETP non ha fatto già un ciclo (non c'è già l'ID di *n*) **e** i percorsi contenuti in *P* hanno apportato qualche aggiornamento alla mappa di *n*.
 
-## Implementazione dell'esplorazione
+## <a name="Implementazione_esplorazione"></a>Implementazione dell'esplorazione
 
 Si descrive ora come viene implementata l'esplorazione di una rete. Affrontiamo subito il problema della dinamicità della rete, cioè operiamo in un grafo che cambia nel tempo in termini di vertici o di archi o di costo degli archi.
 
@@ -40,7 +66,7 @@ Si noti invece che in questo capitolo non introduciamo subito l'aspetto della st
 
 Tuttavia, in alcuni passaggi verranno fatte delle annotazioni che riguardano concetti relativi alla struttura gerarchica, come il concetto dei g-nodi a cui un nodo appartiene. Questi concetti dovrebbero comunque essere stati assimiliati dal lettore nel documento di [analisi](AnalisiFunzionale.md). Si prosegua comunque la lettura considerando che in seguito tali aspetti verranno dettagliati maggiormente.
 
-### Maggiori dettagli sull'ETP
+### <a name="Dettagli_etp"></a>Maggiori dettagli sull'ETP
 
 Diciamo subito che l'esplorazione della rete avviene attraverso la comunicazione da un nodo ai suoi vicini di messaggi ETP.
 
@@ -58,7 +84,7 @@ Inoltre abbiamo detto che un ETP è esso stesso un TP (aciclico) e quindi ha anc
 
 Ricordiamo che un ETP contiene, oltre alla sua sequenza di ID dei nodi attraversati, anche un set *P* di percorsi *p* che vengono "pubblicizzati" dal nodo che trasmette l'ETP ai suoi vicini.
 
-### Rete completamente esplorata
+### <a name="Rete_esplorata"></a>Rete completamente esplorata
 
 Una rete si dice *completamente esplorata*, per brevità diciamo *esplorata*, se tutti i nodi hanno tutte le conoscenze di loro pertinenza. L'obiettivo che ci siamo prefissati è descritto nel dettaglio nel documento di analisi funzionale: in sintesi, ogni nodo deve avere per ogni destinazione un numero di percorsi rapidi e tra loro [disgiunti](PercorsiDisgiunti.md). I dettagli sulle informazioni per ogni percorso verranno man mano esplicitati in questo documento. In seguito nel documento indicheremo questo insieme di conoscenze di un nodo con il termine *mappa* di *n*.
 
@@ -149,11 +175,11 @@ Il nodo *n*, solo se ha almeno un vicino, prepara un nuovo ETP completo e lo inv
 
 Quando tutti gli ETP finiscono il loro ciclo di vita la rete è di nuovo *esplorata*.
 
-## Struttura gerarchica degli indirizzi
+## <a name="Struttura_gerarchica_indirizzi"></a>Struttura gerarchica degli indirizzi
 
 In questo capitolo prendiamo in esame il fatto che ogni singolo nodo mantiene informazioni sulla rete che sono limitate ad una visione gerarchica. Quindi anche quando le trasmette esse hanno questo limite. Vedremo cosa questo comporta in termini di informazioni che devono essere trasmesse in ogni ETP in aggiunta al set di percorsi che abbiamo prima introdotto. Essendo questo l'ultimo aspetto affrontato, descriveremo di seguito nel dettaglio come è fatto un messaggio di ETP. Vedremo infine cosa comporta l'ingresso di un intero g-nodo in una rete esistente.
 
-### Rappresentazione gerarchica degli ID
+### <a name="Rappresentazione_gerarchica_id"></a>Rappresentazione gerarchica degli ID
 
 Abbiamo già detto che un messaggio di ETP contiene, oltre alla lista di ID dei nodi che ha percorso, anche un set *P* di percorsi *p*. Ogni percorso contiene una lista degli ID dei nodi che lo costituiscono, e per ognuno di questi nodi contiene anche l'identificativo dell'arco attraverso il quale passa il percorso; infine contiene il suo costo totale.
 
@@ -166,11 +192,11 @@ Ogni percorso *p* contiene due sequenze di *k* elementi:
 
 Ogni g-nodo in queste liste è espresso in forma di coordinate gerarchiche che sono valide per il nodo pubblicizzante, cioè il nodo che ha prodotto l'oggetto ETP. Gli identificativi degli archi in queste liste sono gli effettivi archi che collegano un border-nodo del g-nodo precedente ad un border-nodo del g-nodo successivo.
 
-### Informazioni aggiuntive sulla destinazione
+### <a name="Informazioni_aggiuntive_sulla_destinazione"></a>Informazioni aggiuntive sulla destinazione
 
 Aggiungiamo inoltre che ogni percorso del set *P* contiene alcune informazioni aggiuntive riguardo il g-nodo che è la sua destinazione. Contiene il suo fingerprint e il numero approssimato di nodi nel suo interno.
 
-### Minimo comune g-nodo e massimo distinto g-nodo
+### <a name="Minimo_comune_gnodo"></a>Minimo comune g-nodo e massimo distinto g-nodo
 
 Introduciamo due definizioni che ci saranno utili nel resto del capitolo. Siano due nodi distinti *n* e *v*.
 
@@ -186,13 +212,13 @@ Definiamo *massimo distinto g-nodo di v per n* il g-nodo *v<sub>i</sub>*, cioè 
 
 Simmetricamente abbiamo che il *massimo distinto g-nodo di n per v* è il g-nodo *n<sub>i</sub>*, cioè il più grande g-nodo che contiene *n* ma non contiene *v*.
 
-### Percorso a livelli crescenti
+### <a name="Percorso_a_livelli_crescenti"></a>Percorso a livelli crescenti
 
 Si consideri che un ETP è un ATP, cioè è aciclico. Quando il nodo *n* riceve dal nodo *v* un ETP *m* che contiene già il suo ID nella lista del percorso seguito, subito *n* ignora l'ETP *m*. Bisogna considerare che in questa frase con il termine ID di *n* si intende l'identificativo del massimo distinto g-nodo di *n* per *v*.
 
 Come conseguenza del fatto che non possono essere mantenuti o trasmessi percorsi  ciclici a nessun livello della gerarchia, le liste di hop percorsi sono sempre in una forma in  cui i livelli salgono man mano che si avanza. Infatti nel momento in cui un ATP esce da un g-nodo non può più rientrarvi. Ad esempio  potrei avere il percorso (0, 2) - (0, 5) - (1, 3) - (1, 7) - (2, 2) - (4, 2)  - (4, 3) - (5, 3) - (5, 6). In questa rappresentazione delle coordinate il primo numero indica il livello e il secondo l'identificativo.
 
-### Dichiarazione di percorso da ignorare all'esterno di un g-nodo
+### <a name="Dichiarazione_percorso_da_ignorare"></a>Dichiarazione di percorso da ignorare all'esterno di un g-nodo
 
 Sia *m* un ETP prodotto dal nodo *v*. Quando questo abbandona il suo g-nodo di livello *i*, cioè quando viene ricevuto dal nodo vicino *n* il cui minimo comune g-nodo con *v* è *v<sub>i+1</sub>*, esso deve perdere tutte le informazioni interne al g-nodo *v<sub>i</sub>*. Infatti *n* considera tutti i nodi interni a *v<sub>i</sub>* come raggruppati in un unico vertice.
 
@@ -200,7 +226,7 @@ Sia *p* ∈ *m.P* un percorso pubblicizzato da *v*. Tale percorso può essere va
 
 Vediamo quali casi sono stati individuati.
 
-#### Arco di uscita dal g-nodo
+#### <a name="Arco_di_uscita"></a>Arco di uscita dal g-nodo
 
 Si consideri un ETP che abbandona un g-nodo *g* di livello *i* e giunge al nodo *n*. Ogni percorso noto a *n*, che tocca il vertice *g*, avrà come successivo hop un altro vertice *h*, di livello *i* o maggiore. Il passaggio da *g* ad *h* avviene attraverso un arco che è un arco realizzato da uno dei border-nodi di *g*.
 
@@ -210,13 +236,13 @@ Di conseguenza, il nodo *n* ∉ *g* è interessato a ricevere informazioni su pe
 
 Quindi, quando il nodo *v* produce il messaggio *m* e include un percorso *p*, per ogni livello *i* (da 1 a *l* - 1), se tale percorso non è il migliore tra quelli che escono dal suo g-nodo *v<sub>i</sub>* attraverso un particolare arco *a*, deve indicare che tale percorso va ignorato all'esterno di *v<sub>i</sub>*.
 
-#### Percorsi interni al g-nodo
+#### <a name="Percorsi_interni"></a>Percorsi interni al g-nodo
 
 Si consideri un ETP *m* prodotto da *v* che abbandona *v<sub>i</sub>* e giunge al nodo *n*. Ogni percorso *p* la cui destinazione finale è interna a *v<sub>i</sub>* , cioè con livello inferiore a *i*, va scartato dal nodo *n*. Questo il nodo *n* sarebbe stato in grado di capirlo da solo. Comunque anche in questo caso, lo facciamo dichiarare esplicitamente dal nodo *v*.
 
 Quindi, quando il nodo *v* produce il messaggio *m* e include un percorso *p*, per ogni livello *i* (da 1 a *l* - 1), se tale percorso ha una destinazione interna a *v<sub>i</sub>*, deve indicare che tale percorso va ignorato all'esterno di *v<sub>i</sub>*.
 
-### Rimozione dei percorsi da ignorare
+### <a name="Rimozione_percorsi_da_ignorare"></a>Rimozione dei percorsi da ignorare
 
 Sia *m* un ETP che il nodo *n* riceve dal nodo *v*. Sia *p* ∈ *m.P* un percorso pubblicizzato da *v*.
 
@@ -226,7 +252,7 @@ Il nodo *n* esamina il messaggio *m* per vedere se *p* è un percorso che va ign
 
 <a name="GroupingRule"></a>
 
-### Definizione di grouping rule
+### <a name="Definizione_grouping_rule"></a>Definizione di grouping rule
 
 Sia *m* un ETP che il nodo *n* riceve dal nodo *v*. Sia *p* ∈ *m.P* un percorso pubblicizzato da *v*.
 
@@ -240,7 +266,7 @@ Se invece *i* > 1  questo significa che il nodo *v* e il nodo *n* sono border-no
 
 Da ogni percorso *p* ∈ *m.P*, *n* rimuove tutti gli hop iniziali che rappresentano un g-nodo di livello inferiore ad *i-1*; alla lista rimarrà sicuramente qualche hop; di seguito *n* vi aggiunge in testa l'hop composto dal massimo distinto g-nodo di *v* per *n* - che sarà del tipo ( *i-1* , *v<sub>i-1</sub>* ) - e dall'arco tramite il quale *n* ha ricevuto l'ETP.
 
-#### Applicazione della grouping rule sulla lista di hops percorsi dall'ETP
+#### <a name="Applicazione_grouping_rule"></a>Applicazione della grouping rule sulla lista di hops percorsi dall'ETP
 
 La grouping rule come è stata descritta si applica ai percorsi *p* ∈ *m.P*. Ma si applica in modo diverso anche alla lista di hops percorsi dal messaggio *m*.
 
@@ -250,7 +276,7 @@ Il nodo *n* rimuove da questa lista tutti gli hop iniziali che rappresentano un 
 
 <a name="AcyclicRule"></a>
 
-### Definizione di acyclic rule
+### <a name="Definizione_acyclic_rule"></a>Definizione di acyclic rule
 
 Sia *m* un ETP che il nodo *n* riceve dal nodo *v*. Sia *p* ∈ *m.P* un percorso pubblicizzato da *v*.
 
@@ -260,13 +286,13 @@ L'implementazione è banale. Va effettuata su tutti i livelli. Il nodo *v* sa di
 
 Se la regola non è soddisfatta, cioè se il percorso è ciclico, il percorso *p* viene scartato.
 
-#### Applicazione della acyclic rule sulla lista di hops percorsi dall'ETP
+#### <a name="Applicazione_acyclic_rule"></a>Applicazione della acyclic rule sulla lista di hops percorsi dall'ETP
 
 La acyclic rule come è stata descritta si applica ai percorsi *p* ∈ *m.P*. Ma si applica in modo analogo anche alla lista di hops percorsi dal messaggio *m*.
 
 In questo caso, se la regola non è soddisfatta, cioè se il percorso è ciclico, allora l'intero ETP viene ignorato.
 
-### Contenuto e forma di un messaggio ETP
+### <a name="Contenuto_forma_messaggio_etp"></a>Contenuto e forma di un messaggio ETP
 
 Un messaggio ETP *m* inviato da un nodo *v* deve contenere:
 
@@ -282,7 +308,7 @@ Un messaggio ETP *m* inviato da un nodo *v* deve contenere:
     *   Il numero approssimato di nodi nel g-nodo *d* come riportato dal percorso *p*.
     *   Il costo totale del percorso da *v* a *d*.
 
-#### Informazioni sui percorsi da ignorare
+#### <a name="Informazioni_sui_percorsi_da_ignorare"></a>Informazioni sui percorsi da ignorare
 
 Quando un ETP *m* prodotto da *v* abbandona *v<sub>i</sub>* esso deve indicare quali percorsi sono da ignorare all'esterno di *v<sub>i</sub>*.
 
@@ -302,7 +328,7 @@ La valorizzazione di questo booleano procede così:
         *   Altrimenti:
             *   Il booleano vale True.
 
-#### Informazioni aggiuntive riguardo la destinazione
+#### <a name="Informazioni_aggiuntive_destinazione"></a>Informazioni aggiuntive riguardo la destinazione
 
 Si consideri il nodo *n* vicino di *v* che riceve questo messaggio *m* tramite un suo arco. Oltre al set di percorsi *P* contenuto in *m*, il nodo *n* intrinsecamente riceve un percorso verso il massimo distinto g-nodo di *v* per *n*. Sia *i* il livello di questo g-nodo, indichiamo questo g-nodo con *v<sub>i</sub>*. Il nodo *n* vorrà memorizzare nella sua mappa questo percorso e dovrà quindi essere informato sulle informazioni aggiuntive di cui abbiamo parlato in precedenza, cioè il fingerprint di *v<sub>i</sub>* e il numero di nodi all'interno di *v<sub>i</sub>*. Siccome il nodo *v* quando trasmette l'ETP *m* non conosce il livello *i* (poiché il messaggio *m* potrebbe essere inviato in broadcast e raggiungere diversi vicini) allora *v* dovrà aggiungere ad *m* queste informazioni per tutti i g-nodi a cui appartiene ad ogni livello. Quindi il messaggio *m* prodotto da *v* deve contenere anche:
 
@@ -310,7 +336,7 @@ Si consideri il nodo *n* vicino di *v* che riceve questo messaggio *m* tramite u
     *   Il fingerprint del g-nodo *v<sub>i</sub>*.
     *   Il numero approssimato di nodi all'interno del g-nodo *v<sub>i</sub>*.
 
-### Ingresso di un g-nodo in una rete
+### <a name="Ingresso_gnodo_in_rete"></a>Ingresso di un g-nodo in una rete
 
 Prima di affrontare l'argomento di rete gerarchica, avevamo detto che un nodo *n* può fare ingresso in una rete *G* grazie ad un set di archi verso nodi vicini.
 
@@ -404,7 +430,7 @@ Doopo che il nodo *n* è uscito dalla fase di bootstrap per qualsiasi motivo —
 
 Alla fine il nodo *n* prepara un nuovo ETP completo e lo invia in broadcast a tutti i vicini.
 
-#### Osservazione sugli indirizzi IP interni
+#### <a name="Osservazione_indirizzi_ip_interni"></a>Osservazione sugli indirizzi IP interni
 
 Durante il tempo in cui il modulo QSPN del nodo *m* si ritiene nella fase di bootstrap ai livelli da *i* a *j* - 1, esso comunque fornisce al suo utilizzatore i percorsi noti verso destinazioni di livello minore di *i*. Del resto le mappe nei vari nodi in *w* sono già popolate fino al livello *i* - 1. Questo è importante per il funzionamento degli indirizzi IP interni, i quali abbiamo detto mitigano i disagi dovuti al cambio di indirizzo di grandi g-nodi (dovuti a migrazioni o a ingressi in altre reti). Infatti l'identità *m* in *w* può essere la nuova identità *principale* del suo sistema, ad esempio a motivo di una migrazione di g-nodo. In questo momento un processo nel sistema, usando il network namespace default, ha a disposizione nella tabella di routing del kernel solo le rotte verso indirizzi IP interni a *w*.
 
