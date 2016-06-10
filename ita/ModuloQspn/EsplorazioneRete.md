@@ -39,7 +39,7 @@ considerazioni abbiano portato alla scelta dell'effettiva implementazione che sa
 
 Un TP *flood* viene avviato da un nodo *s*. Per farlo *s* genera un TP, ci scrive il suo ID e lo invia a tutti
 i suoi vicini. Un nodo *n* che riceve il TP vi aggiunge il suo ID, un identificativo univoco dell'arco *a* attraverso
-il quale lo ha ricevuto e il costo dell'arco *c ( a )* e poi lo inoltra a tutti i suoi vicini tranne quello da
+il quale lo ha ricevuto e il costo dell'arco *c(a)* e poi lo inoltra a tutti i suoi vicini tranne quello da
 cui lo ha ricevuto.
 
 Quando un nodo invia un TP (questo vale sia per il nodo *s* che inizia il flood sia per il generico nodo *n* che
@@ -139,9 +139,10 @@ come si è detto nei [requisiti](AnalisiFunzionale.md#requisiti) dell'analisi fu
 **_Evento hooked_**: Sia *n* un nodo appena entrato nella rete G grazie ad un set di archi verso nodi vicini.
 
 Il nodo *n* si considera in fase di *bootstrap*. Durante questa fase il nodo conosce l'esistenza della rete
-G di cui vuole entrare a far parte con un dato indirizzo e questo indirizzo viene passato al modulo QSPN; il
-nodo sa riconoscere se un vicino che ha rilevato appartiene a tale rete, infatti è in grado di formare degli
-archi con tali vicini e questi archi sono comunicati al modulo QSPN; il modulo QSPN del nodo non conosce ancora
+G di cui vuole entrare a far parte con un dato indirizzo e questo indirizzo viene passato al modulo QSPN.
+Il programma che è in esecuzione nel sistema sa riconoscere se su un sistema vicino che ha rilevato
+esiste una identità (cioè un nodo) che appartiene a tale rete. Solo se è così il programma costruisce un
+arco-identità con quel nodo e comunica questo arco-identità al modulo QSPN di *n*. Il modulo QSPN di *n* non conosce ancora
 tutti i percorsi di sua pertinenza, quindi nemmeno tutte le destinazioni che esistono nella rete; il modulo
 QSPN del nodo non è in grado di computare il fingerprint dei g-nodi a cui appartiene. In queste condizioni il
 modulo non è in grado di produrre un ETP per i suoi vicini.
@@ -283,7 +284,7 @@ Abbiamo già detto che un messaggio di ETP contiene, oltre alla lista di ID dei 
 questi nodi contiene anche l'identificativo dell'arco attraverso il quale passa il percorso; infine contiene il suo costo totale.
 
 Aggiungiamo ora che ogni ID può in effetti rappresentare o un singolo nodo oppure un g-nodo, diciamo genericamente
-un g-nodo di livello *i* da 0 a *l-1*. Anche la destinazione di ognuno dei percorsi nel set *P* è un g-nodo.
+un g-nodo di livello *i* da 0 a *l* - 1. Anche la destinazione di ognuno dei percorsi nel set *P* è un g-nodo.
 
 Ogni percorso *p* contiene due sequenze di *k* elementi:
 
@@ -306,7 +307,7 @@ Introduciamo due definizioni che ci saranno utili nel resto del capitolo. Siano 
 
 Il nodo *v* ha indirizzo *v<sub>l-1</sub>·...·v<sub>1</sub>·v<sub>0</sub>*. Vale a dire che *v* ha identificativo
 *v<sub>0</sub>* all'interno del suo g-nodo di livello 1, il quale ha identificativo *v<sub>1</sub>* all'interno
-del suo g-nodo di livello 2, ... fino al suo g-nodo di livello *l-1* che ha identificativo *v<sub>l-1</sub>* all'interno
+del suo g-nodo di livello 2, ... fino al suo g-nodo di livello *l* - 1 che ha identificativo *v<sub>l-1</sub>* all'interno
 dell'unico g-nodo di livello *l* che costituisce l'intera rete.
 
 Il nodo *n* ha indirizzo *n<sub>l-1</sub>·...·n<sub>1</sub>·n<sub>0</sub>* con analogo significato.
@@ -317,7 +318,7 @@ a cui *v* ed *n* non appartengono allo stesso g-nodo.
 Definiamo *minimo comune g-nodo* tra *v* e *n* il g-nodo *v<sub>i+1</sub>* = *n<sub>i+1</sub>*, cioè il più piccolo
 g-nodo che contiene sia *n* sia *v*. Potrebbe trattarsi del g-nodo a livello *l* che costituisce l'intera rete.
 Siccome si tratta di uno dei g-nodi di *n* e anche uno dei g-nodi di *v*, per entrambi i nodi questo può essere
-rappresentato semplicemente con l'intero *i+1*.
+rappresentato semplicemente con l'intero *i* + 1.
 
 Definiamo *massimo distinto g-nodo di v per n* il g-nodo *v<sub>i</sub>*, cioè il più grande g-nodo che contiene *v*
 ma non contiene *n*. Per il nodo *n* questo può essere rappresentato come coordinata gerarchica a livello *i*. Invece
@@ -406,7 +407,7 @@ Sia *i* con *i* ≤ *l* il livello del minino comune g-nodo tra *n* e *v*.
 Se *i* = 1, cioè se il minimo comune g-nodo tra *n* e *v* è *v<sub>1</sub>*,  cioè *n* e *v* sono nello stesso g-nodo
 di livello 1, allora tutti gli  indirizzi che sono nella mappa gerarchica di *v* possono essere nella  mappa gerarchica
 di *n*. Quindi *n* considera validi tutti gli hop della lista; inoltre vi aggiunge in testa l'hop composto dal massimo
-distinto g-nodo di *v* per *n* - che sarà del tipo ( 0 , *v<sub>0</sub>* ) - e dall'arco tramite il quale *n* ha
+distinto g-nodo di *v* per *n* - che sarà del tipo (0, *v<sub>0</sub>*) - e dall'arco tramite il quale *n* ha
 ricevuto l'ETP.
 
 Se invece *i* > 1  questo significa che il nodo *v* e il nodo *n* sono border-nodi di g-nodi diversi. Questo comporta
@@ -414,8 +415,8 @@ che i percorsi che il nodo *v* sta pubblicizzando vanno modificati rimuovendo le
 g-nodo *v<sub>i</sub>*.
 
 Da ogni percorso *p* ∈ *m.P*, *n* rimuove tutti gli hop iniziali che rappresentano un g-nodo di livello inferiore ad
-*i-1*; alla lista rimarrà sicuramente qualche hop; di seguito *n* vi aggiunge in testa l'hop composto dal massimo
-distinto g-nodo di *v* per *n* - che sarà del tipo ( *i-1* , *v<sub>i-1</sub>* ) - e dall'arco tramite il quale *n*
+*i* - 1; alla lista rimarrà sicuramente qualche hop; di seguito *n* vi aggiunge in testa l'hop composto dal massimo
+distinto g-nodo di *v* per *n* - che sarà del tipo (*i* - 1, *v<sub>i-1</sub>*) - e dall'arco tramite il quale *n*
 ha ricevuto l'ETP.
 
 #### <a name="Applicazione_grouping_rule"></a>Applicazione della grouping rule sulla lista di hops percorsi dall'ETP
@@ -427,7 +428,7 @@ Si consideri che un percorso verso una destinazione interna ad un g-nodo *g* non
 Invece un ETP originato in *g* può essere che porti variazioni a percorsi che escono da *g*, quindi può essere nel
 complesso interessante per il nodo *n* ∉ *g*.
 
-Il nodo *n* rimuove da questa lista tutti gli hop iniziali che rappresentano un g-nodo di livello inferiore ad *i-1*;
+Il nodo *n* rimuove da questa lista tutti gli hop iniziali che rappresentano un g-nodo di livello inferiore ad *i* - 1;
 di seguito, anche qualora la lista risultasse vuota, vi aggiunge in testa l'hop composto dal massimo distinto g-nodo
 di *v* per *n*.
 
@@ -442,8 +443,8 @@ l'identificativo di uno dei suoi g-nodi, cioè se questo percorso è ciclico a q
 
 L'implementazione è banale. Va effettuata su tutti i livelli. Il nodo *v* sa di aver ricevuto questo percorso dal
 nodo *n*, quindi, avendo calcolato *i* il livello del minimo comune g-nodo tra *n* e *v*, potrebbe limitarsi a
-verificare il livello *i-1*, poiché in teoria il nodo *n* ha già rimosso i percorsi con cicli nei livelli superiori.
-Comunque il nodo *v* non si fida di questo e verifica tutti i livelli da *i-1* in su. Quelli inferiori a *i-1* sono
+verificare il livello *i* - 1, poiché in teoria il nodo *n* ha già rimosso i percorsi con cicli nei livelli superiori.
+Comunque il nodo *v* non si fida di questo e verifica tutti i livelli da *i* - 1 in su. Quelli inferiori a *i* - 1 sono
 stati rimossi dalla grouping rule.
 
 Se la regola non è soddisfatta, cioè se il percorso è ciclico, il percorso *p* viene scartato.
@@ -482,13 +483,13 @@ all'esterno di *v<sub>i</sub>*.
 Quindi il messaggio *m* prodotto da *v* deve contenere anche:
 
 *   Per ogni percorso *p* ∈ *P*:
-    *   Per ogni livello *i* da 1 a *l-1*:
+    *   Per ogni livello *i* da 1 a *l* - 1:
         *   Un booleano che dice se *p* è da ignorare per il nodo *n* ∉ *v<sub>i</sub>*.
 
 La valorizzazione di questo booleano procede così:
 
 *   Per ogni percorso *p* ∈ *P*:
-    *   Per ogni livello *i* da 1 a *l-1*:
+    *   Per ogni livello *i* da 1 a *l* - 1:
         *   Se la destinazione di *p* ha livello maggiore o uguale a *i*, cioè `p.hops.last().lvl` ≥ i:
             *   Sia *j* il più piccolo valore tale che `p.hops[j].lvl` ≥ i.
             *   Il booleano vale True se e solo se *p* NON è il miglior percorso da *v* verso `p.hops[j]` tramite `p.arcs[j]`.
@@ -506,7 +507,7 @@ nodo *v* quando trasmette l'ETP *m* non conosce il livello *i* (poiché il messa
 broadcast e raggiungere diversi vicini) allora *v* dovrà aggiungere ad *m* queste informazioni per tutti i g-nodi a
 cui appartiene ad ogni livello. Quindi il messaggio *m* prodotto da *v* deve contenere anche:
 
-*   Per ogni livello *i* da 0 a *l-1*:
+*   Per ogni livello *i* da 0 a *l* - 1:
     *   Il fingerprint del g-nodo *v<sub>i</sub>*.
     *   Il numero approssimato di nodi all'interno del g-nodo *v<sub>i</sub>*.
 
@@ -533,20 +534,20 @@ di *g* ha ottenuto e propagato a tutti i nodi in *w’* le seguenti informazioni
 
 *   Il livello *i* del proprio g-nodo *w’*.
 *   L'indirizzo Netsukuku di *g* di livello *j* in *G* e la sua anzianità e quella dei g-nodi superiori in *G*.
-*   La posizione riservata a *w* in *g* al livello *j* - 1 e la sua anzianità.
+*   La posizione riservata a *w* in *g* al livello *j* - 1 e la sua anzianità.
 
 Ogni singolo nodo *n’* in *w’* ha ora tutte le informazioni per produrre il suo nuovo indirizzo *n* in *w* e il suo
 fingerprint a livello 0, mantenendo lo stesso identificativo che aveva in *w’*.
 
 Per le posizioni dell'indirizzo Netsukuku di *n*:
 
-*   Per i livelli maggiori o uguali a *j* - 1 usa le posizioni che gli sono state comunicate ora.
-*   Per i livelli minori di *j* - 1 usa le posizioni che aveva l'indirizzo dell'identità *n’*.
+*   Per i livelli maggiori o uguali a *j* - 1 usa le posizioni che gli sono state comunicate ora.
+*   Per i livelli minori di *j* - 1 usa le posizioni che aveva l'indirizzo dell'identità *n’*.
 
 Per le anzianità del fingerprint di *n*:
 
-*   Per i livelli maggiori o uguali a *j* - 1 usa le anzianità che gli sono state comunicate ora.
-*   Per i livelli maggiori o uguali a *i* e minori di *j* - 1 usa zero (nel senso che è il primo g-nodo).
+*   Per i livelli maggiori o uguali a *j* - 1 usa le anzianità che gli sono state comunicate ora.
+*   Per i livelli maggiori o uguali a *i* e minori di *j* - 1 usa zero (nel senso che è il primo g-nodo).
 *   Per i livelli minori di *i* usa le anzianità che erano dei g-nodi a cui apparteneva l'identità *n’*.
 
 Il sistema in cui vive l'identità *n’* crea una nuova istanza del modulo QSPN che gestirà la sua identità *n*. Si
@@ -560,12 +561,12 @@ Il modulo QSPN in questo caso riceve queste informazioni:
 *   I percorsi noti verso i g-nodi di livello inferiore a *i* che sono in *w*.
 *   Gli archi di *n*.
 
-Il nuovo modulo QSPN si considera in fase di *bootstrap* ai livelli da *i* a *j* - 1, nel senso che:
+Il nuovo modulo QSPN si considera in fase di *bootstrap* ai livelli da *i* a *j* - 1, nel senso che:
 
 *   Conosce già tutti i percorsi di sua pertinenza verso g-nodi di livello inferiore a *i*.
-*   Non ha alcun percorso verso altri g-nodi di livello tra *i* e *j* - 1. Tali g-nodi non esistono nella posizione
+*   Non ha alcun percorso verso altri g-nodi di livello tra *i* e *j* - 1. Tali g-nodi non esistono nella posizione
     assegnata a *w* all'interno del g-nodo *g* della rete *G*.
-*   Non conosce ancora percorsi verso altri g-nodi di livello *j* - 1, che in teoria devono esistere in *g*.
+*   Non conosce ancora percorsi verso altri g-nodi di livello *j* - 1, che in teoria devono esistere in *g*.
 *   Non conosce ancora percorsi verso altri eventuali g-nodi di livello *j* o superiore nella rete *G*.
 Per questo non può computare il fingerprint del proprio g-nodo di livello *j* (e superiori). Questo implica che non
 può costruire un ETP che sia in grado di essere trasmesso all'esterno del g-nodo *w*.
@@ -583,7 +584,7 @@ Mentre è in corso la fase di bootstrap:
     *   Se *v* è un vicino esterno a *w*:
         *   Il modulo QSPN ignora il messaggio.
     *   Altrimenti:
-        *   Se *msg* non contiene percorsi verso destinazioni di livello uguale a *j* - 1:
+        *   Se *msg* non contiene percorsi verso destinazioni di livello uguale a *j* - 1:
             *   Il modulo QSPN ignora il messaggio.
         *   Altrimenti:
             *   L'identità *n* processa *msg* e aggiorna la sua mappa.
@@ -603,14 +604,14 @@ verso l'esterno di *g*.
 Se invece la lista *queued_arcs* non è vuota, chiede un ETP completo al vicino collegato col primo elemento della
 lista *queued_arcs*. Se riceve come risposta un rifiuto "perché in fase di bootstrap" ignora quell'arco e può provare
 con il prossimo. Se invece riceve un ETP come risposta (un solo ETP è già sufficiente) può uscire dalla fase di
-bootstrap ai livelli da *i* a *j* - 1, aggiornare la sua mappa e produrre ETP in grado di essere trasmessi
+bootstrap ai livelli da *i* a *j* - 1, aggiornare la sua mappa e produrre ETP in grado di essere trasmessi
 globalmente. Quindi trasmette tali ETP agli altri nodi in *w*. In questo caso l'ingresso di *w* è riuscito e tutti i
 nodi ne verranno gradualmente a conoscenza.
 
 Un nodo *m* in *w* che non ha archi verso l'esterno di *w* ma interno a *g* (o che ha ricevuto tutti rifiuti "perché
 in fase di bootstrap") aspetta per un certo tempo *X* di ricevere ETP per venire a conoscenza di percorsi verso
 l'esterno di *w* ma interno a *g*. Al primo ETP che gliene fornisce, il nodo *m* può uscire dalla fase di bootstrap
-ai livelli da *i* a *j* - 1, aggiornare la sua mappa e produrre ETP in grado di essere trasmessi globalmente. Anche
+ai livelli da *i* a *j* - 1, aggiornare la sua mappa e produrre ETP in grado di essere trasmessi globalmente. Anche
 esso trasmette tali ETP agli altri nodi in *w*.
 
 Se invece dopo un tempo massimo nessun ETP ha dato a *m* informazioni con percorsi verso l'esterno di *w*, bisogna
@@ -634,7 +635,7 @@ Le operazioni descritte sopra possono essere formalizzate con questo algoritmo:
     *   Sia *max_wait* = `max(10 sec, 100 * max(bestpath(dst).rtt for dst in known_destinations))`.
     *   Attende *max_wait*.
     *   Se ancora *bootstrap in corso*:
-        *   Esce dal *bootstrap* ai livelli da *i* a *j* - 1, poiché il g-nodo *w* di livello *i* è una rete a sé stante.
+        *   Esce dal *bootstrap* ai livelli da *i* a *j* - 1, poiché il g-nodo *w* di livello *i* è una rete a sé stante.
 
 Doopo che il nodo *n* è uscito dalla fase di bootstrap per qualsiasi motivo — può essere accaduto perché ha ottenuto
 un ETP espressamente richiesto ad un nodo esterno a *w* ma interno a *g*, oppure perché ha ricevuto un ETP da un suo
@@ -646,16 +647,16 @@ Alla fine il nodo *n* prepara un nuovo ETP completo e lo invia in broadcast a tu
 
 #### <a name="Osservazione_indirizzi_ip_interni"></a>Osservazione sugli indirizzi IP interni
 
-Durante il tempo in cui il modulo QSPN del nodo *m* si ritiene nella fase di bootstrap ai livelli da *i* a *j* - 1,
+Durante il tempo in cui il modulo QSPN del nodo *m* si ritiene nella fase di bootstrap ai livelli da *i* a *j* - 1,
 esso comunque fornisce al suo utilizzatore i percorsi noti verso destinazioni di livello minore di *i*. Del resto le
-mappe nei vari nodi in *w* sono già popolate fino al livello *i* - 1. Questo è importante per il funzionamento degli
+mappe nei vari nodi in *w* sono già popolate fino al livello *i* - 1. Questo è importante per il funzionamento degli
 indirizzi IP interni, i quali abbiamo detto mitigano i disagi dovuti al cambio di indirizzo di grandi g-nodi (dovuti
 a migrazioni o a ingressi in altre reti). Infatti l'identità *m* in *w* può essere la nuova identità *principale* del
 suo sistema, ad esempio a motivo di una migrazione di g-nodo. In questo momento un processo nel sistema, usando il
 network namespace default, ha a disposizione nella tabella di routing del kernel solo le rotte verso indirizzi IP interni a *w*.
 
-Non è critica la possibilità che, mentre il nodo *m* è nella fase di bootstrap ai livelli da *i* a *j* - 1, ci siano
+Non è critica la possibilità che, mentre il nodo *m* è nella fase di bootstrap ai livelli da *i* a *j* - 1, ci siano
 variazioni locali nel grafo interno a *w*. Quindi, sebbene tali variazioni avrebbero potuto essere comunicate ai nodi
-in *w*, ammettiamo il fatto che mentre un nodo è nella fase di bootstrap ai livelli da *i* a *j* - 1 non trasmette ETP
+in *w*, ammettiamo il fatto che mentre un nodo è nella fase di bootstrap ai livelli da *i* a *j* - 1 non trasmette ETP
 nemmeno all'interno di *w*.
 
