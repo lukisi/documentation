@@ -461,12 +461,9 @@ In questo caso, se la regola non è soddisfatta, cioè se il percorso è ciclico
 Un messaggio ETP *m* inviato da un nodo *v* deve contenere:
 
 *   L'indirizzo del nodo *v*, come elenco *v<sub>l-1</sub>·...·v<sub>1</sub>·v<sub>0</sub>*.
-*   La lista dei g-nodi percorsi dall'ETP sotto forma di due sequenze:
-    *   hops: sequenza di k g-nodi sotto forma di coordinate gerarchiche valide per il nodo *v*.
-    *   arcs: sequenza di k identificativi di arco, dove `arcs[0]` indica l'arco che congiunge il nodo v a
-        `hops[0]`, e `arcs[j]` indica l'arco che congiunge `hops[j-1]` a `hops[j]`.
+*   La lista dei g-nodi percorsi dall'ETP sotto forma di coordinate gerarchiche valide per il nodo *v*.
 *   Un set di percorsi *P* che il nodo *v* intende comunicare ai suoi vicini. Per ogni percorso *p* ∈ *P*:
-    *   La lista dei g-nodi del percorso *p*; questa comprende il g-nodo destinazione *d*; anche questa lista è
+    *   La lista dei g-nodi del percorso *p*; questa comprende il g-nodo destinazione *d*; questa lista è
         espressa come due sequenze:
         *   p.hops: sequenza di k<sub>p</sub> g-nodi sotto forma di coordinate gerarchiche valide per il nodo *v*.
         *   p.arcs: sequenza di k<sub>p</sub> identificativi di arco, dove `arcs[0]` indica l'arco che congiunge il
