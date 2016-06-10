@@ -438,13 +438,13 @@ di *v* per *n*.
 
 Sia *m* un ETP che il nodo *n* riceve dal nodo *v*. Sia *p* ∈ *m.P* un percorso pubblicizzato da *v*.
 
-Definiamo la *acyclic rule* come l'elaborazione che permette al nodo *v* di stabilire se in *p* è presente
+Definiamo la *acyclic rule* come l'elaborazione che permette al nodo *n* di stabilire se in *p* è presente
 l'identificativo di uno dei suoi g-nodi, cioè se questo percorso è ciclico a qualsiasi livello della gerarchia.
 
-L'implementazione è banale. Va effettuata su tutti i livelli. Il nodo *v* sa di aver ricevuto questo percorso dal
-nodo *n*, quindi, avendo calcolato *i* il livello del minimo comune g-nodo tra *n* e *v*, potrebbe limitarsi a
-verificare il livello *i* - 1, poiché in teoria il nodo *n* ha già rimosso i percorsi con cicli nei livelli superiori.
-Comunque il nodo *v* non si fida di questo e verifica tutti i livelli da *i* - 1 in su. Quelli inferiori a *i* - 1 sono
+L'implementazione è banale. Va effettuata su tutti i livelli. Il nodo *n* sa di aver ricevuto questo percorso dal
+nodo *v*, quindi, avendo calcolato *i* il livello del minimo comune g-nodo tra *n* e *v*, potrebbe limitarsi a
+verificare il livello *i* - 1, poiché in teoria il nodo *v* ha già rimosso i percorsi con cicli nei livelli superiori.
+Comunque il nodo *n* non si fida di questo e verifica tutti i livelli da *i* - 1 in su. Quelli inferiori a *i* - 1 sono
 stati rimossi dalla grouping rule.
 
 Se la regola non è soddisfatta, cioè se il percorso è ciclico, il percorso *p* viene scartato.
