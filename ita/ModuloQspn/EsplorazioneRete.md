@@ -388,7 +388,7 @@ all'esterno di *v<sub>i</sub>*.
 
 Sia *m* un ETP che il nodo *n* riceve dal nodo *v*. Sia *p* ∈ *m.P* un percorso pubblicizzato da *v*.
 
-Sia *i* con *i* ≤ *l* il livello del minino comune g-nodo tra *n* e *v*.
+Sia *i* con *i* < *l* il livello del massimo distinto g-nodo di *v* per *n*.
 
 Il nodo *n* esamina il messaggio *m* per vedere se *p* è un percorso che va ignorato all'esterno di *v<sub>i</sub>*,
 come è stato descritto sopra. In questo caso il percorso *p* viene scartato.
