@@ -515,12 +515,13 @@ grazie ad un set di archi verso nodi vicini.
 
 Generalizzando, un g-nodo *w* di livello *i*, isomorfo al g-nodo *w’* che si trova in una diversa rete, può fare
 ingresso in blocco in una rete *G*, per l'esattezza trovando un posto in un g-nodo *g* ∈ *G* di livello *j* con
-*j* > *i*, grazie ad un numero di archi che congiungono alcuni nodi di *w’* ad altri nodi di *g*. Il requisito è
+*j* > *i*, grazie ad un numero di archi che congiungono alcuni nodi di *w* ad altri nodi di *g*. Il requisito è
 che la topologia di rete di *G* sia identica a quella usata da *w’*.
 
 Considerando l'aspetto delle migrazioni, diciamo anche che in modo analogo un g-nodo *w*, isomorfo al g-nodo *w’*
 che si trova nel g-nodo *h* ∈ *G* può "fare ingresso", o meglio trovare un ulteriore posto, in blocco, nel g-nodo
-*g* ∈ *G* di pari livello di *h*. Sempre grazie ad un numero di archi che congiungono alcuni nodi di *w’* ad altri nodi di *g*.
+*g* ∈ *G* di livello pari o superiore a *h*. Sempre grazie ad un numero di archi che congiungono alcuni nodi di
+*w* ad altri nodi di *g*.
 
 Sia nel caso di ingresso in una nuova rete, sia nel caso di migrazione in un diverso g-nodo, consideriamo cosa deve
 fare ogni nodo *n’* appartenente al g-nodo *w’* di livello *i* (incluso il caso in cui *w’* sia il g-nodo di livello
@@ -533,49 +534,76 @@ di *g* ha ottenuto e propagato a tutti i nodi in *w’* le seguenti informazioni
 *   L'indirizzo Netsukuku di *g* di livello *j* in *G* e la sua anzianità e quella dei g-nodi superiori in *G*.
 *   La posizione riservata a *w* in *g* al livello *j* - 1 e la sua anzianità.
 
-Ogni singolo nodo *n’* in *w’* ha ora tutte le informazioni per produrre il suo nuovo indirizzo *n* in *w* e il suo
-fingerprint a livello 0, mantenendo lo stesso identificativo che aveva in *w’*.
+Ogni singolo nodo *n’* in *w’* ha ora tutte le informazioni per produrre l'indirizzo Netsukuku e il
+fingerprint a livello 0 per una nuova identità *n* in *w*.
 
-Per le posizioni dell'indirizzo Netsukuku di *n*:
+Per costruire l'indirizzo Netsukuku di *n*:
 
 *   Per i livelli maggiori o uguali a *j* - 1 usa le posizioni che gli sono state comunicate ora.
 *   Per i livelli minori di *j* - 1 usa le posizioni che aveva l'indirizzo dell'identità *n’*.
 
-Per le anzianità del fingerprint di *n*:
+Per costruire il fingerprint a livello 0 di *n*, come identificativo usa lo stesso identificativo
+di *n’*. Per le sue anzianità:
 
 *   Per i livelli maggiori o uguali a *j* - 1 usa le anzianità che gli sono state comunicate ora.
 *   Per i livelli maggiori o uguali a *i* e minori di *j* - 1 usa zero (nel senso che è il primo g-nodo).
 *   Per i livelli minori di *i* usa le anzianità che erano dei g-nodi a cui apparteneva l'identità *n’*.
 
 Il sistema in cui vive l'identità *n’* crea una nuova istanza del modulo QSPN che gestirà la sua identità *n*. Si
-rimanda alla trattazione delle identità per chiarimenti a proposito.
+rimanda alla trattazione delle identità per dettagli approfonditi.
 
-Il modulo QSPN in questo caso riceve queste informazioni:
+Dopo la duplicazione degli archi-identità da *n’* a *n*, nel caso di ingresso in una nuova rete,
+bisogna considerare che alcuni archi-identità per i quali il nodo *n’* non aveva costruito un arco-qspn
+potrebbero essere tali che il nodo *n* voglia costruire un arco-qspn: questo avviene se ci sono archi fisici
+con sistemi che appartenevano già alla nuova rete. Inoltre alcuni archi-identità per i quali il nodo *n’*
+aveva costruito un arco-qspn potrebbero essere tali che il nodo *n* non voglia costruire un arco-qspn: questo
+avviene se *n’* aveva archi-identità con nodi esterni a *w’* nella vecchia rete.
+
+La nuova istanza del modulo QSPN riceve queste informazioni:
 
 *   L'indirizzo Netsukuku di *n* in *G* e il suo fingerprint a livello 0.
 *   Il livello *i* del g-nodo *w* che sta facendo il suo ingresso in *G*.
 *   Il livello *j* del g-nodo *g* in cui *w* sta facendo ingresso.
 *   I percorsi noti verso i g-nodi di livello inferiore a *i* che sono in *w*.
-*   Gli archi di *n*.
+*   Gli archi di *n* interni a *w*. Per questi archi il modulo QSPN riceve dal suo utilizzatore
+    anche l'indirizzo Netsukuku del vicino. `List<IQspnArc> internal_arc_set` e
+    `List<IQspnNaddr> internal_arc_peer_naddr_set` di uguali dimensioni.  
+    In particolare per quanto riguarda l'indirizzo Netsukuku del vicino, possiamo affermare
+    che l'utilizzatore del modulo è in grado di reperire questa informazione per
+    gli archi di *n* interni a *w*: infatti l'arco collega ad un vicino che ha migrato con noi, quindi sappiamo
+    quale era l'indirizzo Netsukuku di quel vicino in *w’* e come calcolare il suo indirizzo Netsukuku in *w*.
+*   Gli archi di *n* esterni a *w*. Per questi archi il modulo QSPN non riceve l'indirizzo Netsukuku del vicino.
+    `List<IQspnArc> external_arc_set`.
+*   Una callback con la quale il costruttore del modulo QSPN può ottenere, partendo da una istanza di arco
+    di *n’* interno a *w’*, l'istanza del relativo arco duplicato di *n* interno a *w*.
+    `IQspnArc? old_arc_to_new_arc(IQspnArc old)`.
 
-Il nuovo modulo QSPN si considera in fase di *bootstrap* ai livelli da *i* a *j* - 1, nel senso che:
+Per gli archi che collegano *n* ad altri nodi interni a *w*, proprio per il fatto che il modulo
+di *n* copia dal modulo di *n’* i percorsi noti verso i g-nodi di livello inferiore a *i* che
+sono in *w’*, il modulo deve conoscere le ulteriori informazioni riportate qui sopra.
+
+La nuova istanza del modulo QSPN si considera in fase di *bootstrap* ai livelli da *i* a *j* - 1, nel senso che:
 
 *   Conosce già tutti i percorsi di sua pertinenza verso g-nodi di livello inferiore a *i*.
-*   Non ha alcun percorso verso altri g-nodi di livello tra *i* e *j* - 1. Tali g-nodi non esistono nella posizione
-    assegnata a *w* all'interno del g-nodo *g* della rete *G*.
-*   Non conosce ancora percorsi verso altri g-nodi di livello *j* - 1, che in teoria devono esistere in *g*.
-*   Non conosce ancora percorsi verso altri eventuali g-nodi di livello *j* o superiore nella rete *G*.
+*   Sa che non esistono altri g-nodi (oltre al suo) di livello tra *i* e *j* - 2 all'interno del g-nodo
+    di livello *j* - 1 che gli è stato assegnato dentro *g* nella rete *G*.
+*   Sa che esistono (*almeno uno*) altri g-nodi (oltre al suo) di livello *j* - 1 all'interno del g-nodo *g* della
+    rete *G*. Ma non conosce ancora alcun percorso verso di essi.
+*   Non conosce ancora alcun percorso verso altri eventuali g-nodi di livello *j* o superiore nella rete *G*.
+
 Per questo non può computare il fingerprint del proprio g-nodo di livello *j* (e superiori). Questo implica che non
 può costruire un ETP che sia in grado di essere trasmesso all'esterno del g-nodo *w*.
 
+L'identità *n* copia in una lista temporanea *queued_arcs* tutti gli archi che ha verso nodi esterni a *w*.  
+Perché il modulo di *n* possa uscire dalla fase di bootstrap, cioè per avere le informazioni necessarie
+al nostro nuovo posto, è *necessario e sufficiente* un ETP completo prodotto da un nodo che sia
+in *g* e non in *w*.  
+La nuova istanza del modulo non ha ancora ricevuto ETP dagli archi e quindi non conosce gli indirizzi Netsukuku dei
+suoi vicini esterni a *w*. Non può quindi stabilire (se non ottenendo un primo ETP, magari da scartare) se un vicino
+esterno a *w* sia interno a *g*.
+
 Mentre è in corso la fase di bootstrap:
 
-*   L'identità *n* copia in una lista temporanea *queued_arcs* tutti gli archi che ha verso nodi esterni a *w* ma
-    interni a *g* (da ogni arco si può vedere il Netsukuku address del vicino collegato).  
-    Non vogliamo prendere in considerazione archi verso nodi esterni a *g*. Infatti dagli ETP prodotti da tali vicini
-    non potremmo avere informazioni che ci consentono di costruire correttamente il fingerprint di livello *j* e di
-    conseguenza i superiori.
-*   Nella lista temporanea *queued_arcs* dovremmo avere solo archi che collegano a nodi nel proprio g-nodo di livello *j*.
 *   Se *n* riceve un ETP *msg* spontaneamente inviato da un vicino *v* (non quelli richiesti da *n* ai nodi in
     *queued_arcs* di cui parliamo sotto):
     *   Se *v* è un vicino esterno a *w*:
@@ -594,22 +622,22 @@ Mentre è in corso la fase di bootstrap:
     Non esegue altre azioni.
 *   Se *n* riceve la richiesta di produrre un ETP la rifiuta "perché in fase di bootstrap".
 
-Un nodo *n* in *w*, se non ha alcun arco verso l'esterno di *w* ma interno a *g* (la lista *queued_arcs* è vuota) aspetta
-di vedere se altri nodi in *w* gli forniranno in seguito i percorsi verso l'esterno di *w* ma interno a *g* e anche
-verso l'esterno di *g*.
+Un nodo *n* in *w*, se non ha alcun arco verso l'esterno di *w* ma interno a *g* (cioè se
+la lista *queued_arcs* è vuota oppure se tentando di ottenere qualche ETP è costretto a scartare tutti
+gli archi perché sono esterni a *g*) aspetta di ricevere dagli altri nodi in *w* un ETP
+con i percorsi verso l'esterno di *w*.
 
-Se invece la lista *queued_arcs* non è vuota, chiede un ETP completo al vicino collegato col primo elemento della
-lista *queued_arcs*. Se riceve come risposta un rifiuto "perché in fase di bootstrap" ignora quell'arco e può provare
-con il prossimo. Se invece riceve un ETP come risposta (un solo ETP è già sufficiente) può uscire dalla fase di
+Se la lista *queued_arcs* non è vuota, *n* chiede un ETP completo al vicino collegato col primo elemento della
+lista *queued_arcs*. Se riceve come risposta un rifiuto "perché in fase di bootstrap",
+oppure se l'indirizzo Netsukuku del vicino riportato nell'ETP risulta esterno a *g*, ignora quell'arco e può provare
+con il prossimo. Altrimenti, con l'ETP che riceve (un solo ETP è già sufficiente) può uscire dalla fase di
 bootstrap ai livelli da *i* a *j* - 1, aggiornare la sua mappa e produrre ETP in grado di essere trasmessi
 globalmente. Quindi trasmette tali ETP agli altri nodi in *w*. In questo caso l'ingresso di *w* è riuscito e tutti i
 nodi ne verranno gradualmente a conoscenza.
 
 Un nodo *m* in *w* che non ha archi verso l'esterno di *w* ma interno a *g* (o che ha ricevuto tutti rifiuti "perché
-in fase di bootstrap") aspetta per un certo tempo *X* di ricevere ETP per venire a conoscenza di percorsi verso
-l'esterno di *w* ma interno a *g*. Al primo ETP che gliene fornisce, il nodo *m* può uscire dalla fase di bootstrap
-ai livelli da *i* a *j* - 1, aggiornare la sua mappa e produrre ETP in grado di essere trasmessi globalmente. Anche
-esso trasmette tali ETP agli altri nodi in *w*.
+in fase di bootstrap") aspetta per un certo tempo *X* di ricevere un ETP dagli altri nodi in *w*, come abbiamo
+detto sopra, e quindi uscire dalla fase di bootstrap.
 
 Se invece dopo un tempo massimo nessun ETP ha dato a *m* informazioni con percorsi verso l'esterno di *w*, bisogna
 che il nodo *m* riconosca il g-nodo *w* come un g-nodo isolato. Il nodo *m* a questo punto non ha percorsi verso
@@ -617,7 +645,8 @@ altri g-nodi di livello *i* o superiori, esce lo stesso dalla fase di bootstrap,
 fingerprint a livello *l* che ha l'identificativo del g-nodo *w* come identificativo di rete.
 
 Il tempo *X* da aspettare dipende dalla forma di *w* e dalla posizione di *m* all'interno di *w*. Si ritiene adeguato
-come tempo 10 secondi oppure, se maggiore, 1000 volte il tempo del miglior percorso noto verso la peggiore delle destinazioni note.
+come tempo 10 secondi oppure, se maggiore, 1000 volte il tempo del miglior percorso noto verso la peggiore delle
+destinazioni note (interne a *w*).
 
 Le operazioni descritte sopra possono essere formalizzate con questo algoritmo:
 
@@ -626,7 +655,10 @@ Le operazioni descritte sopra possono essere formalizzate con questo algoritmo:
     *   Chiede al vicino collegato ad *arc* un nuovo ETP completo.  
         Se il vicino rifiuta perché non ha completato il bootstrap, *n* rimuove *arc* dalla lista *queued_arcs*
         e continua il ciclo.
-    *   Se riceve un ETP *msg* come risposta (uno solo è già sufficiente) *n* processa *msg* ed esce dalla fase di
+    *   Se riceve un ETP *msg* come risposta, *n* scopre l'indirizzo Netsukuku del vicino
+        collegato a *arc*. Se tale vicino risulta esterno a *g* (livello maggiore o uguale a *j*)
+        *n* rimuove *arc* dalla lista *queued_arcs*, ignora l'ETP ricevuto e continua il ciclo.
+    *   Altrimenti *n* processa *msg* ed esce dalla fase di
         bootstrap. Poi produce un ETP completo e lo invia a tutti i vicini. Esce dal ciclo.
 *   Se ancora *bootstrap in corso*:
     *   Sia *max_wait* = `max(10 sec, 100 * max(bestpath(dst).rtt for dst in known_destinations))`.
@@ -634,9 +666,7 @@ Le operazioni descritte sopra possono essere formalizzate con questo algoritmo:
     *   Se ancora *bootstrap in corso*:
         *   Esce dal *bootstrap* ai livelli da *i* a *j* - 1, poiché il g-nodo *w* di livello *i* è una rete a sé stante.
 
-Doopo che il nodo *n* è uscito dalla fase di bootstrap per qualsiasi motivo — può essere accaduto perché ha ottenuto
-un ETP espressamente richiesto ad un nodo esterno a *w* ma interno a *g*, oppure perché ha ricevuto un ETP da un suo
-vicino interno a *w* che era uscito prima di lui, oppure perché il tempo massimo è scaduto — la lista *queued_arcs*
+Doopo che il nodo *n* è uscito dalla fase di bootstrap la lista *queued_arcs*
 non serve più e può essere rimossa. Ora che il nodo *n* non è più in bootstrap, per ogni suo arco chiede un nuovo ETP
 completo al relativo vicino. Con tale ETP aggiorna la sua mappa.
 
