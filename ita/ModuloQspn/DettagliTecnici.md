@@ -37,9 +37,7 @@ A volte ci riferiremo ad una istanza di QspnManager, sottintendendo che questa s
 identità che vive in un nodo.
 
 Per una dettagliata analisi del concetto di *identità* e delle sue caratteristiche rimandiamo al documento di
-trattazione del modulo Identities. Nel documento Identities viene introdotto il concetto di identità *principale*.
-Qui evidenziamo che tale identità detiene l'indirizzo che nella trattazione del presente modulo abbiamo indicato
-con il termine *indirizzo definitivo*.
+trattazione del modulo Identities.
 
 A volte parleremo di *nodo* indicando con questo termine l'intera macchina fisica. O meglio il *sistema* su cui
 è in esecuzione il processo demone *ntkd*. Dobbiamo tenere presente che al suo interno possono vivere diverse
@@ -82,7 +80,7 @@ Esaminiamo nel dettaglio i requisiti (forniti dal demone *ntkd*) e i deliverable
 *   **Avvio** come singolo nodo. Quando un nodo si avvia viene creata la sua *identità principale* ed essa
     forma da sola una "rete".  
     Il demone *ntkd* crea una istanza di QspnManager specificando che si tratta di questo scenario. In questo
-    caso al costruttore viene passato un indirizzo *definitivo* generato in modo del tutto arbitrario.
+    caso al costruttore viene passato un indirizzo *reale* generato in modo del tutto arbitrario.
 *   **Ingresso** nella rete di un singolo nodo del grafo o di un g-nodo.  
     Se si tratta di un singolo nodo del grafo allora il demone *ntkd* individua l'istanza di QspnManager che
     ad esso si riferisce.  
@@ -91,7 +89,7 @@ Esaminiamo nel dettaglio i requisiti (forniti dal demone *ntkd*) e i deliverable
     Per ogni istanza di QspnManager individuata, il demone *ntkd* :
     *   Crea una nuova istanza di QspnManager specificando che si tratta di questo scenario e indicando la
         precedente istanza. In questo caso al costruttore viene passato un nuovo indirizzo valido nella nuova
-        rete. Tale indirizzo sarà analogo (*definitivo* o *di connettività*) a quello detenuto dalla precedente identità.
+        rete. Questa identità sarà di tipo analogo (*principale* o *di connettività*) a ciò che era la precedente identità.
     *   Dismette la precedente istanza di QspnManager.
 *   **Migrazione** (di un singolo nodo del grafo o di un g-nodo) da un g-nodo di livello *i* ad un altro
     g-nodo (sempre di livello *i*) il quale appartiene a g-nodi distinti da quelli del primo fino al livello *j*.  
@@ -102,7 +100,7 @@ Esaminiamo nel dettaglio i requisiti (forniti dal demone *ntkd*) e i deliverable
     Per ogni istanza di QspnManager individuata, il demone *ntkd* :
     *   Crea una nuova istanza di QspnManager specificando che si tratta di questo scenario e indicando la
         precedente istanza. In questo caso al costruttore viene passato un nuovo indirizzo valido nel nuovo
-        g-nodo. Tale indirizzo sarà analogo (*definitivo* o *di connettività*) a quello detenuto dalla precedente identità.
+        g-nodo. Questa identità sarà di tipo analogo (*principale* o *di connettività*) a ciò che era la precedente identità.
     *   Modifica la precedente istanza di QspnManager che ora detiene un indirizzo *di connettività* ai livelli
         da *i* a *j*, modificando la componente al livello *i* - 1 del precedente indirizzo.
 
@@ -165,8 +163,8 @@ Se si tratta di un singolo nodo del grafo *n* che vuole entrare nel g-nodo *g* �
 principale del suo sistema — lo stesso nodo *n* chiede ad un suo diretto vicino in *g*, chiamiamolo *g<sub>0</sub>*,
 i dati che servono all'ingresso. Questa richiesta da *n* a *g<sub>0</sub>* viene fatta con i metodi remoti di un
 modulo *di identità*. Per rispondere, *g<sub>0</sub>* inizia un dialogo con il Coordinator di *g*. Dopo che *n* ha
-ricevuto la risposta, il demone *ntkd* crea una nuova istanza di QspnManager basata sulla precedente *n* che detiene
-un indirizzo *definitivo* in *g*.
+ricevuto la risposta, il demone *ntkd* crea una nuova istanza di QspnManager basata sulla precedente *n* che
+diventa l'identità *principale* del sistema in *g*.
 
 Se si tratta di un g-nodo *w* che contiene diversi nodi del grafo e che vuole entrare in blocco nel g-nodo *g* ∈ *G*,
 in qualche modo si è eletto un suo nodo *n<sub>0</sub>* — che deve essere l'identità principale del suo sistema — a
@@ -183,14 +181,13 @@ appartengono a *w*. In particolare in ogni sistema possono vivere una o più ist
 del grafo) che appartengono a *w* e quindi il demone *ntkd* farà alcune operazioni per ognuna di esse.
 
 Per ogni istanza *n* di QspnManager che apparteneva a *w* il demone *ntkd* crea una nuova istanza di QspnManager
-basata sulla precedente *n* che detiene un indirizzo in *g* analogo (*definitivo* o *di connettività*) a quello
-che deteneva *n* in *w*.
+basata sulla precedente *n* che detiene un indirizzo in *g*. Questa nuova identità è di tipo analogo (*principale*
+o *di connettività*) a ciò che era *n* in *w*.
 
 In questo modo si produce di fatto un g-nodo *w’* all'interno del g-nodo *g* ∈ *G* che è isomorfo al g-nodo *w* come esisteva prima.
 
-Notiamo che ci può essere il caso di un sistema in cui una istanza *n* di QspnManager che detiene un indirizzo
-*di connettività* appartiene a *w*, mentre l'identità principale del sistema (cioè l'istanza di QspnManager
-che detiene l'indirizzo *definitivo*) non appartiene a *w* ma ad un diverso g-nodo della stessa rete. In questo
+Notiamo che ci può essere il caso di un sistema in cui una istanza *n* di QspnManager è una identità *di connettività* in *w*,
+mentre l'identità *principale* del sistema non è in *w* ma in un diverso g-nodo della stessa rete. In questo
 caso se *w* entra in blocco in *G* mentre altri g-nodi della vecchia rete non lo hanno ancora fatto, il sistema
 in questione ha la sua identità *principale* in una rete distinta da *G* e una sua identità *di connettività* dentro *G*.
 
@@ -257,7 +254,7 @@ Il demone *ntkd* costruisce una istanza di QspnManager fornendo:
 *   `QspnManager previous_identity` - Il manager precedente. La nuova istanza di QspnManager copia da esso
     nella mappa i percorsi noti verso i g-nodi di livello inferiore a *k* (perché sono in *w*).  
     Grazie a questi percorsi la nuova istanza calcola i fingerprint dal livello 1 al livello *k* (se *k* è maggiore di 0).  
-    Inoltre la nuova istanza di QspnManager copia da esso il tipo dell'indirizzo: *definitivo* o *di connettività* ai livelli
+    Inoltre la nuova istanza di QspnManager copia da esso il tipo dell'identità: *principale* o *di connettività* ai livelli
     da *i<sub>0</sub>* a *j<sub>0</sub>*.
 
 Una istanza di QspnManager costruita in questo modo entra in una fase di bootstrap ai livelli da *k* a *i* - 1.
@@ -298,13 +295,13 @@ grafo appartenenti al g-nodo *w* sono stati portati a conoscenza dei dati e del 
 
 Dobbiamo esaminare cosa avviene in ogni sistema in cui vivono dei nodi del grafo che appartengono a *w*. In particolare
 in ogni sistema possono vivere una o più istanze *n* di QspnManager (cioè nodi del grafo) che appartengono a *w*. Ogni
-identità *n* in *w* poteva detenere un indirizzo *definitivo* o uno *di connettività* in g-nodi interni a *w*.<sup>1</sup>
-Non sicuramente un indirizzo *di connettività* in g-nodi di livello superiore a *w*, in quanto il g-nodo *w* che migra
+identità *n* in *w* poteva essere l'identità *principale* o una *di connettività* in g-nodi interni a *w*.<sup>1</sup>
+Non sicuramente un'identità *di connettività* in g-nodi di livello superiore a *w*, in quanto il g-nodo *w* che migra
 (considerato nel suo insieme come singolo vertice nel grafo *[G]<sub>i-1</sub>*) è sicuramente un g-nodo *reale*. Nel
 senso che il suo Netsukuku address, che è composto da identificativi dal livello *i*-1 in su, non ha alcun componente *virtuale*.
 
 Per ogni istanza *n* di QspnManager che apparteneva a *w* il demone *ntkd* crea una nuova istanza di QspnManager *n’*
-basata su *n* che detiene un indirizzo in *h* analogo (*definitivo* o *di connettività*) a quello che deteneva *n* in *w*.
+basata su *n* che è una identità in *h* di tipo analogo (*principale* o *di connettività*) a ciò che era *n* in *w*.
 
 In questo modo si produce di fatto un g-nodo *w’* all'interno del g-nodo *h* che è isomorfo al g-nodo *w* all'interno del g-nodo *g*.
 
@@ -392,7 +389,7 @@ Costruisce una istanza di QspnManager fornendo:
 *   `QspnManager previous_identity` - Il manager precedente. La nuova istanza di QspnManager copia da esso
     nella mappa i percorsi noti verso i g-nodi di livello inferiore a *k* (perché sono in *w*).  
     Grazie a questi percorsi la nuova istanza calcola i fingerprint dal livello 1 al livello *k* (se *k* è maggiore di 0).  
-    Inoltre la nuova istanza di QspnManager copia da esso il tipo dell'indirizzo: *definitivo* o *di connettività* ai livelli
+    Inoltre la nuova istanza di QspnManager copia da esso il tipo dell'identità: *principale* o *di connettività* ai livelli
     da *i<sub>0</sub>* a *j<sub>0</sub>*.
 
 Una istanza di QspnManager costruita in questo modo entra in una fase di bootstrap ai livelli da *k* a *i* - 1. In seguito
