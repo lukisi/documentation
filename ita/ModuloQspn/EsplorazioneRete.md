@@ -666,7 +666,7 @@ Le operazioni descritte sopra possono essere formalizzate con questo algoritmo:
     *   Se ancora *bootstrap in corso*:
         *   Esce dal *bootstrap* ai livelli da *i* a *j* - 1, poiché il g-nodo *w* di livello *i* è una rete a sé stante.
 
-Doopo che il nodo *n* è uscito dalla fase di bootstrap la lista *queued_arcs*
+Dopo che il nodo *n* è uscito dalla fase di bootstrap la lista *queued_arcs*
 non serve più e può essere rimossa. Ora che il nodo *n* non è più in bootstrap, per ogni suo arco chiede un nuovo ETP
 completo al relativo vicino. Con tale ETP aggiorna la sua mappa.
 
