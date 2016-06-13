@@ -50,7 +50,7 @@ Il modulo QSPN fa uso delle [tasklet](../Librerie/TaskletSystem.md), un sistema 
 Il modulo QSPN fa uso del framework [ZCD](../Librerie/ZCD.md), precisamente appoggiandosi ad una libreria intermedia
 prodotta con questo framework per formalizzare i metodi remoti usati nel demone *ntkd*.
 
-Il modulo QSPN è un modulo *di identità*. In un singolo nodo il demone *ntkd* può creare diverse istanze della classe
+Il modulo QSPN è un modulo *di identità*. In un singolo sistema il demone *ntkd* può creare diverse istanze della classe
 QspnManager, ognuna gestita da una sua identità. Alcune operazioni di inizializzazione del modulo sono fatte una sola
 volta, per questo usano metodi statici della classe QspnManager.
 
@@ -93,8 +93,8 @@ Esaminiamo nel dettaglio i requisiti (forniti dal demone *ntkd*) e i deliverable
     *   Crea una nuova istanza di QspnManager specificando che si tratta di questo scenario e indicando la
         precedente istanza. In questo caso al costruttore viene passato un nuovo indirizzo valido nel nuovo
         g-nodo. Questa identità sarà di tipo analogo (*principale* o *di connettività*) a ciò che era la precedente identità.
-    *   Modifica la precedente istanza di QspnManager che ora detiene un indirizzo *di connettività* ai livelli
-        da *i* a *j*, modificando la componente al livello *i* - 1 del precedente indirizzo.
+    *   Modifica la precedente istanza di QspnManager che ora detiene un indirizzo *virtuale* al livello
+        *i* - 1 e diventa una identità *di connettività* ai livelli da *i* a *j*.
 
 ### <a name="Avvio"></a>Avvio
 
@@ -199,8 +199,14 @@ Questa operazione di creazione di una nuova identità viene realizzata dal demon
 *Identities*. Rimandiamo al relativo [documento](../ModuloIdentities/AnalisiFunzionale.md) se si vuole approfondire.
 Qui ricordiamo solo che l'operazione avviene in due fasi, con il metodo *prepare_add_identity* e il metodo
 *add_identity*. Questi metodi richiedono due dati: l'identificativo di migrazione *migration_id* e l'identità *n*
-da duplicare. Subito, quando riceve le informazioni suddette, il demone *ntkd* riguardo l'identità *n* esegue il
-primo metodo e ne comunica (come risposta al metodo remoto con cui ha ricevuto le informazioni) il completamento.
+da duplicare.
+
+Durante le operazioni (che in questo documento non vengono dettagliate) che portano alla propagazione
+in tutto il g-nodo *w* (con avviso di ricevimento) delle suddette informazioni, il demone *ntkd*
+riguardo ogni identità *n* in *w* esegue (solo una volta) il primo metodo. In modo tale che quando
+il nodo che ha iniziato la propagazione riceve la conferma che tutto il g-nodo *w* è stato informato,
+tale nodo sa con certezza che tutti i nodi hanno completato il primo metodo. A questo punto lo stesso
+nodo inizierà la propagazione (senza avviso di ricevimento) a tutto *w* dell'ordine di completare la migrazione.
 
 Dopo un certo tempo l'identità *n* riceve l'ordine di completare la migrazione. A questo punto il demone *ntkd*
 riguardo l'identità *n* esegue il secondo metodo e realizza così la creazione di *n’*. Così facendo gli *archi-identità*
@@ -214,9 +220,8 @@ il g-nodo *w’*, o il singolo nodo *n’*.
 Naturalmente *i* è maggiore del livello *k* del g-nodo *w* (*k* vale 0 se l'ingresso è di un singolo nodo *n*).
 
 A queste informazioni il demone *ntkd* aggiunge le altre che già aveva nella sua identità *n* dal livello 0 fino al
-livello *k* - 1. Cioè: il demone *ntkd* interroga l'istanza di QspnManager che gestisce l'identità *n* per avere
-il suo indirizzo Netsukuku e il suo fingerprint a livello 0. Il demone *ntkd* sa come estrarre dal fingerprint i
-valori delle anzianità fino al livello *k* - 1.
+livello *k* - 1. Il demone *ntkd* infatti conosce l'indirizzo Netsukuku e il fingerprint a livello 0 dell'identità *n*,
+con tutti i valori delle anzianità fino al livello *k* - 1.
 
 Il demone *ntkd* costruisce un indirizzo Netsukuku valido in *g* e il fingerprint a livello 0 per la nuova identità
 *n’* in *G*. Per l'identificativo del fingerprint a livello 0, usa lo stesso che aveva prima. Per le posizioni
@@ -238,6 +243,7 @@ Il demone *ntkd* costruisce una istanza di QspnManager fornendo:
 
 *   `QspnManager.enter_net` - Tipo di costruttore: ingresso nella rete.
 *   `IQspnNaddr my_naddr` - Il proprio indirizzo Netsukuku.
+*   **TODO** Archi interni a *w* e loro indirizzi, callback di associazione, archi esterni a *w*.
 *   `List<IQspnArc> my_arcs` - Gli archi che esistono tra il nodo e i suoi vicini.
 *   `IQspnFingerprint my_fingerprint` - Il suo fingerprint come nodo.
 *   `IQspnStubFactory stub_factory` - La stub factory per le comunicazioni con i vicini.
@@ -323,23 +329,15 @@ Abbiamo già detto che tali informazioni giungono ad una precisa identità *n* c
 ogni identità *n* crea una nuova identità *n’*.
 
 Questa operazione di creazione di una nuova identità viene realizzata dal demone *ntkd* avvalendosi del modulo
-*Identities*, come esposto sopra. L'operazione avviene in due fasi, con il metodo *prepare_add_identity* e il metodo
-*add_identity*. Questi metodi richiedono due dati: l'identificativo di migrazione *migration_id* e l'identità *n* da
-duplicare. Subito, quando riceve le informazioni suddette, il demone *ntkd* riguardo l'identità *n* esegue il primo
-metodo e ne comunica (come risposta al metodo remoto con cui ha ricevuto le informazioni) il completamento.
+*Identities*, come esposto sopra nella trattazione dell'ingresso in diversa rete.
 
-Dopo un certo tempo l'identità *n* riceve l'ordine di completare la migrazione. A questo punto il demone *ntkd* riguardo
-l'identità *n* esegue il secondo metodo e realizza così la creazione di *n’*. Così facendo gli *archi-identità* sono
-stati correttamente duplicati da *n* a *n’*.
-
-Ora il demone *ntkd* procede con le successive operazioni usando le altre informazioni ricevute.
+Dopo il demone *ntkd* procede con le successive operazioni usando le altre informazioni ricevute.
 
 Naturalmente *i* è maggiore del livello *k* del g-nodo *w* (*k* vale 0 se la migrazione è di un singolo nodo *n*).
 
 A queste informazioni il demone *ntkd* aggiunge le altre che già aveva nella sua identità *n* dal livello 0 fino al
-livello *k* - 1. Cioè: il demone *ntkd* interroga l'istanza di QspnManager che gestisce l'identità *n* per avere il
-suo indirizzo Netsukuku e il suo fingerprint a livello 0. Il demone *ntkd* sa come estrarre dal fingerprint i valori
-delle anzianità fino al livello *k* - 1.
+livello *k* - 1. Il demone *ntkd* infatti conosce l'indirizzo Netsukuku e il fingerprint a livello 0 dell'identità *n*,
+con tutti i valori delle anzianità fino al livello *k* - 1.
 
 Il demone *ntkd* costruisce un indirizzo Netsukuku valido in *h* e il fingerprint a livello 0 per la nuova identità
 *n’* in *h*. Per l'identificativo del fingerprint a livello 0, usa lo stesso che aveva prima. Per le posizioni
@@ -373,6 +371,7 @@ Costruisce una istanza di QspnManager fornendo:
 
 *   `QspnManager.migration` - Tipo di costruttore: per migrazione.
 *   `IQspnNaddr my_naddr` - Il proprio indirizzo Netsukuku.
+*   **TODO** Archi interni a *w* e loro indirizzi, callback di associazione, archi esterni a *w*.
 *   `List<IQspnArc> my_arcs` - Gli archi che esistono tra il nodo e i suoi vicini.
 *   `IQspnFingerprint my_fingerprint` - Il suo fingerprint come nodo.
 *   `IQspnStubFactory stub_factory` - La stub factory per le comunicazioni con i vicini.
