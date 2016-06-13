@@ -1,10 +1,30 @@
 # Modulo QSPN - Dettagli Tecnici
 
-*   **TODO TOC**
+1.  [Terminologia](#Terminologia)
+1.  [Inizializzazione del modulo](#Inizializzazione_del_modulo)
+1.  [Requisiti e Deliverable](#Requisiti_deliverable)
+    1.  [Avvio](#Avvio)
+    1.  [Ingresso](#Ingresso)
+        1.  [Creazione di una identità nella rete G e dismissione della precedente](#Creazione_in_g_dismissione_precedente)
+    1.  [Migrazione](#Migrazione)
+        1.  [Creazione di una identità in h](#Creazione_in_h)
+        1.  [Modifica della precedente identità in g in una identità di connettività](#Modifica_precedente)
+1.  [Ulteriori deliverable](#Ulteriori_deliverable)
+1.  [Funzioni di appoggio](#Funzioni_di_appoggio)
+1.  [Produzione e trasmissione di ETP](#Produzione_trasmissione_etp)
+    1.  [Metodi remoti](#Metodi_remoti)
+    1.  [Produzione del primo ETP](#Produzione_primo_etp)
+    1.  [Processazione di un set di ETP](#Processazione_set_etp)
+    1.  [Rielaborazione dei percorsi in ogni ETP ricevuto](#Rielaborazione_percorsi_etp_ricevuto)
+    1.  [Variazioni nella mappa di n](#Variazioni_mappa)
+        1.  [Algoritmo](#Variazioni_mappa_Algoritmo)
+    1.  [Variazioni nei propri g-nodi](#Variazioni_propri_gnodi)
+        1.  [Algoritmo](#Variazioni_propri_gnodi_Algoritmo)
+    1.  [Produzione di percorsi da mettere in un ETP da inviare](#Produzione_percorsi_etp_da_inviare)
 
 Il presente documento assume che siano stati letti il documento di [Analisi Funzionale](AnalisiFunzionale.md) e quelli in esso indicati ([Esplorazione della rete](EsplorazioneRete.md) e [Percorsi disgiunti](PercorsiDisgiunti.md)).
 
-## Terminologia
+## <a name="Terminologia"></a>Terminologia
 
 Diamo un significato ad alcuni termini che useremo frequentemente nel resto del documento.
 
@@ -18,7 +38,7 @@ A volte parleremo di *nodo* indicando con questo termine l'intera macchina fisic
 
 Per questo motivo, per non portare confusione, cercheremo di usare direttamente il termine "demone *ntkd*" o il termine *sistema* al posto di *nodo* quando vogliamo indicare nel suo insieme il sistema su cui è in esecuzione. Quando vogliamo indicare un singolo vertice del grafo cercheremo di usare la locuzione *nodo del grafo* o genericamente *g-nodo*.
 
-## Inizializzazione del modulo
+## <a name="Inizializzazione_del_modulo"></a>Inizializzazione del modulo
 
 Il modulo QSPN fa uso delle [tasklet](../Librerie/TaskletSystem.md), un sistema di multithreading cooperativo.
 
@@ -37,7 +57,7 @@ Inoltre vengono passati:
 *   Tempo di rilevamento degli archi in millisecondi (int *arc_timeout*).
 *   Il calcolatore del tempo di tolleranza (istanza di IQspnThresholdCalculator *threshold_calculator*).
 
-## Requisiti e Deliverable
+## <a name="Requisiti_deliverable"></a>Requisiti e Deliverable
 
 Esaminiamo nel dettaglio i requisiti (forniti dal demone *ntkd*) e i deliverable del modulo QSPN in questi possibili scenari:
 
@@ -56,7 +76,7 @@ Esaminiamo nel dettaglio i requisiti (forniti dal demone *ntkd*) e i deliverable
     *   Crea una nuova istanza di QspnManager specificando che si tratta di questo scenario e indicando la precedente istanza. In questo caso al costruttore viene passato un nuovo indirizzo valido nel nuovo g-nodo. Tale indirizzo sarà analogo (*definitivo* o *di connettività*) a quello detenuto dalla precedente identità.
     *   Modifica la precedente istanza di QspnManager che ora detiene un indirizzo *di connettività* ai livelli da *i* a *j*, modificando la componente al livello *i* - 1 del precedente indirizzo.
 
-### Avvio
+### <a name="Avvio"></a>Avvio
 
 Il demone *ntkd* nel sistema *n* produce in  modo completamente arbitrario un indirizzo Netsukuku conforme ad una certa topologia di rete di *l* livelli. Sceglie un identificativo random per il suo fingerprint a livello 0, il quale avrà tutte le anzianità ai vari livelli a zero (nel senso che è il primo nodo, nel primo g-nodo a livello 1, ... nel primo g-nodo a livello *l* - 1, nella rete).
 
@@ -85,7 +105,7 @@ Quando il QspnManager memorizza i suoi archi, per ognuno genera un identificativ
 
 Inoltre il modulo non assume che anche il suo utilizzatore mantenga le istanze degli archi. Questo significa che il QspnManager per vedere se un arco è nella sua lista si basa sul metodo *i_qspn_equals* fornito dall'interfaccia IQspnArc. Sul metodo *arc_is_changed* sostituisce l'istanza corrente nella sua lista (e nel suo dizionario degli identificativi) con quella passata (non assumendo che si tratti della stessa istanza) e dovrà fare lo stesso cambio su tutte le istanze della classe NodePath.
 
-### Ingresso
+### <a name="Ingresso"></a>Ingresso
 
 Supponiamo che il g-nodo *w* (a cui appartiene il nodo del grafo *n* che vive nel nostro sistema) fa il suo ingresso in una rete *G*. In questa trattazione è incluso il caso in cui *w* equivale a *n*.
 
@@ -109,7 +129,7 @@ In questo modo si produce di fatto un g-nodo *w’* all'interno del g-nodo *g* �
 
 Notiamo che ci può essere il caso di un sistema in cui una istanza *n* di QspnManager che detiene un indirizzo *di connettività* appartiene a *w*, mentre l'identità principale del sistema (cioè l'istanza di QspnManager che detiene l'indirizzo *definitivo*) non appartiene a *w* ma ad un diverso g-nodo della stessa rete. In questo caso se *w* entra in blocco in *G* mentre altri g-nodi della vecchia rete non lo hanno ancora fatto, il sistema in questione ha la sua identità *principale* in una rete distinta da *G* e una sua identità *di connettività* dentro *G*.
 
-#### Creazione di una identità nella rete G e dismissione della precedente
+#### <a name="Creazione_in_g_dismissione_precedente"></a>Creazione di una identità nella rete G e dismissione della precedente
 
 I dati che ogni identità *n* riceve in relazione a questo ingresso nel g-nodo *g* di livello *i* in *G* sono:
 
@@ -170,7 +190,7 @@ Una volta costruita la nuova istanza, il demone *ntkd* potrà dismettere (rimuov
 
 Prima di farlo, il demone *ntkd* chiama su di essa il metodo *destroy* per segnalare ai suoi diretti vicini esterni a *w* che sta uscendo dalla rete. Tale metodo esegue una chiamata broadcast a metodo remoto.
 
-### Migrazione
+### <a name="Migrazione"></a>Migrazione
 
 Supponiamo che il g-nodo *w* (a cui appartiene il nodo del grafo *n* che vive nel nostro sistema) migra da un g-nodo *g* di livello *i* ad un diverso g-nodo *h* (sempre di livello *i*) il quale appartiene a g-nodi distinti da quelli di *g* fino al livello *j*. In questa trattazione è incluso il caso in cui *w* equivale a *n*.
 
@@ -188,7 +208,7 @@ Inoltre viene modificato l'indirizzo detenuto da *n* in uno *di connettività* a
 
 **Nota 1:** Quando diciamo che un nodo del grafo (o una identità) *n*, con *n* ∈ *w*, è *di connettività* in g-nodi interni a *w* intendiamo dire che l'indirizzo che *n* detiene è un indirizzo *di connettività* ai livelli da *i<sub>0</sub>* a *j<sub>0</sub>*, dove *i<sub>0</sub>* è strettamente minore del livello di *w*. Non si fa alcuna assunzione invece sul valore *j<sub>0</sub>*.
 
-#### Creazione di una identità in h
+#### <a name="Creazione_in_h"></a>Creazione di una identità in h
 
 I dati che ogni identità *n* riceve in relazione a questa migrazione da *g* in *h* sono:
 
@@ -262,7 +282,7 @@ Abbiamo detto che tra i dati di cui è in possesso l'identità *n’* riguardant
 
 Per la chiamata di tale metodo, solo se *n’* ha già completato la sua fase di bootstrap, verrà avviata immediatamente la trasmissione di un ETP a tutti i vicini di *n’* esterni a *w’*. In esso la lista dei percorsi è vuota, perché va segnalato soltanto il nuovo percorso verso il nuovo identificativo *reale* di *w’* al livello *i* - 1.
 
-#### Modifica della precedente identità in g in una identità di connettività
+#### <a name="Modifica_precedente"></a>Modifica della precedente identità in g in una identità di connettività
 
 Con i dati suddetti relativi alla migrazione il demone *ntkd* sull'istanza di QspnManager *n* chiama il metodo *make_connectivity*. Con questa chiamata segnala al modulo che questa diventa una identità *di connettività*. Gli argomenti passati sono:
 
@@ -296,7 +316,7 @@ In seguito il demone *ntkd* sull'istanza di QspnManager *n* può chiamare questi
 *   *destroy*  
     Chiede al modulo di segnalare ai suoi diretti vicini (esterni a *w*) che l'identità chiamante sta per essere distrutta. La comunicazione ai vicini avviene tramite il metodo remoto *got_destroy* della classe QspnManager.
 
-## Ulteriori deliverable
+## <a name="Ulteriori_deliverable"></a>Ulteriori deliverable
 
 Esaminiamo altri deliverable del modulo QSPN, che sono gli stessi per ogni tipo di identità e di modalità di costruzione del QspnManager.
 
@@ -356,22 +376,22 @@ Il modulo permette di leggere il fingerprint di uno dei suoi g-nodi con il metod
 
 Il modulo permette di leggere il numero approssimato di nodi all'interno di uno dei suoi g-nodi con il metodo *get_nodes_inside* di QspnManager.
 
-## Funzioni di appoggio
+## <a name="Funzioni_di_appoggio"></a>Funzioni di appoggio
 
 Alcune funzioni, definite e usate internamente al modulo, sono aggiunte alle classi così come sono state descritte nell'analisi funzionale. Le illustriamo ora perché nel seguito del documento sono riportati alcuni algoritmi che ne fanno uso.
 
 Aggiunte alla classe NodePath:
 
-*   La proprietà dinamica *cost* : viene calcolata dinamicamente come somma dei costi di *arc* e *path* .
+*   La proprietà dinamica *cost* : viene calcolata dinamicamente come somma dei costi di *arc* e *path*.
 *   La proprietà *exposed* : indica se per questo percorso un segnale di *path_added* era stato emesso e in seguito nessun segnale di *path_removed*. Questo flag serve a gestire correttamente i segnali che il modulo deve emettere quando diversi percorsi verso un g-nodo di livello maggiore di 0 indicano fingerprint diversi (potenziale split).  
     Quando viene creata una istanza di NodePath la proprietà *exposed* è sempre inizializzata a False. Solo quando l'istanza viene messa nella mappa del nodo, allora può venire impostata a True.
 *   I metodi *hops_arcs_equal_etppath( EtpPath p )* e *hops_arcs_equal( NodePath np )* :  
     Si ricorda che due percorsi sono distinti se usano un diverso gateway o lo raggiungono attraverso una diversa interfaccia di rete del nodo corrente; oppure se la sequenza di passi fino alla destinazione (compresa) non è identica sia come g-nodi sia come archi di uscita. Considerato che nei percorsi memorizzati nella mappa la sequenza di archi comprende anche l'identificativo dell'arco del nodo corrente che lo collega al gateway; considerato che un arco univocamente identifica anche il gateway che vi è collegato; si deduce che il test di uguaglianza di un percorso *NodePath np* nella mappa del nodo con un altro percorso si basa esclusivamente sulle liste *np.path.hops* e *np.path.arcs*.  
     Si consideri inoltre che i confronti con altri percorsi ricevuti in un ETP (istanze di *EtpPath* ) vengono fatti dopo che la Grouping Rule è stata eseguita, quindi anche essi comprendono come primo elemento delle liste *hops* e *arcs* gli identificativi riferiti al passo dal nodo corrente al suo gateway.  
     Il metodo *hops_arcs_equal_etppath( EtpPath p )* : confronta questa istanza con il percorso *p* ricevuto in un ETP tramite l'arco *arc* di questa istanza.  
-    Il metodo *hops_arcs_equal( NodePath np )* : confronta questa istanza con l'istanza *np* .
+    Il metodo *hops_arcs_equal( NodePath np )* : confronta questa istanza con l'istanza *np*.
 
-## Produzione e trasmissione di ETP
+## <a name="Produzione_trasmissione_etp"></a>Produzione e trasmissione di ETP
 
 La costruzione e il passaggio di ETP quando necessario ai propri vicini è realizzata dal modulo in autonomia, senza necessitare di interventi dal suo utilizzatore.
 
@@ -383,15 +403,15 @@ Il modulo assume che i nodi collegati ai suoi archi appartengano alla sua stessa
 
 L'elaborazione degli ETP ricevuti dai miei vicini che appartengono alla mia stessa rete da come risultato l'aggiornamento della mia mappa; allo stesso tempo mi permette anche di capire quali informazioni saranno di interesse anche per gli altri miei vicini, quindi mi consente di costruire un messaggio che sia esaustivo e allo stesso tempo più piccolo possibile. Il dettaglio di come tale elaborazione avviene è descritto nel documento [esplorazione](EsplorazioneRete.md).
 
-### Metodi remoti
+### <a name="Metodi_remoti"></a>Metodi remoti
 
-L'implementazione della trasmissione di ETP ai vicini avviene con l'uso di due metodi remoti: *get_full_etp* e *send_etp* .
+L'implementazione della trasmissione di ETP ai vicini avviene con l'uso di due metodi remoti: *get_full_etp* e *send_etp*.
 
 Il metodo *get_full_etp* viene chiamato dal nodo *n* sul vicino *v* quando vuole ottenere da *v* un ETP *completo*. Il documento di esplorazione descrive cosa si intende per ETP completo. Quando un nodo chiede espressamente un ETP ad un suo vicino (o a tutti i vicini uno alla volta) si tratta sempre di un ETP completo.
 
 Il metodo *send_etp* viene usato dal nodo *n* quando vuole spontaneamente inviare un ETP ad un suo vicino o a più vicini in broadcast. In questo caso può trattarsi di un ETP completo oppure no. Per questo il metodo *send_etp* prevede un parametro booleano che dice se l'ETP è completo.
 
-### Produzione del primo ETP
+### <a name="Produzione_primo_etp"></a>Produzione del primo ETP
 
 Prendiamo in esame un nodo che ha appena costituito una nuova rete. Il modulo QSPN cioè non riceve nessun arco. La sua mappa è vuota. Vediamo cosa deve fare per costruire un nuovo ETP completo, presumibilmente perché un nuovo nodo ha appena fatto ingresso nella rete e gli chiede un ETP.
 
@@ -409,7 +429,7 @@ Nell'ETP vi è anche una lista di HCoord che rappresenta il percorso di questo E
 
 In conclusione il modulo è in grado di costruire una istanza della classe EtpMessage con i dati necessari. Si tratta di un oggetto serializzabile, che quindi può essere usato nelle chiamate (o risposte) a metodi remoti.
 
-### Processazione di un set di ETP
+### <a name="Processazione_set_etp"></a>Processazione di un set di ETP
 
 Gli algoritmi illustrati nei successivi paragrafi, volti a processare un set di ETP, vengono eseguiti dal nodo *n* in queste possibili circostanze:
 
@@ -422,7 +442,7 @@ Gli algoritmi illustrati nei successivi paragrafi, volti a processare un set di 
 *   Il nodo *n*, uscito dal bootstrap, ha rilevato la rimozione di un arco *a_removed* e quindi  ha chiesto un ETP a tutti i suoi vicini. In questo caso prima di iniziare questo algoritmo, il nodo *n* ha rimosso dalla sua mappa tutti i percorsi che sfruttavano l'arco *a_removed*.
 *   Il nodo *n*, uscito dal bootstrap, ha ricevuto un ETP inviato in broadcast da un suo vicino.
 
-### Rielaborazione dei percorsi in ogni ETP ricevuto
+### <a name="Rielaborazione_percorsi_etp_ricevuto"></a>Rielaborazione dei percorsi in ogni ETP ricevuto
 
 Sia *m* un ETP che il nodo *n* riceve dal nodo *v* attraverso l'arco *a*.
 
@@ -439,26 +459,26 @@ Infine *n* esamina il set di percorsi *P* contenuto in *m*, ma deve renderli coe
 *   **3)** Per ogni percorso *p* in *P* il nodo *n* esegue la Acyclic Rule e se vede che il percorso ha fatto un ciclo lo rimuove da *P*.
 *   **4)** Il nodo *n* aggiunge a *P* il percorso verso *v<sub>i-1</sub>* con costo *null* e fingerprint e numero di nodi così come riportati in *m*.
 *   **5)** Solo se *m* è un ETP completo:
-    *   Il nodo *n* cerca in tutta la sua mappa i percorsi che partono dal gateway *v* attraverso l'arco *a*. Li mette in un set *M<sub>a</sub>* .
+    *   Il nodo *n* cerca in tutta la sua mappa i percorsi che partono dal gateway *v* attraverso l'arco *a*. Li mette in un set *M<sub>a</sub>*.
     *   Per ogni percorso *np* in *M<sub>a</sub>* :
-        *   Cerca un percorso *p* in *P* tale che *np* .hops_arcs_equal_etppath( *p* ).
+        *   Cerca un percorso *p* in *P* tale che *np*.hops_arcs_equal_etppath( *p* ).
         *   Se non esiste tale *p*:
-            *   Crea una copia *np<sub>0</sub>* di *np* con costo *dead* e la mette nel set *Q*. Per farlo, crea una nuova istanza di EtpPath *p<sub>0</sub>* copiando i valori di *np’* e mettendo *cost* a *dead*. Non c'è bisogno di valorizzare *ignore_outside*. Poi crea una istanza di NodePath *np<sub>0</sub>* associando al percorso *p<sub>0</sub>* l'arco *a* .
-*   **6)** Per tutti i percorsi *p* del set *P*, i quali sono istanze di EtpPath, il nodo *n* crea una istanza di NodePath *q* associando al percorso *p* l'arco *a*. Mette *q* nel set *Q* .
+            *   Crea una copia *np<sub>0</sub>* di *np* con costo *dead* e la mette nel set *Q*. Per farlo, crea una nuova istanza di EtpPath *p<sub>0</sub>* copiando i valori di *np’* e mettendo *cost* a *dead*. Non c'è bisogno di valorizzare *ignore_outside*. Poi crea una istanza di NodePath *np<sub>0</sub>* associando al percorso *p<sub>0</sub>* l'arco *a*.
+*   **6)** Per tutti i percorsi *p* del set *P*, i quali sono istanze di EtpPath, il nodo *n* crea una istanza di NodePath *q* associando al percorso *p* l'arco *a*. Mette *q* nel set *Q*.
 
 Spieghiamo il punto 4. La ricezione di un ETP comporta sempre l'acquisizione di qualche informazione sulla rete, quindi contribuisce a popolare la mappa di *n*. Infatti, anche quando la lista *P* nell'ETP *m* fosse vuota, l'ETP contiene intrinsecamente un percorso verso il massimo distinto g-nodo di *v* per *n*, che indichiamo con *v<sub>i-1</sub>*. Per rappresentare questo percorso intrinseco, il modulo nel nodo *n* costruisce una istanza della classe EtpPath con questi dati:
 
 *   La sequenza *hops* è composta da un solo g-nodo che è *v<sub>i-1</sub>*.
-*   La sequenza *arcs* è composta dal solo *id ( a )* .
+*   La sequenza *arcs* è composta dal solo *id ( a )*.
 *   Il costo del percorso è *null*. Esso rappresenta il costo da *v* ad *v*.
 *   Il fingerprint del g-nodo è il fingerprint indicato nell'ETP *m* al livello *i* - 1.
 *   Il numero di nodi nel g-nodo è il numero di nodi indicato nell'ETP *m* al livello *i* - 1.
 
-Spieghiamo il punto 5. Siccome *m* è un ETP completo, tutti i percorsi che *n* può usare passando per *v* sono presenti in *m.P*. Quindi i vecchi percorsi che *n* conosceva e che non sono in *m.P* andranno rimossi dalla mappa di *n* .
+Spieghiamo il punto 5. Siccome *m* è un ETP completo, tutti i percorsi che *n* può usare passando per *v* sono presenti in *m.P*. Quindi i vecchi percorsi che *n* conosceva e che non sono in *m.P* andranno rimossi dalla mappa di *n*.
 
 Spieghiamo il punto 6. In tutte le istanze di EtpPath ricevute nell'ETP (più quella costruita come detto adesso per rappresentare il percorso intrinseco verso il g-nodo vicino) il costo del percorso rappresenta il costo da *v* alla destinazione. Invece il costo da *n* ad *v* è il costo dell'arco *a*. Questo dato è già memorizzato nell'oggetto arco che comunque il modulo deve mantenere associato al percorso, per questo nella mappa interna del nodo *n* ogni percorso è in realtà memorizzato come istanza della classe NodePath, la quale include l'istanza di EtpPath.
 
-### Variazioni nella mappa di n
+### <a name="Variazioni_mappa"></a>Variazioni nella mappa di n
 
 Quando abbiamo descritto, nel documento [esplorazione](EsplorazioneRete.md), la gestione degli eventi che portano a variazioni nel grafo della rete, abbiamo più volte usato diciture quali *"n aggiorna la sua mappa"* e *"mette in P i percorsi che nella sua mappa hanno subito variazioni"*.
 
@@ -466,7 +486,7 @@ Qui riportiamo l'algoritmo che realizza queste macro-operazioni. Inoltre l'algor
 
 Il rilevamento dello split di un g-nodo *d* si ha quando per raggiungere *d* vengono rilevati due percorsi che differiscono per il loro  fingerprint e se questa  situazione si mantiene per un certo lasso di  tempo. Tale tempo di tolleranza è direttamente proporzionale alla somma delle  latenze associate ai due percorsi che differiscono; ma il modulo QSPN  non ha questa informazione in quanto il costo associato ad un percorso  non sappiamo se sia espresso in latenza, in larghezza di banda o in  altra metrica; quindi il calcolo di tale tempo di tolleranza va  demandato all'utilizzatore del modulo il quale fornisce una callback attraverso l'istanza di IQspnThresholdCalculator.  Per dare il massimo del supporto a questa callback vengono passate le  istanze di IQspnNodePath che rappresentano i percorsi discordi. Da  queste la callback potrà estrapolare i costi e sommarli se si tratta in  effetti di latenze. Altrimenti la callback potrà leggere la destinazione  e confrontarla con il proprio indirizzo per risalire al livello del  minimo g-nodo comune, chiedere allo stesso modulo QSPN la stima dei nodi  all'interno di tale livello e finalmente proporre un tempo di  tolleranza sulla base di questo dato. Ricevuto questo tempo, il modulo si occupa di emettere alla sua scadenza il segnale *gnode_splitted* di QspnManager se la situazione si è mantenuta.
 
-#### Algoritmo
+#### <a name="Variazioni_mappa_Algoritmo"></a>Algoritmo
 
 Il nodo *n*, dopo aver rielaborato i percorsi nel set di ETP ricevuti, si trova infine con un set di percorsi nuovi che chiamiamo *Q*. Indichiamo con *M* l'insieme dei percorsi che già prima il nodo *n* conosceva, cioè la sua mappa.
 
@@ -577,18 +597,18 @@ Il nodo *n*, dopo aver rielaborato i percorsi nel set di ETP ricevuti, si trova 
                 *   Per ogni *fp* ∈ *F* ’’:
                     *   Sia *bp* il miglior percorso verso *d* che riporta come fingerprint *fp*.
                     *   Avvia in una nuova tasklet:
-                        *   Sia una lista globale del modulo *pending_gnode_split* .
+                        *   Sia una lista globale del modulo *pending_gnode_split*.
                         *   Se la coppia (*fp_eldest* , *fp* ) è presente in *pending_gnode_split* :
                             *   Esci.
-                        *   Metti la coppia (*fp_eldest* , *fp* ) in *pending_gnode_split* .
-                        *   Calcola il tempo di tolleranza prima della segnalazione dello split. Si calcola con il *threshold_calculator* passando le istanze *bp_eldest* e *bp* .
+                        *   Metti la coppia (*fp_eldest* , *fp* ) in *pending_gnode_split*.
+                        *   Calcola il tempo di tolleranza prima della segnalazione dello split. Si calcola con il *threshold_calculator* passando le istanze *bp_eldest* e *bp*.
                         *   Aspetta il tempo di tolleranza.
-                        *   Togli la coppia (*fp_eldest* , *fp* ) da *pending_gnode_split* .
+                        *   Togli la coppia (*fp_eldest* , *fp* ) da *pending_gnode_split*.
                         *   Se per la destinazione *d* è ancora noto un percorso che riporta il fingerprint *fp_eldest* :
                             *   Per ogni arco *a* nei miei archi:
                                 *   Se il vicino collegato tramite *a* appartiene a *d* :
                                     *    Se il percorso per *d* tramite *a* riporta il fingerprint *fp* :
-                                         *    Emetti il segnale *gnode_splitted* indicando *a*, *d* ed *fp* .
+                                         *    Emetti il segnale *gnode_splitted* indicando *a*, *d* ed *fp*.
 *   Ora la mappa di *n* è aggiornata.
 *   Il nodo *n* cicla la lista *P* per finalizzare le istanze dei percorsi che andranno segnalati ai vicini a cui si inoltrerà l'ETP. Vedere sotto l'algoritmo di produzione di un percorso da inviare.
 
@@ -599,7 +619,7 @@ Infine abbiamo in *B* tutte le destinazioni per cui si ritiene necessario inviar
 *   Se *B* ≠ ∅:
     *   Il nodo *n* prepara un nuovo ETP con tutti i percorsi che conosce verso le destinazioni *d* ∈ *B*. Lo invia a tutti i suoi vicini.
 
-### Variazioni nei propri g-nodi
+### <a name="Variazioni_propri_gnodi"></a>Variazioni nei propri g-nodi
 
 Dopo aver completato un aggiornamento della propria mappa, il nodo *n* aggiorna anche le informazioni relative ai propri g-nodi, cioè fingerprint e numero di nodi all'interno. Se ci sono state variazioni *n* se ne accorge e questo è importante per decidere se l'ETP ricevuto va inoltrato ai suoi vicini.
 
@@ -621,7 +641,7 @@ Illustriamo l'approccio da usare ai livelli maggiori. Si parte dal livello *i* 
 
 Quando queste informazioni portano ad una variazione nel fingerprint di uno dei g-nodi del nodo corrente, il QspnManager emette il segnale *changed_fp*. Quando portano ad una variazione nel numero di nodi interni ad uno dei g-nodi del nodo corrente, emette il segnale *changed_nodes_inside*.
 
-#### Algoritmo
+#### <a name="Variazioni_propri_gnodi_Algoritmo"></a>Algoritmo
 
 Dopo aver aggiornato la sua mappa sulla base di un set di ETP, il nodo *n* procede così per ricalcolare le informazioni dei propri g-nodi:
 
@@ -636,7 +656,7 @@ Dopo aver aggiornato la sua mappa sulla base di un set di ETP, il nodo *n* proce
         *   *fp<sub>d</sub>* = fingerprint di *d* come riportato da *best_p*.
         *   Aggiungi *fp<sub>d</sub>* al set *FP*.
         *   Somma 1 a *NN*.
-    *   *new_fp* = *my_fingerprints[0]* .i_qspn_construct( *FP* ).
+    *   *new_fp* = *my_fingerprints[0]*.i_qspn_construct( *FP* ).
     *   Se *new_fp* ≠ *my_fingerprints[1]* :
         *   *my_fingerprints[1]* = *new_fp*.
         *   *changes_in_my_gnodes* = True.
@@ -657,22 +677,22 @@ Dopo aver aggiornato la sua mappa sulla base di un set di ETP, il nodo *n* proce
             *   *fp<sub>d,p</sub>* = fingerprint di *d* come riportato da *p*.
             *   *nn<sub>d,p</sub>* = numero nodi di *d* come riportato da *p*.
             *   Se *fp<sub>d</sub>* = null:
-                *   *fp<sub>d</sub>* = *fp<sub>d,p</sub>* .
-                *   *nn<sub>d</sub>* = *nn<sub>d,p</sub>* .
-                *   *best_p* = *p* .
+                *   *fp<sub>d</sub>* = *fp<sub>d,p</sub>*.
+                *   *nn<sub>d</sub>* = *nn<sub>d,p</sub>*.
+                *   *best_p* = *p*.
             *   Altrimenti:
                 *   Se *fp<sub>d</sub>* ≠ *fp<sub>d,p</sub>* :
                     *   Se *fp<sub>d</sub>* è meno anziano di *fp<sub>d,p</sub>* :
-                        *   *fp<sub>d</sub>* = *fp<sub>d,p</sub>* .
-                        *   *nn<sub>d</sub>* = *nn<sub>d,p</sub>* .
-                        *   *best_p* = *p* .
+                        *   *fp<sub>d</sub>* = *fp<sub>d,p</sub>*.
+                        *   *nn<sub>d</sub>* = *nn<sub>d,p</sub>*.
+                        *   *best_p* = *p*.
                 *   Altrimenti:
                     *   Se *p*.cost < *best_p*.cost:
-                        *   *nn<sub>d</sub>* = *nn<sub>d,p</sub>* .
-                        *   *best_p* = *p* .
+                        *   *nn<sub>d</sub>* = *nn<sub>d,p</sub>*.
+                        *   *best_p* = *p*.
         *   Aggiungi *fp<sub>d</sub>* al set *FP*.
         *   Somma *nn<sub>d</sub>* a *NN*.
-    *   *new_fp* = *my_fingerprints[i-1]* .i_qspn_construct( *FP* ).
+    *   *new_fp* = *my_fingerprints[i-1]*.i_qspn_construct( *FP* ).
     *   Se *new_fp* ≠ *my_fingerprints[i]* :
         *   *my_fingerprints[i]* = *new_fp*.
         *   *changes_in_my_gnodes* = True.
@@ -685,7 +705,7 @@ Dopo aver aggiornato la sua mappa sulla base di un set di ETP, il nodo *n* proce
 
 Ora abbiamo in *changes_in_my_gnodes* se sono state apportate variazioni alle informazioni relative ai g-nodi di *n*.
 
-### Produzione di percorsi da mettere in un ETP da inviare
+### <a name="Produzione_percorsi_etp_da_inviare"></a>Produzione di percorsi da mettere in un ETP da inviare
 
 La valorizzazione dei dati in una istanza di EtpPath, cioè un percorso da includere in un ETP da inviare, si fa in due fasi.
 
@@ -695,48 +715,48 @@ Sia *q* tale istanza di NodePath. Indichiamo con *q.path* l'istanza di EtpPath i
 
 Il nodo *n* prepara una nuova istanza *p* di EtpPath. Copia tutte le informazioni da *q.path* a *p*; come costo indica *q.cost*, cioè la somma dei costi *q.path.cost* e *q.arc.cost*. Poi *p* viene messa in un set *P* con cui comporre l'ETP.
 
-La seconda fase avviene alla fine degli aggiornamenti alla mappa. Questo perché in questa fase si valorizzano i dati che vanno ricavati non solo dalla istanza di NodePath in esame ma anche da altre informazioni contenute nella mappa di *n* .
+La seconda fase avviene alla fine degli aggiornamenti alla mappa. Questo perché in questa fase si valorizzano i dati che vanno ricavati non solo dalla istanza di NodePath in esame ma anche da altre informazioni contenute nella mappa di *n*.
 
 Il nodo *n* cicla tutte le istanze *p* in *P*. Per ognuna, ricalcola tutti i valori booleani che indicano se il percorso *p* va ignorato all'esterno di un suo g-nodo.
 
-*   *p* .ignore_outside[ 0 ] = False.
+*   *p*.ignore_outside[ 0 ] = False.
 *   Per ogni livello *i* da 1 a *l* - 1 :
-    *   Se *p* .hops.last().lvl ≥ *i* :
+    *   Se *p*.hops.last().lvl ≥ *i* :
         *   *j* = 0.
         *   Mentre True:
-            *   Se *p* .hops[ *j* ].lvl ≥ *i* :
+            *   Se *p*.hops[ *j* ].lvl ≥ *i* :
                 *   Esci dal ciclo.
             *   Incrementa *j* di 1.
-        *   Se non esiste nella mia mappa la destinazione *d* che rappresenta *p* .hops[ *j* ]:
-            *   Se *p* .cost.is_dead():
-                *   *p* .ignore_outside[ *i* ] = False.
+        *   Se non esiste nella mia mappa la destinazione *d* che rappresenta *p*.hops[ *j* ]:
+            *   Se *p*.cost.is_dead():
+                *   *p*.ignore_outside[ *i* ] = False.
                 *   continue.
             *   Altrimenti:
                 *   assert_not_reached.
         *   *best_to_arc* = null.
         *   Per ogni NodePath *q* in *d* :
-            *   Se *q* .arcs.last() = *p* .arcs[ *j* ]:
+            *   Se *q*.arcs.last() = *p*.arcs[ *j* ]:
                 *   Se *best_to_arc* = null:
-                    *   *best_to_arc* = *q* .
+                    *   *best_to_arc* = *q*.
                 *   Altrimenti:
-                    *   Se *q* .cost < *best_to_arc* .cost:
-                        *   *best_to_arc* = *q* .
+                    *   Se *q*.cost < *best_to_arc*.cost:
+                        *   *best_to_arc* = *q*.
         *   Se *best_to_arc* = null:
-            *   *p* .ignore_outside[ *i* ] = False.
+            *   *p*.ignore_outside[ *i* ] = False.
         *   Altrimenti:
             *   *same* = False.
-            *   Se *best_to_arc* .hops.size = *j* - 1 :
+            *   Se *best_to_arc*.hops.size = *j* - 1 :
                 *   *same* = True.
                 *   Per *k* che va da 0 a *j* - 1 :
-                    *   Se *best_to_arc* .hops[ *k* ] ≠ *p* .hops[ *k* ]:
+                    *   Se *best_to_arc*.hops[ *k* ] ≠ *p*.hops[ *k* ]:
                         *   *same* = False.
                         *   Esci dal ciclo.
-                    *   Se *best_to_arc* .arcs[ *k* ] ≠ *p* .arcs[ *k* ]:
+                    *   Se *best_to_arc*.arcs[ *k* ] ≠ *p*.arcs[ *k* ]:
                         *   *same* = False.
                         *   Esci dal ciclo.
-            *   *p* .ignore_outside[ *i* ] = NOT *same* .
+            *   *p*.ignore_outside[ *i* ] = NOT *same*.
     *   Altrimenti:
-        *   *p* .ignore_outside[ *i* ] = True.
+        *   *p*.ignore_outside[ *i* ] = True.
 
 Alla fine tutto il contenuto di *P* è pronto per essere messo nell'EtpMessage da inviare.
 
