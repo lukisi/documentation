@@ -32,24 +32,16 @@ Diamo un significato ad alcuni termini che useremo frequentemente nel resto del 
 Invece di dire "l'utilizzatore del modulo QSPN" in ottica di uso generico, nel resto del documento ci riferiremo
 direttamente al "demone *ntkd*" per brevità.
 
-C'è una relazione di equivalenza tra il termine "*identità* del nodo" e una istanza della classe QspnManager.
-A volte ci riferiremo ad una istanza di QspnManager, sottintendendo che questa si riferisce ad una specifica
-identità che vive in un nodo.
+Sappiamo che il demone *ntkd* è in esecuzione su un *sistema*. In tale sistema possono esistere
+diverse *identità*, ognuna delle quali costituisce una singola entità della rete Netsukuku, detta anche *nodo del grafo*
+o più brevemente *nodo*.
 
 Per una dettagliata analisi del concetto di *identità* e delle sue caratteristiche rimandiamo al documento di
 trattazione del modulo Identities.
 
-A volte parleremo di *nodo* indicando con questo termine l'intera macchina fisica. O meglio il *sistema* su cui
-è in esecuzione il processo demone *ntkd*. Dobbiamo tenere presente che al suo interno possono vivere diverse
-*identità*. Ma nella trattazione degli aspetti di esplorazione della rete ci siamo di norma riferiti con il
-termine *nodo* alla singola entità del grafo che detiene un certo Netsukuku address. Questa è appunto una singola
-*identità*. Analogamente, con il termine *g-nodo* ci siamo riferiti ad un cluster di *nodi*, cioè un insieme di
-singole *identità*. Quando ci riferiamo ad un g-nodo o meglio ai singoli nodi che lo compongono, dobbiamo avere
-presente che su una singola macchina possono esistere diverse *identità* e di esse una o più possono appartenere al dato g-nodo.
-
-Per questo motivo, per non portare confusione, cercheremo di usare direttamente il termine "demone *ntkd*" o il
-termine *sistema* al posto di *nodo* quando vogliamo indicare nel suo insieme il sistema su cui è in esecuzione.
-Quando vogliamo indicare un singolo vertice del grafo cercheremo di usare la locuzione *nodo del grafo* o genericamente *g-nodo*.
+C'è una relazione di equivalenza tra una *identità* nel sistema e una istanza della classe QspnManager.
+A volte ci riferiremo ad una istanza di QspnManager, sottintendendo che questa si riferisce ad una specifica
+identità che vive nel sistema.
 
 ## <a name="Inizializzazione_del_modulo"></a>Inizializzazione del modulo
 
