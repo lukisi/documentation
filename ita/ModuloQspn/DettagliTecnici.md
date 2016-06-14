@@ -73,7 +73,7 @@ Esaminiamo nel dettaglio i requisiti (forniti dal demone *ntkd*) e i deliverable
     forma da sola una "rete".  
     Il demone *ntkd* crea una istanza di QspnManager specificando che si tratta di questo scenario. In questo
     caso al costruttore viene passato un indirizzo *reale* generato in modo del tutto arbitrario.
-*   **Ingresso** nella rete di un singolo nodo del grafo o di un g-nodo.  
+*   **Ingresso** (di un singolo nodo del grafo o di un g-nodo) in una diversa rete preesistente.  
     Se si tratta di un singolo nodo del grafo allora il demone *ntkd* individua l'istanza di QspnManager che
     ad esso si riferisce.  
     Se si tratta di un g-nodo allora il demone *ntkd* individua una o più istanze di QspnManager che si riferiscono
@@ -98,14 +98,15 @@ Esaminiamo nel dettaglio i requisiti (forniti dal demone *ntkd*) e i deliverable
 
 ### <a name="Avvio"></a>Avvio
 
-Il demone *ntkd* nel sistema *n* produce in  modo completamente arbitrario un indirizzo Netsukuku conforme
+Il demone *ntkd* al suo avvio in un sistema crea la sua prima identità principale, ossia
+il nodo *n*. Per esso produce in  modo completamente arbitrario un indirizzo Netsukuku conforme
 ad una certa topologia di rete di *l* livelli. Sceglie un identificativo random per il suo fingerprint a livello
 0, il quale avrà tutte le anzianità ai vari livelli a zero (nel senso che è il primo nodo, nel primo g-nodo a
 livello 1, ... nel primo g-nodo a livello *l* - 1, nella rete).
 
-Il nodo del grafo non ha archi.
+Il nodo *n* non ha archi.
 
-Quindi il demone *ntkd* nel sistema *n* istanzia il suo QspnManager passando al costruttore:
+Quindi il demone *ntkd* nel sistema istanzia il QspnManager di *n* passando al costruttore:
 
 *   `QspnManager.create_net` - Tipo di costruttore: creazione di una rete.
 *   `IQspnNaddr my_naddr` - Il proprio indirizzo Netsukuku.
@@ -117,11 +118,11 @@ La lista di istanze di IQspnArc del nodo viene inizializzata vuota dal costrutto
 Una istanza di QspnManager costruita in questo modo esce immediatamente dalla fase di bootstrap. Quando una
 istanza di QspnManager esce dalla fase di bootstrap lo notifica con il segnale *bootstrap_complete*.
 
-Abbiamo detto che la rete è composta dal solo nodo del grafo *n*. Se in seguito il sistema *n* decidesse di
-entrare in una diversa rete, allora farebbe come vedremo sotto una nuova istanza di QspnManager.
+Abbiamo detto che la rete è composta dal solo nodo del grafo *n*. Se in seguito il nodo *n* decidesse di
+entrare in una diversa rete, allora il demone *ntkd* farebbe come vedremo sotto una nuova istanza di QspnManager.
 
-Se invece un altro sistema decide di entrare come nodo nel grafo della mia rete, allora il demone *ntkd* nel
-sistema *n* segnala le variazioni sugli archi alla sua istanza di QspnManager con questi metodi:
+Se invece un altro nodo in un altro sistema decide di entrare nel grafo della mia rete, allora il demone *ntkd* nel
+mio sistema segnala le variazioni sugli archi all'istanza di QspnManager di *n* con questi metodi:
 
 *   `arc_add (IQspnArc arc)`.
 *   `arc_is_changed (IQspnArc changed_arc)`.
@@ -149,7 +150,16 @@ Per l'esattezza, dire che un g-nodo *w* fa ingresso in una rete *G* significa ch
 *   Il g-nodo *w* ha almeno un arco diretto verso *g*.
 
 A fronte di diversi g-nodi che potrebbero soddisfare questi requisiti, la strategia che si adotta per la scelta
-del g-nodo non è di competenza del modulo QSPN. Viene descritta nel documento del modulo Migrations. **TODO: inserire.**
+del g-nodo non è di competenza del modulo QSPN. Viene descritta nel documento del modulo Migrations. **TODO**: collegare. In
+quel documento si vedrà anche che nella fase iniziale almeno un nodo 𝛼 di *w* deve avere un arco-identità con un nodo 𝛽
+di *g* e questi nodi devono avere queste caratteristiche:
+
+*   𝛼 deve essere l'identità *principale* del sistema in cui vive e deve avere indirizzo Netsukuku *reale*.
+*   𝛽 deve essere l'identità *principale* del sistema in cui vive e deve avere indirizzo Netsukuku *reale*.
+
+In seguito però, le operazioni della *migration path* possono portare al fatto che l'identità 𝛽
+diventi una identità *di connettività* per il g-nodo *g* e/o che l'identità 𝛼 assuma temporaneamente
+un indirizzo *virtuale* in *g*.
 
 Se si tratta di un singolo nodo del grafo *n* che vuole entrare nel g-nodo *g* ∈ *G* — deve trattarsi dell'identità
 principale del suo sistema — lo stesso nodo *n* chiede ad un suo diretto vicino in *g*, chiamiamolo *g<sub>0</sub>*,
@@ -202,13 +212,13 @@ Qui ricordiamo solo che l'operazione avviene in due fasi, con il metodo *prepare
 da duplicare.
 
 Durante le operazioni (che in questo documento non vengono dettagliate) che portano alla propagazione
-in tutto il g-nodo *w* (con avviso di ricevimento) delle suddette informazioni, il demone *ntkd*
-riguardo ogni identità *n* in *w* esegue (solo una volta) il primo metodo. In modo tale che quando
-il nodo che ha iniziato la propagazione riceve la conferma che tutto il g-nodo *w* è stato informato,
-tale nodo sa con certezza che tutti i nodi hanno completato il primo metodo. A questo punto lo stesso
-nodo inizierà la propagazione (senza avviso di ricevimento) a tutto *w* dell'ordine di completare la migrazione.
+in tutto il g-nodo *w* partendo da *n<sub>0</sub>* (con avviso di completamento) delle suddette informazioni, il demone *ntkd*
+riguardo ogni generica identità *n* in *w* esegue (solo una volta) il primo metodo. In modo tale che quando
+*n<sub>0</sub>* riceve la conferma che tutto il g-nodo *w* è stato informato, esso
+sa con certezza che tutti i nodi hanno completato il primo metodo. A questo punto lo stesso
+*n<sub>0</sub>* inizierà la propagazione (senza avviso di completamento) a tutto *w* dell'ordine di completare la migrazione.
 
-Dopo un certo tempo l'identità *n* riceve l'ordine di completare la migrazione. A questo punto il demone *ntkd*
+Dopo un certo tempo, quindi, la generica identità *n* riceve l'ordine di completare la migrazione. A questo punto il demone *ntkd*
 riguardo l'identità *n* esegue il secondo metodo e realizza così la creazione di *n’*. Così facendo gli *archi-identità*
 sono stati correttamente duplicati da *n* a *n’*.
 
@@ -281,7 +291,7 @@ Il demone *ntkd* costruisce una istanza di QspnManager fornendo:
 Una istanza di QspnManager costruita in questo modo entra in una fase di bootstrap ai livelli da *k* a *i* - 1.
 In seguito alcuni nodi di *w’* riceveranno degli ETP completi dai loro diretti vicini esterni a *w’* ma interni
 a *g*. Poi propagheranno le nuove conoscenze (cioè percorsi verso g-nodi esterni a *w’*) trasmettendo degli ETP
-ai nodi del grafo interni a *w’*. Alla fine ogni nodo del grafo (cioè ogni *identità*) riceve queste nuove
+ai nodi del grafo interni a *w’*. Alla fine ogni nuovo nodo in *w’* riceve queste nuove
 conoscenze e può uscire dalla fase di bootstrap. Quando una istanza di QspnManager esce dalla fase di bootstrap
 lo notifica con il segnale *bootstrap_complete*.
 
@@ -331,7 +341,7 @@ Inoltre viene modificato l'indirizzo detenuto da *n* in uno *di connettività* a
 * * *
 
 **Nota 1:** Quando diciamo che un nodo del grafo (o una identità) *n*, con *n* ∈ *w*, è *di connettività* in g-nodi
-interni a *w* intendiamo dire che l'indirizzo che *n* detiene è un indirizzo *di connettività* ai livelli da
+interni a *w* intendiamo dire che l'identità *n* è *di connettività* ai livelli da
 *i<sub>0</sub>* a *j<sub>0</sub>*, dove *i<sub>0</sub>* è strettamente minore del livello di *w*. Non si fa alcuna
 assunzione invece sul valore *j<sub>0</sub>*.
 
@@ -425,11 +435,12 @@ Costruisce una istanza di QspnManager fornendo:
     Inoltre la nuova istanza di QspnManager copia da esso il tipo dell'identità: *principale* o *di connettività* ai livelli
     da *i<sub>0</sub>* a *j<sub>0</sub>*.
 
-Una istanza di QspnManager costruita in questo modo entra in una fase di bootstrap ai livelli da *k* a *i* - 1. In seguito
-i border-nodi di *w’* riceveranno degli ETP completi dai loro diretti vicini esterni a *w’* ma interni a *g*. Poi
-propagheranno le nuove conoscenze (cioè percorsi verso g-nodi esterni a *w’*) trasmettendo degli ETP ai nodi del grafo
-interni a *w’*. Alla fine ogni nodo del grafo (cioè ogni *identità*) riceve queste nuove conoscenze e può uscire dalla
-fase di bootstrap. Quando una istanza di QspnManager esce dalla fase di bootstrap lo notifica con il segnale *bootstrap_complete*.
+Una istanza di QspnManager costruita in questo modo entra in una fase di bootstrap ai livelli da *k* a *i* - 1.
+In seguito alcuni nodi di *w’* riceveranno degli ETP completi dai loro diretti vicini esterni a *w’* ma interni
+a *g*. Poi propagheranno le nuove conoscenze (cioè percorsi verso g-nodi esterni a *w’*) trasmettendo degli ETP
+ai nodi del grafo interni a *w’*. Alla fine ogni nuovo nodo in *w’* riceve queste nuove
+conoscenze e può uscire dalla fase di bootstrap. Quando una istanza di QspnManager esce dalla fase di bootstrap
+lo notifica con il segnale *bootstrap_complete*.
 
 Dopo che è uscita dalla fase di bootstrap, una istanza di QspnManager trasmette i suoi primi ETP ai diretti vicini. Dopo
 averli trasmessi, aspetta un certo tempo per accertarsi che i vicini abbiano avuto modo di processarli e poi emette il
@@ -702,6 +713,9 @@ queste possibili circostanze:
 ### <a name="Rielaborazione_percorsi_etp_ricevuto"></a>Rielaborazione dei percorsi in ogni ETP ricevuto
 
 Sia *m* un ETP che il nodo *n* riceve dal nodo *v* attraverso l'arco *a*.
+
+In questo momento il nodo *n* scopre l'indirizzo Netsukuku del vicino *v* collegato al suo
+arco *a*. Lo tiene a mente per il futuro.
 
 Quando il modulo riceve una istanza di EtpMessage che gli viene trasmessa in una chiamata a metodo remoto, questa contiene
 le istanze degli oggetti che l'utilizzatore del modulo (nell'altro nodo) ha costruito e che il modulo continua a conoscere
