@@ -714,16 +714,43 @@ queste possibili circostanze:
 
 Sia *m* un ETP che il nodo *n* riceve dal nodo *v* attraverso l'arco *a*.
 
-In questo momento il nodo *n* scopre l'indirizzo Netsukuku del vicino *v* collegato al suo
-arco *a*. Lo tiene a mente per il futuro.
-
 Quando il modulo riceve una istanza di EtpMessage che gli viene trasmessa in una chiamata a metodo remoto, questa contiene
 le istanze degli oggetti che l'utilizzatore del modulo (nell'altro nodo) ha costruito e che il modulo continua a conoscere
 solo in quanto implementazioni delle interfacce a lui note. Inoltre riconoscendo l'arco *a* da cui ha ricevuto il messaggio
 può ottenere l'istanza di IQspnCost che rappresenta il suo costo. Anche questa si assume che sia un oggetto serializzabile.
 Infine, sempre avendo individuato l'arco *a*, ha individuato l'identificativo *id(a)*, che è un intero.
 
-Il nodo *n* calcola il livello *i* del minimo comune g-nodo tra *n* e *v*.
+In questo momento il nodo *n* riceve anche l'indirizzo Netsukuku corrente del vicino *v* collegato al suo
+arco *a*.
+
+Il nodo *n* calcola subito il livello *i* del minimo comune g-nodo tra *n* e *v*.
+
+Riguardo l'indirizzo Netsukuku corrente del vicino *v*, possono esserci 3 situazioni:
+
+*   Il nodo *n* ancora non lo conosceva.  
+    In questo caso semplicemente *n* lo memorizza per il futuro.
+*   Il nodo *n* già lo conosceva. Esso è rimasto invariato.
+*   Il nodo *n* lo conosceva, ma esso è cambiato.  
+    Questo può avvenire solo se *v* è diventato una identità *di connettività*, cambiando quindi
+    il suo identificativo di un certo livello da reale a virtuale.  
+    Vi sono anche qui diverse situazioni. Indichiamo con *i<sub>0</sub>* il livello delle coordinate
+    gerarchiche con cui il nodo *n* in precedenza identificava il massimo distinto g-nodo di *v*.
+    *   Il cambio di indirizzo è avvenuto ad un livello minore di *i<sub>0</sub>*. Quindi il nodo *n* non ha partecipato a
+        questa trasformazione in g-nodo di connettività; le coordinate gerarchiche con cui il nodo *n*
+        identifica il massimo distinto g-nodo di *v* non sono cambiate.
+    *   Il cambio di indirizzo è avvenuto ad un livello maggiore di *i<sub>0</sub>*. Questo comporterebbe che
+        anche il nodo *n* ha partecipato a questa trasformazione in g-nodo di connettività: quindi
+        usando il nuovo indirizzo Netsukuku di *n* ancora una volta le coordinate
+        gerarchiche con cui il nodo *n* identifica il massimo distinto g-nodo di *v* non sono
+        cambiate.
+    *   Il cambio di indirizzo è avvenuto al livello *i<sub>0</sub>*. Quindi il nodo *n* non ha partecipato a
+        questa trasformazione in g-nodo di connettività; le coordinate gerarchiche con cui il
+        nodo *n* identifica il massimo distinto g-nodo di *v* sono cambiate.  
+        In questo caso il nodo *n* scopre con questo ETP, oltre ad altre informazioni, che deve rimuovere dalla
+        sua mappa, se c'era, un percorso con zero passi verso il vecchio massimo distinto g-nodo di
+        *v* per *n*.  
+        Il nodo *n* discerne di essere in questa situazione guardando solo se è cambiato l'identificativo
+        al livello *i* - 1 dell'indirizzo Netsukuku di *v*.
 
 Il nodo *n* esamina la lista di hop percorsi da *m*. Per prima cosa esegue la [Grouping Rule](EsplorazioneRete.md#GroupingRule)
 su tale lista per renderla coerente con i g-nodi a cui *n* appartiene. Poi esegue la
@@ -736,6 +763,9 @@ Infine *n* esamina il set di percorsi *P* contenuto in *m*, ma deve renderli coe
 *   **2)** Per ogni percorso *p* rimasto in *P* il nodo *n* esegue la Grouping Rule.
 *   **3)** Per ogni percorso *p* in *P* il nodo *n* esegue la Acyclic Rule e se vede che il percorso ha fatto un ciclo lo rimuove da *P*.
 *   **4)** Il nodo *n* aggiunge a *P* il percorso verso *v<sub>i-1</sub>* con costo *null* e fingerprint e numero di nodi
+    così come riportati in *m*.
+*   **4bis)** Se le coordinate gerarchiche di *v<sub>i-1</sub>* sono cambiate rispetto a prima: Il nodo *n* aggiunge a *P*
+    il percorso verso *old_v<sub>i-1</sub>* con costo *dead* e fingerprint e numero di nodi
     così come riportati in *m*.
 *   **5)** Solo se *m* è un ETP completo:
     *   Il nodo *n* cerca in tutta la sua mappa i percorsi che partono dal gateway *v* attraverso l'arco *a*. Li mette in
@@ -758,6 +788,16 @@ rappresentare questo percorso intrinseco, il modulo nel nodo *n* costruisce una 
 *   La sequenza *hops* è composta da un solo g-nodo che è *v<sub>i-1</sub>*.
 *   La sequenza *arcs* è composta dal solo *id(a)*.
 *   Il costo del percorso è *null*. Esso rappresenta il costo da *v* ad *v*.
+*   Il fingerprint del g-nodo è il fingerprint indicato nell'ETP *m* al livello *i* - 1.
+*   Il numero di nodi nel g-nodo è il numero di nodi indicato nell'ETP *m* al livello *i* - 1.
+
+Il punto 4bis ha una spiegazione simile. Se un vicino *v*, o meglio il suo massimo distinto g-nodo per *n*, cambia il
+suo identificativo (perché diventa di connettività a causa di una migrazione) il vecchio percorso intrinseco acquisito
+in precedenza va rimosso. Per farlo, il modulo nel nodo *n* costruisce una istanza della classe EtpPath con questi dati:
+
+*   La sequenza *hops* è composta da un solo g-nodo che è *old_v<sub>i-1</sub>*.
+*   La sequenza *arcs* è composta dal solo *id(a)*.
+*   Il costo del percorso è *dead*.
 *   Il fingerprint del g-nodo è il fingerprint indicato nell'ETP *m* al livello *i* - 1.
 *   Il numero di nodi nel g-nodo è il numero di nodi indicato nell'ETP *m* al livello *i* - 1.
 
