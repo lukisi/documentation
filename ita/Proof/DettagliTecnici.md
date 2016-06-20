@@ -51,7 +51,7 @@ una istanza della classe *IdentityData*. Dentro questa classe il programma manti
 *   `NodeID nodeid` - L'identificativo che il modulo Identities ha assegnato all'identità.
 *   `my_addr` - L'indirizzo Netsukuku.
 *   `my_fp` - Il fingerprint e le anzianità a livello 0.
-*   `LinuxRoute route` - Una classe, che dettaglieremo dopo, con la quale si intende gestire gli
+*   `NetworkStack network_stack` - Una classe, che dettaglieremo dopo, con la quale si intende gestire gli
     aspetti delle routing policy di un dato network namespace.
 
 Per valorizzare la prima istanza di IdentityData, nel dizionario con indice 0 e associata alla
@@ -61,7 +61,7 @@ recuperare il NodeID che il modulo Identities ha assegnato alla prima identità.
 In questo stesso momento il NodeID viene mostrato a video con il relativo indice. In seguito l'utente può
 rivederli con il comando interattivo *show_nodeids*.
 
-Inoltre in questa prima istanza di IdentityData viene memorizzata la prima istanza di *LinuxRoute* che
+Inoltre in questa prima istanza di IdentityData viene memorizzata la prima istanza di *NetworkStack* che
 gestisce il network namespace default.
 
 * * *
@@ -82,16 +82,16 @@ nodi che prendono parte al testbed. Questo significa che quando l'utente richied
 in una diversa rete (vedere sotto il comando interattivo *enter_net*) la topologia non dovrà essere di nuovo specificata.
 
 Abbiamo già detto che alla prima *identità* il programma *qspnclient* associa la prima istanza della classe
-*LinuxRoute*, che è destinata al network namespace default.
+*NetworkStack*, che è destinata al network namespace default.
 
 In seguito, quando si forma una nuova identità (con il comando interattivo *add_identity*),
 necessariamente viene anche creato un nuovo network namespace temporaneo. Allora il programma *qspnclient*
-creerà una nuova istanza della classe LinuxRoute destinata a quel network namespace.
+creerà una nuova istanza della classe NetworkStack destinata a quel network namespace.
 
 Quando viene creata una istanza di QspnManager (qui e anche con il comando interattivo *enter_net*)
-come prima operazione con l'istanza di LinuxRoute che gestisce il network namespace associato
+come prima operazione con l'istanza di NetworkStack che gestisce il network namespace associato
 a questa identità, il programma *qspnclient* assegna al nodo gli indirizzi IP che servono. Usa per questo
-il metodo `add_address` di LinuxRoute.
+il metodo `add_address` di NetworkStack.
 
 In questo caso specifico del costruttore *create_net*, siamo di fronte ad una identità principale che detiene un
 indirizzo Netsukuku *reale* *n*. Quindi il programma assegna al nodo:
@@ -184,21 +184,21 @@ autoincrementante *nodeid_nextindex*, nel dizionario *nodeids*. In questo esempi
 
 Inoltre è stato anche realizzato un nuovo network namespace temporaneo; l'identità *i<sub>1</sub>* inizierà ora a gestire il
 vecchio namespace che era gestito da *i<sub>0</sub>*, mentre l'identità *i<sub>0</sub>* avrà in gestione
-il nuovo network namespace. Ne consegue che l'istanza di LinuxRoute, chiamiamola *r<sub>𝛼</sub>*, che si trovava
-memorizzata nell'istanza di IdentityData associata a *i<sub>0</sub>*, nel membro *route*, viene ora memorizzata nella
+il nuovo network namespace. Ne consegue che l'istanza di NetworkStack, chiamiamola *ns<sub>𝛼</sub>*, che si trovava
+memorizzata nell'istanza di IdentityData associata a *i<sub>0</sub>*, nel membro *network_stack*, viene ora memorizzata nella
 nuova istanza di IdentityData associata a *i<sub>1</sub>*; nell'istanza di IdentityData associata
-a *i<sub>0</sub>* verrà invece memorizzata una nuova istanza di LinuxRoute, chiamiamola *r<sub>𝛽</sub>*, creata per il nuovo
+a *i<sub>0</sub>* verrà invece memorizzata una nuova istanza di NetworkStack, chiamiamola *ns<sub>𝛽</sub>*, creata per il nuovo
 network namespace.
 
-Alcune delle rotte impostate da *r<sub>𝛼</sub>* nel suo network namespace dovranno presto essere
+Alcune delle rotte impostate da *ns<sub>𝛼</sub>* nel suo network namespace dovranno presto essere
 rimosse, mentre altre dovranno rimanere. Analogamente, alcuni indirizzi IP, che nel tempo sono stati impostati
-da *r<sub>𝛼</sub>* nel suo network namespace assegnandoli alle varie \[pseudo]interfacce gestite,
+da *ns<sub>𝛼</sub>* nel suo network namespace assegnandoli alle varie \[pseudo]interfacce gestite,
 dovranno presto essere rimossi, mentre altri dovranno rimanere. Tutto questo deriva dal fatto che ora
 quel network namespace è gestito da una diversa identità *i<sub>1</sub>*.  
 Quando l'utente dà il comando interattivo *add_identity* non sappiamo ancora quale sia il g-nodo
 che in blocco entra in una nuova rete oppure migra in un diverso g-nodo. In base al livello
 del g-nodo che *si muove* e al livello del g-nodo in cui esso entra, alcuni indirizzi IP interni
-e le relative rotte dovranno restare in esistenza nel network namespace gestito da *r<sub>𝛼</sub>*
+e le relative rotte dovranno restare in esistenza nel network namespace gestito da *ns<sub>𝛼</sub>*
 mentre altri dovranno essere rimossi.  
 Quindi rinviamo queste considerazioni ad un prossimo momento: in questo caso, al momento in cui
 l'utente dà il comando interattivo *enter_net*.
@@ -242,27 +242,27 @@ interattivo *enter_net*) per chiamare il costruttore *enter_net* di QspnManager 
     Netsukuku dei vicini collegati da questi archi. In questo esempio \["3.10.123.45"].
 
 A questo punto, come dicevamo prima, il programma *qspnclient* conosce i dettagli di questo ingresso
-in una nuova rete. È il momento giusto per dare istruzioni all'istanza di LinuxRoute *r<sub>𝛼</sub>* (che ora è
+in una nuova rete. È il momento giusto per dare istruzioni all'istanza di NetworkStack *ns<sub>𝛼</sub>* (che ora è
 associata all'identità *i<sub>1</sub>*) di rimuovere le rotte e gli indirizzi IP propri che non sono
 più validi, lasciando in vigore le rotte (e relativi indirizzi propri) che sono validi in quanto
 interni ad un livello inferiore a quello del g-nodo che migra.
 
 Le rotte verso indirizzi IP globali e le rotte verso indirizzi IP interni ad un livello *k* tale
 che *k* > `hooking_gnode_level` vanno rimosse. Per farlo il programma *qspnclient* fa diverse
-chiamate al metodo `remove_destination` di *r<sub>𝛼</sub>* sulla base dei percorsi che sono
+chiamate al metodo `remove_destination` di *ns<sub>𝛼</sub>* sulla base dei percorsi che sono
 noti al precedente QspnManager.
 
 L'indirizzo IP proprio globale e quelli interni ad un livello *k* tale
 che *k* > `into_gnode_level-1` vanno rimossi. Per farlo il programma *qspnclient* fa diverse
-chiamate al metodo `remove_address` di *r<sub>𝛼</sub>* sulla base dell'indirzzo Netsukuku che era
+chiamate al metodo `remove_address` di *ns<sub>𝛼</sub>* sulla base dell'indirzzo Netsukuku che era
 detenuto dalla precente identità (memorizzato nella classe IdentityData).
 
 Subito dopo, il comando interattivo *enter_net* costruisce la nuova istanza di QspnManager. Poi,
-per mezzo delle istanze di LinuxRoute associate alle due identità esegue queste operazioni:
+per mezzo delle istanze di NetworkStack associate alle due identità esegue queste operazioni:
 
-*   L'identità *i<sub>1</sub>* usa la sua istanza di LinuxRoute (che ora è *r<sub>𝛼</sub>*) per assegnarsi i relativi indirizzi IP.  
+*   L'identità *i<sub>1</sub>* usa la sua istanza di NetworkStack (che ora è *ns<sub>𝛼</sub>*) per assegnarsi i relativi indirizzi IP.  
     Per l'esattezza, l'indirizzo IP globale e quelli interni ai livelli da `into_gnode_level` in su.
-*   L'identità *i<sub>0</sub>* usa la sua istanza di LinuxRoute (che ora è *r<sub>𝛽</sub>*) per assegnarsi i relativi indirizzi IP.  
+*   L'identità *i<sub>0</sub>* usa la sua istanza di NetworkStack (che ora è *ns<sub>𝛽</sub>*) per assegnarsi i relativi indirizzi IP.  
     In realtà, essendo *i<sub>0</sub>* una identità *di connettività*, secondo l'analisi non dovrà assegnarsi nessun indirizzo IP.
 
 Successivamente — ma in tempi molto rapidi perché il modulo QSPN prevede un tempo massimo
@@ -309,11 +309,11 @@ Quando l'utente termina l'applicazione con il comando `quit` (o con Ctrl-C) il p
 l'istanza di IdentityManager di rimuovere tutte le identità di connettività. In questo modo tutte le
 pseudo-interfacce e tutti i network namespace creati dal programma vengono rimossi.
 
-Per pulire il network namespace default, invece, il programma chiama sull'istanza di LinuxRoute relativa
+Per pulire il network namespace default, invece, il programma chiama sull'istanza di NetworkStack relativa
 dapprima il metodo `stop_management`. Con questo rimuove le tabelle (`ntk` e le varie `ntk_from_XXX`) che
 aveva creato e popolato.
 
-Poi, per rimuovere gli indirizzi IP propri, il programma chiama sull'istanza di LinuxRoute relativa
+Poi, per rimuovere gli indirizzi IP propri, il programma chiama sull'istanza di NetworkStack relativa
 il metodo `remove_address` una volta per ogni indirizzo IP e per ognuna delle sue interfacce di rete reali.
 
 ## Annotazioni sulla rimozione degli archi
@@ -622,38 +622,39 @@ avviene che l'identità *i<sub>0</sub>* vede cambiare il proprio indirizzo Netsu
 una identità *di connettività* per un livello in cui prima non lo era. Inoltre la
 nuova identità *i<sub>1</sub>* deterrà un nuovo indirizzo Netsukuku ancora diverso.
 
-Inoltre ancora, l'identità *i<sub>1</sub>* avrà in eredità un network namespace *r<sub>𝛼</sub>* preesistente
+Inoltre ancora, l'identità *i<sub>1</sub>* avrà in eredità un network
+namespace gestito con l'istanza di NetworkStack *ns<sub>𝛼</sub>* preesistente
 che era stato configurato sulla base delle passate conoscenze di *i<sub>0</sub>*. Alcune di
-queste configurazioni vanno subito rimosse da *r<sub>𝛼</sub>*, altre invece devono rimanere perché
+queste configurazioni vanno subito rimosse da *ns<sub>𝛼</sub>*, altre invece devono rimanere perché
 alcune conoscenze di *i<sub>0</sub>* vanno copiate su *i<sub>1</sub>*. In seguito tramite il QSPN
 l'identità *i<sub>1</sub>* acquisirà nuove conoscenze e queste produrranno nuove configurazioni
-che andranno aggiunte a *r<sub>𝛼</sub>*.
+che andranno aggiunte a *ns<sub>𝛼</sub>*.
 
-Invece l'identità *i<sub>0</sub>* avrà assegnato un nuovo network namespace *r<sub>𝛽</sub>*. Alcune
+Invece l'identità *i<sub>0</sub>* avrà assegnato un nuovo network namespace gestito con *ns<sub>𝛽</sub>*. Alcune
 delle conoscenze di *i<sub>0</sub>* vengono annullate, altre rimangono valide. Quelle che rimangono valide
-vanno subito aggiunte come configurazioni a *r<sub>𝛽</sub>*. In seguito tramite il QSPN
+vanno subito aggiunte come configurazioni a *ns<sub>𝛽</sub>*. In seguito tramite il QSPN
 l'identità *i<sub>0</sub>* acquisirà nuove conoscenze e queste produrranno nuove configurazioni
-che andranno aggiunte a *r<sub>𝛽</sub>*.
+che andranno aggiunte a *ns<sub>𝛽</sub>*.
 
 Ad esempio possiamo avere in un *sistema* *n* l'identità *n<sub>0</sub>* con indirizzo 3·2·3·1 in una topologia 4·4·4·4.
 Questo è un indirizzo *reale* quindi si tratta di una identità principale nel network namespace default (indichiamo
-la relativa istanza di LinuxRoute con *r<sub>𝛼</sub>*).  
+la relativa istanza di NetworkStack con *ns<sub>𝛼</sub>*).  
 Ora supponiamo che il nodo 3·2·3·1 vuole migrare in 3·2·2·2, restando nel g-nodo 3·2·3
 con l'identificativo *virtuale* 3·2·3·6.  
 Quindi dentro *n* si aggiunge l'identità *n<sub>1</sub>* basata su *n<sub>0</sub>* con indirizzo 3·2·2·2  (che nasce come
 identità principale con un indirizzo Netsukuku *reale* ed eredita il network namespace default)
 mentre l'identità *n<sub>0</sub>* diventa *di connettività* al livello 1 con indirizzo 3·2·3·6
-e gli viene associato il nuovo namespace *r<sub>𝛽</sub>*.
+e gli viene associato il nuovo namespace *ns<sub>𝛽</sub>*.
 
 Poi supponiamo che il g-nodo 3·2 migra in 1·0, restando dentro il g-nodo 3 con l'identificativo *virtuale* 3·5. Dentro il
 g-nodo 3·2 abbiamo sia il nodo 3·2·2·2 (cioè l'identità *n<sub>1</sub>* dentro *n*) sia il
 nodo 3·2·3·6 (cioè l'identità *n<sub>0</sub>* dentro *n*).  
 Quindi dentro *n* si aggiunge l'identità *n<sub>2</sub>* basata su *n<sub>0</sub>* con indirizzo 1·0·3·6 (che nasce come
-identità *di connettività* al livello 1 ed eredita il network namespace *r<sub>𝛽</sub>*) mentre l'identità *n<sub>0</sub>* diventa
-*di connettività* al livello 3 con indirizzo 3·5·3·6 e gli viene associato il nuovo namespace *r<sub>𝛾</sub>*.  
+identità *di connettività* al livello 1 ed eredita il network namespace *ns<sub>𝛽</sub>*) mentre l'identità *n<sub>0</sub>* diventa
+*di connettività* al livello 3 con indirizzo 3·5·3·6 e gli viene associato il nuovo namespace *ns<sub>𝛾</sub>*.  
 Inoltre dentro *n* si aggiunge l'identità *n<sub>3</sub>* basata su *n<sub>1</sub>* con indirizzo 1·0·2·2 (che nasce come
 identità principale con un indirizzo Netsukuku *reale* ed eredita il network namespace default) mentre l'identità *n<sub>1</sub>* diventa
-*di connettività* al livello 3 con indirizzo 3·5·2·2 e gli viene associato il nuovo namespace *r<sub>𝛿</sub>*.
+*di connettività* al livello 3 con indirizzo 3·5·2·2 e gli viene associato il nuovo namespace *ns<sub>𝛿</sub>*.
 
 Esaminiamo cosa avviene nella prima migrazione, quando si aggiunge l'identità *n<sub>1</sub>* basata su *n<sub>0</sub>*. In questo
 caso il livello del g-nodo che migra, `hooking_gnode_level`, è 0. Il programma chiede al precedente QspnManager (quello associato
@@ -661,27 +662,27 @@ a *n<sub>0</sub>*) quali destinazioni conosce, a tutti i livelli. Ad esempio dic
 alcuni percorsi verso la destinazione 3·2·3·3, cioè in coordinate gerarchiche (0,3) rispetto a 3·2·3·1.
 Ora il programma calcola per questa destinazione l'indirizzo IP globale, quello anonimizzante e quelli
 interni al livello *k* con *k* > 0. Per ognuno di questi indirizzi IP il programma chiama il metodo
-`remove_destination` di *r<sub>𝛼</sub>*. In conclusione, non rimane nessuna rotta in *r<sub>𝛼</sub>*.
+`remove_destination` di *ns<sub>𝛼</sub>*. In conclusione, non rimane nessuna rotta in *ns<sub>𝛼</sub>*.
 
 Ora ricordiamo che il livello del g-nodo in cui si entra, `into_gnode_level`, è 1.
 Il programma, relativamente all'indirizzo proprio 3·2·3·1, calcola l'indirizzo IP globale,
 quello anonimizzante solo se il *sistema* *n* intendeva rispondere a richieste anonime, e quelli
 interni al livello *k* con *k* > 0. Per ognuno di questi indirizzi IP il programma chiama il metodo
-`remove_address` di *r<sub>𝛼</sub>*. In conclusione, non rimane nessun indirizzo proprio in *r<sub>𝛼</sub>*.
+`remove_address` di *ns<sub>𝛼</sub>*. In conclusione, non rimane nessun indirizzo proprio in *ns<sub>𝛼</sub>*.
 
-Da adesso *r<sub>𝛼</sub>* sarà assegnato a *n<sub>1</sub>* mentre *r<sub>𝛽</sub>* sarà assegnato a *n<sub>0</sub>*.
+Da adesso *ns<sub>𝛼</sub>* sarà assegnato a *n<sub>1</sub>* mentre *ns<sub>𝛽</sub>* sarà assegnato a *n<sub>0</sub>*.
 
 L'identità *n<sub>0</sub>* ora detiene un nuovo indirizzo Netsukuku per il quale nessun indirizzo
 IP proprio si può computare, essendo divenuta una identità *di connettività*. Quindi a questo
-proposito nessuna configurazione va aggiunta a *r<sub>𝛽</sub>*.
+proposito nessuna configurazione va aggiunta a *ns<sub>𝛽</sub>*.
 
 Le vecchie conoscenze di *n<sub>0</sub>* rimangono tuttavia valide. Riprendiamo ad esempio i
 percorsi che erano noti verso la destinazione 3·2·3·3, cioè in coordinate gerarchiche (0,3) rispetto a 3·2·3·6.
-Ora queste configurazioni vanno aggiunte a *r<sub>𝛽</sub>*. Il programma guarda innanzitutto se
+Ora queste configurazioni vanno aggiunte a *ns<sub>𝛽</sub>*. Il programma guarda innanzitutto se
 il QspnManager associato a *n<sub>0</sub>* ha completato il bootstrap (altrimenti non aveva
-impostato ancora nessuna rotta in *r<sub>𝛼</sub>* e nessuna rotta va ancora impostata nemmeno
-in *r<sub>𝛽</sub>*). Se il bootstrap è stato completato, il programma chiede quali sono le
-destinazioni note e opera quanto è necessario per impostare le rotte relative in *r<sub>𝛽</sub>*.
+impostato ancora nessuna rotta in *ns<sub>𝛼</sub>* e nessuna rotta va ancora impostata nemmeno
+in *ns<sub>𝛽</sub>*). Se il bootstrap è stato completato, il programma chiede quali sono le
+destinazioni note e opera quanto è necessario per impostare le rotte relative in *ns<sub>𝛽</sub>*.
 
 Ora vediamo cosa avviene nella seconda migrazione. Prima osserviamo quando si aggiunge l'identità
 *n<sub>3</sub>* basata su *n<sub>1</sub>*, in quanto questo riguarda il network namespace default
@@ -691,7 +692,7 @@ destinazioni conosce, a tutti i livelli. Ad esempio diciamo che erano noti alcun
 verso la destinazione 3·2·3·3, cioè in coordinate gerarchiche (1,3) rispetto a 3·2·2·2.
 Ora il programma calcola per questa destinazione l'indirizzo IP globale, quello anonimizzante e quelli
 interni al livello *k* con *k* > 2. Per ognuno di questi indirizzi IP il programma chiama il metodo
-`remove_destination` di *r<sub>𝛼</sub>*. In conclusione, in *r<sub>𝛼</sub>* rimangono quelle
+`remove_destination` di *ns<sub>𝛼</sub>*. In conclusione, in *ns<sub>𝛼</sub>* rimangono quelle
 rotte verso (1,3) che usano l'indirizzo IP interno al livello 2. Questo è corretto, poiché nella
 migrazione è coinvolto tutto il g-nodo 3·2.
 
@@ -699,23 +700,23 @@ Ora ricordiamo che il livello del g-nodo in cui si entra, `into_gnode_level`, è
 Il programma, relativamente all'indirizzo proprio 3·2·2·2, calcola l'indirizzo IP globale,
 quello anonimizzante solo se il *sistema* *n* intendeva rispondere a richieste anonime, e quelli
 interni al livello *k* con *k* > 2. Per ognuno di questi indirizzi IP il programma chiama il metodo
-`remove_address` di *r<sub>𝛼</sub>*. In conclusione, rimane in *r<sub>𝛼</sub>* l'indirizzo IP
+`remove_address` di *ns<sub>𝛼</sub>*. In conclusione, rimane in *ns<sub>𝛼</sub>* l'indirizzo IP
 proprio interno al livello 2 e quello interno al livello 1. Questo è corretto e necessario,
-poiché abbiamo mantenuto in *r<sub>𝛼</sub>* alcune rotte che hanno questi indirizzi IP propri
+poiché abbiamo mantenuto in *ns<sub>𝛼</sub>* alcune rotte che hanno questi indirizzi IP propri
 come *src* preferito.
 
-Da adesso *r<sub>𝛼</sub>* sarà assegnato a *n<sub>3</sub>* mentre *r<sub>𝛿</sub>* sarà assegnato a *n<sub>1</sub>*.
+Da adesso *ns<sub>𝛼</sub>* sarà assegnato a *n<sub>3</sub>* mentre *ns<sub>𝛿</sub>* sarà assegnato a *n<sub>1</sub>*.
 
 L'identità *n<sub>1</sub>* ora detiene un nuovo indirizzo Netsukuku per il quale nessun indirizzo
 IP proprio si può computare, essendo divenuta una identità *di connettività*. Quindi a questo
-proposito nessuna configurazione va aggiunta a *r<sub>𝛿</sub>*.
+proposito nessuna configurazione va aggiunta a *ns<sub>𝛿</sub>*.
 
 Le vecchie conoscenze di *n<sub>1</sub>* rimangono tuttavia valide.
-Ora queste configurazioni vanno aggiunte a *r<sub>𝛿</sub>*. Il programma guarda innanzitutto se
+Ora queste configurazioni vanno aggiunte a *ns<sub>𝛿</sub>*. Il programma guarda innanzitutto se
 il QspnManager associato a *n<sub>1</sub>* ha completato il bootstrap (altrimenti non aveva
-impostato ancora nessuna rotta in *r<sub>𝛼</sub>* e nessuna rotta va ancora impostata nemmeno
-in *r<sub>𝛿</sub>*). Se il bootstrap è stato completato, il programma chiede quali sono le
-destinazioni note e opera quanto è necessario per impostare le rotte relative in *r<sub>𝛿</sub>*.
+impostato ancora nessuna rotta in *ns<sub>𝛼</sub>* e nessuna rotta va ancora impostata nemmeno
+in *ns<sub>𝛿</sub>*). Se il bootstrap è stato completato, il programma chiede quali sono le
+destinazioni note e opera quanto è necessario per impostare le rotte relative in *ns<sub>𝛿</sub>*.
 
 Infine osserviamo cosa avviene quando si aggiunge l'identità *n<sub>2</sub>* basata su *n<sub>0</sub>*. In questo
 caso il livello del g-nodo che migra, `hooking_gnode_level`, è 2. Il programma chiede al precedente QspnManager (quello associato
@@ -723,7 +724,7 @@ a *n<sub>0</sub>*) quali destinazioni conosce, a tutti i livelli. Ad esempio dic
 alcuni percorsi verso la destinazione 3·2·3·3, cioè in coordinate gerarchiche (0,3) rispetto a 3·2·3·6.
 Ora il programma calcola per questa destinazione l'indirizzo IP globale, quello anonimizzante e quelli
 interni al livello *k* con *k* > 2. Per ognuno di questi indirizzi IP il programma chiama il metodo
-`remove_destination` di *r<sub>𝛽</sub>*. In conclusione, in *r<sub>𝛽</sub>* rimangono quelle
+`remove_destination` di *ns<sub>𝛽</sub>*. In conclusione, in *ns<sub>𝛽</sub>* rimangono quelle
 rotte verso (0,3) che usano l'indirizzo IP interno al livello 1 e l'indirizzo IP interno al
 livello 2. Questo è corretto, poiché nella migrazione è coinvolto tutto il g-nodo 3·2.
 
@@ -732,26 +733,34 @@ Il programma, relativamente all'indirizzo proprio 3·2·3·6, calcola l'indirizz
 quello anonimizzante solo se il *sistema* *n* intendeva rispondere a richieste anonime, e quelli
 interni al livello *k* con *k* > 2. In questo caso nessuno di questi indirizzi IP si può computare
 in quanto la precedente identità *n<sub>0</sub>* era già una identità *di connettività*. Quindi
-non andrà mai chiamato il metodo `remove_address` di *r<sub>𝛽</sub>*.
+non andrà mai chiamato il metodo `remove_address` di *ns<sub>𝛽</sub>*.
 
-Da adesso *r<sub>𝛽</sub>* sarà assegnato a *n<sub>2</sub>* mentre *r<sub>𝛾</sub>* sarà assegnato a *n<sub>0</sub>*.
+Da adesso *ns<sub>𝛽</sub>* sarà assegnato a *n<sub>2</sub>* mentre *ns<sub>𝛾</sub>* sarà assegnato a *n<sub>0</sub>*.
 
 L'identità *n<sub>0</sub>* ora detiene un nuovo indirizzo Netsukuku per il quale nessun indirizzo
 IP proprio si può computare, essendo divenuta una identità *di connettività*. Quindi a questo
-proposito nessuna configurazione va aggiunta a *r<sub>𝛾</sub>*.
+proposito nessuna configurazione va aggiunta a *ns<sub>𝛾</sub>*.
 
 Le vecchie conoscenze di *n<sub>0</sub>* rimangono tuttavia valide.
-Ora queste configurazioni vanno aggiunte a *r<sub>𝛾</sub>*. Il programma guarda innanzitutto se
+Ora queste configurazioni vanno aggiunte a *ns<sub>𝛾</sub>*. Il programma guarda innanzitutto se
 il QspnManager associato a *n<sub>0</sub>* ha completato il bootstrap (altrimenti non aveva
-impostato ancora nessuna rotta in *r<sub>𝛽</sub>* e nessuna rotta va ancora impostata nemmeno
-in *r<sub>𝛾</sub>*). Se il bootstrap è stato completato, il programma chiede quali sono le
-destinazioni note e opera quanto è necessario per impostare le rotte relative in *r<sub>𝛾</sub>*.
+impostato ancora nessuna rotta in *ns<sub>𝛽</sub>* e nessuna rotta va ancora impostata nemmeno
+in *ns<sub>𝛾</sub>*). Se il bootstrap è stato completato, il programma chiede quali sono le
+destinazioni note e opera quanto è necessario per impostare le rotte relative in *ns<sub>𝛾</sub>*.
 
-## Metodi di LinuxRoute
+## Classe NetworkStack
 
-Una istanza di LinuxRoute viene creata per ogni network namespace. Cioè, la prima per gestire
+Una istanza di NetworkStack viene creata per ogni network namespace. Cioè, la prima per gestire
 il network namespace default, e in seguito una per ogni nuovo network namespace che viene
 creato.
+
+I metodi di questa classe fanno delle operazioni che implicano comandi al sistema operativo
+riguardanti un network stack. Questi metodi possono essere chiamati da diverse tasklet (thread)
+e la loro esecuzione può comportare operazioni *bloccanti*, che cioè danno occasione al sistema
+di schedulare altre tasklet concorrenti. Tuttavia queste operazioni devono essere completate
+in sequenza. Per questo ogni metodo di NetworkStack fa in modo che le dovute operazioni di sistema
+vengano eseguite da una unica tasklet (per ogni istanza) e aspetta il loro completamento prima
+di ritornare al chiamante.
 
 *   **costruttore**  
     Argomenti:
