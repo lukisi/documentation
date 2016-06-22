@@ -174,14 +174,15 @@ istanza non completamente valorizzata della classe MigrationData. Tale classe ha
 che viene impostato a *False* per indicare appunto che non è stata valorizzata. Ma subito sono valorizzati
 i campi *migration_id* e *old_id*, proprio per riconoscere di quale migrazione si sta tenendo traccia con questo oggetto.
 
-Questa struttura dati viene messa in una variabile che può essere acceduta da altre tasklet, come quelle
+Questa struttura dati viene messa nella lista *pending_migrations* che può essere acceduta da altre tasklet, come quelle
 che risponderanno ai metodi remoti del manager. Dopo di ciò il metodo *prepare_add_identity*, che restituisce `void`, fa ritorno.
 
 L'istanza di MigrationData deve rimanere in memoria per un tempo limitato, sufficiente a garantire che tutti
 i sistemi diretti vicini hanno completato la migrazione in oggetto. Possiamo dire, ad esempio, che dopo
 10 minuti dalla chiamata *prepare_add_identity* può essere rimossa in sicurezza.
 
-Quando sul manager viene chiamato il metodo *add_identity(migration_id, old_id)*, il manager avvia un dialogo
+Quando sul manager viene chiamato il metodo *add_identity(migration_id, old_id)*, il manager recupera dalla lista
+*pending_migrations* l'istanza di MigrationData relativa, che indichiamo ora con la variabile *migration_data*. Poi avvia un dialogo
 nel modulo Identities fra il sistema e i suoi vicini. Illustriamo ora tale dialogo nel dettaglio.
 
 Indichiamo con *id<sub>j</sub>* il vecchio identificativo passato a parametro *old_id*. A fronte di tale
@@ -210,7 +211,7 @@ scambio. Il manager assegna alla vecchia identità *id<sub>j</sub>* le nuove pse
 identità *id<sub>i</sub>* le interfacce (reali o pseudo) che prima erano assegnate a *id<sub>j</sub>*.
 Concretamente, questo scambio di assegnazioni avviene modificando i valori dell'associazione *handled_nics* mantenuta dal modulo.
 
-Il manager adesso può popolare del tutto l'istanza di *MigrationData* e raccoglie in essa le seguenti informazioni:
+Il manager adesso può popolare del tutto l'istanza *migration_data* e raccoglie in essa le seguenti informazioni:
 *   *migration_id* - Identificativo numerico univoco per la migrazione.
 *   *old_id* - L'identità che migra, in questo esempio *id<sub>j</sub>*.
 *   *new_id* - L'identità nuova, in questo esempio *id<sub>i</sub>*.
@@ -225,7 +226,7 @@ Il manager adesso può popolare del tutto l'istanza di *MigrationData* e raccogl
 
 Qui termina una prima fase delle operazioni di *add_identity* nel sistema corrente. Indichiamola con il
 termine *fase di raccolta dati*. Il sistema può vedere che è terminata (ad esempio da un'altra tasklet)
-proprio esaminando il membro *ready* dell'oggetto MigrationData.
+proprio esaminando il membro *ready* dell'istanza di MigrationData relativa.
 
 Ora il manager prende in esame ad uno ad uno tutti gli archi-identità che partono dalla identità
 *id<sub>j</sub>* e compie alcune operazioni. Ci sono due parti: una prima parte in cui le operazioni
@@ -236,81 +237,96 @@ Raggruppiamo i vari archi-identità in base all'arco su cui sono formati. Questo
 problema nelle comunicazioni attraverso un arco quell'arco va rimosso e con lui tutti gli archi-identità
 collegati. Quindi non ha senso proseguire le operazioni su altri eventuali archi-identità formati sullo stesso arco.
 
-Per ogni arco *arc* in *arc_list*:
-*   Per ogni arco-identità *IdentityArc w<sub>0</sub>* su *arc* che parte dalla identità *id<sub>j</sub>*:
-    *   Chiamiamo *a* il sistema corrente. Sia *arc<sub>0</sub>* l'arco su cui si appoggia *w<sub>0</sub>*.
-        Sia *b* il sistema collegato all'arco *arc<sub>0</sub>*.
-    *   Sia *b<sub>j</sub>* l'identità del sistema *b* collegata a *w<sub>0</sub>*.
-    *   Il manager nel sistema *a* crea un duplicato *w<sub>1</sub>* dell'arco per assegnarlo ad *id<sub>i</sub>*. Cioè:
-        *   *w<sub>1</sub> = w<sub>0</sub>.copy();*
-        *   *identity_arcs(id<sub>i</sub>-arc<sub>0</sub>).add(w<sub>1</sub>);*
-    *   Il manager nel sistema *a* deve comunicare al manager nel sistema *b* attraverso l'arco *arc<sub>0</sub>*
-        il *migration_id* visto prima e le informazioni dell'istanza di MigrationDeviceData relativa all'interfaccia
-        *arc<sub>0</sub>.get_dev()*, cioè l'interfaccia di rete reale su cui è formato
-        l'arco. In questa stessa comunicazione il sistema *b*, se la sua identità interessata
-        *b<sub>j</sub>* ha partecipato alla stessa migrazione, risponde con l'identificativo della nuova identità
-        basata su *b<sub>j</sub>* e le informazioni della pseudo-interfaccia gestita ora da *b<sub>j</sub>* relativa
-        all'interfaccia reale su cui ha ricevuto il messaggio.  
-        Questa comunicazione avviene concretamente con una chiamata in unicast realiable sull'arco *arc<sub>0</sub>* al
-        metodo remoto *match_duplication* esposto dalla classe IdentityManager. La classe serializzabile usata per
-        il valore di ritorno di questo metodo è DuplicationData.  
-        Il manager nel sistema *a*, quando avvia questa chiamata sullo stub, deve concederle solo un certo
-        tempo. Deve essere preparato a gestire l'evento che il sistema *b* termini la connessione, o risponda
-        male, o non risponda entro un certo tempo.  
-        La comunicazione se tutto procede bene avviene così:
-        *   Il sistema *a* comunica:
-            *   *migration_id* - L'identificativo della migrazione. È un dato primitivo utilizzabile in un metodo remoto.
-            *   *peer_id* - L'identificativo della identità *b<sub>j</sub>* in *b*. La classe NodeID è serializzabile.
-            *   *old_id* - L'identificativo della vecchia identità *id<sub>j</sub>* in *a*. La classe NodeID è serializzabile.
-            *   *new_id* - L'identificativo della nuova identità *id<sub>i</sub>* in *a*. La classe NodeID è serializzabile.
-            *   *old_id_new_mac* - Il MAC indicato nella istanza di MigrationDeviceData di cui sopra. È
-                un dato primitivo utilizzabile in un metodo remoto.
-            *   *old_id_new_linklocal* - L'indirizzo link-local indicato nella istanza di MigrationDeviceData di cui
-                sopra. È un dato primitivo utilizzabile in un metodo remoto.
-        *   Il manager nel sistema *b* ora verifica se riconosce il *migration_id* e se proprio l'identità
-            *b<sub>j</sub>* sta partecipando alla stessa migrazione. Lo fa guardando se esiste una relativa
-            istanza di MigrationData.
-        *   Se esiste l'istanza *migration_data*:
-            *   Finché **NOT** *migration_data.ready*:
-                *   Aspetta un po'. La *fase di raccolta dati* per tale identità non è completata.
-            *   Il manager nel sistema *b* individua l'interfaccia reale *if_b* su cui ha ricevuto il messaggio e risponde con:
-                *   *peer_new_id* - L'identificativo della nuova identità frutto della migrazione di *b<sub>j</sub>*,
-                    chiamiamola *b<sub>k</sub>*. Cioè *migration_data.new_id*.
-                *   *peer_old_id_new_mac* - Il MAC della nuova pseudo-interfaccia gestita ora da *b<sub>j</sub>*
-                    costruita su *if_b*. Cioè *migration_data.devices[if_b].old_id_new_mac*.
-                *   *peer_old_id_new_linklocal* - L'indirizzo link-local della nuova pseudo-interfaccia
-                    gestita ora da *b<sub>j</sub>* costruita su *if_b*. Cioè *migration_data.devices[if_b].old_id_new_linklocal*.
+*   Ciclo 1. Per ogni arco *arc* in *arc_list*:
+    *   Booleano *arc_is_broken* = False.
+    *   MigrationDeviceData *devdata* = *migration_data.devices[arc.get_dev()]*.
+    *   Ciclo 2. Per ogni arco-identità *IdentityArc w<sub>0</sub>* su *arc* che parte dalla identità *id<sub>j</sub>*:
+        *   Chiamiamo *a* il sistema corrente. Sia *b* il sistema collegato all'arco *arc*.
+        *   Sia *b<sub>j</sub>* l'identità del sistema *b* collegata all'arco-identità *w<sub>0</sub>*.
+        *   Il manager nel sistema *a* crea un duplicato *w<sub>1</sub>* dell'arco *w<sub>0</sub>* per assegnarlo
+            ad *id<sub>i</sub>*, concretamente aggiungendolo alla lista *identity_arcs(id<sub>i</sub>-arc)*.
+        *   Se *arc_is_broken*:
+            *   Significa che nell'iterazione precedente del ciclo 2 si era riscontrato che la comunicazione tra i sistemi
+                *a* e *b* attraverso l'arco *arc* non funzionava.
+            *   Il manager nel sistema *a* non tenta nemmeno di fare la comunicazione di cui sotto, ma si comporta come se fosse
+                avvenuta e l'esito fosse stato la semplice risposta "OK", cioè *b<sub>j</sub>* non ha partecipato alla migrazione.
+        *   Il manager nel sistema *a* deve comunicare al manager nel sistema *b* attraverso l'arco *arc*
+            il *migration_id* visto prima e le informazioni dell'istanza di MigrationDeviceData relativa all'interfaccia
+            *arc.get_dev()*, cioè l'interfaccia di rete reale su cui è formato
+            l'arco. In questa stessa comunicazione il sistema *b*, se la sua identità interessata
+            *b<sub>j</sub>* ha partecipato alla stessa migrazione, risponde con l'identificativo della nuova identità
+            basata su *b<sub>j</sub>* e le informazioni della pseudo-interfaccia gestita ora da *b<sub>j</sub>* relativa
+            all'interfaccia reale su cui ha ricevuto il messaggio.  
+            Questa comunicazione avviene concretamente con una chiamata in unicast realiable sull'arco *arc* al
+            metodo remoto *match_duplication* esposto dalla classe IdentityManager. La classe serializzabile usata per
+            il valore di ritorno di questo metodo è DuplicationData.  
+            Il manager nel sistema *a*, quando avvia questa chiamata sullo stub, deve concederle solo un certo
+            tempo. Deve essere preparato a gestire l'evento che il sistema *b* termini la connessione, o risponda
+            male, o non risponda entro un certo tempo.  
+            La comunicazione se tutto procede bene avviene così:
+            *   Il sistema *a* comunica:
+                *   *migration_id* - L'identificativo della migrazione. È un dato primitivo utilizzabile in un metodo remoto.
+                *   *peer_id* - L'identificativo della identità *b<sub>j</sub>* in *b*. La classe NodeID è serializzabile.
+                *   *old_id* - L'identificativo della vecchia identità *id<sub>j</sub>* in *a*. La classe NodeID è serializzabile.
+                *   *new_id* - L'identificativo della nuova identità *id<sub>i</sub>* in *a*. La classe NodeID è serializzabile.
+                *   *old_id_new_mac* - Il MAC indicato nella istanza di MigrationDeviceData di cui sopra. È
+                    un dato primitivo utilizzabile in un metodo remoto.
+                *   *old_id_new_linklocal* - L'indirizzo link-local indicato nella istanza di MigrationDeviceData di cui
+                    sopra. È un dato primitivo utilizzabile in un metodo remoto.
+            *   Il manager nel sistema *b* ora verifica se riconosce il *migration_id* e se proprio l'identità
+                *b<sub>j</sub>* sta partecipando alla stessa migrazione. Lo fa guardando se esiste una relativa
+                istanza di MigrationData.
+            *   Se esiste l'istanza *migration_data*:
+                *   Finché **NOT** *migration_data.ready*:
+                    *   Aspetta un po'. La *fase di raccolta dati* per tale identità non è completata.
+                *   Il manager nel sistema *b* individua l'interfaccia reale *if_b* su cui ha ricevuto il messaggio e risponde con:
+                    *   *peer_new_id* - L'identificativo della nuova identità frutto della migrazione di *b<sub>j</sub>*,
+                        chiamiamola *b<sub>k</sub>*. Cioè *migration_data.new_id*.
+                    *   *peer_old_id_new_mac* - Il MAC della nuova pseudo-interfaccia gestita ora da *b<sub>j</sub>*
+                        costruita su *if_b*. Cioè *migration_data.devices[if_b].old_id_new_mac*.
+                    *   *peer_old_id_new_linklocal* - L'indirizzo link-local della nuova pseudo-interfaccia
+                        gestita ora da *b<sub>j</sub>* costruita su *if_b*. Cioè *migration_data.devices[if_b].old_id_new_linklocal*.
+            *   Altrimenti:
+                *   Il manager nel sistema *b* risponde semplicemente "OK".
+        *   Se nella comunicazione tra *a* e *b* attraverso l'arco *arc* si riscontra uno dei
+            problemi sopra citati (stub error, o deserialize error, o nessuna risposta entro un tempo limite)
+            il sistema *a* procederà ugualmente alla duplicazione dell'arco-identità e all'assegnazione
+            di *w<sub>1</sub>* all'identità *id<sub>i</sub>* sull'arco *arc*, come se avesse ricevuto dal
+            sistema *b* la semplice risposta "OK". Tuttavia si farà in modo che in seguito venga avviata in una nuova tasklet
+            la rimozione dell'arco *arc* tra qualche istante.  
+            Il manager nel sistema *a* procede così:
+            *   Prepara i dati come se avesse ricevuto la risposta "OK", cioè *b<sub>j</sub>* non ha partecipato alla migrazione.
+            *   Imposta *arc_is_broken* = True.
+        *   Il manager nel sistema *a* ora sa se l'identità *b<sub>j</sub>* ha partecipato anch'essa alla migrazione.
+            Se sì, il sistema *a* conosce i dati *peer_old_id_new_mac* e *peer_old_id_new_linklocal* che sono riferiti
+            a *b<sub>k</sub>*, la quale ora gestisce la vecchia interfaccia del sistema *b* che prima era gestita da *b<sub>j</sub>*.
+        *   Se *b<sub>j</sub>* ha partecipato alla migrazione:
+            *   Il manager nel sistema *a* cambia i dati dell'arco assegnato ad *id<sub>j</sub>* relativamente all'interfaccia remota:
+                *   *w<sub>0</sub>.peer_mac = peer_old_id_new_mac*.
+                *   *w<sub>0</sub>.peer_linklocal = peer_old_id_new_linklocal*.
+            *   Il manager nel sistema *a* cambia i dati dell'arco assegnato ad *id<sub>i</sub>* relativamente alla *identità* remota:
+                *   *w<sub>1</sub>.peer_nodeid* = Il NodeID di *b<sub>k</sub>*.
+        *   Il manager nel sistema *a* tramite il netns-manager aggiunge alle tabelle nel network namespace
+            *namespaces(id<sub>j</sub>)* la rotta verso *w<sub>0</sub>.peer_linklocal* partendo da *old_id_new_linklocal*
+            su *handled_nics(id<sub>j</sub>)(arc.get_dev()).dev*.
+        *   **Quanto segue**, fino alla fine del ciclo 2, si riferisce al sistema *b*. Ovviamente ha senso solo ipotizzando che la
+            comunicazione tra il sistema *a* e il sistema *b* sia stata portata a termine con successo.
+        *   Il manager nel sistema *b* a sua volta, ora sa che l'identità *id<sub>j</sub>* in *a* ha migrato e ha
+            dato luogo a *id<sub>i</sub>*. Sa anche che la sua identità *b<sub>j</sub>* aveva un arco-identità
+            con *id<sub>j</sub>* in *a* appoggiato sull'arco con *a* che parte da *if_b*. Ovviamente sa anche se
+            l'identità *b<sub>j</sub>* ha partecipato anch'essa alla migrazione formando *b<sub>k</sub>*.
+        *   Se *b<sub>j</sub>* ha partecipato alla migrazione:
+            *   Il manager nel sistema *b* non ha bisogno di fare nulla in questo momento. Le sue variazioni le
+                apporterà di sua iniziativa poiché anche in esso è avvenuta la migrazione di *b<sub>j</sub>* in *b<sub>k</sub>*.
         *   Altrimenti:
-            *   Il manager nel sistema *b* risponde semplicemente "OK".
-    *   Se nella comunicazione tra *a* e *b* attraverso l'arco *arc<sub>0</sub>* si riscontra uno dei
-        problemi sopra citati (stub error, o deserialize error, o nessuna risposta entro un tempo limite) bisogna
-        continuare con il prossimo arco *arc*. Questo arco invece verrà rimosso in una nuova tasklet tra qualche istante.
-    *   Il manager nel sistema *a* ora sa se l'identità *b<sub>j</sub>* ha partecipato anch'essa alla migrazione.
-        Se sì, il sistema *a* conosce i dati *peer_old_id_new_mac* e *peer_old_id_new_linklocal* che sono riferiti
-        a *b<sub>k</sub>*, la quale ora gestisce la vecchia interfaccia del sistema *b* che prima era gestita da *b<sub>j</sub>*.
-    *   Se *b<sub>j</sub>* ha partecipato alla migrazione:
-        *   Il manager nel sistema *a* cambia i dati dell'arco assegnato ad *id<sub>j</sub>* relativamente all'interfaccia remota:
-            *   *w<sub>0</sub>.peer_mac = peer_old_id_new_mac*.
-            *   *w<sub>0</sub>.peer_linklocal = peer_old_id_new_linklocal*.
-        *   Il manager nel sistema *a* cambia i dati dell'arco assegnato ad *id<sub>i</sub>* relativamente alla *identità* remota:
-            *   *w<sub>1</sub>.peer_nodeid* = Il NodeID di *b<sub>k</sub>*.
-    *   Il manager nel sistema *a* tramite il netns-manager aggiunge alle tabelle nel network namespace
-        *namespaces(id<sub>j</sub>)* la rotta verso *w<sub>0</sub>.peer_linklocal* partendo da *old_id_new_linklocal*
-        su *handled_nics(id<sub>j</sub>)(arc<sub>0</sub>.get_dev()).dev*.
-    *   Il manager nel sistema *b* a sua volta, ora sa che l'identità *id<sub>j</sub>* in *a* ha migrato e ha
-        dato luogo a *id<sub>i</sub>*. Sa anche che la sua identità *b<sub>j</sub>* aveva un arco-identità
-        con *id<sub>j</sub>* in *a* appoggiato sull'arco con *a* che parte da *if_b*. Ovviamente sa anche se
-        l'identità *b<sub>j</sub>* ha partecipato anch'essa alla migrazione formando *b<sub>k</sub>*.
-    *   Se *b<sub>j</sub>* ha partecipato alla migrazione:
-        *   Il manager nel sistema *b* non ha bisogno di fare nulla in questo momento. Le sue variazioni le
-            apporterà di sua iniziativa poiché anche in esso è avvenuta la migrazione di *b<sub>j</sub>* in *b<sub>k</sub>*.
-    *   Altrimenti:
-        *   Il manager nel sistema *b*, in autonomia come accennato sopra, forma un nuovo arco-identità
-            *b<sub>j</sub>*-*id<sub>i</sub>* e lo segnala al suo utilizzatore.
-        *   Cambia i dati dell' arco-identità *b<sub>j</sub>*-*id<sub>j</sub>*, cioè MAC e linklocal, e lo
-            segnala al suo utilizzatore.
-        *   Aggiunge una rotta nelle tabelle di un suo namespace (quello gestito da *b<sub>j</sub>*) per
-            l'arco *b<sub>j</sub>*-*id<sub>j</sub>*.
+            *   Il manager nel sistema *b*, in autonomia come accennato sopra, forma un nuovo arco-identità
+                *b<sub>j</sub>*-*id<sub>i</sub>* e lo segnala al suo utilizzatore.
+            *   Cambia i dati dell' arco-identità *b<sub>j</sub>*-*id<sub>j</sub>*, cioè MAC e linklocal, e lo
+                segnala al suo utilizzatore.
+            *   Aggiunge una rotta nelle tabelle di un suo namespace (quello gestito da *b<sub>j</sub>*) per
+                l'arco *b<sub>j</sub>*-*id<sub>j</sub>*.
+    *   Se *arc_is_broken*:
+        *   Avvia una tasklet in cui, fra un istante, si rimuove *arc* per `bad_link`.
 
 Al termine delle operazioni, il metodo *add_identity* restituisce l'identificativo della nuova identità.
 
