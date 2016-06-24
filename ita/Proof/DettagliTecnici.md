@@ -160,6 +160,9 @@ ProofOfConcept.IdentityArc che ha questi membri:
     al ProofOfConcept.Arc.
 *   `NodeID id`. Si tratta di uno dei propri NodeID.
 *   `IIdmgmtIdentityArc id_arc`.
+*   `string peer_mac`. Memorizza l'attuale contenuto di `id_arc.get_peer_mac()`. Sarà utile quando
+    in futuro questa istanza di IIdmgmtIdentityArc notificherà una variazione.
+*   `string peer_linklocal`. Analogo per il contenuto di `id_arc.get_peer_linklocal()`.
 
 Associa questa istanza di ProofOfConcept.IdentityArc al prossimo valore dell'indice autoincrementante
 *identityarc_nextindex*, nel dizionario *identityarcs*.
@@ -283,18 +286,16 @@ crea una istanza della classe ProofOfConcept.QspnArc. Essa ha questi membri:
 *   `ProofOfConcept.Arc arc`. L'istanza di arco su cui si poggia l'arco-identità.
 *   `NodeID sourceid`. L'identificativo dell'identità nel sistema vicino.
 *   `NodeID destid`. L'identificativo dell'identità nel proprio sistema.
-*   `ProofOfConcept.Naddr neighbour_naddr`. L'indirizzo Netsukuku del vicino, rappresentato da una classe
-    che implementa IQspnNaddr.
+*   `string peer_mac`. L'indirizzo MAC della \[pseudo]interfaccia gestita dall'identità nel sistema vicino.  
+    Utile per sapere come identificare un generico pacchetto IP da instradare che proviene da questo
+    specifico arco-identità.
 
-I primi 3 dati sono inclusi nell'istanza di arco-identità per la quale il programma intende
-costruire un QspnArc. L'indirizzo Netsukuku del vicino, invece, viene fornito dall'utente che
-fa le veci di un diverso modulo che si occupa di reperirlo dialogando con l'identità nel sistema
-vicino.
+Tutti i dati sono inclusi nell'istanza di arco-identità per la quale il programma intende
+costruire un QspnArc.
 
 I dati che servono per implementare i metodi di IQspnArc sono:
 
 *   *i_qspn_get_cost()* – `arc.cost`.
-*   *i_qspn_get_naddr()* – `neighbour_naddr`.
 *   *i_qspn_equals(IQspnArc other)* – Si usa l'uguaglianza dell'istanza.
 *   *i_qspn_comes_from(CallerInfo rpc_caller)* – `arc.neighborhood_arc.neighbour_nic_addr` deve essere equivalente
     all'indirizzo IP riportato come `peer_address` dall'istanza di CallerInfo `rpc_caller`.
@@ -302,6 +303,23 @@ I dati che servono per implementare i metodi di IQspnArc sono:
 Quando una istanza di QspnArc viene passata alla QspnStubFactory i suoi dati sono sufficienti
 a realizzare uno stub per un modulo di identità con i metodi `get_stub_identity_aware_*` di
 NeigborhoodManager.
+
+* * *
+
+Quando riceve il segnale *identity_arc_changed* di IdentityManager, il programma è in grado
+di recuperare l'istanza di ProofOfConcept.IdentityArc che aveva creato per questo arco-identità.
+Da tale vecchia istanza recupera i vecchi valori di *peer_mac* e *peer_linklocal*, prima di aggiornarli.
+
+Inoltre è in grado di sapere se per tale arco-identità aveva in passato creato una istanza di QspnArc.
+In caso affermativo, tutti questi dati servono al programma che deve fare queste operazioni:
+
+*   Creare una nuova tabella (`ntk_from_newmac`) con questo nuovo neighbour come ingresso.
+    Ricordiamo che l'aggiunta del neighour nella classe NetworkStack causa anche l'aggiunta
+    delle rotte `unreachable` per tutte le destinazioni note.
+*   Nella tabella principale (`ntk`) cambiare tutte le rotte che passano per questo gateway.
+*   Nella tabella nuova (`ntk_from_newmac`) cambiare tutte le rotte che passano per questo gateway.
+*   Rimuovere la tabella vecchia (`ntk_from_oldmac`). Forse riapparirà in seguito con una
+    chiamata al metodo add_arc di Qspn.
 
 * * *
 
