@@ -483,6 +483,13 @@ Con i dati suddetti relativi alla migrazione il demone *ntkd* sull'istanza di Qs
 Verrà avviata tra pochi istanti la trasmissione di un ETP a tutti i vicini di *n* esterni a *w*. In esso va segnalata
 soltanto la rimozione del percorso verso il vecchio identificativo *reale* di *w* al livello *i* - 1.
 
+Questo ETP non deve raggiungere altri nodi che fanno parte della migrazione, che potrebbero aver avviato anch'essi le
+operazioni di *make_connectivity* oppure ancora no. In questo caso infatti questo ETP
+produrrebbe in essi una confusione. Quindi vogliamo che non solo l'ETP venga trasmesso da *n*
+ai soli suoi vicini che non sono in *w*, ma anche che questo ETP non venga propagato in qualche modo che possa
+rientrare in *w*. Dobbiamo cioè preparare questo ETP di modo che abbia da subito nella lista di hop percorsi
+sia l'identitificativo nuovo virtuale al livello *i* - 1, sia l'identificativo vecchio reale al livello *i* - 1.
+
 Il demone *ntkd* sull'istanza di QspnManager *n* deve registrare un ascoltatore sul segnale *remove_identity*. Infatti
 solo uno dei membri di *w* verifica in prima persona se il g-nodo *w* può essere dismesso. Gli altri si propagano l'ordine
 di dismissione di *w* e ogni singola identità quando lo esegue segnala questo evento al demone *ntkd*.
