@@ -10,8 +10,6 @@
         Andrà modificata quella parte.
     *   Nei dettagli tecnici del modulo PeerServices si fa riferimento al "documento livelli e bits".  
         Andrà modificata quella parte.
-    *   Nell'allegato RoutingIndirizziInterni all'analisi del modulo QSPN si fa riferimento al "documento livelli e bits".  
-        Andrà aggiornato il link.
 
 ## Calcolo degli indirizzi IP
 
