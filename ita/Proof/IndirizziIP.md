@@ -376,7 +376,7 @@ masquerade del firewall come descritto nel documento di analisi.
 Per ridurre al minimo il numero massimo di rotte da memorizzare in uno spazio a 24 bit come
 la classe 10.0.0.0/8 si proceda come illustrato di seguito.
 
-Abbiamo 24 bit a disposizione. Tolto 1 per le rappresentazioni interne e 1 per l'anonimato abbiamo 22 bit.
+Abbiamo 24 bit a disposizione. Tolti 2 per le codifiche viste nel presente documento, abbiamo 22 bit.
 Diamo 4 bit al livello alto; abbiamo così un *gsize* del livello più alto capace di rappresentare fino
 a 16 livelli. Per sfruttarli tutti facciamo i livelli da 14 a 3 da 1 bit e i livelli 2, 1 e 0 da 2 bit.
 
