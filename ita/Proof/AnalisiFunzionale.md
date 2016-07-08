@@ -26,17 +26,24 @@ e quelle di pertinenza di altri moduli:
 *   La ricerca della più breve *migration path* per liberare un posto in *g* (modulo Migrations).
 *   La comunicazione delle informazioni a tutte le identità interessate dalla migration path trovata.
 
-Sulla base dei comandi dati sulla console dall'utente, il programma *qspnclient* interagisce coi
-moduli suddetti (QSPN, Neighborhood, Identities) e sulla base delle loro elaborazioni interviene
-sulle configurazioni di rete del sistema. L'utente sarà quindi in grado di verificare che il
+Il programma *qspnclient* interagisce con l'utente (il quale ha a disposizione alcuni meccanismi per dare istruzioni
+al programma) e con i moduli suddetti: QSPN, Neighborhood, Identities. Sulla base delle informazioni ottenute tramite
+queste interazioni, interviene sulle configurazioni di rete del sistema. L'utente sarà quindi in grado di verificare che il
 sistema riesca effettivamente a stabilire connessioni con gli altri sistemi della rete, che le rotte
-siano quelle che ci si attende, eccetera. Inoltre il programma interattivamente consente di chiedere
-al modulo QSPN le informazioni che ha raccolto e mostrarle all'utente.
+siano quelle che ci si attende, eccetera. Inoltre il programma consente all'utente di chiedere la visualizzazione
+di tutte le informazioni che il modulo QSPN ha raccolto.
 
 ### <a name="Interazione_programma_utente"></a>Interazione programma-utente
 
-Il programma *qspnclient* prevede che l'utente immetta, come argomenti della riga di comando e in modo
-interattivo dalla console durante la sua esecuzione, tutti i requisiti dei moduli di cui si avvale.
+L'utente avvia il programma *qspnclient* su un sistema 𝛼 eseguendo su una shell il comando *qspnclient init*. In
+questo momento fornisce alcuni dati iniziali come argomenti. Il comando avvia il programma *qspnclient* e
+non restituisce il controllo della shell all'utente; la utilizza invece per visualizzare alcune informazioni
+utili durante le sue operazioni.
+
+Per le successive comunicazioni con il programma, l'utente dovrà aprire una nuova shell sul sistema 𝛼 e
+da questa dare altri comandi (ad esempio *qspnclient enter_net*, ...) e con essi altri dati. Questi comandi
+e informazioni saranno comunicate al programma *qspnclient* già in esecuzione, poi il comando restituirà
+all'utente la shell, eventualmente dopo aver visualizzato le informazioni pertinenti.
 
 Ai parametri che saranno individuati in modo autonomo dai moduli (ad esempio gli identificativi di
 nodo, gli indirizzi di scheda, ...) verranno associati degli indici progressivi che saranno visualizzati
