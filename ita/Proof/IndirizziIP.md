@@ -352,7 +352,7 @@ Globale di *h*:
  = 10.32.0.0/12
 ```
 
-Quindi *n* imposta solo la rotta globale: 10.32.0.0/12 via xx dev yy src 10.10.58.123.45
+Quindi *n* imposta solo la rotta globale: 10.32.0.0/12 via xx dev yy src 10.58.123.45
 
 ### Richiesta di anonimato
 

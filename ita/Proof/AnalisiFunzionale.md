@@ -2,6 +2,9 @@
 
 1.  [Ruolo del qspnclient](#Ruolo_del_qspnclient)
     1.  [Interazione programma-utente](#Interazione_programma_utente)
+    1.  [Primi passi](#Primi_passi)
+    1.  [Casi d'uso](#Casi_duso)
+    1.  [Da riordinare](#Da_riordinare)
 1.  [Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IPv4](#Mappatura_indirizzi_ip)
 1.  [Identità](#Identita)
     1.  [Identità principale](#Identita_principale)
@@ -50,7 +53,7 @@ nodo, gli indirizzi di scheda, ...) verranno associati degli indici progressivi 
 all'utente. L'utente si riferirà ad essi tramite questi indici. Questo per rendere più facilmente
 riproducibili gli ambienti di test.
 
-* * *
+### <a name="Primi_passi"></a>Primi passi
 
 All'avvio del programma nel sistema viene creata l'istanza di NeighborhoodManager. Poi gli sono passati i nomi delle
 interfacce di rete che dovrà gestire, tramite il metodo *start_monitor*. Ad ogni interfaccia, il modulo Neighborhood associa un
@@ -92,7 +95,43 @@ che parte da 0. In seguito il programma quando crea una nuova identità col meto
 nuova istanza di NodeID al prossimo valore di *nodeid_nextindex*. Quindi l'utente può usare questo indice per
 dare dalla console comandi concernenti una certa identità.
 
-* * *
+### <a name="Casi_duso"></a>Casi d'uso
+
+Attraverso una disamina dettagliata dei possibili scenari in cui il programma si trova ad operare
+e delle operazioni che devono essere fatte sulle tabelle di routing del sistema per il corretto funzionamento
+della rete, giungeremo ad osservare quali operazioni e in quali momenti il programma deve fare
+in risposta agli eventi che rileva.
+
+Partiamo dal sistema *𝛼* che ha una identità principale *𝛼<sub>0</sub>* che ha indirizzo Netsukuku 3·10·123·45
+in una rete con topologia 4·16·256·256. Tale rete (cioè l'identificativo della rete che si trova nel
+fingerprint al livello 4) la chiamiamo *G<sub>0</sub>*. Diciamo inoltre che tale sistema ha una sola
+interfaccia di rete che chiamiamo `eth1`. Diciamo anche che questo nodo ammette la possibilità di essere
+contattato in forma anonima.
+
+Fra i compiti del modulo Neighborhood, esso assegna all'interfaccia `eth1` del sistema *𝛼* un indirizzo IP
+linklocal, sia ad esempio 169.254.35.112.
+
+**sistema 𝛼**
+```
+ip link set eth1 up
+ip address add 169.254.35.112 dev eth1
+```
+
+Il programma *qspnclient* invece ha il compito, fin dall'inizio, di assegnare alla stessa interfaccia gli
+indirizzi IP che sono da associare all'identità principale *𝛼<sub>0</sub>*. Come si spiega sotto in questo documento,
+in questo caso abbiamo l'indirizzo IP globale, l'indirizzo IP anonimizzante, l'indirizzo IP interno al g-nodo di
+livello 3, di livello 2 e di livello 1.
+
+**sistema 𝛼**
+```
+ip address add 10.58.123.45 dev eth1
+ip address add 10.186.123.45 dev eth1
+ip address add 10.122.123.45 dev eth1
+ip address add 10.96.123.45 dev eth1
+ip address add 10.80.0.45 dev eth1
+```
+
+### <a name="Da_riordinare"></a>Da riordinare
 
 Alla creazione di una nuova identità, il modulo Identities crea un nuovo network namespace. In realtà la creazione
 del network namespace è fatta proprio dal programma attraverso una classe che implementa l'interfaccia
