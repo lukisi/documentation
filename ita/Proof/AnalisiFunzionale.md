@@ -131,6 +131,61 @@ ip address add 10.96.123.45 dev eth1
 ip address add 10.80.0.45 dev eth1
 ```
 
+Ora assumiamo che un sistema *𝛽* giunga a distanza di rilevamento con la sua interfaccia di rete che
+ha MAC address 00:16:3E:2D:8D:DE e indirizzo IP linklocal (assegnatogli dal modulo Neighborhood) 169.254.43.192.
+
+Fra i compiti del modulo Neighborhood, esso aggiunge nel network namespace default la rotta diretta verso
+l'indirizzo IP linklocal del vicino per ogni arco che lo stesso modulo ha realizzato.
+
+**sistema 𝛼**
+```
+ip route add 169.254.43.192 dev eth1 src 169.254.35.112
+```
+
+Assumiamo che il sistema *𝛽* abbia solo una identità *𝛽<sub>0</sub>* che si trova in una diversa rete
+*G<sub>1</sub>*.
+
+Il modulo Identities ha creato l'arco-identità principale, cioè quello che collega le due identità
+*𝛼<sub>0</sub>* e *𝛽<sub>0</sub>*, senza per questo aggiungere alcuna rotta, perché per tale arco-identità
+la rotta è stata aggiunta dal modulo Neighborhood nel network namespace default del sistema *𝛼*.
+
+Ora assumiamo che *𝛽<sub>0</sub>* decide di entrare in *G<sub>0</sub>*. Per essere precisi, il sistema *𝛽* decide di
+costruire una nuova identità *𝛽<sub>1</sub>* partendo da *𝛽<sub>0</sub>*. Poi *𝛽<sub>1</sub>* farà ingresso nella
+rete *G<sub>0</sub>*.
+
+Quando il sistema *𝛽* crea la nuova identità, il suo modulo Identities dialoga con il modulo del sistema
+*𝛼* per aggiungere l'arco-identità *𝛼<sub>0</sub>*-*𝛽<sub>1</sub>* e modificare i valori (peer_mac e
+peer_linklocal) dell'arco-identità *𝛼<sub>0</sub>*-*𝛽<sub>0</sub>*. Di fatto, questo comporta che il modulo Identities
+nel sistema *𝛼* aggiunge la nuova rotta, sempre nel network namespace default gestito da *𝛼<sub>0</sub>*, verso il nuovo indirizzo
+linklocal assunto da *𝛽<sub>0</sub>*, assumiamo ad esempio 169.254.101.161.
+
+**sistema 𝛼**
+```
+ip route add 169.254.101.161 dev eth1 src 169.254.35.112
+```
+
+Ora il sistema *𝛽* fa entrare *𝛽<sub>1</sub>* in *G<sub>0</sub>* e, contemporaneamente, il sistema *𝛼* comunica
+alla sua identità *𝛼<sub>0</sub>* che sull'arco-identità *𝛼<sub>0</sub>*-*𝛽<sub>1</sub>* va costruito un QspnArc.
+Questo deve produrre due macro-operazioni nel sistema *𝛼*: la creazione di una tabella per i pacchetti IP ricevuti
+dall'arco *𝛼<sub>0</sub>*-*𝛽<sub>1</sub>* e l'aggiornamento (su tutte le tabelle) delle rotte che adesso possono
+avere come gateway l'arco *𝛼<sub>0</sub>*-*𝛽<sub>1</sub>*.
+
+**sistema 𝛼**
+```
+/etc/iproute2/rt_tables: add table 250: ntk_from_00:16:3E:2D:8D:DE
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:2D:8D:DE -j MARK --set-mark 250
+ip rule add fwmark 250 table ntk_from_00:16:3E:2D:8D:DE
+foreach dest in current_known_destinations:
+    ip route add unreachable $(dest) table ntk_from_00:16:3E:2D:8D:DE
+```
+
+**sistema 𝛼**
+```
+foreach table in ntk + [neighbours_set]:
+    foreach dest in current_known_destinations:
+        ip route change $(solution_to_dest) table $(table)
+```
+
 ### <a name="Da_riordinare"></a>Da riordinare
 
 Alla creazione di una nuova identità, il modulo Identities crea un nuovo network namespace. In realtà la creazione
