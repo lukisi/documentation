@@ -24,9 +24,9 @@ Il modulo Identities si occupa di organizzare le diverse identità che vivono ne
 
 Il modulo Identities consente la creazione di una prima *identità* all'avvio del programma nel sistema.
 
-In seguito il modulo, data una identità *j*, consente di creare una nuova identità *i* che prende il
-posto di *j*. In questo momento l'identità *j* resta in vita, ma in modo temporaneo. L'identità *j* diventa
-una identità *di connettività*. Si veda la trattazione del modulo [QSPN](../ModuloQSPN/AnalisiFunzionale.md#Nodi_virtuali)
+In seguito il modulo, data una identità *j*, consente di creare partendo da essa una nuova identità *i*.
+Da questo momento l'identità *j* sussiste, ma diventa una identità *di connettività*, la
+quale sussiste temporaneamente. Si veda la trattazione del modulo [QSPN](../ModuloQSPN/AnalisiFunzionale.md#Nodi_virtuali)
 per comprendere la funzione di una identità *di connettività* e per quale motivo essa sia temporanea.
 
 In contrapposizione al significato di una identità *di connettività* introduciamo il concetto di
@@ -35,7 +35,7 @@ sistema che viene creata all'avvio è dunque l'identità *principale* del sistem
 
 Abbiamo detto che in seguito il sistema può creare una nuova identità *i* partendo da una precedente
 identità *j*. L'identità *j* poteva essere in precedenza l'identità *principale* oppure una identità
-*di connettività*. Dicendo che l'identità *i* prende il posto di *j*, intendiamo significare, tra le
+*di connettività*. Dicendo che l'identità *i* è creata partendo da *j*, intendiamo significare, tra le
 altre cose, che se *j* era la *principale* allora adesso *i* diventa la *principale*. Mentre se *j*
 era una identità *di connettività* allora adesso *i* diventa anch'essa una identità *di connettività*.
 
