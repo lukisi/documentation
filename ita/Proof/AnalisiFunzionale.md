@@ -102,11 +102,82 @@ e delle operazioni che devono essere fatte sulle tabelle di routing del sistema 
 della rete, giungeremo ad osservare quali operazioni e in quali momenti il programma deve fare
 in risposta agli eventi che rileva.
 
-Partiamo dal sistema *𝛼* che ha una identità principale *𝛼<sub>0</sub>* che ha indirizzo Netsukuku 3·10·123·45
-in una rete con topologia 4·16·256·256. Tale rete (cioè l'identificativo della rete che si trova nel
+Partiamo dal sistema *𝛼* che ha una identità principale *𝛼<sub>0</sub>* che ha indirizzo Netsukuku 3·1·0·1
+in una rete con topologia 4·2·2·2. Tale rete (cioè l'identificativo della rete che si trova nel
 fingerprint al livello 4) la chiamiamo *G<sub>0</sub>*. Diciamo inoltre che tale sistema ha una sola
 interfaccia di rete che chiamiamo `eth1`. Diciamo anche che questo nodo ammette la possibilità di essere
 contattato in forma anonima.
+
+```
+Topologia 4·2·2·2
+
+Globali:
+10.0.0.0 ... 10.0.0.31
+Anonimizzanti:
+10.0.0.64 ... 10.0.0.95
+Interni al livello 3
+10.0.0.56 ... 10.0.0.63
+Interni al livello 2
+10.0.0.48 ... 10.0.0.51
+Interni al livello 1
+10.0.0.40 ... 10.0.0.41
+
+Mio indirizzo 3·1·0·1.
+     globale
+      10.0.0.29
+     anonimizzante [opzionale]
+      10.0.0.93
+     interno al mio g-nodo di livello 3
+      10.0.0.61
+     interno al mio g-nodo di livello 2
+      10.0.0.49
+     interno al mio g-nodo di livello 1
+      10.0.0.41
+
+Possibili destinazioni:
+ 0·
+     globale
+      10.0.0.0/29
+     anonimizzante
+      10.0.0.64/29
+ 1·
+     globale
+      10.0.0.8/29
+     anonimizzante
+      10.0.0.72/29
+ 2·
+     globale
+      10.0.0.16/29
+     anonimizzante
+      10.0.0.80/29
+ 3·0·
+     globale
+      10.0.0.24/30
+     anonimizzante
+      10.0.0.88/30
+     interno al mio g-nodo di livello 3
+      10.0.0.56/30
+ 3·1·1·
+     globale
+      10.0.0.30/31
+     anonimizzante
+      10.0.0.94/31
+     interno al mio g-nodo di livello 3
+      10.0.0.62/31
+     interno al mio g-nodo di livello 2
+      10.0.0.50/31
+ 3·1·0·0
+     globale
+      10.0.0.28/32
+     anonimizzante
+      10.0.0.92/32
+     interno al mio g-nodo di livello 3
+      10.0.0.60/32
+     interno al mio g-nodo di livello 2
+      10.0.0.48/32
+     interno al mio g-nodo di livello 1
+      10.0.0.40/32
+```
 
 Fra i compiti del modulo Neighborhood, esso assegna all'interfaccia `eth1` del sistema *𝛼* un indirizzo IP
 linklocal, sia ad esempio 169.254.35.112.
@@ -124,11 +195,39 @@ livello 3, di livello 2 e di livello 1.
 
 **sistema 𝛼**
 ```
-ip address add 10.58.123.45 dev eth1
-ip address add 10.186.123.45 dev eth1
-ip address add 10.122.123.45 dev eth1
-ip address add 10.96.123.45 dev eth1
-ip address add 10.80.0.45 dev eth1
+ip address add 10.0.0.29 dev eth1
+ip address add 10.0.0.93 dev eth1
+ip address add 10.0.0.61 dev eth1
+ip address add 10.0.0.49 dev eth1
+ip address add 10.0.0.41 dev eth1
+```
+
+Inoltre il programma *qspnclient* ha da subito il compito, sempre con riferimento alla sua identità principale *𝛼<sub>0</sub>*,
+di creare nel network namespace default una tabella "ntk" e di aggiungere una regola che la referenzia. In tale
+tabella deve anche mettere tutte le possibili destinazioni, inizialmente in stato "unreachable".
+
+**sistema 𝛼**
+```
+/etc/iproute2/rt_tables: add table 251: ntk
+ip rule add table ntk
+ip route add unreachable 10.0.0.0/29 table ntk
+ip route add unreachable 10.0.0.64/29 table ntk
+ip route add unreachable 10.0.0.8/29 table ntk
+ip route add unreachable 10.0.0.72/29 table ntk
+ip route add unreachable 10.0.0.16/29 table ntk
+ip route add unreachable 10.0.0.80/29 table ntk
+ip route add unreachable 10.0.0.24/30 table ntk
+ip route add unreachable 10.0.0.88/30 table ntk
+ip route add unreachable 10.0.0.56/30 table ntk
+ip route add unreachable 10.0.0.30/31 table ntk
+ip route add unreachable 10.0.0.94/31 table ntk
+ip route add unreachable 10.0.0.62/31 table ntk
+ip route add unreachable 10.0.0.50/31 table ntk
+ip route add unreachable 10.0.0.28/32 table ntk
+ip route add unreachable 10.0.0.92/32 table ntk
+ip route add unreachable 10.0.0.60/32 table ntk
+ip route add unreachable 10.0.0.48/32 table ntk
+ip route add unreachable 10.0.0.40/32 table ntk
 ```
 
 Ora assumiamo che un sistema *𝛽* giunga a distanza di rilevamento con la sua interfaccia di rete che
@@ -154,8 +253,8 @@ costruire una nuova identità *𝛽<sub>1</sub>* partendo da *𝛽<sub>0</sub>*.
 rete *G<sub>0</sub>*.
 
 Quando il sistema *𝛽* crea la nuova identità, il suo modulo Identities dialoga con il modulo del sistema
-*𝛼* per aggiungere l'arco-identità *𝛼<sub>0</sub>*-*𝛽<sub>1</sub>* e modificare i valori (peer_mac e
-peer_linklocal) dell'arco-identità *𝛼<sub>0</sub>*-*𝛽<sub>0</sub>*. Di fatto, questo comporta che il modulo Identities
+*𝛼* per aggiungere l'arco-identità *𝛼<sub>0</sub>-𝛽<sub>1</sub>* e modificare i valori (peer_mac e
+peer_linklocal) dell'arco-identità *𝛼<sub>0</sub>-𝛽<sub>0</sub>*. Di fatto, questo comporta che il modulo Identities
 nel sistema *𝛼* aggiunge la nuova rotta, sempre nel network namespace default gestito da *𝛼<sub>0</sub>*, verso il nuovo indirizzo
 linklocal assunto da *𝛽<sub>0</sub>*, assumiamo ad esempio 169.254.101.161.
 
@@ -165,25 +264,83 @@ ip route add 169.254.101.161 dev eth1 src 169.254.35.112
 ```
 
 Ora il sistema *𝛽* fa entrare *𝛽<sub>1</sub>* in *G<sub>0</sub>* e, contemporaneamente, il sistema *𝛼* comunica
-alla sua identità *𝛼<sub>0</sub>* che sull'arco-identità *𝛼<sub>0</sub>*-*𝛽<sub>1</sub>* va costruito un QspnArc.
-Questo deve produrre due macro-operazioni nel sistema *𝛼*: la creazione di una tabella per i pacchetti IP ricevuti
-dall'arco *𝛼<sub>0</sub>*-*𝛽<sub>1</sub>* e l'aggiornamento (su tutte le tabelle) delle rotte che adesso possono
-avere come gateway l'arco *𝛼<sub>0</sub>*-*𝛽<sub>1</sub>*.
+alla sua identità *𝛼<sub>0</sub>* che sull'arco-identità *𝛼<sub>0</sub>-𝛽<sub>1</sub>* va costruito un QspnArc.
+
+Questo nuovo QspnArc che viene comunicato al modulo QSPN del sistema *𝛼* per l'identità *𝛼<sub>0</sub>*, inizialmente
+non comporta operazioni sulle tabelle di routing, fino a quando non si riceve il primo ETP attraverso questo
+arco e così si scopre l'indirizzo Netsukuku di questo vicino.
+
+Dopo un po' di tempo il nodo *𝛼<sub>0</sub>* riceverà un ETP dal QspnArc *𝛼<sub>0</sub>-𝛽<sub>1</sub>* e con esso
+aggiornerà l'indirizzo Netsukuku di questo vicino. Questo deve produrre due macro-operazioni nel sistema *𝛼*: la creazione di
+una tabella per i pacchetti IP ricevuti dall'arco *𝛼<sub>0</sub>-𝛽<sub>1</sub>* e l'aggiornamento (su tutte le tabelle) delle
+rotte che adesso possono avere come gateway l'arco *𝛼<sub>0</sub>-𝛽<sub>1</sub>*.
+
+Assumiamo che l'indirizzo Netsukuku di *𝛽<sub>1</sub>* sia 3·1·0·0.
 
 **sistema 𝛼**
 ```
 /etc/iproute2/rt_tables: add table 250: ntk_from_00:16:3E:2D:8D:DE
 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:2D:8D:DE -j MARK --set-mark 250
 ip rule add fwmark 250 table ntk_from_00:16:3E:2D:8D:DE
-foreach dest in current_known_destinations:
-    ip route add unreachable $(dest) table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.16/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.80/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.24/30 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.88/30 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.30/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.94/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.28/32 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.92/32 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.60/32 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.48/32 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:2D:8D:DE
 ```
 
 **sistema 𝛼**
 ```
-foreach table in ntk + [neighbours_set]:
-    foreach dest in current_known_destinations:
-        ip route change $(solution_to_dest) table $(table)
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.16/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.80/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.24/30 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.88/30 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.30/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.94/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.28/32 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.92/32 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.60/32 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.48/32 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:2D:8D:DE
+
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.16/29 table ntk
+ip route change unreachable 10.0.0.80/29 table ntk
+ip route change unreachable 10.0.0.24/30 table ntk
+ip route change unreachable 10.0.0.88/30 table ntk
+ip route change unreachable 10.0.0.56/30 table ntk
+ip route change unreachable 10.0.0.30/31 table ntk
+ip route change unreachable 10.0.0.94/31 table ntk
+ip route change unreachable 10.0.0.62/31 table ntk
+ip route change unreachable 10.0.0.50/31 table ntk
+ip route change 10.0.0.28/32 table ntk via 169.254.43.192 dev eth1 src 10.0.0.29
+ip route change 10.0.0.92/32 table ntk via 169.254.43.192 dev eth1 src 10.0.0.29
+ip route change 10.0.0.60/32 table ntk via 169.254.43.192 dev eth1 src 10.0.0.61
+ip route change 10.0.0.48/32 table ntk via 169.254.43.192 dev eth1 src 10.0.0.49
+ip route change 10.0.0.40/32 table ntk via 169.254.43.192 dev eth1 src 10.0.0.41
 ```
 
 ### <a name="Da_riordinare"></a>Da riordinare
