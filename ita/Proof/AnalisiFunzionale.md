@@ -230,6 +230,15 @@ ip route add unreachable 10.0.0.48/32 table ntk
 ip route add unreachable 10.0.0.40/32 table ntk
 ```
 
+Inoltre il programma *qspnclient* ha da subito il compito, sempre con riferimento alla sua identità
+principale *𝛼<sub>0</sub>*, se decide di prestarsi all'anonimizzazione dei pacchetti IP che inoltra,
+di istruire il kernel a questo scopo.
+
+**sistema 𝛼**
+```
+iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.29
+```
+
 Ora assumiamo che un sistema *𝛽* giunga a distanza di rilevamento con la sua interfaccia di rete che
 ha MAC address 00:16:3E:2D:8D:DE e indirizzo IP linklocal (assegnatogli dal modulo Neighborhood) 169.254.43.192.
 
