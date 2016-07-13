@@ -352,6 +352,15 @@ ip route change 10.0.0.48/32 table ntk via 169.254.43.192 dev eth1 src 10.0.0.49
 ip route change 10.0.0.40/32 table ntk via 169.254.43.192 dev eth1 src 10.0.0.41
 ```
 
+Poi il sistema *𝛽* rimuoverà l'identità *𝛽<sub>0</sub>* con tutti i suoi archi-identità.
+La cosa verrà comunicata al modulo Identities del sistema *𝛼* per via dell'arco-identità
+*𝛼<sub>0</sub>-𝛽<sub>0</sub>*. Questo produce la rimozione della rotta.
+
+**sistema 𝛼**
+```
+ip route del 169.254.101.161 dev eth1 src 169.254.35.112
+```
+
 ### <a name="Da_riordinare"></a>Da riordinare
 
 Alla creazione di una nuova identità, il modulo Identities crea un nuovo network namespace. In realtà la creazione
