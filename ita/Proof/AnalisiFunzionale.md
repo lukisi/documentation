@@ -361,6 +361,91 @@ La cosa verrà comunicata al modulo Identities del sistema *𝛼* per via dell'a
 ip route del 169.254.101.161 dev eth1 src 169.254.35.112
 ```
 
+Ora assumiamo che un sistema *𝛾* giunga a distanza di rilevamento con la sua interfaccia di rete che
+ha MAC address 00:16:3E:5B:78:D5 e indirizzo IP linklocal (assegnatogli dal modulo Neighborhood) 169.254.103.81.
+
+Fra i compiti del modulo Neighborhood, esso aggiunge nel network namespace default la rotta diretta verso
+l'indirizzo IP linklocal del vicino per ogni arco che lo stesso modulo ha realizzato.
+
+**sistema 𝛼**
+```
+ip route add 169.254.103.81 dev eth1 src 169.254.35.112
+```
+
+Assumiamo che il sistema *𝛾* abbia solo una identità *𝛾<sub>0</sub>* che si trova in una diversa rete
+*G<sub>2</sub>*.
+
+Il modulo Identities ha creato l'arco-identità principale, cioè quello che collega le due identità
+*𝛼<sub>0</sub>* e *𝛾<sub>0</sub>*, senza per questo aggiungere alcuna rotta, perché per tale arco-identità
+la rotta è stata aggiunta dal modulo Neighborhood nel network namespace default del sistema *𝛼*.
+
+Ora assumiamo che *𝛼<sub>0</sub>* decide di entrare in *G<sub>2</sub>*. Per essere precisi, il sistema *𝛼* decide di
+costruire una nuova identità *𝛼<sub>1</sub>* partendo da *𝛼<sub>0</sub>*. Questa nuova identità scaturisce dalla
+migrazione del g-nodo *𝜑*, di livello 1 e di indirizzo Netsukuku 3·1·0·, che comprende anche il vicino
+*𝛽<sub>1</sub>*. Poi *𝛼<sub>1</sub>* farà ingresso in *G<sub>2</sub>* come membro del g-nodo *𝜑*.
+
+All'inizio viene creato nel sistema *𝛼* un nuovo network namespace "ntkv0" e in esso viene creata
+una pseudo-interfaccia "ntkv0_eth1" sopra l'interfaccia reale "eth1". Questo nuovo network namespace
+sarà gestito da *𝛼<sub>0</sub>* mentre quello precedente (il default) verrà gestito da *𝛼<sub>1</sub>*.  
+Assumiamo che alla nuova pseudo-interfaccia il modulo Identities assegna l'indirizzo IP linklocal 169.254.83.167.  
+Ricordiamo inoltre che una identità di connettività non detiene (nel suo network namespace che non è
+il default) alcun indirizzo IP associato al suo indirizzo Netsukuku.
+
+**sistema 𝛼**
+```
+ip netns add ntkv0
+ip link add dev ntkv0_eth1 link eth1 type macvlan
+ip link set dev ntkv0_eth1 netns ntkv0
+ip netns exec ntkv0 ip link set dev ntkv0_eth1 up
+ip netns exec ntkv0 ip address add 169.254.83.167 dev ntkv0_eth1
+```
+
+Anche nel sistema *𝛽* partendo da *𝛽<sub>1</sub>* è stata creata una nuova identità *𝛽<sub>2</sub>*.  
+Assumiamo che la nuova pseudo-interfaccia gestita ora da *𝛽<sub>1</sub>* prende MAC address 00:16:3E:DF:23:F5 e
+indirizzo IP linklocal 169.254.242.91. La vecchia è gestita ora da *𝛽<sub>2</sub>*.  
+Il modulo Identities del sistema *𝛼*, dal dialogo con i vicini, desume che vanno creati/modificati questi
+archi-identità:
+
+*   *𝛼<sub>0</sub>-𝛽<sub>1</sub>*.  
+    Questo arco-identità vede cambiare il `peer_mac` e `peer_linklocal`. Inoltre la sua identità
+    di riferimento ha cambiato il suo network namespace e relativo indirizzo IP linklocal. Per questo
+    il modulo Identities si occupa di aggiungere nel nuovo network namespace gestito da *𝛼<sub>0</sub>*
+    la rotta verso il vicino.  
+    I nodi *𝛼<sub>0</sub>* e *𝛽<sub>1</sub>* fanno parte della stessa rete, quindi è prevista una tabella
+    per i pacchetti IP da inoltrare che provengono da questo arco. Nel nuovo network namespace gestito da *𝛼<sub>0</sub>*
+    il programma *qspnclient* deve aggiungere la tabella `ntk_from_00:16:3E:DF:23:F5` e la relativa regola.
+*   *𝛼<sub>1</sub>-𝛽<sub>2</sub>*.  
+    Questo arco-identità è nuovo.  
+    Nel network namespace gestito da *𝛼<sub>1</sub>* la relativa rotta è stata già aggiunta.  
+    I nodi *𝛼<sub>1</sub>* e *𝛽<sub>2</sub>* fanno parte della stessa rete, quindi è prevista una tabella
+    per i pacchetti IP da inoltrare che provengono da questo arco. Nel network namespace gestito da *𝛼<sub>1</sub>*
+    la tabella `ntk_from_00:16:3E:2D:8D:DE` c'è già, e anche la relativa regola.
+*   *𝛼<sub>0</sub>-𝛾<sub>0</sub>*.  
+    Per questo arco-identità abbiamo che la sua identità
+    di riferimento ha cambiato il suo network namespace e relativo indirizzo IP linklocal. Per questo
+    il modulo Identities si occupa di aggiungere nel nuovo network namespace gestito da *𝛼<sub>0</sub>*
+    la rotta verso il vicino.  
+    I nodi *𝛼<sub>0</sub>* e *𝛾<sub>0</sub>* non fanno parte della stessa rete, quindi non è prevista una tabella
+    `ntk_from_xxx`.
+*   *𝛼<sub>1</sub>-𝛾<sub>0</sub>*.  
+    Questo arco-identità è nuovo.  
+    Nel network namespace gestito da *𝛼<sub>1</sub>* la relativa rotta è stata già aggiunta.  
+    I nodi *𝛼<sub>1</sub>* e *𝛾<sub>0</sub>* faranno parte della stessa rete, ma solo dopo che il nodo *𝛼<sub>1</sub>*
+    avrà costruito la nuova istanza di QspnManager; per fare questo il sistema *𝛼* dovrà costruire un QspnArc
+    sull'arco-identità *𝛼<sub>1</sub>-𝛾<sub>0</sub>*. Questo nuovo QspnArc inizialmente non comporta operazioni sulle
+    tabelle di routing, fino a quando non si riceve il primo ETP attraverso questo arco e così si scopre l'indirizzo
+    Netsukuku di questo vicino. Solo a quel punto, ad esempio, nel network namespace gestito da *𝛼<sub>1</sub>*
+    il programma *qspnclient* deve aggiungere la tabella `ntk_from_00:16:3E:5B:78:D5` e la relativa regola.
+
+**sistema 𝛼**
+```
+ip netns exec ntkv0 ip route add 169.254.242.91 dev ntkv0_eth1 src 169.254.83.167
+/etc/iproute2/rt_tables: add table 249: ntk_from_00:16:3E:DF:23:F5
+ip netns exec ntkv0 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:DF:23:F5 -j MARK --set-mark 249
+ip netns exec ntkv0 ip rule add fwmark 249 table ntk_from_00:16:3E:DF:23:F5
+ip netns exec ntkv0 ip route add 169.254.103.81 dev ntkv0_eth1 src 169.254.83.167
+```
+
 ### <a name="Da_riordinare"></a>Da riordinare
 
 Alla creazione di una nuova identità, il modulo Identities crea un nuovo network namespace. In realtà la creazione
