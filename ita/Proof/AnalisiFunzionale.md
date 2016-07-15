@@ -3,7 +3,6 @@
 1.  [Ruolo del qspnclient](#Ruolo_del_qspnclient)
     1.  [Interazione programma-utente](#Interazione_programma_utente)
     1.  [Primi passi](#Primi_passi)
-    1.  [Casi d'uso](#Casi_duso)
     1.  [Da riordinare](#Da_riordinare)
 1.  [Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IPv4](#Mappatura_indirizzi_ip)
 1.  [Identità](#Identita)
