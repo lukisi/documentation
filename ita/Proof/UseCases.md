@@ -125,7 +125,7 @@ indirizzo 2·1·1·1 in *G<sub>𝛾</sub>*. Naturalmente, dopo poco *𝛽<sub>0<
 **entr03**
 
 Il g-nodo *𝜒* di livello 1 e di indirizzo Netsukuku 3·1·0·, che comprende *𝛿<sub>0</sub>* e *𝜇<sub>1</sub>*,
-costituisce l'intera rete *G<sub>𝛿</sub>*. Con questa operazione di ingresso si forma il g-nodo isomorfo
+costituiva l'intera rete *G<sub>𝛿</sub>*. Con questa operazione di ingresso si forma il g-nodo isomorfo
 *𝜒'* costituito dalle nuove identità *𝛿<sub>1</sub>* e *𝜇<sub>2</sub>*. Il g-nodo
 *𝜒* assume indirizzo *di connettività* 3·1·2· in *G<sub>𝛿</sub>*. Temporaneamente
 *𝜒'* assume indirizzo *virtuale* 2·1·2· in *G<sub>𝛾</sub>*. Dopo poco *𝜒'* assume
@@ -256,6 +256,32 @@ di istruire il kernel a questo scopo.
 iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.29
 ```
 
+Trattandosi della prima identità nel sistema, quasi immediatamente il QspnManager associato a
+*𝛿<sub>0</sub>* notifica il segnale `bootstrap_complete`. A fronte di esso nel sistema
+verranno dati, sebbene superflui, questi comandi:
+
+**sistema 𝛿**
+```
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.16/29 table ntk
+ip route change unreachable 10.0.0.80/29 table ntk
+ip route change unreachable 10.0.0.24/30 table ntk
+ip route change unreachable 10.0.0.88/30 table ntk
+ip route change unreachable 10.0.0.56/30 table ntk
+ip route change unreachable 10.0.0.30/31 table ntk
+ip route change unreachable 10.0.0.94/31 table ntk
+ip route change unreachable 10.0.0.62/31 table ntk
+ip route change unreachable 10.0.0.50/31 table ntk
+ip route change unreachable 10.0.0.28/32 table ntk
+ip route change unreachable 10.0.0.92/32 table ntk
+ip route change unreachable 10.0.0.60/32 table ntk
+ip route change unreachable 10.0.0.48/32 table ntk
+ip route change unreachable 10.0.0.40/32 table ntk
+```
+
 ## <a name="Ingresso_altro_nodo"></a>Ingresso di un altro singolo nodo nella nostra rete
 
 Ora assumiamo che il sistema *𝜇* giunga a distanza di rilevamento con la sua interfaccia di rete
@@ -303,7 +329,8 @@ aggiornerà l'indirizzo Netsukuku di questo vicino. Questo deve produrre due mac
 una tabella per i pacchetti IP ricevuti dall'arco *𝛿<sub>0</sub>-𝜇<sub>1</sub>* e l'aggiornamento (su tutte le tabelle) delle
 rotte che adesso possono avere come gateway l'arco *𝛿<sub>0</sub>-𝜇<sub>1</sub>*.
 
-Assumiamo che l'indirizzo Netsukuku di *𝜇<sub>1</sub>* sia 3·1·0·0.
+Assumiamo che quando arriva questo primo ETP l'indirizzo Netsukuku di *𝜇<sub>1</sub>* sia ancora quello
+temporaneo *virtuale* 3·1·0·2.
 
 **sistema 𝛿**
 ```
@@ -329,6 +356,49 @@ ip route add unreachable 10.0.0.60/32 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.48/32 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:2D:8D:DE
 ```
+
+**sistema 𝛿**
+```
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.16/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.80/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.24/30 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.88/30 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.30/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.94/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.28/32 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.92/32 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.60/32 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.48/32 table ntk_from_00:16:3E:2D:8D:DE
+ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:2D:8D:DE
+
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.16/29 table ntk
+ip route change unreachable 10.0.0.80/29 table ntk
+ip route change unreachable 10.0.0.24/30 table ntk
+ip route change unreachable 10.0.0.88/30 table ntk
+ip route change unreachable 10.0.0.56/30 table ntk
+ip route change unreachable 10.0.0.30/31 table ntk
+ip route change unreachable 10.0.0.94/31 table ntk
+ip route change unreachable 10.0.0.62/31 table ntk
+ip route change unreachable 10.0.0.50/31 table ntk
+ip route change unreachable 10.0.0.28/32 table ntk
+ip route change unreachable 10.0.0.92/32 table ntk
+ip route change unreachable 10.0.0.60/32 table ntk
+ip route change unreachable 10.0.0.48/32 table ntk
+ip route change unreachable 10.0.0.40/32 table ntk
+```
+
+Poi *𝜇<sub>1</sub>* assume l'indirizzo 3·1·0·0 e comunica un nuovo ETP che giunge a *𝛿<sub>0</sub>*.
 
 **sistema 𝛿**
 ```
