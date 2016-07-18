@@ -20,20 +20,19 @@ Il modulo Identities ha creato l'arco-identità principale, cioè quello che col
 *𝛿<sub>0</sub>* e *𝛾<sub>0</sub>*, senza per questo aggiungere alcuna rotta, perché per tale arco-identità
 la rotta è stata aggiunta dal modulo Neighborhood nel network namespace default del sistema *𝛿*.
 
-Ora assumiamo che *𝛿<sub>0</sub>* decide di entrare in *G<sub>𝛾</sub>*. Per essere precisi, il sistema *𝛿* decide di
-costruire una nuova identità *𝛿<sub>1</sub>* partendo da *𝛿<sub>0</sub>*. Questa nuova identità scaturisce dalla
-migrazione del g-nodo *𝜒*, di livello 1 e di indirizzo Netsukuku 3·1·0·, che comprende anche il vicino
-*𝜇<sub>1</sub>*. Poi *𝛿<sub>1</sub>* farà ingresso in *G<sub>𝛾</sub>* come membro del g-nodo *𝜒'*, il quale
-avrà in *G<sub>𝛾</sub>* un indirizzo Netsukuku. Per completezza prevediamo che tale indirizzo Netsukuku sia
-temporaneamente *virtuale* nella sua componente di livello 1: assumiamo sia 2·1·2·.
+Ora assumiamo che il g-nodo *𝜒* di livello 1 e di indirizzo Netsukuku 3·1·0·, che comprende *𝛿<sub>0</sub>* e *𝜇<sub>1</sub>*,
+decide di entrare in *G<sub>𝛾</sub>*. Per essere precisi, decide di costruire un g-nodo isomorfo
+*𝜒'* costituito dalle nuove identità *𝛿<sub>1</sub>* e *𝜇<sub>2</sub>*. Il g-nodo
+*𝜒* assume indirizzo *di connettività* 3·1·2· in *G<sub>𝛿</sub>*. Temporaneamente
+*𝜒'* assume indirizzo *virtuale* 2·1·2· in *G<sub>𝛾</sub>*.  
+Esaminiamo cosa avviene con riferimento al singolo nodo *𝛿<sub>0</sub>* nel sistema *𝛿*.
 
-All'inizio viene creato nel sistema *𝛿* un nuovo network namespace "entr03" e in esso viene creata
+Il sistema *𝛿* costruisce una nuova identità *𝛿<sub>1</sub>* partendo da *𝛿<sub>0</sub>*.
+Viene creato nel sistema *𝛿* un nuovo network namespace "entr03" e in esso viene creata
 una pseudo-interfaccia "entr03_eth1" sopra l'interfaccia reale "eth1". Questo nuovo network namespace
 sarà gestito da *𝛿<sub>0</sub>* mentre quello precedente (il default) verrà gestito da *𝛿<sub>1</sub>*.  
-Assumiamo che il g-nodo *𝜒*, che rimane di connettività in *G<sub>𝛿</sub>*, prende l'indirizzo Netsukuku
-3·1·2·. Questo non ha una diretta ripercussione negli indirizzi IP del sistema *𝛿* nel nuovo
-network namespace: infatti una identità di connettività non detiene (nel suo network namespace che non è
-il default) alcun indirizzo IP associato al suo indirizzo Netsukuku.
+Ricordiamo che una identità di connettività quale è ora *𝛿<sub>0</sub>*, nel suo network namespace che non è
+il default, non detiene alcun indirizzo IP associato al suo indirizzo Netsukuku.
 
 **sistema 𝛿**
 ```
