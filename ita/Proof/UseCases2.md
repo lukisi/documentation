@@ -2,8 +2,9 @@
 
 ## <a name="Prime_operazioni"></a>Prime operazioni
 
-Partiamo dal sistema *𝛿* che ha una identità principale *𝛿<sub>0</sub>* che ha indirizzo Netsukuku 3·1·0·1
-in una rete con topologia 4·2·2·2. Tale rete (cioè l'identificativo della rete che si trova nel
+Prendiamo in esame quello che avviene nel sistema *𝛿*, partendo dal momento in cui avvia
+il programma *qspnclient*. Assumiamo che la sua prima identità principale, *𝛿<sub>0</sub>*,
+ha indirizzo Netsukuku 3·1·0·1. La sua rete iniziale (cioè l'identificativo della rete che si trova nel
 fingerprint al livello 4) la chiamiamo *G<sub>𝛿</sub>*.
 
 ```

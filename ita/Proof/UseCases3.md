@@ -557,7 +557,7 @@ iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK -
 ip rule add fwmark 248 table ntk_from_00:16:3E:5B:78:D5
 ```
 
+## <a name="Elaborazione_etp"></a>Ricezione di un ETP che apporta variazioni alla mappa
 
-
-
+**TODO**
 

@@ -9,6 +9,8 @@ Per una più facile lettura, questa sequenza di eventi e operazioni è stata div
 1.  Parte 2. [Prime operazioni](UseCases2.md#Prime_operazioni)
 1.  [Ingresso di un altro singolo nodo nella nostra rete](UseCases2.md#Ingresso_altro_nodo)
 1.  Parte 3. [Ingresso come g-nodo in un'altra rete](UseCases3.md#Ingresso_gnodo_altra_rete)
+1.  [Ricezione di un ETP che apporta variazioni alla mappa](UseCases3.md#Elaborazione_etp)
+1.  Parte 4. [Negli altri sistemi](UseCases4.md#Altri_sistemi)
 
 ## Parte 1
 
