@@ -557,6 +557,39 @@ iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK -
 ip rule add fwmark 248 table ntk_from_00:16:3E:5B:78:D5
 ```
 
+Infine, dopo un po' di tempo, il g-nodo *𝜒* in *G<sub>𝛿</sub>* viene dismesso. Di fatto questo si
+identifica con la dismissione di ogni identità di connettività che lo costituisce.
+
+*   Se il g-nodo di connettività si era formato per la scelta da parte del g-nodo originario di
+    fare ingresso in una diversa rete, allora immediatamente il g-nodo di connettività va
+    dismesso. Ogni singolo nodo che lo componeva ne è al corrente.
+*   Se il g-nodo di connettività si era formato per la scelta da parte del g-nodo originario di
+    migrare dal suo g-nodo superiore in uno diverso della stessa rete, allora viene eletto un
+    singolo nodo che gli appartiene a controllare periodicamente se il g-nodo di connettività può
+    essere dismesso. Quando tale verifica è positiva il singolo nodo inizia la propagazione di
+    questa informazione all'interno del g-nodo e dopo alcuni secondi dismette la sua identità di connettività.  
+    La propagazione dell'informazione di dismissione avviene nel modulo QSPN, i singoli nodi che la ricevono
+    ne notificano l'evento con un segnale al programma *qspnclient* del loro sistema.
+
+Comunque questo avvenga, quando il programma *qspnclient* di un sistema sa di dover rimuovere una
+identità di connettività esegue queste operazioni tramite il modulo Identities:
+
+**sistema 𝛿**
+```
+ip netns exec entr03 ip route flush table main
+ip netns exec entr03 ip link delete entr03_eth1 type macvlan
+ip netns del entr03
+```
+
+Inoltre, a fronte della rimozione di un network namespace, il programma deve tenere traccia se qualche
+particolare tabella `ntk_from_XXX` presente ha cessato di essere referenziata. In quel caso va
+rimossa. Nel nostro esempio:
+
+**sistema 𝛿**
+```
+sed -i '/xxx_table_ntk_from_00:16:3E:DF:23:F5_xxx/d' /etc/iproute2/rt_tables
+```
+
 ## <a name="Elaborazione_etp"></a>Ricezione di un ETP che apporta variazioni alla mappa
 
 **TODO**
