@@ -225,7 +225,7 @@ tabella deve anche mettere tutte le possibili destinazioni, inizialmente in stat
 
 **sistema 𝛿**
 ```
-/etc/iproute2/rt_tables: add table 251: ntk
+(echo; echo "251 ntk # xxx_table_ntk_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
 ip rule add table ntk
 ip route add unreachable 10.0.0.0/29 table ntk
 ip route add unreachable 10.0.0.64/29 table ntk
@@ -334,7 +334,7 @@ temporaneo *virtuale* 3·1·0·2.
 
 **sistema 𝛿**
 ```
-/etc/iproute2/rt_tables: add table 250: ntk_from_00:16:3E:2D:8D:DE
+(echo; echo "250 ntk_from_00:16:3E:2D:8D:DE # xxx_table_ntk_from_00:16:3E:2D:8D:DE_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:2D:8D:DE -j MARK --set-mark 250
 ip rule add fwmark 250 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:2D:8D:DE
@@ -545,7 +545,7 @@ Il programma *qspnclient* fa queste operazioni preliminari:
 **sistema 𝛿**
 ```
 ip netns exec entr03 ip rule add table ntk
-/etc/iproute2/rt_tables: add table 249: ntk_from_00:16:3E:DF:23:F5
+(echo; echo "249 ntk_from_00:16:3E:DF:23:F5 # xxx_table_ntk_from_00:16:3E:DF:23:F5_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
 ip netns exec entr03 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:DF:23:F5 -j MARK --set-mark 249
 ip netns exec entr03 ip rule add fwmark 249 table ntk_from_00:16:3E:DF:23:F5
 ```
@@ -704,8 +704,8 @@ archi-identità di *𝛿<sub>1</sub>* per i quali conosciamo già l'indirizzo Ne
 
 Deve poi aggiungere in queste tabelle (se non ci sono già) tutte le possibili destinazioni previste dall'indirizzo
 di *𝛿<sub>1</sub>*, inizialmente in stato "unreachable". Deve anche fare in modo che le operazioni di aggiunta
-delle destinazioni vengano completate tutte prima di elaborare (ad esempio dopo il segnale `bootstrap_complete`) operazioni
-di aggiornamento delle rotte.
+delle destinazioni vengano completate tutte prima di elaborare operazioni di aggiornamento delle rotte: infatti
+queste potrebbero essere avviate, ad esempio, dopo il segnale `bootstrap_complete` che viene notificato da un'altra tasklet.
 
 ```
 Mio indirizzo 2·1·2·1.
@@ -818,7 +818,10 @@ precedente detentore del network namespace default o dallo stesso nella fase in 
 In questo caso l'indirizzo IP interno al g-nodo di livello 1.
 
 Deve poi aggiungere in queste tabelle (se non ci sono già) tutte le possibili destinazioni previste dall'indirizzo
-di *𝛿<sub>1</sub>*, inizialmente in stato "unreachable".
+di *𝛿<sub>1</sub>*, inizialmente in stato "unreachable".  
+Deve però tenere presente che alcuni di esse possono essere già stati aggiunte dal
+precedente detentore del network namespace default o dallo stesso nella fase in cui aveva indirizzo virtuale.
+In questo caso le destinazioni verso g-nodi di livello 1 e superiori.
 
 ```
 Mio indirizzo 2·1·0·1.
@@ -888,37 +891,11 @@ ip address add 10.0.0.49 dev eth1
 
 **sistema 𝛿**
 ```
-ip route add unreachable 10.0.0.0/29 table ntk
-ip route add unreachable 10.0.0.64/29 table ntk
-ip route add unreachable 10.0.0.8/29 table ntk
-ip route add unreachable 10.0.0.72/29 table ntk
-ip route add unreachable 10.0.0.24/29 table ntk
-ip route add unreachable 10.0.0.88/29 table ntk
-ip route add unreachable 10.0.0.16/30 table ntk
-ip route add unreachable 10.0.0.80/30 table ntk
-ip route add unreachable 10.0.0.56/30 table ntk
-ip route add unreachable 10.0.0.22/31 table ntk
-ip route add unreachable 10.0.0.86/31 table ntk
-ip route add unreachable 10.0.0.62/31 table ntk
-ip route add unreachable 10.0.0.50/31 table ntk
 ip route add unreachable 10.0.0.20/32 table ntk
 ip route add unreachable 10.0.0.84/32 table ntk
 ip route add unreachable 10.0.0.60/32 table ntk
 ip route add unreachable 10.0.0.48/32 table ntk
 
-ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:2D:8D:DE
-ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:2D:8D:DE
-ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:2D:8D:DE
-ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:2D:8D:DE
-ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:2D:8D:DE
-ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:2D:8D:DE
-ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:2D:8D:DE
-ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:2D:8D:DE
-ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:2D:8D:DE
-ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:3E:2D:8D:DE
-ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:2D:8D:DE
-ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:2D:8D:DE
-ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.20/32 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.84/32 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.60/32 table ntk_from_00:16:3E:2D:8D:DE
@@ -934,7 +911,7 @@ ricevuti su questo arco.
 
 **sistema 𝛿**
 ```
-/etc/iproute2/rt_tables: add table 248: ntk_from_00:16:3E:5B:78:D5
+(echo; echo "248 ntk_from_00:16:3E:5B:78:D5 # xxx_table_ntk_from_00:16:3E:5B:78:D5_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:5B:78:D5
