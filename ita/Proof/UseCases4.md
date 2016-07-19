@@ -177,6 +177,24 @@ che ha migrato poiché si tratta della migrazione di un singolo nodo.
 
 Il programma *qspnclient* sposta tutte le rotte dal network namespace vecchio al network namespace nuovo.
 
+Avendo però preso per la vecchia identità un indirizzo Netsukuku con posizione *virtuale* nel
+livello 0, dove prima aveva posizione *reale*, abbiamo che esiste una ulteriore possibile
+destinazione da aggiungere nel nuovo network namespace. La 1·0·1·1.
+
+```
+ 1·0·1·1
+     globale
+      10.0.0.11/32
+     anonimizzante
+      10.0.0.75/32
+     interno al mio g-nodo di livello 3
+      10.0.0.59/32
+     interno al mio g-nodo di livello 2
+      10.0.0.51/32
+     interno al mio g-nodo di livello 1
+      10.0.0.41/32
+```
+
 **sistema 𝜇**
 ```
 ip netns exec entr01 ip route add unreachable 10.0.0.0/29 table ntk
@@ -197,6 +215,11 @@ ip netns exec entr01 ip route add unreachable 10.0.0.74/32 table ntk
 ip netns exec entr01 ip route add unreachable 10.0.0.58/32 table ntk
 ip netns exec entr01 ip route add unreachable 10.0.0.50/32 table ntk
 ip netns exec entr01 ip route add unreachable 10.0.0.40/32 table ntk
+ip netns exec entr01 ip route add unreachable 10.0.0.11/32 table ntk
+ip netns exec entr01 ip route add unreachable 10.0.0.75/32 table ntk
+ip netns exec entr01 ip route add unreachable 10.0.0.59/32 table ntk
+ip netns exec entr01 ip route add unreachable 10.0.0.51/32 table ntk
+ip netns exec entr01 ip route add unreachable 10.0.0.41/32 table ntk
 
 ip route del 10.0.0.0/29 table ntk
 ip route del 10.0.0.64/29 table ntk
@@ -253,6 +276,11 @@ ip netns exec entr01 ip route change unreachable 10.0.0.74/32 table ntk
 ip netns exec entr01 ip route change unreachable 10.0.0.58/32 table ntk
 ip netns exec entr01 ip route change unreachable 10.0.0.50/32 table ntk
 ip netns exec entr01 ip route change unreachable 10.0.0.40/32 table ntk
+ip netns exec entr01 ip route change unreachable 10.0.0.11/32 table ntk
+ip netns exec entr01 ip route change unreachable 10.0.0.75/32 table ntk
+ip netns exec entr01 ip route change unreachable 10.0.0.59/32 table ntk
+ip netns exec entr01 ip route change unreachable 10.0.0.51/32 table ntk
+ip netns exec entr01 ip route change unreachable 10.0.0.41/32 table ntk
 ```
 
 Poi il sistema *𝜇* per la nuova identità *𝜇<sub>1</sub>* istanzia un QspnManager con il
@@ -297,43 +325,73 @@ Possibili destinazioni:
       10.0.0.72/29
  2·
      globale
-      10.0.0.XX/29
+      10.0.0.16/29
      anonimizzante
-      10.0.0.XX/29
+      10.0.0.80/29
  3·0·
      globale
-      10.0.0.XX/30
+      10.0.0.24/30
      anonimizzante
-      10.0.0.XX/30
+      10.0.0.88/30
      interno al mio g-nodo di livello 3
-      10.0.0.XX/30
+      10.0.0.56/30
  3·1·1·
      globale
-      10.0.0.XX/31
+      10.0.0.30/31
      anonimizzante
-      10.0.0.XX/31
+      10.0.0.94/31
      interno al mio g-nodo di livello 3
-      10.0.0.XX/31
+      10.0.0.62/31
      interno al mio g-nodo di livello 2
-      10.0.0.XX/31
+      10.0.0.50/31
  3·1·0·0
      globale
-      10.0.0.XX/32
+      10.0.0.28/32
      anonimizzante
-      10.0.0.XX/32
+      10.0.0.92/32
      interno al mio g-nodo di livello 3
-      10.0.0.XX/32
+      10.0.0.60/32
      interno al mio g-nodo di livello 2
-      10.0.0.XX/32
+      10.0.0.48/32
      interno al mio g-nodo di livello 1
-      10.0.0.XX/32
+      10.0.0.40/32
+ 3·1·0·1
+     globale
+      10.0.0.29/32
+     anonimizzante
+      10.0.0.93/32
+     interno al mio g-nodo di livello 3
+      10.0.0.61/32
+     interno al mio g-nodo di livello 2
+      10.0.0.49/32
+     interno al mio g-nodo di livello 1
+      10.0.0.41/32
 ```
 
 **sistema 𝜇**
 ```
-ip route add unreachable 10.0.0.XX/ZZ table ntk
-ip route add unreachable 10.0.0.XX/ZZ table ntk
-ip route add unreachable 10.0.0.XX/ZZ table ntk
-ip route add unreachable 10.0.0.XX/ZZ table ntk
+ip route add unreachable 10.0.0.0/29 table ntk
+ip route add unreachable 10.0.0.64/29 table ntk
+ip route add unreachable 10.0.0.8/29 table ntk
+ip route add unreachable 10.0.0.72/29 table ntk
+ip route add unreachable 10.0.0.16/29 table ntk
+ip route add unreachable 10.0.0.80/29 table ntk
+ip route add unreachable 10.0.0.24/30 table ntk
+ip route add unreachable 10.0.0.88/30 table ntk
+ip route add unreachable 10.0.0.56/30 table ntk
+ip route add unreachable 10.0.0.30/31 table ntk
+ip route add unreachable 10.0.0.94/31 table ntk
+ip route add unreachable 10.0.0.62/31 table ntk
+ip route add unreachable 10.0.0.50/31 table ntk
+ip route add unreachable 10.0.0.28/32 table ntk
+ip route add unreachable 10.0.0.92/32 table ntk
+ip route add unreachable 10.0.0.60/32 table ntk
+ip route add unreachable 10.0.0.48/32 table ntk
+ip route add unreachable 10.0.0.40/32 table ntk
+ip route add unreachable 10.0.0.29/32 table ntk
+ip route add unreachable 10.0.0.93/32 table ntk
+ip route add unreachable 10.0.0.61/32 table ntk
+ip route add unreachable 10.0.0.49/32 table ntk
+ip route add unreachable 10.0.0.41/32 table ntk
 ```
 
