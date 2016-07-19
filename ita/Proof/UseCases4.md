@@ -395,3 +395,228 @@ ip route add unreachable 10.0.0.49/32 table ntk
 ip route add unreachable 10.0.0.41/32 table ntk
 ```
 
+Dopo un po' di tempo avverranno 2 eventi per *𝜇<sub>1</sub>*, dei quali non possiamo a priori
+sapere l'ordine temporale:
+
+*   il QspnManager di *𝜇<sub>1</sub>* emetterà il segnale di `bootstrap_complete` dopo aver ricevuto un ETP dal
+    vicino *𝛿<sub>0</sub>*.
+*   il programma *qspnclient* nel sistema *𝜇* viene notificato che il suo indirizzo Netsukuku in *G<sub>𝛿</sub>*, che
+    temporaneamente era il *virtuale* 3·1·0·2, diventa il *reale* (3·1·0·0). Di conseguenza il programma comunica al
+    QspnManager di *𝜇<sub>1</sub>* che ora il suo indirizzo Netsukuku è 3·1·0·0.
+
+Assumiamo che si verifichi prima il segnale di ricezione di un ETP.
+
+Ora il QspnManager di *𝜇<sub>1</sub>* riceve un ETP dal vicino *𝛿<sub>0</sub>*. A questo punto
+conosce l'indirizzo Netsukuku del peer sull'arco *𝜇<sub>1</sub>-𝛿<sub>0</sub>*. Per questo il
+programma *qspnclient* può creare la tabella `ntk_from_00:16:3E:1A:C4:45` e popolarla con tutte le
+destinazioni adatte al suo indirizzo. Poi, ma solo dopo che la tabella sarà stata popolata
+e aggiornata, aggiungerà la regola di guardare questa tabella per i pacchetti IP da inoltrare
+ricevuti su questo arco.
+
+**sistema 𝜇**
+```
+(echo; echo "250 ntk_from_00:16:3E:1A:C4:45 # xxx_table_ntk_from_00:16:3E:1A:C4:45_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.16/29 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.80/29 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.24/30 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.88/30 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.30/31 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.94/31 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.28/32 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.92/32 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.60/32 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.48/32 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.29/32 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.93/32 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.61/32 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.49/32 table ntk_from_00:16:3E:1A:C4:45
+ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:1A:C4:45
+```
+
+Inoltre il QspnManager di *𝜇<sub>1</sub>* sulla base dell'ETP aggiorna la sua mappa.
+Attraverso l'arco *𝜇<sub>1</sub>-𝛿<sub>0</sub>* scopre di poter raggiungere la destinazione
+(0, 1), ossia il g-nodo 3·1·0·1.
+
+Poi il QspnManager di *𝜇<sub>1</sub>* notifica il segnale `bootstrap_complete`. Per questo
+il programma *qspnclient* aggiorna tutte le rotte sulla base dei migliori percorsi noti.
+
+**sistema 𝜇**
+```
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.16/29 table ntk
+ip route change unreachable 10.0.0.80/29 table ntk
+ip route change unreachable 10.0.0.24/30 table ntk
+ip route change unreachable 10.0.0.88/30 table ntk
+ip route change unreachable 10.0.0.56/30 table ntk
+ip route change unreachable 10.0.0.30/31 table ntk
+ip route change unreachable 10.0.0.94/31 table ntk
+ip route change unreachable 10.0.0.62/31 table ntk
+ip route change unreachable 10.0.0.50/31 table ntk
+ip route change unreachable 10.0.0.28/32 table ntk
+ip route change unreachable 10.0.0.92/32 table ntk
+ip route change unreachable 10.0.0.60/32 table ntk
+ip route change unreachable 10.0.0.48/32 table ntk
+ip route change unreachable 10.0.0.40/32 table ntk
+ip route change 10.0.0.29/32 table ntk via 169.254.253.216 dev eth1
+ip route change 10.0.0.93/32 table ntk via 169.254.253.216 dev eth1
+ip route change 10.0.0.61/32 table ntk via 169.254.253.216 dev eth1
+ip route change 10.0.0.49/32 table ntk via 169.254.253.216 dev eth1
+ip route change 10.0.0.41/32 table ntk via 169.254.253.216 dev eth1
+
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.16/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.80/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.24/30 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.88/30 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.30/31 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.94/31 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.28/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.92/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.60/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.48/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.29/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.93/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.61/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.49/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:1A:C4:45
+```
+
+Alla fine di questo aggiornamento delle tabelle, siccome era rimasta in attesa la regola di guardare
+la nuova tabella, il programma *qspnclient* la aggiunge.
+
+**sistema 𝜇**
+```
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:1A:C4:45 -j MARK --set-mark 250
+ip rule add fwmark 250 table ntk_from_00:16:3E:1A:C4:45
+```
+
+Ora si verifica l'altro evento: il cambio di indirizzo.
+
+Siccome la nuova identità *𝜇<sub>1</sub>* è la *principale*,
+il programma *qspnclient* ora ha il compito di assegnare all'interfaccia reale nel network
+namespace default gli indirizzi IP che sono da associare al
+suo indirizzo Netsukuku.  
+Deve però tenere presente che alcuni di essi possono essere già stati assegnati dal
+precedente detentore del network namespace default o dallo stesso nella fase in cui aveva indirizzo virtuale.
+In questo caso nessuno.
+
+Deve poi aggiungere in queste tabelle (se non ci sono già) tutte le possibili destinazioni previste dall'indirizzo
+di *𝜇<sub>1</sub>*, inizialmente in stato "unreachable".  
+Deve però tenere presente che alcune di esse possono essere già state aggiunte dal
+precedente detentore del network namespace default o dallo stesso nella fase in cui aveva indirizzo virtuale.
+In questo caso sono state tutte già aggiunte.  
+Deve inoltre considerare che prima la sua attuale posizione *reale* al livello 0 (3·1·0·0) poteva essere
+stata aggiunta come destinazione nelle tabelle (se le posizioni superiori erano tutte *reali*). In questo
+caso essa va rimossa.
+
+```
+Mio indirizzo 3·1·0·0.
+     globale
+      10.0.0.28
+     anonimizzante
+      10.0.0.92
+     interno al mio g-nodo di livello 3
+      10.0.0.60
+     interno al mio g-nodo di livello 2
+      10.0.0.48
+     interno al mio g-nodo di livello 1
+      10.0.0.40
+
+Possibili destinazioni:
+ 0·
+     globale
+      10.0.0.0/29
+     anonimizzante
+      10.0.0.64/29
+ 1·
+     globale
+      10.0.0.8/29
+     anonimizzante
+      10.0.0.72/29
+ 2·
+     globale
+      10.0.0.16/29
+     anonimizzante
+      10.0.0.80/29
+ 3·0·
+     globale
+      10.0.0.24/30
+     anonimizzante
+      10.0.0.88/30
+     interno al mio g-nodo di livello 3
+      10.0.0.56/30
+ 3·1·1·
+     globale
+      10.0.0.30/31
+     anonimizzante
+      10.0.0.94/31
+     interno al mio g-nodo di livello 3
+      10.0.0.62/31
+     interno al mio g-nodo di livello 2
+      10.0.0.50/31
+ 3·1·0·0  era valida prima ma non lo è più.
+     globale
+      10.0.0.28/32
+     anonimizzante
+      10.0.0.92/32
+     interno al mio g-nodo di livello 3
+      10.0.0.60/32
+     interno al mio g-nodo di livello 2
+      10.0.0.48/32
+     interno al mio g-nodo di livello 1
+      10.0.0.40/32
+ 3·1·0·1
+     globale
+      10.0.0.29/32
+     anonimizzante
+      10.0.0.93/32
+     interno al mio g-nodo di livello 3
+      10.0.0.61/32
+     interno al mio g-nodo di livello 2
+      10.0.0.49/32
+     interno al mio g-nodo di livello 1
+      10.0.0.41/32
+```
+
+**sistema 𝜇**
+```
+ip address add 10.0.0.28 dev eth1
+ip address add 10.0.0.92 dev eth1
+ip address add 10.0.0.60 dev eth1
+ip address add 10.0.0.48 dev eth1
+ip address add 10.0.0.40 dev eth1
+```
+
+**sistema 𝜇**
+```
+ip route del 10.0.0.28/32 table ntk
+ip route del 10.0.0.92/32 table ntk
+ip route del 10.0.0.60/32 table ntk
+ip route del 10.0.0.48/32 table ntk
+ip route del 10.0.0.40/32 table ntk
+
+ip route del 10.0.0.28/32 table ntk_from_00:16:3E:1A:C4:45
+ip route del 10.0.0.92/32 table ntk_from_00:16:3E:1A:C4:45
+ip route del 10.0.0.60/32 table ntk_from_00:16:3E:1A:C4:45
+ip route del 10.0.0.48/32 table ntk_from_00:16:3E:1A:C4:45
+ip route del 10.0.0.40/32 table ntk_from_00:16:3E:1A:C4:45
+```
+
