@@ -620,3 +620,17 @@ ip route del 10.0.0.48/32 table ntk_from_00:16:3E:1A:C4:45
 ip route del 10.0.0.40/32 table ntk_from_00:16:3E:1A:C4:45
 ```
 
+Infine, dopo un po' di tempo, l'identità *𝜇<sub>0</sub>* viene dismessa. Il programma *qspnclient*
+esegue queste operazioni tramite il modulo Identities:
+
+**sistema 𝜇**
+```
+ip netns exec entr01 ip route flush table main
+ip netns exec entr01 ip link delete entr01_eth1 type macvlan
+ip netns del entr01
+```
+
+Inoltre, a fronte della rimozione di un network namespace, il programma deve tenere traccia se qualche
+particolare tabella `ntk_from_XXX` presente ha cessato di essere referenziata. In quel caso va
+rimossa. Nel nostro esempio nessuna.
+
