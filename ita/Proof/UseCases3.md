@@ -128,6 +128,22 @@ verso destinazioni esterne al g-nodo che ha migrato:
 *   Tutte (siano esse espresse con indirizzi IP globali o interni ad un g-nodo) vanno spostate dal network namespace
     vecchio al network namespace nuovo.
 
+Avendo però preso per la vecchia identità un indirizzo Netsukuku con posizione *virtuale* nel
+livello 1, dove prima aveva posizione *reale*, abbiamo che esiste una ulteriore possibile
+destinazione da aggiungere nel nuovo network namespace. La 3·1·0·.
+
+```
+ 3·1·0·
+     globale
+      10.0.0.28/31
+     anonimizzante
+      10.0.0.92/31
+     interno al mio g-nodo di livello 3
+      10.0.0.60/31
+     interno al mio g-nodo di livello 2
+      10.0.0.48/31
+```
+
 **sistema 𝛿**
 ```
 ip netns exec entr03 ip route add unreachable 10.0.0.0/29 table ntk
@@ -143,6 +159,10 @@ ip netns exec entr03 ip route add unreachable 10.0.0.30/31 table ntk
 ip netns exec entr03 ip route add unreachable 10.0.0.94/31 table ntk
 ip netns exec entr03 ip route add unreachable 10.0.0.62/31 table ntk
 ip netns exec entr03 ip route add unreachable 10.0.0.50/31 table ntk
+ip netns exec entr03 ip route add unreachable 10.0.0.28/31 table ntk
+ip netns exec entr03 ip route add unreachable 10.0.0.92/31 table ntk
+ip netns exec entr03 ip route add unreachable 10.0.0.60/31 table ntk
+ip netns exec entr03 ip route add unreachable 10.0.0.48/31 table ntk
 ip netns exec entr03 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:DF:23:F5
@@ -156,6 +176,10 @@ ip netns exec entr03 ip route add unreachable 10.0.0.30/31 table ntk_from_00:16:
 ip netns exec entr03 ip route add unreachable 10.0.0.94/31 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:DF:23:F5
+ip netns exec entr03 ip route add unreachable 10.0.0.28/31 table ntk_from_00:16:3E:DF:23:F5
+ip netns exec entr03 ip route add unreachable 10.0.0.92/31 table ntk_from_00:16:3E:DF:23:F5
+ip netns exec entr03 ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:DF:23:F5
+ip netns exec entr03 ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:DF:23:F5
 
 ip route del 10.0.0.0/29 table ntk
 ip route del 10.0.0.64/29 table ntk
@@ -214,6 +238,10 @@ ip netns exec entr03 ip route change unreachable 10.0.0.30/31 table ntk
 ip netns exec entr03 ip route change unreachable 10.0.0.94/31 table ntk
 ip netns exec entr03 ip route change unreachable 10.0.0.62/31 table ntk
 ip netns exec entr03 ip route change unreachable 10.0.0.50/31 table ntk
+ip netns exec entr03 ip route change unreachable 10.0.0.28/31 table ntk
+ip netns exec entr03 ip route change unreachable 10.0.0.92/31 table ntk
+ip netns exec entr03 ip route change unreachable 10.0.0.60/31 table ntk
+ip netns exec entr03 ip route change unreachable 10.0.0.48/31 table ntk
 ip netns exec entr03 ip route change 10.0.0.40/32 table ntk via 169.254.242.91 dev entr03_eth1
 
 ip netns exec entr03 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:DF:23:F5
@@ -229,6 +257,10 @@ ip netns exec entr03 ip route change unreachable 10.0.0.30/31 table ntk_from_00:
 ip netns exec entr03 ip route change unreachable 10.0.0.94/31 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:DF:23:F5
+ip netns exec entr03 ip route change unreachable 10.0.0.28/31 table ntk_from_00:16:3E:DF:23:F5
+ip netns exec entr03 ip route change unreachable 10.0.0.92/31 table ntk_from_00:16:3E:DF:23:F5
+ip netns exec entr03 ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:DF:23:F5
+ip netns exec entr03 ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:DF:23:F5
 ```
 
@@ -292,6 +324,15 @@ Possibili destinazioni:
       10.0.0.80/30
      interno al mio g-nodo di livello 3
       10.0.0.56/30
+ 2·1·0·
+     globale
+      10.0.0.20/31
+     anonimizzante
+      10.0.0.84/31
+     interno al mio g-nodo di livello 3
+      10.0.0.60/31
+     interno al mio g-nodo di livello 2
+      10.0.0.48/31
  2·1·1·
      globale
       10.0.0.22/31
@@ -325,6 +366,10 @@ ip route add unreachable 10.0.0.88/29 table ntk
 ip route add unreachable 10.0.0.16/30 table ntk
 ip route add unreachable 10.0.0.80/30 table ntk
 ip route add unreachable 10.0.0.56/30 table ntk
+ip route add unreachable 10.0.0.20/31 table ntk
+ip route add unreachable 10.0.0.84/31 table ntk
+ip route add unreachable 10.0.0.60/31 table ntk
+ip route add unreachable 10.0.0.48/31 table ntk
 ip route add unreachable 10.0.0.22/31 table ntk
 ip route add unreachable 10.0.0.86/31 table ntk
 ip route add unreachable 10.0.0.62/31 table ntk
@@ -339,6 +384,10 @@ ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:2D:8D:DE
@@ -368,9 +417,12 @@ In questo caso l'indirizzo IP interno al g-nodo di livello 1.
 
 Deve poi aggiungere in queste tabelle (se non ci sono già) tutte le possibili destinazioni previste dall'indirizzo
 di *𝛿<sub>1</sub>*, inizialmente in stato "unreachable".  
-Deve però tenere presente che alcuni di esse possono essere già stati aggiunte dal
+Deve però tenere presente che alcune di esse possono essere già state aggiunte dal
 precedente detentore del network namespace default o dallo stesso nella fase in cui aveva indirizzo virtuale.
-In questo caso le destinazioni verso g-nodi di livello 1 e superiori.
+In questo caso le destinazioni verso g-nodi di livello 1 e superiori.  
+Deve inoltre considerare che prima la sua attuale posizione *reale* al livello 1 (2·1·0·) poteva essere
+stata aggiunta come destinazione nelle tabelle (se le posizioni superiori erano tutte *reali*). In questo
+caso essa va rimossa.
 
 ```
 Mio indirizzo 2·1·0·1.
@@ -408,6 +460,15 @@ Possibili destinazioni:
       10.0.0.80/30
      interno al mio g-nodo di livello 3
       10.0.0.56/30
+ 2·1·0·  era valida prima ma non lo è più.
+     globale
+      10.0.0.20/31
+     anonimizzante
+      10.0.0.84/31
+     interno al mio g-nodo di livello 3
+      10.0.0.60/31
+     interno al mio g-nodo di livello 2
+      10.0.0.48/31
  2·1·1·
      globale
       10.0.0.22/31
@@ -440,11 +501,19 @@ ip address add 10.0.0.49 dev eth1
 
 **sistema 𝛿**
 ```
+ip route del 10.0.0.20/31 table ntk
+ip route del 10.0.0.84/31 table ntk
+ip route del 10.0.0.60/31 table ntk
+ip route del 10.0.0.48/31 table ntk
 ip route add unreachable 10.0.0.20/32 table ntk
 ip route add unreachable 10.0.0.84/32 table ntk
 ip route add unreachable 10.0.0.60/32 table ntk
 ip route add unreachable 10.0.0.48/32 table ntk
 
+ip route del 10.0.0.20/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route del 10.0.0.84/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route del 10.0.0.60/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route del 10.0.0.48/31 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.20/32 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.84/32 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.60/32 table ntk_from_00:16:3E:2D:8D:DE
