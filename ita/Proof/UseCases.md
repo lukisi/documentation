@@ -114,7 +114,10 @@ entr03_eth1  00:16:3E:DF:23:F5   169.254.242.91
 Il nodo *𝜇<sub>0</sub>* era da solo e aveva indirizzo 1·0·1·1 in *G<sub>𝜇</sub>*. Con questa operazione
 di ingresso *𝜇<sub>0</sub>* assume indirizzo *di connettività* 1·0·1·2 in *G<sub>𝜇</sub>*. Temporaneamente
 *𝜇<sub>1</sub>* assume indirizzo *virtuale* 3·1·0·2 in *G<sub>𝛿</sub>*. Dopo poco *𝜇<sub>1</sub>* assume
-indirizzo 3·1·0·0 in *G<sub>𝛿</sub>*. Naturalmente, dopo poco *𝜇<sub>0</sub>* viene dismesso.
+indirizzo 3·1·0·0 in *G<sub>𝛿</sub>*.  
+Naturalmente, dopo poco *𝜇<sub>0</sub>* viene dismesso. La verifica con `check_connectivity` avrebbe dato
+esito positivo perché il nodo costituiva tutta la rete. Inoltre trattandosi di un ingresso in altra rete
+la verifica non viene nemmeno fatta.
 
 **entr02**
 
