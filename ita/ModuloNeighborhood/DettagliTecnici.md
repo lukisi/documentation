@@ -6,6 +6,7 @@
 1.  [Produzione di uno stub per inviare un messaggio in broadcast](#Produzione_di_uno_stub_per_inviare_un_messaggio_in_broadcast)
 1.  [Produzione di uno stub per inviare un messaggio UDP in unicast](#Produzione_di_uno_stub_per_inviare_un_messaggio_UDP_in_unicast)
 1.  [Produzione di uno stub per inviare un messaggio reliable ad un vicino tramite un arco](#Produzione_di_uno_stub_per_inviare_un_messaggio_reliable_ad_un_vicino_tramite_un_arco)
+1.  [Chiamate lato server](#Chiamate_lato_server)
 1.  [Indirizzo IPv4 di scheda](#Indirizzo_IPv4_di_scheda)
 1.  [Proof of concept](#Proof_of_concept)
     1.  [Interazione del programma con l'utente](#Interazione_del_programma_con_l.27utente)
@@ -153,7 +154,7 @@ Cicla le interfacce che ha già in gestione; se una ha gli stessi valori per nom
 che è un duplicato; se una ha lo stesso MAC e nome diverso oppure lo stesso nome e MAC diverso allora il modulo va in errore fatale.
 
 Il modulo, per ogni interfaccia che inizia a gestire, memorizza il suo nome e il suo MAC address e genera e memorizza un
-indirizzo locale di scheda. Usa l'oggetto [INeighborhoodIPRouteManager](Requisiti.md#INeighborhoodIPRouteManager)
+indirizzo locale di scheda. Usa l'oggetto [INeighborhoodIPRouteManager](#INeighborhoodIPRouteManager)
 per impostare l'indirizzo generato. Poi emette il segnale *nic_address_set*.
 
 Poi avvia una tasklet nella quale invia un broadcast_to_dev (cioè un broadcast solo su quella interfaccia di rete) con
@@ -167,7 +168,7 @@ Un nodo che vuole accordarsi per un arco con un vicino di cui ha notato la prese
 in UDP unicast, indicando anche esso il suo NeighborhoodNodeID e il MAC e l'indirizzo locale della interfaccia di rete, e
 riceverà la risposta. Dopo entrambi i nodi avranno un arco il cui costo è ancora non misurato.
 
-Dopo essersi accordati per l'arco entrambi i nodi usano l'oggetto [INeighborhoodIPRouteManager](Requisiti.md#INeighborhoodIPRouteManager)
+Dopo essersi accordati per l'arco entrambi i nodi usano l'oggetto [INeighborhoodIPRouteManager](#INeighborhoodIPRouteManager)
 per impostare la rotta verso l'indirizzo di scheda del nuovo vicino. Quindi da subito è possibile realizzare connessioni
 reliable (con protocollo TCP) tra i due nodi passanti per questo nuovo arco.
 
@@ -180,7 +181,7 @@ ogni 30 secondi si ripete. Nell'effettuare la misurazione si verifica anche il f
 funziona viene rimosso.
 
 La misurazione del costo espresso come RTT avviene attraverso l'uso dell'oggetto
-[INeighborhoodNetworkInterface](Requisiti.md#INeighborhoodNetworkInterface), come indicato nel relativo documento.
+[INeighborhoodNetworkInterface](#INeighborhoodNetworkInterface), come indicato nel relativo documento.
 
 Dopo che è stata fatta la prima misurazione, il modulo emette il segnale *arc_added* e l'arco va a far parte della
 lista ufficiale.
@@ -210,6 +211,14 @@ conto della seguente osservazione: se ci sono misurazioni ravvicinate della late
 è quella più vicina alla latenza puramente dovuta alla distanza dei due nodi, mentre quella più alta è stata probabilmente
 maggiormente influenzata dal carico del nodo o dal bufferbloat. Nonostante questa osservazione l'algoritmo pian piano
 si adegua se le misurazioni si mantengono su un valore elevato.
+
+<a name="INeighborhoodIPRouteManager"></a>**INeighborhoodIPRouteManager**
+
+**TODO** Vedi documento "Requisiti" nel vecchio repository.
+
+<a name="INeighborhoodNetworkInterface"></a>**INeighborhoodNetworkInterface**
+
+**TODO** Vedi documento "Requisiti" nel vecchio repository.
 
 ## <a name="Produzione_di_uno_stub_per_inviare_un_messaggio_in_broadcast"></a>Produzione di uno stub per inviare un messaggio in broadcast
 
@@ -341,6 +350,13 @@ attendere l'esecuzione del metodo nel nodo vicino oppure no.
 
 Il modulo può aver bisogno internamente di comunicare con un suo vicino passando per un arco; in questo caso produce
 questo tipo di stub. Oppure lo stub gli può essere richiesto dall'esterno.
+
+## <a name="Chiamate_lato_server"></a>Chiamate lato server
+
+In questo capitolo vediamo passo passo come una applicazione debba usare il modulo Neighborhood per gestire gli
+aspetti "lato server" delle chiamate a metodi remoti.
+
+**TODO** Vedi documento "ChiamateLatoServer" nel vecchio repository.
 
 ## <a name="Indirizzo_IPv4_di_scheda"></a>Indirizzo IPv4 di scheda
 

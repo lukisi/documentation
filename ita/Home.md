@@ -55,15 +55,14 @@ Il software si compone dei moduli seguenti:
 *   Neighborhood
     *   [Analisi funzionale](ModuloNeighborhood/AnalisiFunzionale.md)
     *   [Dettagli Tecnici](ModuloNeighborhood/DettagliTecnici.md)
-    *   [Requisiti](ModuloNeighborhood/Requisiti.md)
 *   Identities
     *   [Analisi funzionale](ModuloIdentities/AnalisiFunzionale.md)
     *   [Dettagli Tecnici](ModuloIdentities/DettagliTecnici.md)
 *   QSPN
-    *   [Analisi funzionale](ModuloQSPN/AnalisiFunzionale.md)
-    *   [Esplorazione rete](ModuloQSPN/EsplorazioneRete.md)
-    *   [Percorsi disgiunti](ModuloQSPN/PercorsiDisgiunti.md)
-    *   [Dettagli Tecnici](ModuloQSPN/DettagliTecnici.md)
+    *   [Analisi funzionale](ModuloQspn/AnalisiFunzionale.md)
+    *   [Esplorazione rete](ModuloQspn/EsplorazioneRete.md)
+    *   [Percorsi disgiunti](ModuloQspn/PercorsiDisgiunti.md)
+    *   [Dettagli Tecnici](ModuloQspn/DettagliTecnici.md)
 *   PeerServices
     *   [Analisi funzionale](ModuloPeers/AnalisiFunzionale.md)
     *   [Dettagli Tecnici](ModuloPeers/DettagliTecnici.md)
