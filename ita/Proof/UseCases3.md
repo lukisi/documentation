@@ -711,7 +711,7 @@ ip route change 10.0.0.20/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.119.17
 ip route change 10.0.0.84/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.119.176 dev eth1 src 10.0.0.21
 ip route change 10.0.0.60/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.119.176 dev eth1 src 10.0.0.61
 ip route change 10.0.0.48/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.119.176 dev eth1 src 10.0.0.49
-ip route change 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.119.176 dev eth1 src 10.0.0.41
+ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
 
 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:2D:8D:DE
 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:2D:8D:DE
