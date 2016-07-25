@@ -580,3 +580,48 @@ ip route change 10.0.0.41/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.40
 ip route del 169.254.83.167 dev eth1 src 169.254.94.223
 ```
 
+### Nel sistema *𝛽*
+
+Il sistema *𝛽* non rileva direttamente alcun cambiamento. La sua identità *𝛽<sub>1</sub>* vede arrivare un
+ETP dal vicino *𝛾<sub>0</sub>* con il quale scopre un percorso verso la destinazione 2·1·0·.
+
+**sistema 𝛽**
+```
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.24/29 table ntk
+ip route change unreachable 10.0.0.88/29 table ntk
+ip route change unreachable 10.0.0.16/30 table ntk
+ip route change unreachable 10.0.0.80/30 table ntk
+ip route change unreachable 10.0.0.56/30 table ntk
+ip route change 10.0.0.20/31 table ntk via 169.254.94.223 dev eth1 src 10.0.0.23
+ip route change 10.0.0.84/31 table ntk via 169.254.94.223 dev eth1 src 10.0.0.23
+ip route change 10.0.0.60/31 table ntk via 169.254.94.223 dev eth1 src 10.0.0.63
+ip route change 10.0.0.48/31 table ntk via 169.254.94.223 dev eth1 src 10.0.0.51
+ip route change 10.0.0.22/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.23
+ip route change 10.0.0.86/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.23
+ip route change 10.0.0.62/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.63
+ip route change 10.0.0.50/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.51
+ip route change 10.0.0.40/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.41
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.20/31 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.84/31 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.22/32 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.86/32 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.62/32 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.50/32 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
+```
+
