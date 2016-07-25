@@ -527,6 +527,9 @@ Deve inoltre considerare che prima la sua attuale posizione *reale* al livello 0
 stata aggiunta come destinazione nelle tabelle (se le posizioni superiori erano tutte *reali*). In questo
 caso essa va rimossa.
 
+Infine, avendo aggiornato nell'identità principale il suo proprio indirizzo che ora è *reale*, deve fare
+un aggiornamento di tutte le sue rotte poiché in alcune di esse il *src* poteva essere mancante.
+
 ```
 Mio indirizzo 3·1·0·0.
      globale
@@ -618,6 +621,47 @@ ip route del 10.0.0.92/32 table ntk_from_00:16:3E:1A:C4:45
 ip route del 10.0.0.60/32 table ntk_from_00:16:3E:1A:C4:45
 ip route del 10.0.0.48/32 table ntk_from_00:16:3E:1A:C4:45
 ip route del 10.0.0.40/32 table ntk_from_00:16:3E:1A:C4:45
+```
+
+**sistema 𝜇**
+```
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.16/29 table ntk
+ip route change unreachable 10.0.0.80/29 table ntk
+ip route change unreachable 10.0.0.24/30 table ntk
+ip route change unreachable 10.0.0.88/30 table ntk
+ip route change unreachable 10.0.0.56/30 table ntk
+ip route change unreachable 10.0.0.30/31 table ntk
+ip route change unreachable 10.0.0.94/31 table ntk
+ip route change unreachable 10.0.0.62/31 table ntk
+ip route change unreachable 10.0.0.50/31 table ntk
+ip route change 10.0.0.29/32 table ntk via 169.254.253.216 dev eth1 src 10.0.0.28
+ip route change 10.0.0.93/32 table ntk via 169.254.253.216 dev eth1 src 10.0.0.28
+ip route change 10.0.0.61/32 table ntk via 169.254.253.216 dev eth1 src 10.0.0.60
+ip route change 10.0.0.49/32 table ntk via 169.254.253.216 dev eth1 src 10.0.0.48
+ip route change 10.0.0.41/32 table ntk via 169.254.253.216 dev eth1 src 10.0.0.40
+
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.16/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.80/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.24/30 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.88/30 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.30/31 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.94/31 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.29/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.93/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.61/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.49/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:1A:C4:45
 ```
 
 Infine, dopo un po' di tempo, l'identità *𝜇<sub>0</sub>* viene dismessa. Il programma *qspnclient*
