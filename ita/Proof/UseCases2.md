@@ -199,14 +199,16 @@ aggiornerà l'indirizzo Netsukuku di questo vicino. Questo deve produrre due mac
 una tabella per i pacchetti IP ricevuti dall'arco *𝛿<sub>0</sub>-𝜇<sub>1</sub>* e l'aggiornamento (su tutte le tabelle) delle
 rotte che adesso possono avere come gateway l'arco *𝛿<sub>0</sub>-𝜇<sub>1</sub>*.
 
+Solo dopo che la tabella per i pacchetti IP ricevuti sarà stata popolata e aggiornata, il sistema
+*𝛿* aggiungerà la regola di guardare questa tabella per i pacchetti IP da inoltrare
+ricevuti su questo arco.
+
 Assumiamo che quando arriva questo primo ETP l'indirizzo Netsukuku di *𝜇<sub>1</sub>* sia ancora quello
 temporaneo *virtuale* 3·1·0·2.
 
 **sistema 𝛿**
 ```
 (echo; echo "250 ntk_from_00:16:3E:2D:8D:DE # xxx_table_ntk_from_00:16:3E:2D:8D:DE_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:2D:8D:DE -j MARK --set-mark 250
-ip rule add fwmark 250 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:2D:8D:DE
@@ -266,6 +268,9 @@ ip route change unreachable 10.0.0.92/32 table ntk
 ip route change unreachable 10.0.0.60/32 table ntk
 ip route change unreachable 10.0.0.48/32 table ntk
 ip route change unreachable 10.0.0.40/32 table ntk
+
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:2D:8D:DE -j MARK --set-mark 250
+ip rule add fwmark 250 table ntk_from_00:16:3E:2D:8D:DE
 ```
 
 Poi *𝜇<sub>1</sub>* assume l'indirizzo 3·1·0·0 e comunica un nuovo ETP che giunge a *𝛿<sub>0</sub>*.
