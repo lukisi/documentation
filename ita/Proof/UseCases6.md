@@ -315,7 +315,7 @@ l'indirizzo reale che ha ora assunto.
 ip address add 10.0.0.20 dev eth1
 ip address add 10.0.0.84 dev eth1
 ip address add 10.0.0.60 dev eth1
-ip address add 10.0.0.44 dev eth1
+ip address add 10.0.0.48 dev eth1
 ```
 
 **sistema 𝜇**
@@ -367,24 +367,24 @@ ip route change 10.0.0.61/32 table ntk via 169.254.253.216 dev eth1 src 10.0.0.6
 ip route change 10.0.0.49/32 table ntk via 169.254.253.216 dev eth1 src 10.0.0.48
 ip route change 10.0.0.41/32 table ntk via 169.254.253.216 dev eth1 src 10.0.0.40
 
-ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.22/31 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.86/31 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.21/32 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.85/32 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.61/32 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.49/32 table ntk_from_00:16:3E:B9:77:80
-ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:B9:77:80
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.22/31 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.86/31 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.21/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.85/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.61/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.49/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:1A:C4:45
 ```
 
 Infine, dopo un po' di tempo, il g-nodo *𝜒* in *G<sub>𝛿</sub>* viene dismesso.
@@ -549,10 +549,10 @@ ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
 ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EC:A3:E1
 ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EC:A3:E1
 ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EC:A3:E1
-ip route change 10.0.0.20/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.253.253.216 dev eth1 src 10.0.0.22
-ip route change 10.0.0.84/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.253.253.216 dev eth1 src 10.0.0.22
-ip route change 10.0.0.60/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.253.253.216 dev eth1 src 10.0.0.62
-ip route change 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.253.253.216 dev eth1 src 10.0.0.50
+ip route change 10.0.0.20/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.253.216 dev eth1 src 10.0.0.22
+ip route change 10.0.0.84/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.253.216 dev eth1 src 10.0.0.22
+ip route change 10.0.0.60/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.253.216 dev eth1 src 10.0.0.62
+ip route change 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.253.216 dev eth1 src 10.0.0.50
 ip route change unreachable 10.0.0.23/32 table ntk_from_00:16:3E:EC:A3:E1
 ip route change unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EC:A3:E1
 ip route change unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EC:A3:E1
@@ -567,10 +567,10 @@ ip route change unreachable 10.0.0.88/29 table ntk
 ip route change unreachable 10.0.0.16/30 table ntk
 ip route change unreachable 10.0.0.80/30 table ntk
 ip route change unreachable 10.0.0.56/30 table ntk
-ip route change 10.0.0.20/31 table ntk via 169.253.253.216 dev eth1 src 10.0.0.22
-ip route change 10.0.0.84/31 table ntk via 169.253.253.216 dev eth1 src 10.0.0.22
-ip route change 10.0.0.60/31 table ntk via 169.253.253.216 dev eth1 src 10.0.0.62
-ip route change 10.0.0.48/31 table ntk via 169.253.253.216 dev eth1 src 10.0.0.50
+ip route change 10.0.0.20/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.22
+ip route change 10.0.0.84/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.22
+ip route change 10.0.0.60/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.62
+ip route change 10.0.0.48/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.50
 ip route change 10.0.0.23/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.22
 ip route change 10.0.0.87/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.22
 ip route change 10.0.0.63/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.62
