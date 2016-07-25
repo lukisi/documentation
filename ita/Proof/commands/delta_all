@@ -324,7 +324,7 @@ ssh delta sudo ip route add unreachable 10.0.0.20/32 table ntk_from_00:16:3E:2D:
 ssh delta sudo ip route add unreachable 10.0.0.84/32 table ntk_from_00:16:3E:2D:8D:DE
 ssh delta sudo ip route add unreachable 10.0.0.60/32 table ntk_from_00:16:3E:2D:8D:DE
 ssh delta sudo ip route add unreachable 10.0.0.48/32 table ntk_from_00:16:3E:2D:8D:DE
-echo "Sistema delta: Bootstrap completo. Nuovo arco => nuova tabella."
+echo "Sistema delta: Nuovo arco => nuova tabella."
 (echo; echo "248 ntk_from_00:16:3E:5B:78:D5 # xxx_table_ntk_from_00:16:3E:5B:78:D5_xxx") | ssh delta sudo tee -a /etc/iproute2/rt_tables >/dev/null
 ssh delta sudo ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
 ssh delta sudo ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
