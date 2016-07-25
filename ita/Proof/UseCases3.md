@@ -525,7 +525,12 @@ conosce l'indirizzo Netsukuku del peer sull'arco *𝛿<sub>1</sub>-𝛾<sub>0</s
 programma *qspnclient* può creare la tabella `ntk_from_00:16:3E:5B:78:D5` e popolarla con tutte le
 destinazioni adatte al suo indirizzo. Poi, ma solo dopo che la tabella sarà stata popolata
 e aggiornata, aggiungerà la regola di guardare questa tabella per i pacchetti IP da inoltrare
-ricevuti su questo arco.
+ricevuti su questo arco.  
+**Nota**: una volta che il modulo Qspn conosce l'indirizzo Netsukuku del peer tramite un arco, il
+programma *qspnclient* nella tabella per i pacchetti da inoltrare che arrivano tramite quell'arco
+può impostare come "blackhole" le rotte per gli indirizzi IP di tipo interno al g-nodo di livello
+*i* dove *i* è minore o uguale al massimo distinto g-nodo di tale indirizzo. Questo come misura di
+sicurezza, sebbene non dovrebbe ricevere pacchetti da quell'arco per un tale indirizzo IP.
 
 **sistema 𝛿**
 ```
@@ -595,7 +600,7 @@ ip route change 10.0.0.20/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.119.17
 ip route change 10.0.0.84/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.119.176 dev eth1 src 10.0.0.21
 ip route change 10.0.0.60/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.119.176 dev eth1 src 10.0.0.61
 ip route change 10.0.0.48/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.119.176 dev eth1 src 10.0.0.49
-ip route change 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.119.176 dev eth1 src 10.0.0.41
+ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
 
 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:2D:8D:DE
 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:2D:8D:DE
