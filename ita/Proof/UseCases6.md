@@ -189,6 +189,7 @@ maggiore di 1 dal network namespace vecchio.
 
 **sistema 𝜇**
 ```
+iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.28
 ip address del 10.0.0.28/32 dev eth1
 ip address del 10.0.0.92/32 dev eth1
 ip address del 10.0.0.60/32 dev eth1
@@ -313,6 +314,7 @@ l'indirizzo reale che ha ora assunto.
 **sistema 𝜇**
 ```
 ip address add 10.0.0.20 dev eth1
+iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.20
 ip address add 10.0.0.84 dev eth1
 ip address add 10.0.0.60 dev eth1
 ip address add 10.0.0.48 dev eth1

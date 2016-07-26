@@ -27,7 +27,7 @@ ssh gamma sudo ip route add unreachable 10.0.0.87/32 table ntk
 ssh gamma sudo ip route add unreachable 10.0.0.63/32 table ntk
 ssh gamma sudo ip route add unreachable 10.0.0.51/32 table ntk
 ssh gamma sudo ip route add unreachable 10.0.0.41/32 table ntk
-ssh gamma sudo iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.29
+ssh gamma sudo iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.22
 ssh gamma sudo ip route change unreachable 10.0.0.0/29 table ntk
 ssh gamma sudo ip route change unreachable 10.0.0.64/29 table ntk
 ssh gamma sudo ip route change unreachable 10.0.0.8/29 table ntk

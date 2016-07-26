@@ -34,7 +34,7 @@ ip route add unreachable 10.0.0.75/32 table ntk
 ip route add unreachable 10.0.0.59/32 table ntk
 ip route add unreachable 10.0.0.51/32 table ntk
 ip route add unreachable 10.0.0.41/32 table ntk
-iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.29
+iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.10
 ip route change unreachable 10.0.0.0/29 table ntk
 ip route change unreachable 10.0.0.64/29 table ntk
 ip route change unreachable 10.0.0.16/29 table ntk
@@ -87,7 +87,7 @@ ip route add unreachable 10.0.0.87/32 table ntk
 ip route add unreachable 10.0.0.63/32 table ntk
 ip route add unreachable 10.0.0.51/32 table ntk
 ip route add unreachable 10.0.0.41/32 table ntk
-iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.29
+iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.22
 ip route change unreachable 10.0.0.0/29 table ntk
 ip route change unreachable 10.0.0.64/29 table ntk
 ip route change unreachable 10.0.0.8/29 table ntk
@@ -164,6 +164,7 @@ ip route del 10.0.0.75/32 table ntk
 ip route del 10.0.0.59/32 table ntk
 ip route del 10.0.0.51/32 table ntk
 ip route del 10.0.0.41/32 table ntk
+iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.10
 ip address del 10.0.0.10/32 dev eth1
 ip address del 10.0.0.74/32 dev eth1
 ip address del 10.0.0.58/32 dev eth1
@@ -288,6 +289,7 @@ ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:5B:78:D5
 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 250
 ip rule add fwmark 250 table ntk_from_00:16:3E:5B:78:D5
 ip address add 10.0.0.23 dev eth1
+iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.23
 ip address add 10.0.0.87 dev eth1
 ip address add 10.0.0.63 dev eth1
 ip address add 10.0.0.51 dev eth1

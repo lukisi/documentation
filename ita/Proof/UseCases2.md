@@ -119,7 +119,10 @@ ip route add unreachable 10.0.0.40/32 table ntk
 
 Inoltre il programma *qspnclient* ha da subito il compito, sempre con riferimento alla sua identità
 principale *𝛿<sub>0</sub>*, siccome decide di prestarsi all'anonimizzazione dei pacchetti IP che inoltra,
-di istruire il kernel a questo scopo.
+di istruire il kernel a questo scopo. Dovrà aggiornare questa istruzione ogni volta che la sua
+identità principale cambia indirizzo: di norma dovrà cancellare l'istruzione quando una nuova identità
+principale assume il controllo del network namespace default con un indirizzo temporaneamente virtuale,
+per poi reimpostarla quando la stessa assume indirizzo reale.
 
 **sistema 𝛿**
 ```

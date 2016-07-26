@@ -101,7 +101,7 @@ ip route add unreachable 10.0.0.74/32 table ntk
 ip route add unreachable 10.0.0.58/32 table ntk
 ip route add unreachable 10.0.0.50/32 table ntk
 ip route add unreachable 10.0.0.40/32 table ntk
-iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.29
+iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.11
 ip route change unreachable 10.0.0.0/29 table ntk
 ip route change unreachable 10.0.0.64/29 table ntk
 ip route change unreachable 10.0.0.16/29 table ntk
@@ -246,6 +246,7 @@ dal network namespace vecchio (che era il default).
 
 **sistema 𝜇**
 ```
+iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.11
 ip address del 10.0.0.11/32 dev eth1
 ip address del 10.0.0.75/32 dev eth1
 ip address del 10.0.0.59/32 dev eth1
@@ -602,6 +603,7 @@ Possibili destinazioni:
 **sistema 𝜇**
 ```
 ip address add 10.0.0.28 dev eth1
+iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.28
 ip address add 10.0.0.92 dev eth1
 ip address add 10.0.0.60 dev eth1
 ip address add 10.0.0.48 dev eth1

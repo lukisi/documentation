@@ -214,6 +214,7 @@ maggiore di 1 dal network namespace vecchio.
 
 **sistema 𝛿**
 ```
+iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.29
 ip address del 10.0.0.29/32 dev eth1
 ip address del 10.0.0.93/32 dev eth1
 ip address del 10.0.0.61/32 dev eth1
@@ -494,6 +495,7 @@ Possibili destinazioni:
 **sistema 𝛿**
 ```
 ip address add 10.0.0.21 dev eth1
+iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.21
 ip address add 10.0.0.85 dev eth1
 ip address add 10.0.0.61 dev eth1
 ip address add 10.0.0.49 dev eth1
