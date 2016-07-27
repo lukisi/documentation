@@ -7,7 +7,11 @@ Prendiamo in esame quello che avviene negli altri sistemi.
 *   Sistema *𝜇*. Prime operazioni e ingresso in *G<sub>𝛿</sub>*. [Dettagli](#step1).
 *   Sistemi *𝛽* e *𝛾*. Parallelamente essi formano un g-nodo di livello 1 in *G<sub>𝛾</sub>*. [Dettagli](UseCases5.md#step2).
 *   Ingresso di *𝛿* e *𝜇* (come g-nodo *𝜒'*) in *G<sub>𝛾</sub>*. [Dettagli](UseCases6.md#step3).
-*   Ingresso di *𝛼* in *G<sub>𝛾</sub>*. [Dettagli](#step4).
+*   Ingresso di *𝛼* in *G<sub>𝛾</sub>*. [Dettagli](UseCases7.md#step4).
+
+Oltre a verificare che la sequenza di operazioni in ogni sistema è valida, dobbiamo anche assicurare che
+le proprietà della rete sono corrette in ogni momento. Quindi dobbiamo esaminare l'ordine temporale in
+cui le operazioni dei vari sistemi possono avvenire. Proseguiamo con questo esame in questa [pagina](UseCases8.md).
 
 ## <a name="step1"></a>Sistema 𝜇
 
