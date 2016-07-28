@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 echo "Sistema beta: prime operazioni come rete a se stante."
 ssh beta sudo ip link set dev eth1 address 00:16:3E:EC:A3:E1
 ssh beta sudo ip link set dev eth1 up

@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 echo "Sistema mu: prime operazioni come rete a se stante."
 ssh mu sudo ip link set dev eth1 address 00:16:3E:2D:8D:DE
 ssh mu sudo ip link set dev eth1 up

@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 echo "Sistema gamma: prime operazioni come rete a se stante."
 ssh gamma sudo ip link set dev eth1 address 00:16:3E:5B:78:D5
 ssh gamma sudo ip link set dev eth1 up
