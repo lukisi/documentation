@@ -574,3 +574,34 @@ ip netns del entr02
 ip route del 169.254.215.29 dev eth1 src 169.254.94.223
 ```
 
+Da questo momento il sistema *𝛽* è in grado di comunicare con il sistema *𝛾*. Può farlo usando l'indirizzo
+IP globale, oppure l'indirizzo IP anonimizzante, oppure quello interno al g-nodo di livello 1, oppure quello
+interno al g-nodo di livello 2, oppure 3. Vale a dire gli indirizzi IP:
+
+*   `10.0.0.22` - globale
+*   `10.0.0.86` - anonimizzante
+*   `10.0.0.62` - interno livello 3
+*   `10.0.0.50` - interno livello 2
+*   `10.0.0.40` - interno livello 1
+
+In realtà un sistema nella rete Netsukuku quando vuole contattare
+un altro sistema di cui conosce il nome, tramite il meccanismo di risoluzione può risalire all'indirizzo
+anonimizzante o a quello interno al massimo comune g-nodo dei due sistemi. Nel nostro caso gli indirizzi IP
+che il sistema *𝛽* usa per comunicare con il sistema *𝛾* sono:
+
+*   `10.0.0.86` - anonimizzante
+*   `10.0.0.40` - interno livello 1
+
+Noi ci concentreremo a verificare che si mantenga la connettività tra i due sistemi quando viene usato
+per la connessione l'indirizzo IP interno al massimo comune g-nodo.
+
+Durante le prime fasi dell'esempio trattato in questo documento non dovrebbe mai perdersi
+questa connettività tra *𝛽* e *𝛾*. Fino al momento in cui simuleremo la migrazione del sistema *𝛽*
+dal g-nodo 2·1·1· nel g-nodo 2·0·1·.
+
+Dovremmo poter verificare periodicamente (o nelle fasi critiche di variazione della rete) la
+connettività tra due sistemi, come *𝛽* e *𝛾*. Un banale test può essere un `ping` che eseguito dal
+sistema *𝛽* con l'indirizzo IP di *𝛾* (interno al massimo comune g-nodo dei due sistemi) dia
+esito positivo. Ma sarebbe più corretto verificare anche che a rispondere sia effettivamente il
+sistema *𝛾* e non un altro. **TODO**
+
