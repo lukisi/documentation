@@ -265,9 +265,14 @@ bisogno di coordinamento con altri sistemi.
 **sistema 𝛽**
 ```
 ip netns add entr02
+ip netns exec entr02 sysctl net.ipv4.ip_forward=1
+ip netns exec entr02 sysctl net.ipv4.conf.all.rp_filter=0
 ip link add dev entr02_eth1 link eth1 type macvlan
 ip link set dev entr02_eth1 netns entr02
 ip netns exec entr02 ip link set dev entr02_eth1 address 00:16:3E:8E:91:B9
+ip netns exec entr02 sysctl net.ipv4.conf.entr02_eth1.rp_filter=0
+ip netns exec entr02 sysctl net.ipv4.conf.entr02_eth1.arp_ignore=1
+ip netns exec entr02 sysctl net.ipv4.conf.entr02_eth1.arp_announce=2
 ip netns exec entr02 ip link set dev entr02_eth1 up
 ip netns exec entr02 ip address add 169.254.215.29 dev entr02_eth1
 ip netns exec entr02 ip route add 169.254.94.223 dev entr02_eth1 src 169.254.215.29
