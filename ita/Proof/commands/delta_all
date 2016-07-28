@@ -155,9 +155,14 @@ echo "Sistema delta: Ingresso come g-nodo (delta+mu) in un'altra rete (beta+gamm
 ssh delta sudo ip route add 169.254.94.223 dev eth1 src 169.254.253.216
 echo "Sistema delta: Vecchia identita come connettivita nel nuovo namespace."
 ssh delta sudo ip netns add entr03
+ssh delta sudo ip netns exec entr03 sysctl net.ipv4.ip_forward=1
+ssh delta sudo ip netns exec entr03 sysctl net.ipv4.conf.all.rp_filter=0
 ssh delta sudo ip link add dev entr03_eth1 link eth1 type macvlan
 ssh delta sudo ip link set dev entr03_eth1 netns entr03
 ssh delta sudo ip netns exec entr03 ip link set dev entr03_eth1 address 00:16:3E:B9:77:80
+ssh delta sudo ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.rp_filter=0
+ssh delta sudo ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.arp_ignore=1
+ssh delta sudo ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.arp_announce=2
 ssh delta sudo ip netns exec entr03 ip link set dev entr03_eth1 up
 ssh delta sudo ip netns exec entr03 ip address add 169.254.83.167 dev entr03_eth1
 ssh delta sudo ip netns exec entr03 ip route add 169.254.242.91 dev entr03_eth1 src 169.254.83.167

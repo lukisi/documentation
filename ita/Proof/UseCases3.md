@@ -37,9 +37,14 @@ il default, non detiene alcun indirizzo IP associato al suo indirizzo Netsukuku.
 **sistema 𝛿**
 ```
 ip netns add entr03
+ip netns exec entr03 sysctl net.ipv4.ip_forward=1
+ip netns exec entr03 sysctl net.ipv4.conf.all.rp_filter=0
 ip link add dev entr03_eth1 link eth1 type macvlan
 ip link set dev entr03_eth1 netns entr03
 ip netns exec entr03 ip link set dev entr03_eth1 address 00:16:3E:B9:77:80
+ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.rp_filter=0
+ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.arp_ignore=1
+ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.arp_announce=2
 ip netns exec entr03 ip link set dev entr03_eth1 up
 ip netns exec entr03 ip address add 169.254.83.167 dev entr03_eth1
 ```
