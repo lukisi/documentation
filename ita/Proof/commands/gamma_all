@@ -2,7 +2,12 @@
 set -e
 
 echo "Sistema gamma: prime operazioni come rete a se stante."
+ssh gamma sudo sysctl net.ipv4.ip_forward=1
+ssh gamma sudo sysctl net.ipv4.conf.all.rp_filter=0
 ssh gamma sudo ip link set dev eth1 address 00:16:3E:5B:78:D5
+ssh gamma sudo sysctl net.ipv4.conf.eth1.rp_filter=0
+ssh gamma sudo sysctl net.ipv4.conf.eth1.arp_ignore=1
+ssh gamma sudo sysctl net.ipv4.conf.eth1.arp_announce=2
 ssh gamma sudo ip link set dev eth1 up
 ssh gamma sudo ip address add 169.254.94.223 dev eth1
 ssh gamma sudo ip address add 10.0.0.22 dev eth1

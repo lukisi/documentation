@@ -64,7 +64,12 @@ Nel sistema *𝛾* la prima identità è *𝛾<sub>0</sub>* con indirizzo Netsuk
 
 **sistema 𝛾**
 ```
+sysctl net.ipv4.ip_forward=1
+sysctl net.ipv4.conf.all.rp_filter=0
 ip link set dev eth1 address 00:16:3E:5B:78:D5
+sysctl net.ipv4.conf.eth1.rp_filter=0
+sysctl net.ipv4.conf.eth1.arp_ignore=1
+sysctl net.ipv4.conf.eth1.arp_announce=2
 ip link set dev eth1 up
 ip address add 169.254.94.223 dev eth1
 ip address add 10.0.0.22 dev eth1
