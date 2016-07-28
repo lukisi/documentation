@@ -139,9 +139,14 @@ nuovo network namespace "entr01".
 ```
 ip route add 169.254.253.216 dev eth1 src 169.254.119.176
 ip netns add entr01
+ip netns exec entr01 sysctl net.ipv4.ip_forward=1
+ip netns exec entr01 sysctl net.ipv4.conf.all.rp_filter=0
 ip link add dev entr01_eth1 link eth1 type macvlan
 ip link set dev entr01_eth1 netns entr01
 ip netns exec entr01 ip link set dev entr01_eth1 address 00:16:3E:71:33:12
+ip netns exec entr01 sysctl net.ipv4.conf.entr01_eth1.rp_filter=0
+ip netns exec entr01 sysctl net.ipv4.conf.entr01_eth1.arp_ignore=1
+ip netns exec entr01 sysctl net.ipv4.conf.entr01_eth1.arp_announce=2
 ip netns exec entr01 ip link set dev entr01_eth1 up
 ip netns exec entr01 ip address add 169.254.101.161 dev entr01_eth1
 ```
