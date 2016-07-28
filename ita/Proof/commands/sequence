@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e
+
 ## Sequenza temporale
 
 ### Prime operazioni
@@ -504,4 +507,9 @@ ssh beta sudo ip netns exec entr02 ip link delete entr02_eth1 type macvlan
 ssh beta sudo ip netns del entr02
 
 ssh gamma sudo ip route del 169.254.215.29 dev eth1 src 169.254.94.223
+
+echo "beta vede gamma e viceversa"
+ssh beta "ping -q -n -c 1 10.0.0.40 -W 1 &>/dev/null" || (echo "beta non vede gamma"; exit 1)
+
+echo "test completato"
 

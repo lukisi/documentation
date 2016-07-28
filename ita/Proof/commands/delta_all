@@ -1,3 +1,4 @@
+#!/bin/bash
 echo "Sistema delta: prime operazioni come rete a se stante."
 ssh delta sudo ip link set dev eth1 address 00:16:3E:1A:C4:45
 ssh delta sudo ip link set dev eth1 up
