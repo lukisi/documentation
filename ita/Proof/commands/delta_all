@@ -2,7 +2,12 @@
 set -e
 
 echo "Sistema delta: prime operazioni come rete a se stante."
+ssh delta sudo sysctl net.ipv4.ip_forward=1
+ssh delta sudo sysctl net.ipv4.conf.all.rp_filter=0
 ssh delta sudo ip link set dev eth1 address 00:16:3E:1A:C4:45
+ssh delta sudo sysctl net.ipv4.conf.eth1.rp_filter=0
+ssh delta sudo sysctl net.ipv4.conf.eth1.arp_ignore=1
+ssh delta sudo sysctl net.ipv4.conf.eth1.arp_announce=2
 ssh delta sudo ip link set dev eth1 up
 ssh delta sudo ip address add 169.254.253.216 dev eth1
 ssh delta sudo ip address add 10.0.0.29 dev eth1

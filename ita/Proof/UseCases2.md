@@ -65,12 +65,25 @@ Possibili destinazioni:
       10.0.0.40/32
 ```
 
+Il programma *qspnclient* ha il compito di preparare all'inizio il sistema a soddisfare i requisiti
+globali e specifici di ogni interfaccia di rete gestita.
+
+**sistema 𝛿**
+```
+sysctl net.ipv4.ip_forward=1
+sysctl net.ipv4.conf.all.rp_filter=0
+
+ip link set dev eth1 address 00:16:3E:1A:C4:45
+sysctl net.ipv4.conf.eth1.rp_filter=0
+sysctl net.ipv4.conf.eth1.arp_ignore=1
+sysctl net.ipv4.conf.eth1.arp_announce=2
+```
+
 Fra i compiti del modulo Neighborhood, esso assegna all'interfaccia `eth1` del sistema *𝛿* un indirizzo IP
 linklocal.
 
 **sistema 𝛿**
 ```
-ip link set dev eth1 address 00:16:3E:1A:C4:45
 ip link set dev eth1 up
 ip address add 169.254.253.216 dev eth1
 ```
