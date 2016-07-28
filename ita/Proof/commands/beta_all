@@ -2,12 +2,12 @@
 set -e
 
 echo "Sistema beta: prime operazioni come rete a se stante."
-ssh beta sudo sysctl net.ipv4.ip_forward=1
-ssh beta sudo sysctl net.ipv4.conf.all.rp_filter=0
+ssh beta sudo sysctl net.ipv4.ip_forward=1 &>/dev/null
+ssh beta sudo sysctl net.ipv4.conf.all.rp_filter=0 &>/dev/null
 ssh beta sudo ip link set dev eth1 address 00:16:3E:EC:A3:E1
-ssh beta sudo sysctl net.ipv4.conf.eth1.rp_filter=0
-ssh beta sudo sysctl net.ipv4.conf.eth1.arp_ignore=1
-ssh beta sudo sysctl net.ipv4.conf.eth1.arp_announce=2
+ssh beta sudo sysctl net.ipv4.conf.eth1.rp_filter=0 &>/dev/null
+ssh beta sudo sysctl net.ipv4.conf.eth1.arp_ignore=1 &>/dev/null
+ssh beta sudo sysctl net.ipv4.conf.eth1.arp_announce=2 &>/dev/null
 ssh beta sudo ip link set dev eth1 up
 ssh beta sudo ip address add 169.254.96.141 dev eth1
 ssh beta sudo ip address add 10.0.0.10 dev eth1
@@ -57,14 +57,14 @@ ssh beta sudo ip route change unreachable 10.0.0.41/32 table ntk
 echo "Sistema beta: ingresso nella rete Ggamma."
 ssh beta sudo ip route add 169.254.94.223 dev eth1 src 169.254.96.141
 ssh beta sudo ip netns add entr02
-ssh beta sudo ip netns exec entr02 sysctl net.ipv4.ip_forward=1
-ssh beta sudo ip netns exec entr02 sysctl net.ipv4.conf.all.rp_filter=0
+ssh beta sudo ip netns exec entr02 sysctl net.ipv4.ip_forward=1 &>/dev/null
+ssh beta sudo ip netns exec entr02 sysctl net.ipv4.conf.all.rp_filter=0 &>/dev/null
 ssh beta sudo ip link add dev entr02_eth1 link eth1 type macvlan
 ssh beta sudo ip link set dev entr02_eth1 netns entr02
 ssh beta sudo ip netns exec entr02 ip link set dev entr02_eth1 address 00:16:3E:8E:91:B9
-ssh beta sudo ip netns exec entr02 sysctl net.ipv4.conf.entr02_eth1.rp_filter=0
-ssh beta sudo ip netns exec entr02 sysctl net.ipv4.conf.entr02_eth1.arp_ignore=1
-ssh beta sudo ip netns exec entr02 sysctl net.ipv4.conf.entr02_eth1.arp_announce=2
+ssh beta sudo ip netns exec entr02 sysctl net.ipv4.conf.entr02_eth1.rp_filter=0 &>/dev/null
+ssh beta sudo ip netns exec entr02 sysctl net.ipv4.conf.entr02_eth1.arp_ignore=1 &>/dev/null
+ssh beta sudo ip netns exec entr02 sysctl net.ipv4.conf.entr02_eth1.arp_announce=2 &>/dev/null
 ssh beta sudo ip netns exec entr02 ip link set dev entr02_eth1 up
 ssh beta sudo ip netns exec entr02 ip address add 169.254.215.29 dev entr02_eth1
 ssh beta sudo ip netns exec entr02 ip route add 169.254.94.223 dev entr02_eth1 src 169.254.215.29
