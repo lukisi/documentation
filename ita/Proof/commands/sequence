@@ -7,7 +7,12 @@ set -e
 echo "Prime operazioni"
 
 echo beta
+ssh beta sudo sysctl net.ipv4.ip_forward=1
+ssh beta sudo sysctl net.ipv4.conf.all.rp_filter=0
 ssh beta sudo ip link set dev eth1 address 00:16:3E:EC:A3:E1
+ssh beta sudo sysctl net.ipv4.conf.eth1.rp_filter=0
+ssh beta sudo sysctl net.ipv4.conf.eth1.arp_ignore=1
+ssh beta sudo sysctl net.ipv4.conf.eth1.arp_announce=2
 ssh beta sudo ip link set dev eth1 up
 ssh beta sudo ip address add 169.254.96.141 dev eth1
 ssh beta sudo ip address add 10.0.0.10 dev eth1
