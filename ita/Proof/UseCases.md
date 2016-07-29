@@ -1,18 +1,16 @@
-# Proof of concept - Casi d'uso
+# Proof of concept - Casi d'uso - Pagina 1
 
 Nel presente documento facciamo un esempio di una rete di nodi che si va formando. Esaminiamo quali
 operazioni ciascun sistema deve fare in risposta ai vari eventi che rileva il programma *qspnclient*
 per il corretto funzionamento della rete Netsukuku.  
 Per una più facile lettura, questa sequenza di eventi e operazioni è stata divisa in più pagine.
 
-1.  Parte 1. [Convenzioni](#Convenzioni)
-1.  Parte 2. [Prime operazioni](UseCases2.md#Prime_operazioni)
+1.  [Convenzioni](#Convenzioni)
+1.  [Prime operazioni](UseCases2.md#Prime_operazioni)
 1.  [Ingresso di un altro singolo nodo nella nostra rete](UseCases2.md#Ingresso_altro_nodo)
-1.  Parte 3. [Ingresso come g-nodo in un'altra rete](UseCases3.md#Ingresso_gnodo_altra_rete)
+1.  [Ingresso come g-nodo in un'altra rete](UseCases3.md#Ingresso_gnodo_altra_rete)
 1.  [Ricezione di un ETP che apporta variazioni alla mappa](UseCases3.md#Elaborazione_etp)
-1.  Parte 4. [Negli altri sistemi](UseCases4.md#Altri_sistemi)
-
-## Parte 1
+1.  [Negli altri sistemi](UseCases4.md#Altri_sistemi)
 
 ## <a name="Convenzioni"></a>Convenzioni
 
@@ -135,3 +133,4 @@ costituiva l'intera rete *G<sub>𝛿</sub>*. Con questa operazione di ingresso s
 *𝜒'* assume indirizzo *virtuale* 2·1·2· in *G<sub>𝛾</sub>*. Dopo poco *𝜒'* assume
 indirizzo 2·1·0· in *G<sub>𝛾</sub>*. Naturalmente, dopo poco *𝜒* viene dismesso.
 
+[Pagina seguente](UseCases2.md)

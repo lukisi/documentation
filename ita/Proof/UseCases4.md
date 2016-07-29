@@ -1,4 +1,6 @@
-# Proof of concept - Casi d'uso - Parte 4
+# Proof of concept - Casi d'uso - Pagina 4
+
+[Pagina precedente](UseCases3.md)
 
 ## <a name="Altri_sistemi"></a>Negli altri sistemi
 
@@ -694,3 +696,4 @@ Inoltre, a fronte della rimozione di un network namespace, il programma deve ten
 particolare tabella `ntk_from_XXX` presente ha cessato di essere referenziata. In quel caso va
 rimossa. Nel nostro esempio nessuna.
 
+[Pagina seguente](UseCases5.md)

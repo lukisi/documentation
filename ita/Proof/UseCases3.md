@@ -1,4 +1,6 @@
-# Proof of concept - Casi d'uso - Parte 3
+# Proof of concept - Casi d'uso - Pagina 3
+
+[Pagina precedente](UseCases2.md)
 
 ## <a name="Ingresso_gnodo_altra_rete"></a>Ingresso come g-nodo in un'altra rete
 
@@ -740,3 +742,4 @@ ip route change unreachable 10.0.0.48/32 table ntk_from_00:16:3E:2D:8D:DE
 ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:2D:8D:DE
 ```
 
+[Pagina seguente](UseCases4.md)

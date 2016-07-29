@@ -1,4 +1,6 @@
-# Proof of concept - Casi d'uso - Parte 2
+# Proof of concept - Casi d'uso - Pagina 2
+
+[Pagina precedente](UseCases.md)
 
 ## <a name="Prime_operazioni"></a>Prime operazioni
 
@@ -341,3 +343,4 @@ La cosa verrà comunicata al modulo Identities del sistema *𝛿* per via dell'a
 ip route del 169.254.101.161 dev eth1 src 169.254.253.216
 ```
 
+[Pagina seguente](UseCases3.md)

@@ -1,4 +1,6 @@
-# Proof of concept - Casi d'uso - Parte 6
+# Proof of concept - Casi d'uso - Pagina 6
+
+[Pagina precedente](UseCases5.md)
 
 ## <a name="step3"></a>Ingresso di 𝛿 e 𝜇 in G𝛾
 
@@ -632,3 +634,4 @@ ip route change unreachable 10.0.0.50/32 table ntk_from_00:16:3E:5B:78:D5
 ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
 ```
 
+[Pagina seguente](UseCases7.md)

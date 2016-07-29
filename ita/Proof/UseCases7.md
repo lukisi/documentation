@@ -1,4 +1,6 @@
-# Proof of concept - Casi d'uso - Parte 7
+# Proof of concept - Casi d'uso - Pagina 7
+
+[Pagina precedente](UseCases6.md)
 
 ## <a name="step4"></a>Ingresso di 𝛼 in G𝛾
 
@@ -22,3 +24,4 @@ avviene negli altri sistemi.
 **TODO**
 
 
+[Pagina seguente](UseCases8.md)
