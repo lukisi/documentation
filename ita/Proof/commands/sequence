@@ -944,15 +944,15 @@ ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10
 echo "Nei sistemi *𝜇* e *𝛿* le vecchie identità si spostano in un namespace"
 
 ssh delta sudo ip netns add entr03
-ssh delta sudo ip netns exec entr03 sysctl net.ipv4.ip_forward=1
-ssh delta sudo ip netns exec entr03 sysctl net.ipv4.conf.all.rp_filter=0
+ssh delta sudo ip netns exec entr03 sysctl net.ipv4.ip_forward=1 &>/dev/null
+ssh delta sudo ip netns exec entr03 sysctl net.ipv4.conf.all.rp_filter=0 &>/dev/null
 ssh delta sudo ip link add dev entr03_eth1 link eth1 type macvlan
 ssh delta sudo ip link set dev entr03_eth1 netns entr03
 ssh delta sudo ip netns exec entr03 ip link set dev entr03_eth1 address 00:16:3E:B9:77:80
 ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10.0.0.41"; exit 1)
-ssh delta sudo ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.rp_filter=0
-ssh delta sudo ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.arp_ignore=1
-ssh delta sudo ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.arp_announce=2
+ssh delta sudo ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.rp_filter=0 &>/dev/null
+ssh delta sudo ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.arp_ignore=1 &>/dev/null
+ssh delta sudo ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.arp_announce=2 &>/dev/null
 ssh delta sudo ip netns exec entr03 ip link set dev entr03_eth1 up
 ssh delta sudo ip netns exec entr03 ip address add 169.254.83.167 dev entr03_eth1
 ssh delta sudo ip netns exec entr03 ip route add 169.254.242.91 dev entr03_eth1 src 169.254.83.167
@@ -960,15 +960,15 @@ ssh delta sudo ip netns exec entr03 ip route add 169.254.94.223 dev entr03_eth1 
 ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10.0.0.41"; exit 1)
 
 ssh mu sudo ip netns add entr03
-ssh mu sudo ip netns exec entr03 sysctl net.ipv4.ip_forward=1
-ssh mu sudo ip netns exec entr03 sysctl net.ipv4.conf.all.rp_filter=0
+ssh mu sudo ip netns exec entr03 sysctl net.ipv4.ip_forward=1 &>/dev/null
+ssh mu sudo ip netns exec entr03 sysctl net.ipv4.conf.all.rp_filter=0 &>/dev/null
 ssh mu sudo ip link add dev entr03_eth1 link eth1 type macvlan
 ssh mu sudo ip link set dev entr03_eth1 netns entr03
 ssh mu sudo ip netns exec entr03 ip link set dev entr03_eth1 address 00:16:3E:DF:23:F5
 ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10.0.0.41"; exit 1)
-ssh mu sudo ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.rp_filter=0
-ssh mu sudo ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.arp_ignore=1
-ssh mu sudo ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.arp_announce=2
+ssh mu sudo ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.rp_filter=0 &>/dev/null
+ssh mu sudo ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.arp_ignore=1 &>/dev/null
+ssh mu sudo ip netns exec entr03 sysctl net.ipv4.conf.entr03_eth1.arp_announce=2 &>/dev/null
 ssh mu sudo ip netns exec entr03 ip link set dev entr03_eth1 up
 ssh mu sudo ip netns exec entr03 ip address add 169.254.242.91 dev entr03_eth1
 ssh mu sudo ip netns exec entr03 ip route add 169.254.83.167 dev entr03_eth1 src 169.254.242.91
