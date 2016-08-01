@@ -1223,7 +1223,466 @@ ssh mu sudo ip netns exec entr03 ip route change unreachable 10.0.0.48/31 table 
 ssh mu sudo ip netns exec entr03 ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:B9:77:80
 ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10.0.0.41"; exit 1)
 
+echo "Nei sistemi *𝛿* e *𝜇* si instanziano nuovi QspnManager"
 
+ssh delta sudo ip route add unreachable 10.0.0.0/29 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.64/29 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.8/29 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.72/29 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.24/29 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.88/29 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.16/30 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.80/30 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.56/30 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.20/31 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.84/31 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.60/31 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.48/31 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.22/31 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.86/31 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.62/31 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.50/31 table ntk
+ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10.0.0.41"; exit 1)
+ssh delta sudo ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip address add 10.0.0.21 dev eth1
+ssh delta sudo iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.21
+ssh delta sudo ip address add 10.0.0.85 dev eth1
+ssh delta sudo ip address add 10.0.0.61 dev eth1
+ssh delta sudo ip address add 10.0.0.49 dev eth1
+ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10.0.0.41"; exit 1)
+ssh delta sudo ip route del 10.0.0.20/31 table ntk
+ssh delta sudo ip route del 10.0.0.84/31 table ntk
+ssh delta sudo ip route del 10.0.0.60/31 table ntk
+ssh delta sudo ip route del 10.0.0.48/31 table ntk
+ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10.0.0.41"; exit 1)
+ssh delta sudo ip route add unreachable 10.0.0.20/32 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.84/32 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.60/32 table ntk
+ssh delta sudo ip route add unreachable 10.0.0.48/32 table ntk
+ssh delta sudo ip route del 10.0.0.20/31 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route del 10.0.0.84/31 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route del 10.0.0.60/31 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route del 10.0.0.48/31 table ntk_from_00:16:3E:2D:8D:DE
+ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10.0.0.41"; exit 1)
+ssh delta sudo ip route add unreachable 10.0.0.20/32 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.84/32 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.60/32 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route add unreachable 10.0.0.48/32 table ntk_from_00:16:3E:2D:8D:DE
+ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10.0.0.41"; exit 1)
+
+ssh mu sudo ip route add unreachable 10.0.0.0/29 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.64/29 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.8/29 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.72/29 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.24/29 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.88/29 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.16/30 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.80/30 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.56/30 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.20/31 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.84/31 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.60/31 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.48/31 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.22/31 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.86/31 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.62/31 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.50/31 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip address add 10.0.0.20 dev eth1
+ssh mu sudo iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.20
+ssh mu sudo ip address add 10.0.0.84 dev eth1
+ssh mu sudo ip address add 10.0.0.60 dev eth1
+ssh mu sudo ip address add 10.0.0.48 dev eth1
+ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10.0.0.41"; exit 1)
+ssh mu sudo ip route del 10.0.0.20/31 table ntk
+ssh mu sudo ip route del 10.0.0.84/31 table ntk
+ssh mu sudo ip route del 10.0.0.60/31 table ntk
+ssh mu sudo ip route del 10.0.0.48/31 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.21/32 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.85/32 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.61/32 table ntk
+ssh mu sudo ip route add unreachable 10.0.0.49/32 table ntk
+ssh mu sudo ip route del 10.0.0.20/31 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route del 10.0.0.84/31 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route del 10.0.0.60/31 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route del 10.0.0.48/31 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.21/32 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.85/32 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.61/32 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route add unreachable 10.0.0.49/32 table ntk_from_00:16:3E:1A:C4:45
+ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10.0.0.41"; exit 1)
+
+echo "Il QspnManager del sistema *𝛾* riceve un nuovo arco, ma per ora nessun ETP da esso."
+
+(echo; echo "249 ntk_from_00:16:3E:1A:C4:45 # xxx_table_ntk_from_00:16:3E:1A:C4:45_xxx") | ssh gamma sudo tee -a /etc/iproute2/rt_tables >/dev/null
+ssh gamma sudo ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.23/32 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.87/32 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.63/32 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:1A:C4:45
+
+echo "Il QspnManager del sistema *𝛿* riceve un ETP da *𝛾*."
+
+(echo; echo "248 ntk_from_00:16:3E:5B:78:D5 # xxx_table_ntk_from_00:16:3E:5B:78:D5_xxx") | ssh delta sudo tee -a /etc/iproute2/rt_tables >/dev/null
+ssh delta sudo ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.20/32 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.84/32 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.60/32 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.48/32 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route change unreachable 10.0.0.0/29 table ntk
+ssh delta sudo ip route change unreachable 10.0.0.64/29 table ntk
+ssh delta sudo ip route change unreachable 10.0.0.8/29 table ntk
+ssh delta sudo ip route change unreachable 10.0.0.72/29 table ntk
+ssh delta sudo ip route change unreachable 10.0.0.24/29 table ntk
+ssh delta sudo ip route change unreachable 10.0.0.88/29 table ntk
+ssh delta sudo ip route change unreachable 10.0.0.16/30 table ntk
+ssh delta sudo ip route change unreachable 10.0.0.80/30 table ntk
+ssh delta sudo ip route change unreachable 10.0.0.56/30 table ntk
+ssh delta sudo ip route change 10.0.0.22/31 table ntk via 169.254.94.223 dev eth1 src 10.0.0.21
+ssh delta sudo ip route change 10.0.0.86/31 table ntk via 169.254.94.223 dev eth1 src 10.0.0.21
+ssh delta sudo ip route change 10.0.0.62/31 table ntk via 169.254.94.223 dev eth1 src 10.0.0.61
+ssh delta sudo ip route change 10.0.0.50/31 table ntk via 169.254.94.223 dev eth1 src 10.0.0.49
+ssh delta sudo ip route change 10.0.0.20/32 table ntk via 169.254.119.176 dev eth1 src 10.0.0.21
+ssh delta sudo ip route change 10.0.0.84/32 table ntk via 169.254.119.176 dev eth1 src 10.0.0.21
+ssh delta sudo ip route change 10.0.0.60/32 table ntk via 169.254.119.176 dev eth1 src 10.0.0.61
+ssh delta sudo ip route change 10.0.0.48/32 table ntk via 169.254.119.176 dev eth1 src 10.0.0.49
+ssh delta sudo ip route change 10.0.0.40/32 table ntk via 169.254.119.176 dev eth1 src 10.0.0.41
+ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10.0.0.41"; exit 1)
+ssh delta sudo ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route change unreachable 10.0.0.22/31 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route change unreachable 10.0.0.86/31 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route change 10.0.0.20/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.119.176 dev eth1 src 10.0.0.21
+ssh delta sudo ip route change 10.0.0.84/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.119.176 dev eth1 src 10.0.0.21
+ssh delta sudo ip route change 10.0.0.60/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.119.176 dev eth1 src 10.0.0.61
+ssh delta sudo ip route change 10.0.0.48/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.119.176 dev eth1 src 10.0.0.49
+ssh delta sudo ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
+ssh delta sudo ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route change 10.0.0.22/31 table ntk_from_00:16:3E:2D:8D:DE via 169.254.94.223 dev eth1 src 10.0.0.21
+ssh delta sudo ip route change 10.0.0.86/31 table ntk_from_00:16:3E:2D:8D:DE via 169.254.94.223 dev eth1 src 10.0.0.21
+ssh delta sudo ip route change 10.0.0.62/31 table ntk_from_00:16:3E:2D:8D:DE via 169.254.94.223 dev eth1 src 10.0.0.61
+ssh delta sudo ip route change 10.0.0.50/31 table ntk_from_00:16:3E:2D:8D:DE via 169.254.94.223 dev eth1 src 10.0.0.49
+ssh delta sudo ip route change unreachable 10.0.0.20/32 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route change unreachable 10.0.0.84/32 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route change unreachable 10.0.0.60/32 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route change unreachable 10.0.0.48/32 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:2D:8D:DE
+ssh delta sudo iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 248
+ssh delta sudo ip rule add fwmark 248 table ntk_from_00:16:3E:5B:78:D5
+ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10.0.0.41"; exit 1)
+
+echo "Il sistema *𝛿* propaga l'ETP a *𝜇*."
+
+ssh mu sudo ip route change unreachable 10.0.0.0/29 table ntk
+ssh mu sudo ip route change unreachable 10.0.0.64/29 table ntk
+ssh mu sudo ip route change unreachable 10.0.0.8/29 table ntk
+ssh mu sudo ip route change unreachable 10.0.0.72/29 table ntk
+ssh mu sudo ip route change unreachable 10.0.0.24/29 table ntk
+ssh mu sudo ip route change unreachable 10.0.0.88/29 table ntk
+ssh mu sudo ip route change unreachable 10.0.0.16/30 table ntk
+ssh mu sudo ip route change unreachable 10.0.0.80/30 table ntk
+ssh mu sudo ip route change unreachable 10.0.0.56/30 table ntk
+ssh mu sudo ip route change 10.0.0.22/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.20
+ssh mu sudo ip route change 10.0.0.86/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.20
+ssh mu sudo ip route change 10.0.0.62/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.60
+ssh mu sudo ip route change 10.0.0.50/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.48
+ssh mu sudo ip route change 10.0.0.21/32 table ntk via 169.254.253.216 dev eth1 src 10.0.0.20
+ssh mu sudo ip route change 10.0.0.85/32 table ntk via 169.254.253.216 dev eth1 src 10.0.0.20
+ssh mu sudo ip route change 10.0.0.61/32 table ntk via 169.254.253.216 dev eth1 src 10.0.0.60
+ssh mu sudo ip route change 10.0.0.49/32 table ntk via 169.254.253.216 dev eth1 src 10.0.0.48
+ssh mu sudo ip route change 10.0.0.41/32 table ntk via 169.254.253.216 dev eth1 src 10.0.0.40
+ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10.0.0.41"; exit 1)
+ssh mu sudo ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.22/31 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.86/31 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.21/32 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.85/32 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.61/32 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.49/32 table ntk_from_00:16:3E:1A:C4:45
+ssh mu sudo ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:1A:C4:45
+ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10.0.0.41"; exit 1)
+
+echo "Il sistema *𝛿* invia un ETP a *𝛾*"
+
+ssh gamma sudo ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.20/31 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.84/31 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change 10.0.0.23/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.96.141 dev eth1 src 10.0.0.22
+ssh gamma sudo ip route change 10.0.0.87/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.96.141 dev eth1 src 10.0.0.22
+ssh gamma sudo ip route change 10.0.0.63/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.96.141 dev eth1 src 10.0.0.62
+ssh gamma sudo ip route change 10.0.0.51/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.96.141 dev eth1 src 10.0.0.50
+ssh gamma sudo ip route change blackhole 10.0.0.41/32 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.20/31 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.84/31 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.23/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.0/29 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.64/29 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.8/29 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.72/29 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.24/29 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.88/29 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.16/30 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.80/30 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.56/30 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.20/31 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.84/31 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.60/31 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.48/31 table ntk
+ssh gamma sudo ip route change 10.0.0.23/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.22
+ssh gamma sudo ip route change 10.0.0.87/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.22
+ssh gamma sudo ip route change 10.0.0.63/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.62
+ssh gamma sudo ip route change 10.0.0.51/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.50
+ssh gamma sudo ip route change 10.0.0.41/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.40
+ssh gamma sudo iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:1A:C4:45 -j MARK --set-mark 249
+ssh gamma sudo ip rule add fwmark 249 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.20/31 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.84/31 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change 10.0.0.23/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.96.141 dev eth1 src 10.0.0.22
+ssh gamma sudo ip route change 10.0.0.87/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.96.141 dev eth1 src 10.0.0.22
+ssh gamma sudo ip route change 10.0.0.63/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.96.141 dev eth1 src 10.0.0.62
+ssh gamma sudo ip route change 10.0.0.51/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.96.141 dev eth1 src 10.0.0.50
+ssh gamma sudo ip route change blackhole 10.0.0.41/32 table ntk_from_00:16:3E:1A:C4:45
+ssh gamma sudo ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change 10.0.0.20/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.253.216 dev eth1 src 10.0.0.22
+ssh gamma sudo ip route change 10.0.0.84/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.253.216 dev eth1 src 10.0.0.22
+ssh gamma sudo ip route change 10.0.0.60/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.253.216 dev eth1 src 10.0.0.62
+ssh gamma sudo ip route change 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.253.216 dev eth1 src 10.0.0.50
+ssh gamma sudo ip route change unreachable 10.0.0.23/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh gamma sudo ip route change unreachable 10.0.0.0/29 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.64/29 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.8/29 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.72/29 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.24/29 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.88/29 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.16/30 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.80/30 table ntk
+ssh gamma sudo ip route change unreachable 10.0.0.56/30 table ntk
+ssh gamma sudo ip route change 10.0.0.20/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.22
+ssh gamma sudo ip route change 10.0.0.84/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.22
+ssh gamma sudo ip route change 10.0.0.60/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.62
+ssh gamma sudo ip route change 10.0.0.48/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.50
+ssh gamma sudo ip route change 10.0.0.23/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.22
+ssh gamma sudo ip route change 10.0.0.87/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.22
+ssh gamma sudo ip route change 10.0.0.63/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.62
+ssh gamma sudo ip route change 10.0.0.51/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.50
+ssh gamma sudo ip route change 10.0.0.41/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.40
+
+echo "Il sistema *𝛽* vede arrivare un ETP da *𝛾* con il quale scopre un percorso verso la destinazione 2·1·0·."
+
+ssh beta sudo ip route change unreachable 10.0.0.0/29 table ntk
+ssh beta sudo ip route change unreachable 10.0.0.64/29 table ntk
+ssh beta sudo ip route change unreachable 10.0.0.8/29 table ntk
+ssh beta sudo ip route change unreachable 10.0.0.72/29 table ntk
+ssh beta sudo ip route change unreachable 10.0.0.24/29 table ntk
+ssh beta sudo ip route change unreachable 10.0.0.88/29 table ntk
+ssh beta sudo ip route change unreachable 10.0.0.16/30 table ntk
+ssh beta sudo ip route change unreachable 10.0.0.80/30 table ntk
+ssh beta sudo ip route change unreachable 10.0.0.56/30 table ntk
+ssh beta sudo ip route change 10.0.0.20/31 table ntk via 169.254.94.223 dev eth1 src 10.0.0.23
+ssh beta sudo ip route change 10.0.0.84/31 table ntk via 169.254.94.223 dev eth1 src 10.0.0.23
+ssh beta sudo ip route change 10.0.0.60/31 table ntk via 169.254.94.223 dev eth1 src 10.0.0.63
+ssh beta sudo ip route change 10.0.0.48/31 table ntk via 169.254.94.223 dev eth1 src 10.0.0.51
+ssh beta sudo ip route change 10.0.0.22/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.23
+ssh beta sudo ip route change 10.0.0.86/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.23
+ssh beta sudo ip route change 10.0.0.62/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.63
+ssh beta sudo ip route change 10.0.0.50/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.51
+ssh beta sudo ip route change 10.0.0.40/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.41
+ssh beta sudo ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.20/31 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.84/31 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.22/32 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.86/32 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.62/32 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.50/32 table ntk_from_00:16:3E:5B:78:D5
+ssh beta sudo ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
+
+echo "identità di connettività possono essere dismesse."
+
+ssh mu sudo ip netns exec entr03 ip route flush table main
+ssh mu sudo ip netns exec entr03 ip link delete entr03_eth1 type macvlan
+ssh mu sudo ip netns del entr03
+ssh mu sudo sed -i '/xxx_table_ntk_from_00:16:3E:B9:77:80_xxx/d' /etc/iproute2/rt_tables
+
+ssh delta sudo ip netns exec entr03 ip route flush table main
+ssh delta sudo ip netns exec entr03 ip link delete entr03_eth1 type macvlan
+ssh delta sudo ip netns del entr03
+ssh delta sudo sed -i '/xxx_table_ntk_from_00:16:3E:DF:23:F5_xxx/d' /etc/iproute2/rt_tables
+
+ssh gamma sudo ip route del 169.254.83.167 dev eth1 src 169.254.94.223
+ssh mu "ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null" || (echo "mu: errore ping 10.0.0.41"; exit 1)
+
+echo "beta vede gamma delta e mu"
+ssh beta "ping -q -n -c 1 10.0.0.22 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.22"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.86 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.86"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.62"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.50 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.50"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.40 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.40"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.21 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.21"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.85 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.85"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.61 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.61"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.49 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.49"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.20"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.84"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.60"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.48"; exit 1)
+echo "gamma vede delta e mu"
+ssh gamma "ping -q -n -c 1 10.0.0.21 -W 1 &>/dev/null" || (echo "gamma: errore ping 10.0.0.21"; exit 1)
+ssh gamma "ping -q -n -c 1 10.0.0.85 -W 1 &>/dev/null" || (echo "gamma: errore ping 10.0.0.85"; exit 1)
+ssh gamma "ping -q -n -c 1 10.0.0.61 -W 1 &>/dev/null" || (echo "gamma: errore ping 10.0.0.61"; exit 1)
+ssh gamma "ping -q -n -c 1 10.0.0.49 -W 1 &>/dev/null" || (echo "gamma: errore ping 10.0.0.49"; exit 1)
+ssh gamma "ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null" || (echo "gamma: errore ping 10.0.0.20"; exit 1)
+ssh gamma "ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null" || (echo "gamma: errore ping 10.0.0.84"; exit 1)
+ssh gamma "ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null" || (echo "gamma: errore ping 10.0.0.60"; exit 1)
+ssh gamma "ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null" || (echo "gamma: errore ping 10.0.0.48"; exit 1)
+echo "delta vede mu"
+ssh delta "ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null" || (echo "delta: errore ping 10.0.0.20"; exit 1)
+ssh delta "ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null" || (echo "delta: errore ping 10.0.0.84"; exit 1)
+ssh delta "ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null" || (echo "delta: errore ping 10.0.0.60"; exit 1)
+ssh delta "ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null" || (echo "delta: errore ping 10.0.0.48"; exit 1)
+ssh delta "ping -q -n -c 1 10.0.0.40 -W 1 &>/dev/null" || (echo "delta: errore ping 10.0.0.40"; exit 1)
 
 echo "test completato"
 
