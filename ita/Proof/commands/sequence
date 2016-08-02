@@ -6,6 +6,60 @@ set -e
 ### Prime operazioni
 echo "Prime operazioni"
 
+echo alfa
+ssh alfa sudo sysctl net.ipv4.ip_forward=1 &>/dev/null
+ssh alfa sudo sysctl net.ipv4.conf.all.rp_filter=0 &>/dev/null
+ssh alfa sudo ip link set dev eth1 address 00:16:3E:FD:E2:AA
+ssh alfa sudo sysctl net.ipv4.conf.eth1.rp_filter=0 &>/dev/null
+ssh alfa sudo sysctl net.ipv4.conf.eth1.arp_ignore=1 &>/dev/null
+ssh alfa sudo sysctl net.ipv4.conf.eth1.arp_announce=2 &>/dev/null
+ssh alfa sudo ip link set dev eth1 up
+ssh alfa sudo ip address add 169.254.69.30 dev eth1
+ssh alfa sudo ip address add 10.0.0.26 dev eth1
+ssh alfa sudo ip address add 10.0.0.90 dev eth1
+ssh alfa sudo ip address add 10.0.0.58 dev eth1
+ssh alfa sudo ip address add 10.0.0.50 dev eth1
+ssh alfa sudo ip address add 10.0.0.40 dev eth1
+(echo; echo "251 ntk # xxx_table_ntk_xxx") | ssh alfa sudo tee -a /etc/iproute2/rt_tables >/dev/null
+ssh alfa sudo ip rule add table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.0/29 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.64/29 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.8/29 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.72/29 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.16/29 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.80/29 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.28/30 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.92/30 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.60/30 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.24/31 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.88/31 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.56/31 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.48/31 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.27/32 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.91/32 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.59/32 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.51/32 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.41/32 table ntk
+ssh alfa sudo iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.26
+ssh alfa sudo ip route change unreachable 10.0.0.0/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.64/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.8/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.72/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.16/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.80/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.28/30 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.92/30 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.60/30 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.24/31 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.88/31 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.56/31 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.48/31 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.27/32 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.91/32 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.59/32 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.51/32 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.41/32 table ntk
+
 echo beta
 ssh beta sudo sysctl net.ipv4.ip_forward=1 &>/dev/null
 ssh beta sudo sysctl net.ipv4.conf.all.rp_filter=0 &>/dev/null
@@ -1683,6 +1737,235 @@ ssh delta "ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null" || (echo "delta: errore p
 ssh delta "ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null" || (echo "delta: errore ping 10.0.0.60"; exit 1)
 ssh delta "ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null" || (echo "delta: errore ping 10.0.0.48"; exit 1)
 ssh delta "ping -q -n -c 1 10.0.0.40 -W 1 &>/dev/null" || (echo "delta: errore ping 10.0.0.40"; exit 1)
+
+### Ingresso di 𝛼 in G𝛾
+echo "Ingresso alfa in G-gamma"
+
+ssh alfa sudo ip route add 169.254.96.141 dev eth1 src 169.254.69.30
+
+ssh beta sudo ip route add 169.254.69.30 dev eth1 src 169.254.96.141
+
+ssh alfa sudo ip netns add entr04
+ssh alfa sudo ip netns exec entr04 sysctl net.ipv4.ip_forward=1 &>/dev/null
+ssh alfa sudo ip netns exec entr04 sysctl net.ipv4.conf.all.rp_filter=0 &>/dev/null
+ssh alfa sudo ip link add dev entr04_eth1 link eth1 type macvlan
+ssh alfa sudo ip link set dev entr04_eth1 netns entr04
+ssh alfa sudo ip netns exec entr04 ip link set dev entr04_eth1 address 00:16:3E:78:18:0B
+ssh alfa sudo ip netns exec entr04 sysctl net.ipv4.conf.entr04_eth1.rp_filter=0 &>/dev/null
+ssh alfa sudo ip netns exec entr04 sysctl net.ipv4.conf.entr04_eth1.arp_ignore=1 &>/dev/null
+ssh alfa sudo ip netns exec entr04 sysctl net.ipv4.conf.entr04_eth1.arp_announce=2 &>/dev/null
+ssh alfa sudo ip netns exec entr04 ip link set dev entr04_eth1 up
+ssh alfa sudo ip netns exec entr04 ip address add 169.254.202.128 dev entr04_eth1
+ssh alfa sudo ip netns exec entr04 ip route add 169.254.96.141 dev entr04_eth1 src 169.254.202.128
+
+ssh beta sudo ip route add 169.254.202.128 dev eth1 src 169.254.96.141
+
+echo "alfa0 in networkspace entr04"
+ssh alfa sudo ip netns exec entr04 ip rule add table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.0/29 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.64/29 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.8/29 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.72/29 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.16/29 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.80/29 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.28/30 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.92/30 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.60/30 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.24/31 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.88/31 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.56/31 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.48/31 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.27/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.91/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.59/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.51/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.41/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.26/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.90/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.58/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.50/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route add unreachable 10.0.0.40/32 table ntk
+ssh alfa sudo ip route del 10.0.0.0/29 table ntk
+ssh alfa sudo ip route del 10.0.0.64/29 table ntk
+ssh alfa sudo ip route del 10.0.0.8/29 table ntk
+ssh alfa sudo ip route del 10.0.0.72/29 table ntk
+ssh alfa sudo ip route del 10.0.0.16/29 table ntk
+ssh alfa sudo ip route del 10.0.0.80/29 table ntk
+ssh alfa sudo ip route del 10.0.0.28/30 table ntk
+ssh alfa sudo ip route del 10.0.0.92/30 table ntk
+ssh alfa sudo ip route del 10.0.0.60/30 table ntk
+ssh alfa sudo ip route del 10.0.0.24/31 table ntk
+ssh alfa sudo ip route del 10.0.0.88/31 table ntk
+ssh alfa sudo ip route del 10.0.0.56/31 table ntk
+ssh alfa sudo ip route del 10.0.0.48/31 table ntk
+ssh alfa sudo ip route del 10.0.0.27/32 table ntk
+ssh alfa sudo ip route del 10.0.0.91/32 table ntk
+ssh alfa sudo ip route del 10.0.0.59/32 table ntk
+ssh alfa sudo ip route del 10.0.0.51/32 table ntk
+ssh alfa sudo ip route del 10.0.0.41/32 table ntk
+ssh alfa sudo iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.26
+ssh alfa sudo ip address del 10.0.0.26/32 dev eth1
+ssh alfa sudo ip address del 10.0.0.90/32 dev eth1
+ssh alfa sudo ip address del 10.0.0.58/32 dev eth1
+ssh alfa sudo ip address del 10.0.0.50/32 dev eth1
+ssh alfa sudo ip address del 10.0.0.40/32 dev eth1
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.0/29 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.64/29 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.8/29 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.72/29 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.16/29 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.80/29 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.28/30 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.92/30 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.60/30 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.24/31 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.88/31 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.56/31 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.48/31 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.27/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.91/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.59/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.51/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.41/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.26/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.90/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.58/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.50/32 table ntk
+ssh alfa sudo ip netns exec entr04 ip route change unreachable 10.0.0.40/32 table ntk
+
+echo "alfa1 in G-gamma"
+ssh alfa sudo ip address add 10.0.0.50 dev eth1
+ssh alfa sudo ip address add 10.0.0.40 dev eth1
+ssh alfa sudo ip route add unreachable 10.0.0.0/29 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.64/29 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.8/29 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.72/29 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.24/29 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.88/29 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.16/30 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.80/30 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.56/30 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.20/30 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.84/30 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.60/30 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.48/31 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.51/32 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.41/32 table ntk
+(echo; echo "250 ntk_from_00:16:3E:EC:A3:E1 # xxx_table_ntk_from_00:16:3E:EC:A3:E1_xxx") | ssh alfa sudo tee -a /etc/iproute2/rt_tables >/dev/null
+ssh alfa sudo ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.20/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.84/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.60/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.0/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.64/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.8/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.72/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.24/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.88/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.16/30 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.80/30 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.56/30 table ntk
+ssh alfa sudo ip route change 10.0.0.20/30 table ntk via 169.254.96.141 dev eth1
+ssh alfa sudo ip route change 10.0.0.84/30 table ntk via 169.254.96.141 dev eth1
+ssh alfa sudo ip route change 10.0.0.60/30 table ntk via 169.254.96.141 dev eth1
+ssh alfa sudo ip route change unreachable 10.0.0.48/31 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.51/32 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.41/32 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.20/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.84/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.60/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 250
+ssh alfa sudo ip rule add fwmark 250 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip address add 10.0.0.18 dev eth1
+ssh alfa sudo iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.18
+ssh alfa sudo ip address add 10.0.0.82 dev eth1
+ssh alfa sudo ip address add 10.0.0.58 dev eth1
+ssh alfa sudo ip route del 10.0.0.16/30 table ntk
+ssh alfa sudo ip route del 10.0.0.80/30 table ntk
+ssh alfa sudo ip route del 10.0.0.56/30 table ntk
+ssh alfa sudo ip route del 10.0.0.16/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route del 10.0.0.80/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route del 10.0.0.56/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.16/31 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.80/31 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.56/31 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.19/32 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.83/32 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.59/32 table ntk
+ssh alfa sudo ip route add unreachable 10.0.0.16/31 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.80/31 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.56/31 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.19/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.83/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route add unreachable 10.0.0.59/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.0/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.64/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.8/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.72/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.24/29 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.88/29 table ntk
+ssh alfa sudo ip route change 10.0.0.20/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.18
+ssh alfa sudo ip route change 10.0.0.84/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.18
+ssh alfa sudo ip route change 10.0.0.60/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.58
+ssh alfa sudo ip route change unreachable 10.0.0.16/31 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.80/31 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.56/31 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.48/31 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.19/32 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.83/32 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.59/32 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.51/32 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.41/32 table ntk
+ssh alfa sudo ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.20/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.84/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.60/30 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.16/31 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.80/31 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.56/31 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.19/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.83/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.59/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+ssh alfa sudo ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+
+echo "alfa0 dismessa"
+ssh alfa sudo ip netns exec entr04 ip route flush table main
+ssh alfa sudo ip netns exec entr04 ip link delete entr04_eth1 type macvlan
+ssh alfa sudo ip netns del entr04
+
+ssh beta sudo ip route del 169.254.202.128 dev eth1 src 169.254.96.141
+
+
 
 echo "test completato"
 
