@@ -55,6 +55,7 @@ sistema (e.g. ntkv0, ntkv1, ...).
 **sistema 𝛼**
 ```
 eth1         00:16:3E:FD:E2:AA   169.254.69.30
+entr04_eth1  00:16:3E:78:18:0B   169.254.202.128
 ```
 
 **sistema 𝛽**
@@ -97,6 +98,8 @@ entr03_eth1  00:16:3E:DF:23:F5   169.254.242.91
 
 ### Dettagli iniziali
 
+**𝛼<sub>0</sub>** ha indirizzo 3·0·1·0 in *G<sub>𝛼</sub>*.
+
 **𝛽<sub>0</sub>** ha indirizzo 1·0·1·0 in *G<sub>𝛽</sub>*.
 
 **𝛾<sub>0</sub>** ha indirizzo 2·1·1·0 in *G<sub>𝛾</sub>*.
@@ -132,5 +135,13 @@ costituiva l'intera rete *G<sub>𝛿</sub>*. Con questa operazione di ingresso s
 *𝜒* assume indirizzo *di connettività* 3·1·2· in *G<sub>𝛿</sub>*. Temporaneamente
 *𝜒'* assume indirizzo *virtuale* 2·1·2· in *G<sub>𝛾</sub>*. Dopo poco *𝜒'* assume
 indirizzo 2·1·0· in *G<sub>𝛾</sub>*. Naturalmente, dopo poco *𝜒* viene dismesso.
+
+**entr04**
+
+Il nodo *𝛼<sub>0</sub>* era da solo e aveva indirizzo 3·0·1·0 in *G<sub>𝛼</sub>*. Con questa operazione
+il singolo nodo abbandona la vecchia rete e entra nella nuova come nuovo g-nodo di livello 2. Per questo
+*𝛼<sub>0</sub>* assume indirizzo *di connettività* 3·0·1·2 in *G<sub>𝛼</sub>*. Temporaneamente
+*𝛼<sub>1</sub>* assume indirizzo *virtuale* 2·2·1·0 in *G<sub>𝛾</sub>*. Dopo poco *𝛼<sub>1</sub>* assume
+indirizzo 2·0·1·0 in *G<sub>𝛾</sub>*. Naturalmente, dopo poco *𝛼<sub>0</sub>* viene dismesso.
 
 [Pagina seguente](UseCases2.md)
