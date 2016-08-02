@@ -491,16 +491,164 @@ Deve però tenere presente che alcune di esse possono essere già state aggiunte
 precedente detentore del network namespace default o dallo stesso nella fase in cui aveva indirizzo virtuale.
 In questo caso sono state già aggiunte quelle di livello maggiore o uguale a 2 e quelle di livello inferiore
 ma solo con gli indirizzi interni al g-nodo di livello minore o uguale a 2.  
-Deve inoltre considerare che prima la sua attuale posizione *reale* al livello 0 (2·0·1·0) poteva essere
+Deve inoltre considerare che prima la sua attuale posizione *reale* al livello 2 (2·0·) poteva essere
 stata aggiunta come destinazione nelle tabelle (se le posizioni superiori erano tutte *reali*). In questo
 caso essa va rimossa.
 
 Infine, avendo aggiornato nell'identità principale il suo proprio indirizzo che ora è *reale*, deve fare
 un aggiornamento di tutte le sue rotte poiché in alcune di esse il *src* poteva essere mancante.
 
+```
+Mio indirizzo 2·0·1·0.
+     globale
+      10.0.0.18
+     anonimizzante
+      10.0.0.82
+     interno al mio g-nodo di livello 3
+      10.0.0.58
+     interno al mio g-nodo di livello 2
+      10.0.0.50
+     interno al mio g-nodo di livello 1
+      10.0.0.40
 
+Possibili destinazioni:
+ 0·
+     globale
+      10.0.0.0/29
+     anonimizzante
+      10.0.0.64/29
+ 1·
+     globale
+      10.0.0.8/29
+     anonimizzante
+      10.0.0.72/29
+ 3·
+     globale
+      10.0.0.24/29
+     anonimizzante
+      10.0.0.88/29
+ 2·0·  era valida prima ma non lo è più.
+     globale
+      10.0.0.16/30
+     anonimizzante
+      10.0.0.80/30
+     interno al mio g-nodo di livello 3
+      10.0.0.56/30
+ 2·1·
+     globale
+      10.0.0.20/30
+     anonimizzante
+      10.0.0.84/30
+     interno al mio g-nodo di livello 3
+      10.0.0.60/30
+ 2·0·0·
+     globale
+      10.0.0.16/31
+     anonimizzante
+      10.0.0.80/31
+     interno al mio g-nodo di livello 3
+      10.0.0.56/31
+     interno al mio g-nodo di livello 2
+      10.0.0.48/31
+ 2·0·1·1
+     globale
+      10.0.0.19/32
+     anonimizzante
+      10.0.0.83/32
+     interno al mio g-nodo di livello 3
+      10.0.0.59/32
+     interno al mio g-nodo di livello 2
+      10.0.0.51/32
+     interno al mio g-nodo di livello 1
+      10.0.0.41/32
+```
 
-**TODO**
+**sistema 𝛼**
+```
+ip address add 10.0.0.18 dev eth1
+iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.18
+ip address add 10.0.0.82 dev eth1
+ip address add 10.0.0.58 dev eth1
+```
+
+**sistema 𝛼**
+```
+ip route del 10.0.0.16/30 table ntk
+ip route del 10.0.0.80/30 table ntk
+ip route del 10.0.0.56/30 table ntk
+
+ip route del 10.0.0.16/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route del 10.0.0.80/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route del 10.0.0.56/30 table ntk_from_00:16:3E:EC:A3:E1
+```
+
+**sistema 𝛼**
+```
+ip route add unreachable 10.0.0.16/31 table ntk
+ip route add unreachable 10.0.0.80/31 table ntk
+ip route add unreachable 10.0.0.56/31 table ntk
+ip route add unreachable 10.0.0.19/32 table ntk
+ip route add unreachable 10.0.0.83/32 table ntk
+ip route add unreachable 10.0.0.59/32 table ntk
+
+ip route add unreachable 10.0.0.16/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.80/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.56/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.19/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.83/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.59/32 table ntk_from_00:16:3E:EC:A3:E1
+```
+
+**sistema 𝛼**
+```
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.24/29 table ntk
+ip route change unreachable 10.0.0.88/29 table ntk
+ip route change 10.0.0.20/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.18
+ip route change 10.0.0.84/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.18
+ip route change 10.0.0.60/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.58
+ip route change unreachable 10.0.0.16/31 table ntk
+ip route change unreachable 10.0.0.80/31 table ntk
+ip route change unreachable 10.0.0.56/31 table ntk
+ip route change unreachable 10.0.0.48/31 table ntk
+ip route change unreachable 10.0.0.19/32 table ntk
+ip route change unreachable 10.0.0.83/32 table ntk
+ip route change unreachable 10.0.0.59/32 table ntk
+ip route change unreachable 10.0.0.51/32 table ntk
+ip route change unreachable 10.0.0.41/32 table ntk
+
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.20/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.84/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.60/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.16/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.80/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.56/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.19/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.83/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.59/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+```
+
+Infine, dopo un po' di tempo, l'identità *𝛼<sub>0</sub>* viene dismessa. Il programma *qspnclient*
+esegue queste operazioni tramite il modulo Identities:
+
+**sistema 𝛼**
+```
+ip netns exec entr04 ip route flush table main
+ip netns exec entr04 ip link delete entr04_eth1 type macvlan
+ip netns del entr04
+```
 
 ### Nel sistema *𝛽*
 
