@@ -2193,6 +2193,48 @@ ssh alfa sudo ip netns del entr04
 
 ssh beta sudo ip route del 169.254.202.128 dev eth1 src 169.254.96.141
 
+echo "alfa vede beta gamma delta e mu"
+ssh alfa "ping -q -n -c 1 10.0.0.23 -W 1 &>/dev/null" || (echo "alfa: errore ping 10.0.0.23"; exit 1)
+ssh alfa "ping -q -n -c 1 10.0.0.87 -W 1 &>/dev/null" || (echo "alfa: errore ping 10.0.0.87"; exit 1)
+ssh alfa "ping -q -n -c 1 10.0.0.63 -W 1 &>/dev/null" || (echo "alfa: errore ping 10.0.0.63"; exit 1)
+ssh alfa "ping -q -n -c 1 10.0.0.22 -W 1 &>/dev/null" || (echo "alfa: errore ping 10.0.0.22"; exit 1)
+ssh alfa "ping -q -n -c 1 10.0.0.86 -W 1 &>/dev/null" || (echo "alfa: errore ping 10.0.0.86"; exit 1)
+ssh alfa "ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null" || (echo "alfa: errore ping 10.0.0.62"; exit 1)
+ssh alfa "ping -q -n -c 1 10.0.0.21 -W 1 &>/dev/null" || (echo "alfa: errore ping 10.0.0.21"; exit 1)
+ssh alfa "ping -q -n -c 1 10.0.0.85 -W 1 &>/dev/null" || (echo "alfa: errore ping 10.0.0.85"; exit 1)
+ssh alfa "ping -q -n -c 1 10.0.0.61 -W 1 &>/dev/null" || (echo "alfa: errore ping 10.0.0.61"; exit 1)
+ssh alfa "ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null" || (echo "alfa: errore ping 10.0.0.20"; exit 1)
+ssh alfa "ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null" || (echo "alfa: errore ping 10.0.0.84"; exit 1)
+ssh alfa "ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null" || (echo "alfa: errore ping 10.0.0.60"; exit 1)
+echo "beta vede gamma delta e mu"
+ssh beta "ping -q -n -c 1 10.0.0.22 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.22"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.86 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.86"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.62"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.50 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.50"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.40 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.40"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.21 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.21"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.85 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.85"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.61 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.61"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.49 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.49"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.20"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.84"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.60"; exit 1)
+ssh beta "ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null" || (echo "beta: errore ping 10.0.0.48"; exit 1)
+echo "gamma vede delta e mu"
+ssh gamma "ping -q -n -c 1 10.0.0.21 -W 1 &>/dev/null" || (echo "gamma: errore ping 10.0.0.21"; exit 1)
+ssh gamma "ping -q -n -c 1 10.0.0.85 -W 1 &>/dev/null" || (echo "gamma: errore ping 10.0.0.85"; exit 1)
+ssh gamma "ping -q -n -c 1 10.0.0.61 -W 1 &>/dev/null" || (echo "gamma: errore ping 10.0.0.61"; exit 1)
+ssh gamma "ping -q -n -c 1 10.0.0.49 -W 1 &>/dev/null" || (echo "gamma: errore ping 10.0.0.49"; exit 1)
+ssh gamma "ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null" || (echo "gamma: errore ping 10.0.0.20"; exit 1)
+ssh gamma "ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null" || (echo "gamma: errore ping 10.0.0.84"; exit 1)
+ssh gamma "ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null" || (echo "gamma: errore ping 10.0.0.60"; exit 1)
+ssh gamma "ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null" || (echo "gamma: errore ping 10.0.0.48"; exit 1)
+echo "delta vede mu"
+ssh delta "ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null" || (echo "delta: errore ping 10.0.0.20"; exit 1)
+ssh delta "ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null" || (echo "delta: errore ping 10.0.0.84"; exit 1)
+ssh delta "ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null" || (echo "delta: errore ping 10.0.0.60"; exit 1)
+ssh delta "ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null" || (echo "delta: errore ping 10.0.0.48"; exit 1)
+ssh delta "ping -q -n -c 1 10.0.0.40 -W 1 &>/dev/null" || (echo "delta: errore ping 10.0.0.40"; exit 1)
 
 
 echo "test completato"
