@@ -9,6 +9,62 @@
 Le prime operazioni ogni sistema le fa senza alcuna relazione con l'ambiente circostante
 e quindi si possono simulare in qualsiasi ordine.
 
+**sistema 𝛼**
+```
+sysctl net.ipv4.ip_forward=1
+sysctl net.ipv4.conf.all.rp_filter=0
+ip link set dev eth1 address 00:16:3E:FD:E2:AA
+sysctl net.ipv4.conf.eth1.rp_filter=0
+sysctl net.ipv4.conf.eth1.arp_ignore=1
+sysctl net.ipv4.conf.eth1.arp_announce=2
+ip link set dev eth1 up
+ip address add 169.254.69.30 dev eth1
+ip address add 10.0.0.26 dev eth1
+ip address add 10.0.0.90 dev eth1
+ip address add 10.0.0.58 dev eth1
+ip address add 10.0.0.50 dev eth1
+ip address add 10.0.0.40 dev eth1
+(echo; echo "251 ntk # xxx_table_ntk_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+ip rule add table ntk
+ip route add unreachable 10.0.0.0/29 table ntk
+ip route add unreachable 10.0.0.64/29 table ntk
+ip route add unreachable 10.0.0.8/29 table ntk
+ip route add unreachable 10.0.0.72/29 table ntk
+ip route add unreachable 10.0.0.16/29 table ntk
+ip route add unreachable 10.0.0.80/29 table ntk
+ip route add unreachable 10.0.0.28/30 table ntk
+ip route add unreachable 10.0.0.92/30 table ntk
+ip route add unreachable 10.0.0.60/30 table ntk
+ip route add unreachable 10.0.0.24/31 table ntk
+ip route add unreachable 10.0.0.88/31 table ntk
+ip route add unreachable 10.0.0.56/31 table ntk
+ip route add unreachable 10.0.0.48/31 table ntk
+ip route add unreachable 10.0.0.27/32 table ntk
+ip route add unreachable 10.0.0.91/32 table ntk
+ip route add unreachable 10.0.0.59/32 table ntk
+ip route add unreachable 10.0.0.51/32 table ntk
+ip route add unreachable 10.0.0.41/32 table ntk
+iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.26
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.16/29 table ntk
+ip route change unreachable 10.0.0.80/29 table ntk
+ip route change unreachable 10.0.0.28/30 table ntk
+ip route change unreachable 10.0.0.92/30 table ntk
+ip route change unreachable 10.0.0.60/30 table ntk
+ip route change unreachable 10.0.0.24/31 table ntk
+ip route change unreachable 10.0.0.88/31 table ntk
+ip route change unreachable 10.0.0.56/31 table ntk
+ip route change unreachable 10.0.0.48/31 table ntk
+ip route change unreachable 10.0.0.27/32 table ntk
+ip route change unreachable 10.0.0.91/32 table ntk
+ip route change unreachable 10.0.0.59/32 table ntk
+ip route change unreachable 10.0.0.51/32 table ntk
+ip route change unreachable 10.0.0.41/32 table ntk
+```
+
 **sistema 𝛽**
 ```
 sysctl net.ipv4.ip_forward=1
