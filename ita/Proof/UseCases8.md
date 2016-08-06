@@ -4,6 +4,11 @@
 
 ## Sequenza temporale
 
+Oltre a verificare che la sequenza di operazioni in ogni sistema è valida, dobbiamo anche assicurare che
+le proprietà della rete sono corrette in ogni momento. Quindi dobbiamo esaminare l'ordine temporale in
+cui le operazioni dei vari sistemi possono avvenire. Con questa attenzione rivediamo gli eventi che hanno
+portato la rete del nostro esempio allo stato attuale.
+
 ### Prime operazioni
 
 Le prime operazioni ogni sistema le fa senza alcuna relazione con l'ambiente circostante

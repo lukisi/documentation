@@ -11,10 +11,6 @@ Prendiamo in esame quello che avviene negli altri sistemi.
 *   Ingresso di *𝛿* e *𝜇* (come g-nodo *𝜒'*) in *G<sub>𝛾</sub>*. [Dettagli](UseCases6.md#step3).
 *   Ingresso di *𝛼* in *G<sub>𝛾</sub>*. [Dettagli](UseCases7.md#step4).
 
-Oltre a verificare che la sequenza di operazioni in ogni sistema è valida, dobbiamo anche assicurare che
-le proprietà della rete sono corrette in ogni momento. Quindi dobbiamo esaminare l'ordine temporale in
-cui le operazioni dei vari sistemi possono avvenire. Proseguiamo con questo esame in questa [pagina](UseCases8.md).
-
 ## <a name="step1"></a>Sistema 𝜇
 
 La prima identità è *𝜇<sub>0</sub>* con indirizzo Netsukuku 1·0·1·1 in *G<sub>𝜇</sub>*.
