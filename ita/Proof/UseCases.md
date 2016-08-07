@@ -64,7 +64,7 @@ entr04_eth1  00:16:3E:78:18:0B   169.254.202.128
 ```
 eth1         00:16:3E:EC:A3:E1   169.254.96.141
 entr02_eth1  00:16:3E:8E:91:B9   169.254.215.29
-ntkv0_eth1   00:16:3E:EE:AF:D1   169.254.27.218
+migr01_eth1  00:16:3E:EE:AF:D1   169.254.27.218
 ntkv1_eth1   00:16:3E:BD:34:98   169.254.42.4
 ```
 
@@ -83,6 +83,7 @@ entr03_eth1  00:16:3E:B9:77:80   169.254.83.167
 **sistema 𝜀**
 ```
 eth1         00:16:3E:3C:14:33   169.254.163.36
+entr05_eth1  00:16:3E:13:28:B2   169.254.133.31
 ntkv1_eth1   00:16:3E:3B:9F:45   169.254.241.153
 ```
 
@@ -110,7 +111,12 @@ entr03_eth1  00:16:3E:DF:23:F5   169.254.242.91
 
 **𝜇<sub>0</sub>** ha indirizzo 1·0·1·1 in *G<sub>𝜇</sub>*.
 
+**𝜀<sub>0</sub>** ha indirizzo 3·1·0·0 in *G<sub>𝜀</sub>*.
+
 ### Dettagli delle migrazioni/ingressi
+
+Questi dettagli riguardo operazioni di migrazione/ingresso sono riportati qui per un rapido riferimento. Le
+operazioni a cui si riferiscono saranno spiegate in dettaglio nel seguito del documento.
 
 **entr01**
 
@@ -145,5 +151,22 @@ il singolo nodo abbandona la vecchia rete e entra nella nuova come nuovo g-nodo 
 *𝛼<sub>0</sub>* assume indirizzo *di connettività* 3·0·1·2 in *G<sub>𝛼</sub>*. Temporaneamente
 *𝛼<sub>1</sub>* assume indirizzo *virtuale* 2·2·1·0 in *G<sub>𝛾</sub>*. Dopo poco *𝛼<sub>1</sub>* assume
 indirizzo 2·0·1·0 in *G<sub>𝛾</sub>*. Naturalmente, dopo poco *𝛼<sub>0</sub>* viene dismesso.
+
+**migr01**
+
+Le operazioni **migr01** e **entr05** sono collegate.  
+Il singolo nodo *𝛽<sub>1</sub>* aveva indirizzo 2·1·1·1 in *G<sub>𝛾</sub>*. Con questa operazione
+di migrazione *𝛽<sub>1</sub>* assume indirizzo *di connettività* 2·1·1·3. Temporaneamente
+*𝛽<sub>2</sub>* assume indirizzo *virtuale* 2·0·1·2. Dopo poco *𝛽<sub>2</sub>* assume
+indirizzo 2·0·1·1.  
+L'identità *𝛽<sub>1</sub>* non viene dismessa finché una verifica con `check_connectivity` non darà
+esito positivo.
+
+**entr05**
+
+Il nodo *𝜀<sub>0</sub>* era da solo e aveva indirizzo 3·1·0·0 in *G<sub>𝜀</sub>*. Con questa operazione
+di ingresso *𝜀<sub>0</sub>* assume indirizzo *di connettività* 3·1·0·2 in *G<sub>𝜀</sub>*. Temporaneamente
+*𝜀<sub>1</sub>* assume indirizzo *virtuale* 2·1·1·2 in *G<sub>𝛾</sub>*. Dopo poco *𝜀<sub>1</sub>* assume
+indirizzo 2·1·1·1 in *G<sub>𝛾</sub>*. Naturalmente, dopo poco *𝜀<sub>0</sub>* viene dismesso.
 
 [Pagina seguente](UseCases2.md)
