@@ -104,7 +104,8 @@ ip route add 169.254.96.141 dev eth1 src 169.254.163.36
 ip route add 169.254.163.36 dev eth1 src 169.254.96.141
 ```
 
-Il modulo Identities produce questi comandi:
+Il modulo Identities produce questi comandi per preparare il nuovo network
+namespace per la vecchia identità:
 
 **sistema 𝜀**
 ```
@@ -126,6 +127,31 @@ ip netns exec entr05 ip route add 169.254.96.141 dev entr05_eth1 src 169.254.133
 ```
 ip route add 169.254.133.31 dev eth1 src 169.254.96.141
 ```
+
+**Spostare** La vecchia identità mantiene il suo indirizzo Netsukuku inalterato, ad eccezione della posizione
+in cui diventa *virtuale* per mantenere la connettività dei g-nodi superiori. Mantiene inalterate
+anche le sue possibili destinazioni, aggiungendone una che era la sua vecchia posizione *reale*.  
+Nel nuovo network namespace la vecchia identità non tiene più traccia del suo proprio indirizzo Netsukuku,
+perché essendo ora una identità di connettività non è mai l'end-point di una qualsiasi comunicazione che
+ha luogo nella rete Netsukuku, né come *src* né come *dest*.  
+Se la vecchia identità era in precedenza l'identità principale, vale a dire se il precedente network namespace
+era quello default, allora tale identità poteva essere in precedenza l'end-point di una qualche comunicazione
+in atto nella rete Netsukuku. In questo caso vanno aggiunte le seguenti considerazioni. Il vecchio indirizzo
+Netsukuku nel suo complesso non è più riferibile a questo sistema. Ma se a migrare (o fare ingresso) è un intero
+g-nodo, allora la parte interna di tale indirizzo Netsukuku è ancora riferibile a questo sistema. Pertanto vanno
+rimossi dal network namespace default gli indirizzi IP globale e interni nei g-nodi di livello alto (che saranno
+rimpiazzati da nuovi indirizzi) ma vanno mantenuti gli indirizzi IP interni nei g-nodi di livello basso a
+partire dal livello del g-nodo che ha migrato.  
+Il vecchio network namespace era stato gestito dalla vecchia identità e per questo era stato popolato con
+alcune possibili destinazioni. Le operazioni che riguardano le rotte nel vecchio network namespace vanno avviate
+solo dopo che: a) la vecchia identità ha predisposto il nuovo network namespace; b) i vicini esterni al g-nodo
+che ha migrato hanno cambiato i gateway nelle loro rotte sulla base del cambio di peer-linklocal del loro
+arco-identità.  
+Nel vecchio network namespace vanno rimosse tutte le rotte tranne quelle verso indirizzi IP interni al
+proprio g-nodo di livello inferiore o uguale al livello del g-nodo che ha migrato.
+
+Il programma *qspnclient*, per trasferire le impostazioni relative alla sua vecchia identità
+nel nuovo network namespace, produce questi comandi:
 
 **sistema 𝜀**
 ```
@@ -200,6 +226,16 @@ ip netns exec entr05 ip route change unreachable 10.0.0.93/32 table ntk
 ip netns exec entr05 ip route change unreachable 10.0.0.61/32 table ntk
 ip netns exec entr05 ip route change unreachable 10.0.0.49/32 table ntk
 ip netns exec entr05 ip route change unreachable 10.0.0.41/32 table ntk
+```
+
+**Spostare** La nuova identità conosce subito il suo nuovo indirizzo Netsukuku, che inizialmente
+è (o potrebbe essere) *virtuale*. Quindi conosce anche le sue nuove possibili destinazioni.
+
+Il programma *qspnclient*, per aggiungere le impostazioni relative alla sua nuova identità
+nel precedente network namespace, produce questi comandi:
+
+**sistema 𝜀**
+```
 ip route add unreachable 10.0.0.0/29 table ntk
 ip route add unreachable 10.0.0.64/29 table ntk
 ip route add unreachable 10.0.0.8/29 table ntk
