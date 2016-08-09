@@ -4,6 +4,7 @@ set -e
 echo "Sistema mu: prime operazioni come rete a se stante."
 ssh mu sudo sysctl net.ipv4.ip_forward=1 &>/dev/null
 ssh mu sudo sysctl net.ipv4.conf.all.rp_filter=0 &>/dev/null
+ssh mu sudo ip address add 10.0.0.32 dev lo
 ssh mu sudo ip link set dev eth1 address 00:16:3E:2D:8D:DE
 ssh mu sudo sysctl net.ipv4.conf.eth1.rp_filter=0 &>/dev/null
 ssh mu sudo sysctl net.ipv4.conf.eth1.arp_ignore=1 &>/dev/null

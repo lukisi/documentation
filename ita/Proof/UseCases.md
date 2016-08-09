@@ -31,15 +31,17 @@ Tutti i sistemi adottano questa comune topologia di rete:
 Topologia 4·2·2·2
 
 Globali:
-10.0.0.0 ... 10.0.0.31
+ 10.0.0.0 ... 10.0.0.31
 Anonimizzanti:
-10.0.0.64 ... 10.0.0.95
-Interni al livello 3
-10.0.0.56 ... 10.0.0.63
-Interni al livello 2
-10.0.0.48 ... 10.0.0.51
-Interni al livello 1
-10.0.0.40 ... 10.0.0.41
+ 10.0.0.64 ... 10.0.0.95
+Interni al livello 3:
+ 10.0.0.56 ... 10.0.0.63
+Interni al livello 2:
+ 10.0.0.48 ... 10.0.0.51
+Interni al livello 1:
+ 10.0.0.40 ... 10.0.0.41
+Sinonimo di localhost = interno al livello 0:
+ 10.0.0.32
 ```
 
 Tutti i sistemi ammettono di essere usati come passi intermedi anonimizzanti e anche di essere

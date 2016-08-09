@@ -9,6 +9,7 @@ echo "Prime operazioni"
 echo alfa
 lxc exec alfa -- sysctl net.ipv4.ip_forward=1 &>/dev/null
 lxc exec alfa -- sysctl net.ipv4.conf.all.rp_filter=0 &>/dev/null
+lxc exec alfa -- ip address add 10.0.0.32 dev lo
 lxc exec alfa -- ip link set dev eth1 address 00:16:3E:FD:E2:AA
 lxc exec alfa -- sysctl net.ipv4.conf.eth1.rp_filter=0 &>/dev/null
 lxc exec alfa -- sysctl net.ipv4.conf.eth1.arp_ignore=1 &>/dev/null
@@ -63,6 +64,7 @@ lxc exec alfa -- ip route change unreachable 10.0.0.41/32 table ntk
 echo beta
 lxc exec beta -- sysctl net.ipv4.ip_forward=1 &>/dev/null
 lxc exec beta -- sysctl net.ipv4.conf.all.rp_filter=0 &>/dev/null
+lxc exec beta -- ip address add 10.0.0.32 dev lo
 lxc exec beta -- ip link set dev eth1 address 00:16:3E:EC:A3:E1
 lxc exec beta -- sysctl net.ipv4.conf.eth1.rp_filter=0 &>/dev/null
 lxc exec beta -- sysctl net.ipv4.conf.eth1.arp_ignore=1 &>/dev/null
@@ -117,6 +119,7 @@ lxc exec beta -- ip route change unreachable 10.0.0.41/32 table ntk
 echo gamma
 lxc exec gamma -- sysctl net.ipv4.ip_forward=1 &>/dev/null
 lxc exec gamma -- sysctl net.ipv4.conf.all.rp_filter=0 &>/dev/null
+lxc exec gamma -- ip address add 10.0.0.32 dev lo
 lxc exec gamma -- ip link set dev eth1 address 00:16:3E:5B:78:D5
 lxc exec gamma -- sysctl net.ipv4.conf.eth1.rp_filter=0 &>/dev/null
 lxc exec gamma -- sysctl net.ipv4.conf.eth1.arp_ignore=1 &>/dev/null
@@ -171,6 +174,7 @@ lxc exec gamma -- ip route change unreachable 10.0.0.41/32 table ntk
 echo delta
 lxc exec delta -- sysctl net.ipv4.ip_forward=1 &>/dev/null
 lxc exec delta -- sysctl net.ipv4.conf.all.rp_filter=0 &>/dev/null
+lxc exec delta -- ip address add 10.0.0.32 dev lo
 lxc exec delta -- ip link set dev eth1 address 00:16:3E:1A:C4:45
 lxc exec delta -- sysctl net.ipv4.conf.eth1.rp_filter=0 &>/dev/null
 lxc exec delta -- sysctl net.ipv4.conf.eth1.arp_ignore=1 &>/dev/null
@@ -225,6 +229,7 @@ lxc exec delta -- ip route change unreachable 10.0.0.40/32 table ntk
 echo mu
 lxc exec mu -- sysctl net.ipv4.ip_forward=1 &>/dev/null
 lxc exec mu -- sysctl net.ipv4.conf.all.rp_filter=0 &>/dev/null
+lxc exec mu -- ip address add 10.0.0.32 dev lo
 lxc exec mu -- ip link set dev eth1 address 00:16:3E:2D:8D:DE
 lxc exec mu -- sysctl net.ipv4.conf.eth1.rp_filter=0 &>/dev/null
 lxc exec mu -- sysctl net.ipv4.conf.eth1.arp_ignore=1 &>/dev/null
@@ -279,6 +284,7 @@ lxc exec mu -- ip route change unreachable 10.0.0.40/32 table ntk
 echo epsilon
 lxc exec epsilon -- sysctl net.ipv4.ip_forward=1 &>/dev/null
 lxc exec epsilon -- sysctl net.ipv4.conf.all.rp_filter=0 &>/dev/null
+lxc exec epsilon -- ip address add 10.0.0.32 dev lo
 lxc exec epsilon -- ip link set dev eth1 address 00:16:3E:3C:14:33
 lxc exec epsilon -- sysctl net.ipv4.conf.eth1.rp_filter=0 &>/dev/null
 lxc exec epsilon -- sysctl net.ipv4.conf.eth1.arp_ignore=1 &>/dev/null
@@ -352,7 +358,7 @@ lxc exec beta -- ip netns exec entr02 ip route add 169.254.94.223 dev entr02_eth
 
 lxc exec gamma -- ip route add 169.254.215.29 dev eth1 src 169.254.94.223
 
-echo "beta0 in networkspace entr02"
+echo "beta0 in network namespace entr02"
 lxc exec beta -- ip netns exec entr02 ip rule add table ntk
 lxc exec beta -- ip netns exec entr02 ip route add unreachable 10.0.0.0/29 table ntk
 lxc exec beta -- ip netns exec entr02 ip route add unreachable 10.0.0.64/29 table ntk
@@ -1814,7 +1820,7 @@ lxc exec alfa -- ip netns exec entr04 ip route add 169.254.96.141 dev entr04_eth
 
 lxc exec beta -- ip route add 169.254.202.128 dev eth1 src 169.254.96.141
 
-echo "alfa0 in networkspace entr04"
+echo "alfa0 in network namespace entr04"
 lxc exec alfa -- ip netns exec entr04 ip rule add table ntk
 lxc exec alfa -- ip netns exec entr04 ip route add unreachable 10.0.0.0/29 table ntk
 lxc exec alfa -- ip netns exec entr04 ip route add unreachable 10.0.0.64/29 table ntk

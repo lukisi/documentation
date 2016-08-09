@@ -10,6 +10,7 @@ Nel sistema *𝛽* la prima identità è *𝛽<sub>0</sub>* con indirizzo Netsuk
 ```
 sysctl net.ipv4.ip_forward=1
 sysctl net.ipv4.conf.all.rp_filter=0
+ip address add 10.0.0.32 dev lo
 ip link set dev eth1 address 00:16:3E:EC:A3:E1
 sysctl net.ipv4.conf.eth1.rp_filter=0
 sysctl net.ipv4.conf.eth1.arp_ignore=1
@@ -68,6 +69,7 @@ Nel sistema *𝛾* la prima identità è *𝛾<sub>0</sub>* con indirizzo Netsuk
 ```
 sysctl net.ipv4.ip_forward=1
 sysctl net.ipv4.conf.all.rp_filter=0
+ip address add 10.0.0.32 dev lo
 ip link set dev eth1 address 00:16:3E:5B:78:D5
 sysctl net.ipv4.conf.eth1.rp_filter=0
 sysctl net.ipv4.conf.eth1.arp_ignore=1

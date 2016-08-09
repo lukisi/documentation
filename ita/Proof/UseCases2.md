@@ -74,6 +74,7 @@ globali e specifici di ogni interfaccia di rete gestita.
 ```
 sysctl net.ipv4.ip_forward=1
 sysctl net.ipv4.conf.all.rp_filter=0
+ip address add 10.0.0.32 dev lo
 
 ip link set dev eth1 address 00:16:3E:1A:C4:45
 sysctl net.ipv4.conf.eth1.rp_filter=0
