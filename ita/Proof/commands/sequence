@@ -2411,6 +2411,10 @@ lxc exec epsilon -- ip route add unreachable 10.0.0.41/32 table ntk
 
 echo "Migrazione di *𝛽*"
 
+# Durante queste operazioni, il sistema *𝛼* deve mantenersi sempre in grado di comunicare con *𝛾*
+# tramite l'indirizzo IP interno al g-nodo di livello 3. Per questo ogni tanto mettiamo un comando di ping.
+
+lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
 lxc exec beta -- ip netns add migr01
 lxc exec beta -- ip netns exec migr01 sysctl net.ipv4.ip_forward=1 &>/dev/null
 lxc exec beta -- ip netns exec migr01 sysctl net.ipv4.conf.all.rp_filter=0 &>/dev/null
@@ -2426,6 +2430,7 @@ lxc exec beta -- ip netns exec migr01 ip route add 169.254.69.30 dev migr01_eth1
 lxc exec beta -- ip netns exec migr01 ip route add 169.254.94.223 dev migr01_eth1 src 169.254.27.218
 lxc exec beta -- ip netns exec migr01 ip route add 169.254.163.36 dev migr01_eth1 src 169.254.27.218
 lxc exec beta -- ip netns exec migr01 ip route add 169.254.133.31 dev migr01_eth1 src 169.254.27.218
+lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
 
 lxc exec alfa -- ip route add 169.254.27.218 dev eth1 src 169.254.69.30
 
@@ -2434,6 +2439,7 @@ lxc exec gamma -- ip route add 169.254.27.218 dev eth1 src 169.254.94.223
 lxc exec epsilon -- ip route add 169.254.27.218 dev eth1 src 169.254.163.36
 lxc exec epsilon -- ip netns exec entr05 ip route add 169.254.27.218 dev entr05_eth1 src 169.254.133.31
 
+lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
 lxc exec beta -- ip netns exec migr01 ip rule add table ntk
 lxc exec beta -- ip netns exec migr01 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 250
 lxc exec beta -- ip netns exec migr01 ip rule add fwmark 250 table ntk_from_00:16:3E:5B:78:D5
@@ -2583,9 +2589,32 @@ lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.87/32 t
 lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.63/32 table ntk_from_00:16:3E:FD:E2:AA
 lxc exec beta -- ip netns exec migr01 ip route change blackhole 10.0.0.51/32 table ntk_from_00:16:3E:FD:E2:AA
 lxc exec beta -- ip netns exec migr01 ip route change blackhole 10.0.0.41/32 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
 
-echo "TODO i vicini modificano le rotte che passano per 𝛽1"
+echo "i vicini di 𝛽 modificano le rotte che passano per 𝛽1"
+lxc exec gamma -- ip route change 10.0.0.16/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.22
+lxc exec gamma -- ip route change 10.0.0.80/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.22
+lxc exec gamma -- ip route change 10.0.0.56/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.62
+lxc exec gamma -- ip route change 10.0.0.23/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.22
+lxc exec gamma -- ip route change 10.0.0.87/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.22
+lxc exec gamma -- ip route change 10.0.0.63/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.62
+lxc exec gamma -- ip route change 10.0.0.51/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.50
+lxc exec gamma -- ip route change 10.0.0.41/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.40
+lxc exec gamma -- ip route change 10.0.0.16/30 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+lxc exec gamma -- ip route change 10.0.0.80/30 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+lxc exec gamma -- ip route change 10.0.0.56/30 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+lxc exec gamma -- ip route change 10.0.0.23/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+lxc exec gamma -- ip route change 10.0.0.87/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+lxc exec gamma -- ip route change 10.0.0.63/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+lxc exec gamma -- ip route change 10.0.0.51/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
 
+lxc exec alfa -- ip route change 10.0.0.20/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.18
+lxc exec alfa -- ip route change 10.0.0.84/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.18
+lxc exec alfa -- ip route change 10.0.0.60/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.58
+lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
+
+echo "𝛽 prosegue la migrazione"
 lxc exec beta -- ip route del 10.0.0.0/29 table ntk
 lxc exec beta -- ip route del 10.0.0.64/29 table ntk
 lxc exec beta -- ip route del 10.0.0.8/29 table ntk
@@ -2604,6 +2633,7 @@ lxc exec beta -- ip route del 10.0.0.86/32 table ntk
 lxc exec beta -- ip route del 10.0.0.62/32 table ntk
 lxc exec beta -- ip route del 10.0.0.50/32 table ntk
 lxc exec beta -- ip route del 10.0.0.40/32 table ntk
+lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
 
 lxc exec beta -- ip route del 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
 lxc exec beta -- ip route del 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
@@ -2623,6 +2653,7 @@ lxc exec beta -- ip route del 10.0.0.86/32 table ntk_from_00:16:3E:5B:78:D5
 lxc exec beta -- ip route del 10.0.0.62/32 table ntk_from_00:16:3E:5B:78:D5
 lxc exec beta -- ip route del 10.0.0.50/32 table ntk_from_00:16:3E:5B:78:D5
 lxc exec beta -- ip route del 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
+lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
 
 lxc exec beta -- ip route del 10.0.0.0/29 table ntk_from_00:16:3E:FD:E2:AA
 lxc exec beta -- ip route del 10.0.0.64/29 table ntk_from_00:16:3E:FD:E2:AA
@@ -2642,6 +2673,7 @@ lxc exec beta -- ip route del 10.0.0.86/32 table ntk_from_00:16:3E:FD:E2:AA
 lxc exec beta -- ip route del 10.0.0.62/32 table ntk_from_00:16:3E:FD:E2:AA
 lxc exec beta -- ip route del 10.0.0.50/32 table ntk_from_00:16:3E:FD:E2:AA
 lxc exec beta -- ip route del 10.0.0.40/32 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
 
 lxc exec beta -- iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.23
 lxc exec beta -- ip address del 10.0.0.23/32 dev eth1
@@ -2649,6 +2681,7 @@ lxc exec beta -- ip address del 10.0.0.87/32 dev eth1
 lxc exec beta -- ip address del 10.0.0.63/32 dev eth1
 lxc exec beta -- ip address del 10.0.0.51/32 dev eth1
 lxc exec beta -- ip address del 10.0.0.41/32 dev eth1
+lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
 
 
 echo "test completato"

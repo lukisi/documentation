@@ -271,6 +271,11 @@ La vecchia identità *𝛽<sub>1</sub>* aveva indirizzo 2·1·1·1, era la princ
 default. Con questa operazione diventa di connettività con indirizzo 2·1·1·3 nel network namespace
 **migr01**.
 
+Verifichiamo che il *passaggio* della vecchia identità *𝛽<sub>1</sub>* ad un nuovo network
+namespace nel suo sistema è fatto in modo tale che in nessun momento si interrompe il servizio di
+forwarding offerto dal sistema *𝛽*. Ad esempio, una connessione tra il sistema 𝛼 e il sistema 𝛾
+non si interrompe e non perde pacchetti.
+
 Il modulo Identities produce questi comandi per preparare il nuovo network
 namespace per la vecchia identità:
 
@@ -468,7 +473,31 @@ ip netns exec migr01 ip route change blackhole 10.0.0.41/32 table ntk_from_00:16
 Ora il programma *qspnclient* nel sistema *𝛽* si accerta che i suoi vicini abbiano modificato le
 rotte che prevedono di usare *𝛽<sub>1</sub>* come gateway.
 
-**TODO**
+**sistema 𝛼**
+```
+ip route change 10.0.0.20/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.18
+ip route change 10.0.0.84/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.18
+ip route change 10.0.0.60/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.58
+```
+
+**sistema 𝛾**
+```
+ip route change 10.0.0.16/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.22
+ip route change 10.0.0.80/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.22
+ip route change 10.0.0.56/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.62
+ip route change 10.0.0.23/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.22
+ip route change 10.0.0.87/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.22
+ip route change 10.0.0.63/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.62
+ip route change 10.0.0.51/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.50
+ip route change 10.0.0.41/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.40
+ip route change 10.0.0.16/30 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+ip route change 10.0.0.80/30 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+ip route change 10.0.0.56/30 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+ip route change 10.0.0.23/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+ip route change 10.0.0.87/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+ip route change 10.0.0.63/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+ip route change 10.0.0.51/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+```
 
 Dopo il programma *qspnclient* nel sistema *𝛽* proseguirà con questi comandi:
 
