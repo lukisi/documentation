@@ -267,8 +267,8 @@ ip route add unreachable 10.0.0.41/32 table ntk
 
 ### Migrazione di *𝛽*
 
-La vecchia identità *𝛽<sub>1</sub>* aveva indirizzo 2·1·1·1, era la principale nel network namespace
-default. Con questa operazione diventa di connettività con indirizzo 2·1·1·3 nel network namespace
+La vecchia identità *𝛽<sub>1</sub>* aveva indirizzo 1·1·1, era la principale nel network namespace
+default. Con questa operazione diventa di connettività con indirizzo 1·1·3 nel network namespace
 **migr01**.
 
 Verifichiamo che il *passaggio* della vecchia identità *𝛽<sub>1</sub>* ad un nuovo network

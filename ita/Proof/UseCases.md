@@ -19,7 +19,11 @@ Per una più facile lettura, questa sequenza di eventi e operazioni è stata div
 Al fine di semplificare, assumiamo da subito alcuni dati della rete che si andrà delineando con questi
 scenari.
 
-I sistemi che fanno parte di questi esempi sono 7: *𝛼*, *𝛽*, *𝛾*, *𝛿*, *𝜇*, *𝜀*, *𝜆*.
+I sistemi che fanno parte di questi esempi sono 7: *𝛼*, *𝛽*, *𝛾*, *𝛿*, *𝜇*, *𝜀*, *𝜆*. Sono disposti come
+mostra il disegno seguente (secondo [l'esempio](../ModuloQspn/UsoIndirizziVirtuali/Step1.md) riportato nella
+trattazione del modulo QSPN).
+
+![grafo1](img/UseCases/grafo1.png)
 
 Tutti i sistemi adottano questa comune topologia di rete:
 
