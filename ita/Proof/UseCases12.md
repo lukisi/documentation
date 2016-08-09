@@ -64,11 +64,11 @@ ip route add unreachable 10.0.0.30/31 table ntk
 ip route add unreachable 10.0.0.94/31 table ntk
 ip route add unreachable 10.0.0.62/31 table ntk
 ip route add unreachable 10.0.0.50/31 table ntk
-ip route add unreachable 10.0.0.28/32 table ntk
-ip route add unreachable 10.0.0.92/32 table ntk
-ip route add unreachable 10.0.0.60/32 table ntk
-ip route add unreachable 10.0.0.48/32 table ntk
-ip route add unreachable 10.0.0.40/32 table ntk
+ip route add unreachable 10.0.0.29/32 table ntk
+ip route add unreachable 10.0.0.93/32 table ntk
+ip route add unreachable 10.0.0.61/32 table ntk
+ip route add unreachable 10.0.0.49/32 table ntk
+ip route add unreachable 10.0.0.41/32 table ntk
 iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.28
 ip route change unreachable 10.0.0.0/29 table ntk
 ip route change unreachable 10.0.0.64/29 table ntk
@@ -200,11 +200,11 @@ ip route del 10.0.0.61/32 table ntk
 ip route del 10.0.0.49/32 table ntk
 ip route del 10.0.0.41/32 table ntk
 iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.28
-ip address del 10.0.0.28 dev eth1
-ip address del 10.0.0.92 dev eth1
-ip address del 10.0.0.60 dev eth1
-ip address del 10.0.0.48 dev eth1
-ip address del 10.0.0.40 dev eth1
+ip address del 10.0.0.28/32 dev eth1
+ip address del 10.0.0.92/32 dev eth1
+ip address del 10.0.0.60/32 dev eth1
+ip address del 10.0.0.48/32 dev eth1
+ip address del 10.0.0.40/32 dev eth1
 ip netns exec entr05 ip route change unreachable 10.0.0.0/29 table ntk
 ip netns exec entr05 ip route change unreachable 10.0.0.64/29 table ntk
 ip netns exec entr05 ip route change unreachable 10.0.0.8/29 table ntk
@@ -532,11 +532,11 @@ ip route del 10.0.0.50/32 table ntk_from_00:16:3E:FD:E2:AA
 ip route del 10.0.0.40/32 table ntk_from_00:16:3E:FD:E2:AA
 
 iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.23
-ip address del 10.0.0.23 dev eth1
-ip address del 10.0.0.87 dev eth1
-ip address del 10.0.0.63 dev eth1
-ip address del 10.0.0.51 dev eth1
-ip address del 10.0.0.41 dev eth1
+ip address del 10.0.0.23/32 dev eth1
+ip address del 10.0.0.87/32 dev eth1
+ip address del 10.0.0.63/32 dev eth1
+ip address del 10.0.0.51/32 dev eth1
+ip address del 10.0.0.41/32 dev eth1
 ```
 
 
