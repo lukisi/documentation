@@ -2598,26 +2598,157 @@ lxc exec beta -- ip netns exec migr01 ip route change blackhole 10.0.0.41/32 tab
 lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
 
 echo "i vicini di 𝛽 modificano le rotte che passano per 𝛽1"
+
+lxc exec gamma -- ip rule del fwmark 250 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec gamma -- ip route flush table ntk_from_00:16:3E:EC:A3:E1
+lxc exec gamma -- sed -i '/xxx_table_ntk_from_00:16:3E:EC:A3:E1_xxx/d' /etc/iproute2/rt_tables
+lxc exec gamma -- iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 250
+
+(echo; echo "250 ntk_from_00:16:3E:EE:AF:D1 # xxx_table_ntk_from_00:16:3E:EE:AF:D1_xxx") | lxc exec gamma -- tee -a /etc/iproute2/rt_tables >/dev/null
+lxc exec gamma -- ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.23/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EE:AF:D1 -j MARK --set-mark 250
+
+lxc exec gamma -- ip route change unreachable 10.0.0.0/29 table ntk
+lxc exec gamma -- ip route change unreachable 10.0.0.64/29 table ntk
+lxc exec gamma -- ip route change unreachable 10.0.0.8/29 table ntk
+lxc exec gamma -- ip route change unreachable 10.0.0.72/29 table ntk
+lxc exec gamma -- ip route change unreachable 10.0.0.24/29 table ntk
+lxc exec gamma -- ip route change unreachable 10.0.0.88/29 table ntk
 lxc exec gamma -- ip route change 10.0.0.16/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.22
 lxc exec gamma -- ip route change 10.0.0.80/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.22
 lxc exec gamma -- ip route change 10.0.0.56/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.62
+lxc exec gamma -- ip route change 10.0.0.20/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.22
+lxc exec gamma -- ip route change 10.0.0.84/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.22
+lxc exec gamma -- ip route change 10.0.0.60/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.62
+lxc exec gamma -- ip route change 10.0.0.48/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.50
 lxc exec gamma -- ip route change 10.0.0.23/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.22
 lxc exec gamma -- ip route change 10.0.0.87/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.22
 lxc exec gamma -- ip route change 10.0.0.63/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.62
 lxc exec gamma -- ip route change 10.0.0.51/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.50
 lxc exec gamma -- ip route change 10.0.0.41/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.40
+lxc exec gamma -- ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:1A:C4:45
 lxc exec gamma -- ip route change 10.0.0.16/30 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
 lxc exec gamma -- ip route change 10.0.0.80/30 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
 lxc exec gamma -- ip route change 10.0.0.56/30 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+lxc exec gamma -- ip route change unreachable 10.0.0.20/31 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.84/31 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:1A:C4:45
 lxc exec gamma -- ip route change 10.0.0.23/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
 lxc exec gamma -- ip route change 10.0.0.87/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
 lxc exec gamma -- ip route change 10.0.0.63/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
 lxc exec gamma -- ip route change 10.0.0.51/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+lxc exec gamma -- ip route change blackhole 10.0.0.41/32 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change 10.0.0.20/31 table ntk_from_00:16:3E:EE:AF:D1 via 169.254.253.216 dev eth1
+lxc exec gamma -- ip route change 10.0.0.84/31 table ntk_from_00:16:3E:EE:AF:D1 via 169.254.253.216 dev eth1
+lxc exec gamma -- ip route change 10.0.0.60/31 table ntk_from_00:16:3E:EE:AF:D1 via 169.254.253.216 dev eth1
+lxc exec gamma -- ip route change 10.0.0.48/31 table ntk_from_00:16:3E:EE:AF:D1 via 169.254.253.216 dev eth1
+lxc exec gamma -- ip route change unreachable 10.0.0.23/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EE:AF:D1
+
+lxc exec gamma -- ip rule add fwmark 250 table ntk_from_00:16:3E:EE:AF:D1
+
 lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
 
+lxc exec alfa -- ip rule del fwmark 250 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec alfa -- ip route flush table ntk_from_00:16:3E:EC:A3:E1
+lxc exec alfa -- sed -i '/xxx_table_ntk_from_00:16:3E:EC:A3:E1_xxx/d' /etc/iproute2/rt_tables
+lxc exec alfa -- iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 250
+
+(echo; echo "250 ntk_from_00:16:3E:EE:AF:D1 # xxx_table_ntk_from_00:16:3E:EE:AF:D1_xxx") | lxc exec alfa -- tee -a /etc/iproute2/rt_tables >/dev/null
+lxc exec alfa -- ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.20/30 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.84/30 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.60/30 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.16/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.80/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.56/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.19/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.83/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.59/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EE:AF:D1 -j MARK --set-mark 250
+
+lxc exec alfa -- ip route change unreachable 10.0.0.0/29 table ntk
+lxc exec alfa -- ip route change unreachable 10.0.0.64/29 table ntk
+lxc exec alfa -- ip route change unreachable 10.0.0.8/29 table ntk
+lxc exec alfa -- ip route change unreachable 10.0.0.72/29 table ntk
+lxc exec alfa -- ip route change unreachable 10.0.0.24/29 table ntk
+lxc exec alfa -- ip route change unreachable 10.0.0.88/29 table ntk
 lxc exec alfa -- ip route change 10.0.0.20/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.18
 lxc exec alfa -- ip route change 10.0.0.84/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.18
 lxc exec alfa -- ip route change 10.0.0.60/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.58
+lxc exec alfa -- ip route change unreachable 10.0.0.16/31 table ntk
+lxc exec alfa -- ip route change unreachable 10.0.0.80/31 table ntk
+lxc exec alfa -- ip route change unreachable 10.0.0.56/31 table ntk
+lxc exec alfa -- ip route change unreachable 10.0.0.48/31 table ntk
+lxc exec alfa -- ip route change unreachable 10.0.0.19/32 table ntk
+lxc exec alfa -- ip route change unreachable 10.0.0.83/32 table ntk
+lxc exec alfa -- ip route change unreachable 10.0.0.59/32 table ntk
+lxc exec alfa -- ip route change unreachable 10.0.0.51/32 table ntk
+lxc exec alfa -- ip route change unreachable 10.0.0.41/32 table ntk
+lxc exec alfa -- ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.20/30 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.84/30 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.60/30 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.16/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.80/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.56/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.19/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.83/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.59/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec alfa -- ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EE:AF:D1
+
+lxc exec alfa -- ip rule add fwmark 250 table ntk_from_00:16:3E:EE:AF:D1
+
 lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
 
 echo "𝛽 prosegue la migrazione"
