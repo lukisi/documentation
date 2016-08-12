@@ -39,6 +39,7 @@ tra *𝜀* e *𝛽*) tramite meccanismi estranei ai moduli di cui stiamo trattan
     1.  [Cambio namespace per *𝛽<sub>1</sub>*](#Cambio_namespace_beta1)
     1.  [Costituzione *𝛽<sub>2</sub>*](#Costituzione_beta2)
     1.  [Rimozione arco *𝛽<sub>1</sub>* - *𝛼*](#Rimozione_arco_beta1_alfa)
+    1.  [Cambio indirizzo per *𝛽<sub>2</sub>*](#Cambio_indirizzo_beta2)
 
 ### <a name="Operazioni_iniziali_epsilon"></a>Operazioni iniziali in *𝜀*
 
@@ -1287,10 +1288,111 @@ un ETP agli altri vicini. Quindi il nodo 𝛾, al ricevere tale ETP, sa che non 
 per il gateway *𝛽<sub>1</sub>*. Però abbiamo detto prima che aveva appreso di poterlo fare passando per il
 gateway *𝛽<sub>2</sub>* e aveva anche già aggiornato le rotte essendo questo un nuovo miglior percorso.
 
-Nel complesso quindi, la propagazione di questo ETP potrebbe portare a nuove esecuzioni di comandi nei
-vari sistemi, ma non li riportiamo qui perché non ci sono variazioni.
+Nel complesso quindi, la propagazione di questo ETP potrebbe portare a nuove esecuzioni di comandi di
+aggiornamento delle rotte nei vari sistemi, ma non li riportiamo qui perché non ci sono variazioni.
 
+#### <a name="Cambio_indirizzo_beta2"></a>Cambio indirizzo per *𝛽<sub>2</sub>*
 
+Ora la nuova identità *𝛽<sub>2</sub>* può assumere un indirizzo reale nel g-nodo destinazione della migrazione,
+nel nostro caso 0·1·1.
+
+Come conseguenza il programma *qspnclient* nel sistema *𝛽* aggiunge gli indirizzi IP che prima non aveva
+e rimuove gli stessi quali possibili destinazioni da tutte le tabelle. Inoltre aggiorna tutte le rotte nella
+tabella per i pacchetti originati localmente (`ntk`) di modo da usare i nuovi indirizzi come *src*.
+
+**sistema 𝛽**
+```
+ip address add 10.0.0.19 dev eth1
+iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.19
+ip address add 10.0.0.83 dev eth1
+ip address add 10.0.0.59 dev eth1
+ip address add 10.0.0.51 dev eth1
+ip address add 10.0.0.41 dev eth1
+
+ip route del 10.0.0.19/32 table ntk
+ip route del 10.0.0.83/32 table ntk
+ip route del 10.0.0.59/32 table ntk
+ip route del 10.0.0.51/32 table ntk
+ip route del 10.0.0.41/32 table ntk
+
+ip route del 10.0.0.19/32 table ntk_from_00:16:3E:5B:78:D5
+ip route del 10.0.0.83/32 table ntk_from_00:16:3E:5B:78:D5
+ip route del 10.0.0.59/32 table ntk_from_00:16:3E:5B:78:D5
+ip route del 10.0.0.51/32 table ntk_from_00:16:3E:5B:78:D5
+ip route del 10.0.0.41/32 table ntk_from_00:16:3E:5B:78:D5
+
+ip route del 10.0.0.19/32 table ntk_from_00:16:3E:FD:E2:AA
+ip route del 10.0.0.83/32 table ntk_from_00:16:3E:FD:E2:AA
+ip route del 10.0.0.59/32 table ntk_from_00:16:3E:FD:E2:AA
+ip route del 10.0.0.51/32 table ntk_from_00:16:3E:FD:E2:AA
+ip route del 10.0.0.41/32 table ntk_from_00:16:3E:FD:E2:AA
+
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.24/29 table ntk
+ip route change unreachable 10.0.0.88/29 table ntk
+ip route change 10.0.0.20/30 table ntk via 169.254.94.223 dev eth1 src 10.0.0.19
+ip route change 10.0.0.84/30 table ntk via 169.254.94.223 dev eth1 src 10.0.0.19
+ip route change 10.0.0.60/30 table ntk via 169.254.94.223 dev eth1 src 10.0.0.59
+ip route change unreachable 10.0.0.16/31 table ntk
+ip route change unreachable 10.0.0.80/31 table ntk
+ip route change unreachable 10.0.0.56/31 table ntk
+ip route change unreachable 10.0.0.48/31 table ntk
+ip route change 10.0.0.18/32 table ntk via 169.254.69.30 dev eth1 src 10.0.0.19
+ip route change 10.0.0.82/32 table ntk via 169.254.69.30 dev eth1 src 10.0.0.19
+ip route change 10.0.0.58/32 table ntk via 169.254.69.30 dev eth1 src 10.0.0.59
+ip route change 10.0.0.50/32 table ntk via 169.254.69.30 dev eth1 src 10.0.0.51
+ip route change 10.0.0.40/32 table ntk via 169.254.69.30 dev eth1 src 10.0.0.41
+```
+
+La nuova identità *𝛽<sub>2</sub>* comunica via ETP ai suoi vicini *𝛼* e *𝛾* che non è più possibile
+raggiungere tramite lui l'indirizzo 0·1·2; ma che ora è possibile raggiungere tramite lui l'indirizzo 0·1·1.
+
+L'effetto di questo ETP, che contiene solo modifiche a percorsi verso singoli nodi, è comunque limitato ai
+nodi del g-nodo di livello 1, cioè al solo *𝛼*.
+
+**sistema 𝛼**
+```
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.24/29 table ntk
+ip route change unreachable 10.0.0.88/29 table ntk
+ip route change 10.0.0.20/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.18
+ip route change 10.0.0.84/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.18
+ip route change 10.0.0.60/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.58
+ip route change unreachable 10.0.0.16/31 table ntk
+ip route change unreachable 10.0.0.80/31 table ntk
+ip route change unreachable 10.0.0.56/31 table ntk
+ip route change unreachable 10.0.0.48/31 table ntk
+ip route change 10.0.0.19/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.18
+ip route change 10.0.0.83/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.18
+ip route change 10.0.0.59/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.58
+ip route change 10.0.0.51/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.50
+ip route change 10.0.0.41/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.40
+
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.20/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.84/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.60/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.16/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.80/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.56/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.19/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.83/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.59/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+```
 
 **completare**
 
