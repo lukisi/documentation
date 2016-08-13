@@ -8,8 +8,8 @@ Ora la nuova identità *𝛽<sub>2</sub>* prende possesso del precedente network
 indirizzo virtuale nel g-nodo destinazione della migrazione, nel nostro caso 0·1·2. Seguiamo i suoi
 passi fino alla produzione del primo ETP.
 
-Per gli archi che ha con *𝛼* e *𝛾* dobbiamo considerare che sono esterni al g-nodo che ha
-migrato. Per questo aspettiamo di avere un ETP da loro prima di usare le relative tabelle
+Nel sistema *𝛽* il modulo QSPN, relativamente alla nuova identità *𝛽<sub>2</sub>*, ha archi verso
+i sistemi *𝛼* e *𝛾* e *𝜀*. Per tutti questi aspettiamo di avere un ETP da loro prima di usare le relative tabelle
 `ntk_from_xxx`.
 
 **sistema 𝛽**
@@ -86,11 +86,29 @@ ip route add unreachable 10.0.0.59/32 table ntk_from_00:16:3E:FD:E2:AA
 ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:FD:E2:AA
 ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:FD:E2:AA
 
-ip rule del fwmark 250 table ntk_from_00:16:3E:5B:78:D5
-iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 250
-
-ip rule del fwmark 249 table ntk_from_00:16:3E:FD:E2:AA
-iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:FD:E2:AA -j MARK --set-mark 249
+ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.20/30 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.84/30 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.60/30 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.16/31 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.80/31 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.56/31 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.18/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.82/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.58/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.50/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.19/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.83/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.59/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:3C:14:33
 ```
 
 Ora l'identità *𝛽<sub>2</sub>* riceve un ETP da *𝛼*, che fa parte del suo g-nodo in cui ha

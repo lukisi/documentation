@@ -548,7 +548,7 @@ del cambio di indirizzo MAC del peer.
 Prima si rimuove la vecchia regola. Poi si svuota/elimina la vecchia tabella. Poi si toglie la marcatura dei pacchetti
 provenienti dal vecchio MAC. Poi si aggiunge la nuova tabella con le rotte unreachable. Poi si aggiunge la marcatura
 dei pacchetti provenienti dal nuovo MAC.  
-Poi vanno aggiornate tutte le regole in tutte le tabelle. Infine si aggiunge la nuova regola.
+Poi vanno aggiornate tutte le rotte in tutte le tabelle. Infine si aggiunge la nuova regola.
 
 **sistema 𝛼**
 ```
@@ -704,6 +704,41 @@ ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EE:AF:D1
 ip rule add fwmark 250 table ntk_from_00:16:3E:EE:AF:D1
 ```
 
+Anche il sistema *𝜀* è un vicino di *𝛽*, ma esso non ha completato il bootstrap quindi non ha ancora aggiunto
+una regola per la tabella `ntk_from_00:16:3E:EC:A3:E1` e nemmeno alcuna rotta che usa *𝛽<sub>1</sub>* come gateway.  
+Quindi per tale sistema si svuota/elimina la vecchia tabella. Poi si aggiunge la nuova tabella con le rotte unreachable.
+
+**sistema 𝜀**
+```
+ip route flush table ntk_from_00:16:3E:EC:A3:E1
+sed -i '/xxx_table_ntk_from_00:16:3E:EC:A3:E1_xxx/d' /etc/iproute2/rt_tables
+
+(echo; echo "250 ntk_from_00:16:3E:EE:AF:D1 # xxx_table_ntk_from_00:16:3E:EE:AF:D1_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.22/32 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.86/32 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.62/32 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.50/32 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.23/32 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EE:AF:D1
+ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EE:AF:D1
+```
+
 Dopo il programma *qspnclient* nel sistema *𝛽* proseguirà con questi comandi:
 
 **sistema 𝛽**
@@ -771,6 +806,19 @@ ip address del 10.0.0.87/32 dev eth1
 ip address del 10.0.0.63/32 dev eth1
 ip address del 10.0.0.51/32 dev eth1
 ip address del 10.0.0.41/32 dev eth1
+```
+
+Siccome i vicini *𝛼* e *𝛾* sono esterni al g-nodo che ha migrato, dal vecchio network namespace
+della vecchia identità vanno rimosse anche le regole per le tabelle `ntk_from_xxx` relative.
+Infatti la nuova identità dovrà attendere un ETP da questi archi prima di poter aggiornare le tabelle.
+
+**sistema 𝛽**
+```
+ip rule del fwmark 250 table ntk_from_00:16:3E:5B:78:D5
+iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 250
+
+ip rule del fwmark 249 table ntk_from_00:16:3E:FD:E2:AA
+iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:FD:E2:AA -j MARK --set-mark 249
 ```
 
 Ora consideriamo che la vecchia identità *𝛽<sub>1</sub>* comunica con un ETP ai suoi vicini *𝛼*

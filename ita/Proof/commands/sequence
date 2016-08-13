@@ -2796,6 +2796,36 @@ lxc exec alfa -- ip rule add fwmark 250 table ntk_from_00:16:3E:EE:AF:D1
 
 lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
 
+lxc exec epsilon -- ip route flush table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- sed -i '/xxx_table_ntk_from_00:16:3E:EC:A3:E1_xxx/d' /etc/iproute2/rt_tables
+
+(echo; echo "250 ntk_from_00:16:3E:EE:AF:D1 # xxx_table_ntk_from_00:16:3E:EE:AF:D1_xxx") | lxc exec epsilon -- tee -a /etc/iproute2/rt_tables >/dev/null
+lxc exec epsilon -- ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.22/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.86/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.62/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.50/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.23/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EE:AF:D1
+
+lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
+
 echo "𝛽 prosegue la migrazione ripulendo il namespace che sarà di 𝛽2"
 lxc exec beta -- ip route del 10.0.0.0/29 table ntk
 lxc exec beta -- ip route del 10.0.0.64/29 table ntk
@@ -2863,6 +2893,13 @@ lxc exec beta -- ip address del 10.0.0.87/32 dev eth1
 lxc exec beta -- ip address del 10.0.0.63/32 dev eth1
 lxc exec beta -- ip address del 10.0.0.51/32 dev eth1
 lxc exec beta -- ip address del 10.0.0.41/32 dev eth1
+
+lxc exec beta -- ip rule del fwmark 250 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 250
+
+lxc exec beta -- ip rule del fwmark 249 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec beta -- iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:FD:E2:AA -j MARK --set-mark 249
+
 lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
 
 echo "𝛾 reagisce al cambio di indirizzo di 𝛽1"
@@ -2995,11 +3032,30 @@ lxc exec beta -- ip route add unreachable 10.0.0.59/32 table ntk_from_00:16:3E:F
 lxc exec beta -- ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:FD:E2:AA
 lxc exec beta -- ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:FD:E2:AA
 
-lxc exec beta -- ip rule del fwmark 250 table ntk_from_00:16:3E:5B:78:D5
-lxc exec beta -- iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 250
+lxc exec beta -- ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.20/30 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.84/30 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.60/30 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.16/31 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.80/31 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.56/31 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.18/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.82/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.58/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.50/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.19/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.83/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.59/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:3C:14:33
 
-lxc exec beta -- ip rule del fwmark 249 table ntk_from_00:16:3E:FD:E2:AA
-lxc exec beta -- iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:FD:E2:AA -j MARK --set-mark 249
 lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
 
 echo "𝛽2 riceve gli ETP"
