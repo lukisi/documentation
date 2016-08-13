@@ -118,7 +118,7 @@ ip route add 169.254.163.36 dev eth1 src 169.254.96.141
 ### <a name="Ingresso_epsilon_prima_fase"></a>Ingresso di *𝜀* - Prima fase
 
 Il modulo Identities produce questi comandi per preparare il nuovo network
-namespace per la vecchia identità:
+namespace nel sistema *𝜀* per la vecchia identità:
 
 **sistema 𝜀**
 ```
@@ -163,7 +163,7 @@ arco-identità.
 Nel vecchio network namespace vanno rimosse tutte le rotte tranne quelle verso indirizzi IP interni al
 proprio g-nodo di livello inferiore o uguale al livello del g-nodo che ha migrato.
 
-Il programma *qspnclient*, per trasferire le impostazioni relative alla sua vecchia identità
+Il programma *qspnclient* nel sistema *𝜀*, per trasferire le impostazioni relative alla sua vecchia identità
 nel nuovo network namespace, produce questi comandi:
 
 **sistema 𝜀**
@@ -246,7 +246,7 @@ ip netns exec entr05 ip route change unreachable 10.0.0.41/32 table ntk
 nel vecchio network namespace; tranne quelle che c'erano, cioè quelle verso indirizzi IP interni al
 proprio g-nodo di livello inferiore o uguale al livello del g-nodo che ha migrato.
 
-Il programma *qspnclient*, per aggiungere le impostazioni relative alla sua nuova identità
+Il programma *qspnclient* nel sistema *𝜀*, per aggiungere le impostazioni relative alla sua nuova identità
 nel precedente network namespace, produce questi comandi:
 
 **sistema 𝜀**
@@ -274,6 +274,63 @@ ip route add unreachable 10.0.0.87/32 table ntk
 ip route add unreachable 10.0.0.63/32 table ntk
 ip route add unreachable 10.0.0.51/32 table ntk
 ip route add unreachable 10.0.0.41/32 table ntk
+```
+
+Il programma *qspnclient* nel sistema *𝜀*, relativamente alla sua nuova identità, fornisce al modulo QSPN
+un arco verso il vicino nodo *𝛽*. Per esso costituisce anche la tabella `ntk_from_xxx`, che però
+non sarà menzionata in alcuna regola prima di aver ricevuto e processato un ETP da questo arco.
+
+**sistema 𝜀**
+```
+(echo; echo "250 ntk_from_00:16:3E:EC:A3:E1 # xxx_table_ntk_from_00:16:3E:EC:A3:E1_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.22/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.86/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.62/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.50/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.23/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+```
+
+Analogamente nel sistema *𝛽* viene fornito al modulo QSPN un arco verso il vicino sistema *𝜀*.
+
+**sistema 𝛽**
+```
+(echo; echo "248 ntk_from_00:16:3E:3C:14:33 # xxx_table_ntk_from_00:16:3E:3C:14:33_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.22/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.86/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.62/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.50/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:3C:14:33
 ```
 
 ### <a name="Migrazione_beta"></a>Migrazione di *𝛽*

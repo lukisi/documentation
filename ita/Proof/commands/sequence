@@ -2415,6 +2415,51 @@ lxc exec epsilon -- ip route add unreachable 10.0.0.63/32 table ntk
 lxc exec epsilon -- ip route add unreachable 10.0.0.51/32 table ntk
 lxc exec epsilon -- ip route add unreachable 10.0.0.41/32 table ntk
 
+(echo; echo "250 ntk_from_00:16:3E:EC:A3:E1 # xxx_table_ntk_from_00:16:3E:EC:A3:E1_xxx") | lxc exec epsilon -- tee -a /etc/iproute2/rt_tables >/dev/null
+lxc exec epsilon -- ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.22/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.86/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.62/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.50/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.23/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+
+(echo; echo "248 ntk_from_00:16:3E:3C:14:33 # xxx_table_ntk_from_00:16:3E:3C:14:33_xxx") | lxc exec beta -- tee -a /etc/iproute2/rt_tables >/dev/null
+lxc exec beta -- ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.22/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.86/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.62/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.50/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:3C:14:33
+
 echo "Migrazione di *𝛽*"
 
 # Durante queste operazioni, il sistema *𝛼* deve mantenersi sempre in grado di comunicare con *𝛾*
