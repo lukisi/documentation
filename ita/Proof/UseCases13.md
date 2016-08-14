@@ -600,6 +600,12 @@ ip route del 10.0.0.59/32 table ntk_from_00:16:3E:FD:E2:AA
 ip route del 10.0.0.51/32 table ntk_from_00:16:3E:FD:E2:AA
 ip route del 10.0.0.41/32 table ntk_from_00:16:3E:FD:E2:AA
 
+ip route del 10.0.0.19/32 table ntk_from_00:16:3E:3C:14:33
+ip route del 10.0.0.83/32 table ntk_from_00:16:3E:3C:14:33
+ip route del 10.0.0.59/32 table ntk_from_00:16:3E:3C:14:33
+ip route del 10.0.0.51/32 table ntk_from_00:16:3E:3C:14:33
+ip route del 10.0.0.41/32 table ntk_from_00:16:3E:3C:14:33
+
 ip route change unreachable 10.0.0.0/29 table ntk
 ip route change unreachable 10.0.0.64/29 table ntk
 ip route change unreachable 10.0.0.8/29 table ntk
