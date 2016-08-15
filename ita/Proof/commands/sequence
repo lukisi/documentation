@@ -3622,5 +3622,425 @@ lxc exec delta -- ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "delta: er
 lxc exec delta -- ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.48"; exit 1)
 lxc exec delta -- ping -q -n -c 1 10.0.0.40 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.40"; exit 1)
 
+echo "Ingresso di *𝜀* - Seconda fase"
+
+lxc exec epsilon -- ip route change unreachable 10.0.0.0/29 table ntk
+lxc exec epsilon -- ip route change unreachable 10.0.0.64/29 table ntk
+lxc exec epsilon -- ip route change unreachable 10.0.0.8/29 table ntk
+lxc exec epsilon -- ip route change unreachable 10.0.0.72/29 table ntk
+lxc exec epsilon -- ip route change unreachable 10.0.0.24/29 table ntk
+lxc exec epsilon -- ip route change unreachable 10.0.0.88/29 table ntk
+lxc exec epsilon -- ip route change 10.0.0.16/30 table ntk via 169.254.96.141 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.80/30 table ntk via 169.254.96.141 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.56/30 table ntk via 169.254.96.141 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.20/31 table ntk via 169.254.27.218 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.84/31 table ntk via 169.254.27.218 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.60/31 table ntk via 169.254.27.218 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.48/31 table ntk via 169.254.27.218 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.22/32 table ntk via 169.254.27.218 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.86/32 table ntk via 169.254.27.218 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.62/32 table ntk via 169.254.27.218 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.50/32 table ntk via 169.254.27.218 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.40/32 table ntk via 169.254.27.218 dev eth1
+lxc exec epsilon -- ip route change unreachable 10.0.0.23/32 table ntk
+lxc exec epsilon -- ip route change unreachable 10.0.0.87/32 table ntk
+lxc exec epsilon -- ip route change unreachable 10.0.0.63/32 table ntk
+lxc exec epsilon -- ip route change unreachable 10.0.0.51/32 table ntk
+lxc exec epsilon -- ip route change unreachable 10.0.0.41/32 table ntk
+
+lxc exec epsilon -- ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route change 10.0.0.20/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.27.218 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.84/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.27.218 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.60/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.27.218 dev eth1
+lxc exec epsilon -- ip route change blackhole 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route change 10.0.0.22/32 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.27.218 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.86/32 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.27.218 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.62/32 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.27.218 dev eth1
+lxc exec epsilon -- ip route change blackhole 10.0.0.50/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route change unreachable 10.0.0.23/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route change unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route change unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route change blackhole 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route change blackhole 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+
+lxc exec epsilon -- ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change 10.0.0.16/30 table ntk_from_00:16:3E:EE:AF:D1 via 169.254.96.141 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.80/30 table ntk_from_00:16:3E:EE:AF:D1 via 169.254.96.141 dev eth1
+lxc exec epsilon -- ip route change 10.0.0.56/30 table ntk_from_00:16:3E:EE:AF:D1 via 169.254.96.141 dev eth1
+lxc exec epsilon -- ip route change unreachable 10.0.0.20/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.84/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.22/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.86/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.62/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.50/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.23/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EE:AF:D1
+
+lxc exec epsilon -- iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 249
+lxc exec epsilon -- ip rule add fwmark 249 table ntk_from_00:16:3E:EC:A3:E1
+
+lxc exec epsilon -- iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EE:AF:D1 -j MARK --set-mark 250
+lxc exec epsilon -- ip rule add fwmark 250 table ntk_from_00:16:3E:EE:AF:D1
+
+lxc exec epsilon -- ip address add 10.0.0.23 dev eth1
+lxc exec epsilon -- iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.23
+lxc exec epsilon -- ip address add 10.0.0.87 dev eth1
+lxc exec epsilon -- ip address add 10.0.0.63 dev eth1
+lxc exec epsilon -- ip address add 10.0.0.51 dev eth1
+lxc exec epsilon -- ip address add 10.0.0.41 dev eth1
+lxc exec epsilon -- ip route del 10.0.0.23/32 table ntk
+lxc exec epsilon -- ip route del 10.0.0.87/32 table ntk
+lxc exec epsilon -- ip route del 10.0.0.63/32 table ntk
+lxc exec epsilon -- ip route del 10.0.0.51/32 table ntk
+lxc exec epsilon -- ip route del 10.0.0.41/32 table ntk
+lxc exec epsilon -- ip route del 10.0.0.23/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route del 10.0.0.87/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route del 10.0.0.63/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route del 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route del 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec epsilon -- ip route del 10.0.0.23/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route del 10.0.0.87/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route del 10.0.0.63/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route del 10.0.0.51/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec epsilon -- ip route del 10.0.0.41/32 table ntk_from_00:16:3E:EE:AF:D1
+
+lxc exec epsilon -- ip route change unreachable 10.0.0.0/29 table ntk
+lxc exec epsilon -- ip route change unreachable 10.0.0.64/29 table ntk
+lxc exec epsilon -- ip route change unreachable 10.0.0.8/29 table ntk
+lxc exec epsilon -- ip route change unreachable 10.0.0.72/29 table ntk
+lxc exec epsilon -- ip route change unreachable 10.0.0.24/29 table ntk
+lxc exec epsilon -- ip route change unreachable 10.0.0.88/29 table ntk
+lxc exec epsilon -- ip route change 10.0.0.16/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.23
+lxc exec epsilon -- ip route change 10.0.0.80/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.23
+lxc exec epsilon -- ip route change 10.0.0.56/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.63
+lxc exec epsilon -- ip route change 10.0.0.20/31 table ntk via 169.254.27.218 dev eth1 src 10.0.0.23
+lxc exec epsilon -- ip route change 10.0.0.84/31 table ntk via 169.254.27.218 dev eth1 src 10.0.0.23
+lxc exec epsilon -- ip route change 10.0.0.60/31 table ntk via 169.254.27.218 dev eth1 src 10.0.0.63
+lxc exec epsilon -- ip route change 10.0.0.48/31 table ntk via 169.254.27.218 dev eth1 src 10.0.0.51
+lxc exec epsilon -- ip route change 10.0.0.22/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.23
+lxc exec epsilon -- ip route change 10.0.0.86/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.23
+lxc exec epsilon -- ip route change 10.0.0.62/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.63
+lxc exec epsilon -- ip route change 10.0.0.50/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.51
+lxc exec epsilon -- ip route change 10.0.0.40/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.41
+
+lxc exec beta -- ip route change unreachable 10.0.0.0/29 table ntk
+lxc exec beta -- ip route change unreachable 10.0.0.64/29 table ntk
+lxc exec beta -- ip route change unreachable 10.0.0.8/29 table ntk
+lxc exec beta -- ip route change unreachable 10.0.0.72/29 table ntk
+lxc exec beta -- ip route change unreachable 10.0.0.24/29 table ntk
+lxc exec beta -- ip route change unreachable 10.0.0.88/29 table ntk
+lxc exec beta -- ip route change 10.0.0.20/30 table ntk via 169.254.163.36 dev eth1 src 10.0.0.19
+lxc exec beta -- ip route change 10.0.0.84/30 table ntk via 169.254.163.36 dev eth1 src 10.0.0.19
+lxc exec beta -- ip route change 10.0.0.60/30 table ntk via 169.254.163.36 dev eth1 src 10.0.0.59
+lxc exec beta -- ip route change unreachable 10.0.0.16/31 table ntk
+lxc exec beta -- ip route change unreachable 10.0.0.80/31 table ntk
+lxc exec beta -- ip route change unreachable 10.0.0.56/31 table ntk
+lxc exec beta -- ip route change unreachable 10.0.0.48/31 table ntk
+lxc exec beta -- ip route change 10.0.0.18/32 table ntk via 169.254.69.30 dev eth1 src 10.0.0.19
+lxc exec beta -- ip route change 10.0.0.82/32 table ntk via 169.254.69.30 dev eth1 src 10.0.0.19
+lxc exec beta -- ip route change 10.0.0.58/32 table ntk via 169.254.69.30 dev eth1 src 10.0.0.59
+lxc exec beta -- ip route change 10.0.0.50/32 table ntk via 169.254.69.30 dev eth1 src 10.0.0.51
+lxc exec beta -- ip route change 10.0.0.40/32 table ntk via 169.254.69.30 dev eth1 src 10.0.0.41
+
+lxc exec beta -- ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec beta -- ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec beta -- ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec beta -- ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec beta -- ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec beta -- ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec beta -- ip route change 10.0.0.20/30 table ntk_from_00:16:3E:FD:E2:AA via 169.254.163.36 dev eth1
+lxc exec beta -- ip route change 10.0.0.84/30 table ntk_from_00:16:3E:FD:E2:AA via 169.254.163.36 dev eth1
+lxc exec beta -- ip route change 10.0.0.60/30 table ntk_from_00:16:3E:FD:E2:AA via 169.254.163.36 dev eth1
+lxc exec beta -- ip route change unreachable 10.0.0.16/31 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec beta -- ip route change unreachable 10.0.0.80/31 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec beta -- ip route change unreachable 10.0.0.56/31 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec beta -- ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec beta -- ip route change unreachable 10.0.0.18/32 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec beta -- ip route change unreachable 10.0.0.82/32 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec beta -- ip route change unreachable 10.0.0.58/32 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec beta -- ip route change unreachable 10.0.0.50/32 table ntk_from_00:16:3E:FD:E2:AA
+lxc exec beta -- ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:FD:E2:AA
+
+lxc exec beta -- ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip route change unreachable 10.0.0.20/30 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip route change unreachable 10.0.0.84/30 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip route change unreachable 10.0.0.60/30 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip route change unreachable 10.0.0.16/31 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip route change unreachable 10.0.0.80/31 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip route change unreachable 10.0.0.56/31 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip route change blackhole 10.0.0.48/31 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip route change 10.0.0.18/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.69.30 dev eth1
+lxc exec beta -- ip route change 10.0.0.82/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.69.30 dev eth1
+lxc exec beta -- ip route change 10.0.0.58/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.69.30 dev eth1
+lxc exec beta -- ip route change blackhole 10.0.0.50/32 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
+
+lxc exec beta -- ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route change unreachable 10.0.0.20/30 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route change unreachable 10.0.0.84/30 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route change unreachable 10.0.0.60/30 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route change unreachable 10.0.0.16/31 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route change unreachable 10.0.0.80/31 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route change unreachable 10.0.0.56/31 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route change blackhole 10.0.0.48/31 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route change 10.0.0.18/32 table ntk_from_00:16:3E:3C:14:33 via 169.254.69.30 dev eth1
+lxc exec beta -- ip route change 10.0.0.82/32 table ntk_from_00:16:3E:3C:14:33 via 169.254.69.30 dev eth1
+lxc exec beta -- ip route change 10.0.0.58/32 table ntk_from_00:16:3E:3C:14:33 via 169.254.69.30 dev eth1
+lxc exec beta -- ip route change blackhole 10.0.0.50/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:3C:14:33
+
+lxc exec beta -- iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3C:14:33 -j MARK --set-mark 248
+lxc exec beta -- ip rule add fwmark 248 table ntk_from_00:16:3E:3C:14:33
+
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.0/29 table ntk
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.64/29 table ntk
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.8/29 table ntk
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.72/29 table ntk
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.24/29 table ntk
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.88/29 table ntk
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.16/30 table ntk via 169.254.163.36 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.80/30 table ntk via 169.254.163.36 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.56/30 table ntk via 169.254.163.36 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.20/31 table ntk via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.84/31 table ntk via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.60/31 table ntk via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.48/31 table ntk via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.22/32 table ntk via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.86/32 table ntk via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.62/32 table ntk via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.50/32 table ntk via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.40/32 table ntk via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.23/32 table ntk via 169.254.163.36 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.87/32 table ntk via 169.254.163.36 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.63/32 table ntk via 169.254.163.36 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.51/32 table ntk via 169.254.163.36 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.41/32 table ntk via 169.254.163.36 dev migr01_eth1
+
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.16/30 table ntk_from_00:16:3E:5B:78:D5 via 169.254.163.36 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.80/30 table ntk_from_00:16:3E:5B:78:D5 via 169.254.163.36 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.56/30 table ntk_from_00:16:3E:5B:78:D5 via 169.254.163.36 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.20/31 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.84/31 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.22/32 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.86/32 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.62/32 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.50/32 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.23/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.163.36 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.87/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.163.36 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.63/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.163.36 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.51/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.163.36 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.41/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.163.36 dev migr01_eth1
+
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.16/30 table ntk_from_00:16:3E:3C:14:33 via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.80/30 table ntk_from_00:16:3E:3C:14:33 via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.56/30 table ntk_from_00:16:3E:3C:14:33 via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.20/31 table ntk_from_00:16:3E:3C:14:33 via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.84/31 table ntk_from_00:16:3E:3C:14:33 via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.60/31 table ntk_from_00:16:3E:3C:14:33 via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.48/31 table ntk_from_00:16:3E:3C:14:33 via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.22/32 table ntk_from_00:16:3E:3C:14:33 via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.86/32 table ntk_from_00:16:3E:3C:14:33 via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.62/32 table ntk_from_00:16:3E:3C:14:33 via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.50/32 table ntk_from_00:16:3E:3C:14:33 via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change 10.0.0.40/32 table ntk_from_00:16:3E:3C:14:33 via 169.254.94.223 dev migr01_eth1
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.23/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.87/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.63/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:3C:14:33
+lxc exec beta -- ip netns exec migr01 ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:3C:14:33
+
+lxc exec beta -- ip netns exec migr01 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3C:14:33 -j MARK --set-mark 248
+lxc exec beta -- ip netns exec migr01 ip rule add fwmark 248 table ntk_from_00:16:3E:3C:14:33
+
+lxc exec gamma -- ip route change unreachable 10.0.0.0/29 table ntk
+lxc exec gamma -- ip route change unreachable 10.0.0.64/29 table ntk
+lxc exec gamma -- ip route change unreachable 10.0.0.8/29 table ntk
+lxc exec gamma -- ip route change unreachable 10.0.0.72/29 table ntk
+lxc exec gamma -- ip route change unreachable 10.0.0.24/29 table ntk
+lxc exec gamma -- ip route change unreachable 10.0.0.88/29 table ntk
+lxc exec gamma -- ip route change 10.0.0.16/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.22
+lxc exec gamma -- ip route change 10.0.0.80/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.22
+lxc exec gamma -- ip route change 10.0.0.56/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.62
+lxc exec gamma -- ip route change 10.0.0.20/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.22
+lxc exec gamma -- ip route change 10.0.0.84/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.22
+lxc exec gamma -- ip route change 10.0.0.60/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.62
+lxc exec gamma -- ip route change 10.0.0.48/31 table ntk via 169.254.253.216 dev eth1 src 10.0.0.50
+lxc exec gamma -- ip route change 10.0.0.23/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.22
+lxc exec gamma -- ip route change 10.0.0.87/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.22
+lxc exec gamma -- ip route change 10.0.0.63/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.62
+lxc exec gamma -- ip route change 10.0.0.51/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.50
+lxc exec gamma -- ip route change 10.0.0.41/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.40
+
+lxc exec gamma -- ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change 10.0.0.16/30 table ntk_from_00:16:3E:1A:C4:45 via 169.254.96.141 dev eth1
+lxc exec gamma -- ip route change 10.0.0.80/30 table ntk_from_00:16:3E:1A:C4:45 via 169.254.96.141 dev eth1
+lxc exec gamma -- ip route change 10.0.0.56/30 table ntk_from_00:16:3E:1A:C4:45 via 169.254.96.141 dev eth1
+lxc exec gamma -- ip route change unreachable 10.0.0.20/31 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.84/31 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:1A:C4:45
+lxc exec gamma -- ip route change 10.0.0.23/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+lxc exec gamma -- ip route change 10.0.0.87/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+lxc exec gamma -- ip route change 10.0.0.63/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+lxc exec gamma -- ip route change 10.0.0.51/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
+lxc exec gamma -- ip route change blackhole 10.0.0.41/32 table ntk_from_00:16:3E:1A:C4:45
+
+lxc exec gamma -- ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec gamma -- ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec gamma -- ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec gamma -- ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec gamma -- ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec gamma -- ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec gamma -- ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec gamma -- ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec gamma -- ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec gamma -- ip route change 10.0.0.20/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.253.216 dev eth1
+lxc exec gamma -- ip route change 10.0.0.84/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.253.216 dev eth1
+lxc exec gamma -- ip route change 10.0.0.60/31 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.253.216 dev eth1
+lxc exec gamma -- ip route change blackhole 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec gamma -- ip route change 10.0.0.23/32 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.27.218 dev eth1
+lxc exec gamma -- ip route change 10.0.0.87/32 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.27.218 dev eth1
+lxc exec gamma -- ip route change 10.0.0.63/32 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.27.218 dev eth1
+lxc exec gamma -- ip route change blackhole 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+lxc exec gamma -- ip route change blackhole 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+
+lxc exec gamma -- ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change 10.0.0.16/30 table ntk_from_00:16:3E:EE:AF:D1 via 169.254.96.141 dev eth1
+lxc exec gamma -- ip route change 10.0.0.80/30 table ntk_from_00:16:3E:EE:AF:D1 via 169.254.96.141 dev eth1
+lxc exec gamma -- ip route change 10.0.0.56/30 table ntk_from_00:16:3E:EE:AF:D1 via 169.254.96.141 dev eth1
+lxc exec gamma -- ip route change 10.0.0.20/31 table ntk_from_00:16:3E:EE:AF:D1 via 169.254.253.216 dev eth1
+lxc exec gamma -- ip route change 10.0.0.84/31 table ntk_from_00:16:3E:EE:AF:D1 via 169.254.253.216 dev eth1
+lxc exec gamma -- ip route change 10.0.0.60/31 table ntk_from_00:16:3E:EE:AF:D1 via 169.254.253.216 dev eth1
+lxc exec gamma -- ip route change 10.0.0.48/31 table ntk_from_00:16:3E:EE:AF:D1 via 169.254.253.216 dev eth1
+lxc exec gamma -- ip route change unreachable 10.0.0.23/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EE:AF:D1
+lxc exec gamma -- ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EE:AF:D1
+
+lxc exec epsilon -- ip netns exec entr05 ip route flush table main
+lxc exec epsilon -- ip netns exec entr05 ip link delete entr05_eth1 type macvlan
+lxc exec epsilon -- ip netns del entr05
+
+lxc exec beta -- ip route del 169.254.133.31 dev eth1 src 169.254.96.141
+lxc exec beta -- ip netns exec migr01 ip route del 169.254.133.31 dev migr01_eth1 src 169.254.27.218
+
+echo "alfa vede beta gamma delta epsilon e mu"
+lxc exec alfa -- ping -q -n -c 1 10.0.0.19 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.19"; exit 1)
+lxc exec alfa -- ping -q -n -c 1 10.0.0.83 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.83"; exit 1)
+lxc exec alfa -- ping -q -n -c 1 10.0.0.59 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.59"; exit 1)
+lxc exec alfa -- ping -q -n -c 1 10.0.0.51 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.51"; exit 1)
+lxc exec alfa -- ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.41"; exit 1)
+lxc exec alfa -- ping -q -n -c 1 10.0.0.22 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.22"; exit 1)
+lxc exec alfa -- ping -q -n -c 1 10.0.0.86 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.86"; exit 1)
+lxc exec alfa -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
+lxc exec alfa -- ping -q -n -c 1 10.0.0.21 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.21"; exit 1)
+lxc exec alfa -- ping -q -n -c 1 10.0.0.85 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.85"; exit 1)
+lxc exec alfa -- ping -q -n -c 1 10.0.0.61 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.61"; exit 1)
+lxc exec alfa -- ping -q -n -c 1 10.0.0.23 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.23"; exit 1)
+lxc exec alfa -- ping -q -n -c 1 10.0.0.87 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.87"; exit 1)
+lxc exec alfa -- ping -q -n -c 1 10.0.0.63 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.63"; exit 1)
+lxc exec alfa -- ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.20"; exit 1)
+lxc exec alfa -- ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.84"; exit 1)
+lxc exec alfa -- ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.60"; exit 1)
+echo "beta vede gamma delta epsilon e mu"
+lxc exec beta -- ping -q -n -c 1 10.0.0.22 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.22"; exit 1)
+lxc exec beta -- ping -q -n -c 1 10.0.0.86 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.86"; exit 1)
+lxc exec beta -- ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.62"; exit 1)
+lxc exec beta -- ping -q -n -c 1 10.0.0.21 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.21"; exit 1)
+lxc exec beta -- ping -q -n -c 1 10.0.0.85 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.85"; exit 1)
+lxc exec beta -- ping -q -n -c 1 10.0.0.61 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.61"; exit 1)
+lxc exec beta -- ping -q -n -c 1 10.0.0.23 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.23"; exit 1)
+lxc exec beta -- ping -q -n -c 1 10.0.0.87 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.87"; exit 1)
+lxc exec beta -- ping -q -n -c 1 10.0.0.63 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.63"; exit 1)
+lxc exec beta -- ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.20"; exit 1)
+lxc exec beta -- ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.84"; exit 1)
+lxc exec beta -- ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.60"; exit 1)
+echo "gamma vede delta epsilon e mu"
+lxc exec gamma -- ping -q -n -c 1 10.0.0.21 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.21"; exit 1)
+lxc exec gamma -- ping -q -n -c 1 10.0.0.85 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.85"; exit 1)
+lxc exec gamma -- ping -q -n -c 1 10.0.0.61 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.61"; exit 1)
+lxc exec gamma -- ping -q -n -c 1 10.0.0.49 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.49"; exit 1)
+lxc exec gamma -- ping -q -n -c 1 10.0.0.23 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.23"; exit 1)
+lxc exec gamma -- ping -q -n -c 1 10.0.0.87 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.87"; exit 1)
+lxc exec gamma -- ping -q -n -c 1 10.0.0.63 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.63"; exit 1)
+lxc exec gamma -- ping -q -n -c 1 10.0.0.51 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.51"; exit 1)
+lxc exec gamma -- ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.41"; exit 1)
+lxc exec gamma -- ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.20"; exit 1)
+lxc exec gamma -- ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.84"; exit 1)
+lxc exec gamma -- ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.60"; exit 1)
+lxc exec gamma -- ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.48"; exit 1)
+echo "delta vede epsilon e mu"
+lxc exec delta -- ping -q -n -c 1 10.0.0.23 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.23"; exit 1)
+lxc exec delta -- ping -q -n -c 1 10.0.0.87 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.87"; exit 1)
+lxc exec delta -- ping -q -n -c 1 10.0.0.63 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.63"; exit 1)
+lxc exec delta -- ping -q -n -c 1 10.0.0.51 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.51"; exit 1)
+lxc exec delta -- ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.20"; exit 1)
+lxc exec delta -- ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.84"; exit 1)
+lxc exec delta -- ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.60"; exit 1)
+lxc exec delta -- ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.48"; exit 1)
+lxc exec delta -- ping -q -n -c 1 10.0.0.40 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.40"; exit 1)
+echo "epsilon vede mu"
+lxc exec epsilon -- ping -q -n -c 1 10.0.0.23 -W 1 &>/dev/null || (echo "epsilon: errore ping 10.0.0.23"; exit 1)
+lxc exec epsilon -- ping -q -n -c 1 10.0.0.87 -W 1 &>/dev/null || (echo "epsilon: errore ping 10.0.0.87"; exit 1)
+lxc exec epsilon -- ping -q -n -c 1 10.0.0.63 -W 1 &>/dev/null || (echo "epsilon: errore ping 10.0.0.63"; exit 1)
+lxc exec epsilon -- ping -q -n -c 1 10.0.0.51 -W 1 &>/dev/null || (echo "epsilon: errore ping 10.0.0.51"; exit 1)
+
+
 echo "test completato"
 
