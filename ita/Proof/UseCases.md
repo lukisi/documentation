@@ -183,7 +183,7 @@ indirizzo 2·1·1·1 in *G<sub>𝛾</sub>*. Naturalmente, dopo poco *𝜀<sub>0<
 Le operazioni **migr02** e **entr06** sono collegate.  
 Indichiamo con *𝜑<sub>0</sub>* il g-nodo di livello 1 composto da *𝛽<sub>1</sub>* *𝛾<sub>0</sub>* e *𝜀<sub>1</sub>*
 che aveva indirizzo 2·1·1· in *G<sub>𝛾</sub>*.  
-Con questa migrazione *𝜑<sub>0</sub>* assume indirizzo *di connettività* 2·1·2· e si costituisce un
+Con questa migrazione *𝜑<sub>0</sub>* assume indirizzo *di connettività* 2·1·3· e si costituisce un
 *nuovo g-nodo* *𝜑<sub>1</sub>* composto da *𝛽<sub>3</sub>* *𝛾<sub>1</sub>* e *𝜀<sub>2</sub>*.
 Temporaneamente *𝜑<sub>1</sub>* assume indirizzo *virtuale* 2·0·2·. Dopo poco *𝜑<sub>1</sub>* assume
 indirizzo 2·0·0·.  
