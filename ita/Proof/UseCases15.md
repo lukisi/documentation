@@ -1377,6 +1377,25 @@ ip netns exec migr01 ip route del 10.0.0.63/32 table ntk_from_00:16:3E:5B:78:D5
 ip netns exec migr01 ip route del 10.0.0.51/32 table ntk_from_00:16:3E:5B:78:D5
 ```
 
+Siccome i vicini *𝛽* e *𝛿* sono esterni al g-nodo *𝜑* che ha migrato, dal vecchio network namespace
+della vecchia identità (dei border-nodi di *𝜑*) vanno rimosse anche le regole per le tabelle `ntk_from_xxx` relative.
+Infatti la nuova identità dovrà attendere un ETP da questi archi prima di poter aggiornare le tabelle.
+
+**sistema 𝛾**
+```
+ip rule del fwmark 249 table ntk_from_00:16:3E:1A:C4:45
+iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:1A:C4:45 -j MARK --set-mark 249
+
+ip rule del fwmark 248 table ntk_from_00:16:3E:EC:A3:E1
+iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 248
+```
+
+**sistema 𝜀**
+```
+ip rule del fwmark 249 table ntk_from_00:16:3E:EC:A3:E1
+iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 249
+```
+
 **completare**
 
 [Pagina seguente](UseCases16.md)
