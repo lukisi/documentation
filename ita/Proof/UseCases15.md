@@ -26,6 +26,11 @@ i sistemi hanno l'identità principale con un indirizzo IP globale raggiungibile
 1.  [Arco tra *𝜆* e *𝜀*](#Arco_lambda_epsilon)
 1.  [Ingresso di *𝜆* - Prima fase](#Ingresso_lambda_prima_fase)
 1.  [Migrazione di *𝜑*](#Migrazione_phi)
+    1.  [Cambio namespace per *𝜑<sub>0</sub>*](#Cambio_namespace_phi0)
+    1.  [Costituzione *𝜑<sub>1</sub>*](UseCases16.md#Costituzione_phi1)
+    1.  [Rimozione archi da *𝜑<sub>0</sub>* all'esterno](UseCases16.md#Rimozione_archi_esterni_phi0)
+    1.  [Cambio indirizzo per *𝜑<sub>1</sub>*](UseCases16.md#Cambio_indirizzo_phi1)
+1.  [Ingresso di *𝜆* - Seconda fase](UseCases17.md#Ingresso_lambda_seconda_fase)
 
 ### <a name="Operazioni_iniziali_lambda"></a>Operazioni iniziali in *𝜆*
 
