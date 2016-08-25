@@ -1123,6 +1123,27 @@ Quindi per tale sistema si svuota/elimina la vecchia tabella. Poi si aggiunge la
 
 **sistema 𝜆**
 ```
+ip route flush table ntk_from_00:16:3E:3C:14:33
+sed -i '/xxx_table_ntk_from_00:16:3E:3C:14:33_xxx/d' /etc/iproute2/rt_tables
+
+(echo; echo "250 ntk_from_00:16:3E:3B:9F:45 # xxx_table_ntk_from_00:16:3E:3B:9F:45_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:3B:9F:45
 ```
 
 **completare**
