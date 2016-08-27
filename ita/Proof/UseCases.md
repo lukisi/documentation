@@ -13,6 +13,7 @@ Per una più facile lettura, questa sequenza di eventi e operazioni è stata div
 1.  [Negli altri sistemi](UseCases4.md#Altri_sistemi)
 1.  [Sequenza temporale nei vari sistemi](UseCases8.md)
 1.  [Migrazione di un singolo nodo](UseCases12.md)
+1.  [Migrazione di un g-nodo](UseCases15.md)
 
 ## <a name="Convenzioni"></a>Convenzioni
 
