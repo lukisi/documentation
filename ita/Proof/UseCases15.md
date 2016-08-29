@@ -16,7 +16,7 @@ Ricordiamo che indichiamo con *𝜑<sub>0</sub>* il g-nodo *g<sub>1</sub>(𝜀)*
 
 Si decide di far entrare il sistema *𝜆* in 1· con indirizzo temporaneamente *virtuale* 1·2·.
 Si farà poi migrare il g-nodo *𝜑<sub>0</sub>*. La nuova identità *𝜑<sub>1</sub>* andrà in 0·, con indirizzo dapprima
-virtuale 0·2 e dopo con indirizzo reale 0·0. L'identità di connettività *𝜑<sub>0</sub>* avrà indirizzo 1·3·.
+virtuale 0·2· e dopo con indirizzo reale 0·0·. L'identità di connettività *𝜑<sub>0</sub>* avrà indirizzo 1·3·.
 In seguito l'indirizzo di *𝜆* diventerà il *reale* 1·1·.
 
 Alla fine il g-nodo 1· resta internamente connesso e tutti
