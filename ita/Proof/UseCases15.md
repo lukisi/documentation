@@ -268,6 +268,7 @@ ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:3C:14:33
 ```
 
 **sistema 𝜀**
@@ -1147,6 +1148,7 @@ ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:3E:3B:9F:45
 ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:3B:9F:45
 ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:3B:9F:45
 ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:3B:9F:45
+ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:3B:9F:45
 ```
 
 Dopo il programma *qspnclient* nei sistemi del g-nodo *𝜑* proseguirà con questi comandi:
