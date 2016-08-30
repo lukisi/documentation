@@ -290,7 +290,7 @@ ip netns exec migr01 ip rule add fwmark 248 table ntk_from_00:16:3E:3C:14:33
 
 La propagazione di questo ETP ha ripercussioni sulle tabelle del nodo *𝛾*.
 
-**sistema *𝛾*
+**sistema 𝛾**
 ```
 ip route change unreachable 10.0.0.0/29 table ntk
 ip route change unreachable 10.0.0.64/29 table ntk
