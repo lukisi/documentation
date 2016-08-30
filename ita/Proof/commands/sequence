@@ -7414,5 +7414,81 @@ ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
 ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
 EOF
 
+echo "alfa vede beta gamma delta epsilon e mu"
+cat <<EOF | lxc exec alfa bash
+set -e
+ping -q -n -c 1 10.0.0.19 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.19"; exit 1)
+ping -q -n -c 1 10.0.0.83 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.83"; exit 1)
+ping -q -n -c 1 10.0.0.59 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.59"; exit 1)
+ping -q -n -c 1 10.0.0.51 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.51"; exit 1)
+ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.41"; exit 1)
+ping -q -n -c 1 10.0.0.16 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.16"; exit 1)
+ping -q -n -c 1 10.0.0.80 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.80"; exit 1)
+ping -q -n -c 1 10.0.0.56 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.56"; exit 1)
+ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.48"; exit 1)
+ping -q -n -c 1 10.0.0.21 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.21"; exit 1)
+ping -q -n -c 1 10.0.0.85 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.85"; exit 1)
+ping -q -n -c 1 10.0.0.61 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.61"; exit 1)
+ping -q -n -c 1 10.0.0.17 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.17"; exit 1)
+ping -q -n -c 1 10.0.0.81 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.81"; exit 1)
+ping -q -n -c 1 10.0.0.57 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.57"; exit 1)
+ping -q -n -c 1 10.0.0.49 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.49"; exit 1)
+ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.20"; exit 1)
+ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.84"; exit 1)
+ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.60"; exit 1)
+EOF
+echo "beta vede gamma delta epsilon e mu"
+cat <<EOF | lxc exec beta bash
+set -e
+ping -q -n -c 1 10.0.0.16 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.16"; exit 1)
+ping -q -n -c 1 10.0.0.80 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.80"; exit 1)
+ping -q -n -c 1 10.0.0.56 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.56"; exit 1)
+ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.48"; exit 1)
+ping -q -n -c 1 10.0.0.21 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.21"; exit 1)
+ping -q -n -c 1 10.0.0.85 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.85"; exit 1)
+ping -q -n -c 1 10.0.0.61 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.61"; exit 1)
+ping -q -n -c 1 10.0.0.17 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.17"; exit 1)
+ping -q -n -c 1 10.0.0.81 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.81"; exit 1)
+ping -q -n -c 1 10.0.0.57 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.57"; exit 1)
+ping -q -n -c 1 10.0.0.49 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.49"; exit 1)
+ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.20"; exit 1)
+ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.84"; exit 1)
+ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.60"; exit 1)
+EOF
+echo "gamma vede delta epsilon e mu"
+cat <<EOF | lxc exec gamma bash
+set -e
+ping -q -n -c 1 10.0.0.21 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.21"; exit 1)
+ping -q -n -c 1 10.0.0.85 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.85"; exit 1)
+ping -q -n -c 1 10.0.0.61 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.61"; exit 1)
+ping -q -n -c 1 10.0.0.17 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.17"; exit 1)
+ping -q -n -c 1 10.0.0.81 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.81"; exit 1)
+ping -q -n -c 1 10.0.0.57 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.57"; exit 1)
+ping -q -n -c 1 10.0.0.49 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.49"; exit 1)
+ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.41"; exit 1)
+ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.20"; exit 1)
+ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.84"; exit 1)
+ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.60"; exit 1)
+EOF
+echo "delta vede epsilon e mu"
+cat <<EOF | lxc exec gamma bash
+set -e
+ping -q -n -c 1 10.0.0.17 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.17"; exit 1)
+ping -q -n -c 1 10.0.0.81 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.81"; exit 1)
+ping -q -n -c 1 10.0.0.57 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.57"; exit 1)
+ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.20"; exit 1)
+ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.84"; exit 1)
+ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.60"; exit 1)
+ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.48"; exit 1)
+ping -q -n -c 1 10.0.0.40 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.40"; exit 1)
+EOF
+echo "epsilon vede mu"
+cat <<EOF | lxc exec gamma bash
+set -e
+ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null || (echo "epsilon: errore ping 10.0.0.20"; exit 1)
+ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null || (echo "epsilon: errore ping 10.0.0.84"; exit 1)
+ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "epsilon: errore ping 10.0.0.60"; exit 1)
+EOF
+
 echo "test completato"
 
