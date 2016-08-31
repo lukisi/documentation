@@ -6758,9 +6758,9 @@ ip route change unreachable 10.0.0.8/29 table ntk
 ip route change unreachable 10.0.0.72/29 table ntk
 ip route change unreachable 10.0.0.24/29 table ntk
 ip route change unreachable 10.0.0.88/29 table ntk
-ip route change 10.0.0.20/30 table ntk via 169.254.96.141 dev eth1
-ip route change 10.0.0.84/30 table ntk via 169.254.96.141 dev eth1
-ip route change 10.0.0.60/30 table ntk via 169.254.96.141 dev eth1
+ip route change 10.0.0.20/30 table ntk via 169.254.27.218 dev eth1
+ip route change 10.0.0.84/30 table ntk via 169.254.27.218 dev eth1
+ip route change 10.0.0.60/30 table ntk via 169.254.27.218 dev eth1
 ip route change unreachable 10.0.0.16/31 table ntk
 ip route change unreachable 10.0.0.80/31 table ntk
 ip route change unreachable 10.0.0.56/31 table ntk
@@ -7129,9 +7129,9 @@ ip route change unreachable 10.0.0.8/29 table ntk
 ip route change unreachable 10.0.0.72/29 table ntk
 ip route change unreachable 10.0.0.24/29 table ntk
 ip route change unreachable 10.0.0.88/29 table ntk
-ip route change 10.0.0.20/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.17
-ip route change 10.0.0.84/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.17
-ip route change 10.0.0.60/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.57
+ip route change 10.0.0.20/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.17
+ip route change 10.0.0.84/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.17
+ip route change 10.0.0.60/30 table ntk via 169.254.27.218 dev eth1 src 10.0.0.57
 ip route change 10.0.0.18/31 table ntk via 169.254.96.141 dev eth1 src 10.0.0.17
 ip route change 10.0.0.82/31 table ntk via 169.254.96.141 dev eth1 src 10.0.0.17
 ip route change 10.0.0.58/31 table ntk via 169.254.96.141 dev eth1 src 10.0.0.57
