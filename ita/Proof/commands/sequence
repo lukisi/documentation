@@ -7090,6 +7090,11 @@ ip route del 10.0.0.80/31 table ntk_from_00:16:3E:EE:AF:D1
 ip route del 10.0.0.56/31 table ntk_from_00:16:3E:EE:AF:D1
 ip route del 10.0.0.48/31 table ntk_from_00:16:3E:EE:AF:D1
 
+ip route del 10.0.0.16/31 table ntk_from_00:16:3E:06:3E:90
+ip route del 10.0.0.80/31 table ntk_from_00:16:3E:06:3E:90
+ip route del 10.0.0.56/31 table ntk_from_00:16:3E:06:3E:90
+ip route del 10.0.0.48/31 table ntk_from_00:16:3E:06:3E:90
+
 ip route add unreachable 10.0.0.16/32 table ntk
 ip route add unreachable 10.0.0.80/32 table ntk
 ip route add unreachable 10.0.0.56/32 table ntk
@@ -7116,6 +7121,11 @@ ip route change unreachable 10.0.0.16/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route change unreachable 10.0.0.80/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route change unreachable 10.0.0.56/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route change unreachable 10.0.0.48/32 table ntk_from_00:16:3E:EE:AF:D1
+
+ip route add unreachable 10.0.0.16/32 table ntk_from_00:16:3E:06:3E:90
+ip route add unreachable 10.0.0.80/32 table ntk_from_00:16:3E:06:3E:90
+ip route add unreachable 10.0.0.56/32 table ntk_from_00:16:3E:06:3E:90
+ip route add unreachable 10.0.0.48/32 table ntk_from_00:16:3E:06:3E:90
 
 ip address add 10.0.0.17 dev eth1
 iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.17
