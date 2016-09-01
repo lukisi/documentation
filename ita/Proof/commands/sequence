@@ -5374,7 +5374,6 @@ ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:3E:3B:9F:45
 ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:3B:9F:45
 ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:3B:9F:45
 ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:3B:9F:45
-ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:3B:9F:45
 EOF
 
 echo "𝜑 prosegue la migrazione ripulendo il namespace che sarà di 𝜑1"
@@ -6037,7 +6036,6 @@ ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:3C:14:33
-ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:3C:14:33
 EOF
 
 cat <<EOF | lxc exec delta bash
@@ -7539,7 +7537,6 @@ ip route change unreachable 10.0.0.22/31 table ntk_from_00:16:3E:3B:9F:45
 ip route change unreachable 10.0.0.86/31 table ntk_from_00:16:3E:3B:9F:45
 ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:3B:9F:45
 ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:3B:9F:45
-ip route change blackhole 10.0.0.41/32 table ntk_from_00:16:3E:3B:9F:45
 
 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3C:14:33
@@ -7558,7 +7555,6 @@ ip route change unreachable 10.0.0.22/31 table ntk_from_00:16:3E:3C:14:33
 ip route change unreachable 10.0.0.86/31 table ntk_from_00:16:3E:3C:14:33
 ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:3C:14:33
 ip route change blackhole 10.0.0.50/31 table ntk_from_00:16:3E:3C:14:33
-ip route change blackhole 10.0.0.41/32 table ntk_from_00:16:3E:3C:14:33
 
 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3B:9F:45 -j MARK --set-mark 250
 ip rule add fwmark 250 table ntk_from_00:16:3E:3B:9F:45
