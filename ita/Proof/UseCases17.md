@@ -722,4 +722,19 @@ ip route change unreachable 10.0.0.49/32 table ntk_from_00:16:3E:1A:C4:45
 ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:1A:C4:45
 ```
 
+Infine, prima o poi, la vecchia identità del sistema *𝜆* viene dismessa.
+
+**sistema 𝜆**
+```
+ip netns exec entr06 ip route flush table main
+ip netns exec entr06 ip link delete entr06_eth1 type macvlan
+ip netns del entr06
+```
+
+**sistema 𝜀**
+```
+ip route del 169.254.34.45 dev eth1 src 169.254.163.36
+ip netns exec migr02 ip route del 169.254.34.45 dev migr02_eth1 src 169.254.241.153
+```
+
 [Pagina seguente](UseCases18.md)
