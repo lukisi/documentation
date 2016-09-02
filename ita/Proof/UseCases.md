@@ -14,6 +14,7 @@ Per una più facile lettura, questa sequenza di eventi e operazioni è stata div
 1.  [Sequenza temporale nei vari sistemi](UseCases8.md)
 1.  [Migrazione di un singolo nodo](UseCases12.md)
 1.  [Migrazione di un g-nodo](UseCases15.md)
+1.  [Rimozione identità di connettività](UseCases18.md)
 
 ## <a name="Convenzioni"></a>Convenzioni
 
@@ -24,7 +25,7 @@ I sistemi che fanno parte di questi esempi sono 7: *𝛼*, *𝛽*, *𝛾*, *𝛿
 mostra il disegno seguente (secondo [l'esempio](../ModuloQspn/UsoIndirizziVirtuali/Step1.md) riportato nella
 trattazione del modulo QSPN).
 
-##### <a name="grafo_1"></a>Grafo 1 #####
+##### <a name="grafo_1"></a>Grafo 1
 
 ![missing image](img/grafo1.png "grafo 1")
 
