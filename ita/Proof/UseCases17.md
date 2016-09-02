@@ -737,4 +737,10 @@ ip route del 169.254.34.45 dev eth1 src 169.254.163.36
 ip netns exec migr02 ip route del 169.254.34.45 dev migr02_eth1 src 169.254.241.153
 ```
 
+Rappresentiamo nel grafo 2 la rete nel suo stato corrente.
+
+##### <a name="grafo_2"></a>Grafo 2 #####
+
+![missing image](img/grafo2.svg "grafo 2")
+
 [Pagina seguente](UseCases18.md)

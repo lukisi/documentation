@@ -24,7 +24,9 @@ I sistemi che fanno parte di questi esempi sono 7: *𝛼*, *𝛽*, *𝛾*, *𝛿
 mostra il disegno seguente (secondo [l'esempio](../ModuloQspn/UsoIndirizziVirtuali/Step1.md) riportato nella
 trattazione del modulo QSPN).
 
-![grafo1](img/UseCases/grafo1.png)
+##### <a name="grafo_1"></a>Grafo 1 #####
+
+![missing image](img/grafo1.svg "grafo 1")
 
 Tutti i sistemi adottano questa comune topologia di rete:
 
