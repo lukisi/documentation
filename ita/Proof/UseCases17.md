@@ -741,6 +741,6 @@ Rappresentiamo nel grafo 2 la rete nel suo stato corrente.
 
 ##### <a name="grafo_2"></a>Grafo 2 #####
 
-![missing image](img/grafo2.svg "grafo 2")
+![missing image](img/grafo2.png "grafo 2")
 
 [Pagina seguente](UseCases18.md)

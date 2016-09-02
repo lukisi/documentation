@@ -14,7 +14,7 @@
    sodipodi:docname="grafo1.svg"
    width="353"
    height="185.83934"
-   inkscape:export-filename="/home/luca/github/documentation/ita/Proof/img/UseCases/grafo1.png"
+   inkscape:export-filename="/home/luca/github/documentation/ita/Proof/img/grafo1.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90">
   <metadata
@@ -25,7 +25,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>

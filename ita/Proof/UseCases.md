@@ -26,7 +26,7 @@ trattazione del modulo QSPN).
 
 ##### <a name="grafo_1"></a>Grafo 1 #####
 
-![missing image](img/grafo1.svg "grafo 1")
+![missing image](img/grafo1.png "grafo 1")
 
 Tutti i sistemi adottano questa comune topologia di rete:
 
