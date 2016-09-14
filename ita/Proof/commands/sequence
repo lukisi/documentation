@@ -8434,8 +8434,8 @@ ip netns exec migr02 ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:
 ip netns exec migr02 ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:3B:9F:45
 ip netns exec migr02 ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:3B:9F:45
 ip netns exec migr02 ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:3B:9F:45
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3B:9F:45 -j MARK --set-mark 245
-ip rule add fwmark 245 table ntk_from_00:16:3E:3B:9F:45
+ip netns exec migr02 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3B:9F:45 -j MARK --set-mark 245
+ip netns exec migr02 ip rule add fwmark 245 table ntk_from_00:16:3E:3B:9F:45
 EOF
 
 cat <<EOF | lxc exec epsilon bash
@@ -8480,8 +8480,8 @@ ip netns exec migr02 ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:
 ip netns exec migr02 ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:AF:4C:2A
 ip netns exec migr02 ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:AF:4C:2A
 ip netns exec migr02 ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:AF:4C:2A
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:AF:4C:2A -j MARK --set-mark 245
-ip rule add fwmark 245 table ntk_from_00:16:3E:AF:4C:2A
+ip netns exec migr02 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:AF:4C:2A -j MARK --set-mark 245
+ip netns exec migr02 ip rule add fwmark 245 table ntk_from_00:16:3E:AF:4C:2A
 EOF
 
 echo "test completato"

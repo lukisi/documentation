@@ -69,10 +69,10 @@ ETP, al termine delle quali abbiamo queste nuove conoscenze:
 *   Il nodo **𝛽<sub>migr01</sub>** conosce un nuovo percorso per 0·0·0 costituito dagli
     archi **𝛽<sub>migr01</sub>-𝜀-𝛾** e un nuovo percorso per 0·0·1 costituito dagli
     archi **𝛽<sub>migr01</sub>-𝛾-𝜀**.
-*   Il nodo **𝛾<sub>migr02</sub>** conosce un nuovo percorso per 1·2·1 costituito dall'arco **𝛾<sub>migr02</sub>-𝜀<sub>migr02</sub>**.
-*   Il nodo **𝜀<sub>migr02</sub>** conosce un nuovo percorso per 1·2·0 costituito dall'arco **𝜀<sub>migr02</sub>-𝛾<sub>migr02</sub>**.
-*   Il nodo **𝛽<sub>migr02</sub>** conosce un nuovo percorso per 1·2·0 costituito dagli
-    archi **𝛽<sub>migr02</sub>-𝜀<sub>migr02</sub>-𝛾<sub>migr02</sub>** e un nuovo percorso per 1·2·1 costituito
+*   Il nodo **𝛾<sub>migr02</sub>** conosce un nuovo percorso per 1·3·1 costituito dall'arco **𝛾<sub>migr02</sub>-𝜀<sub>migr02</sub>**.
+*   Il nodo **𝜀<sub>migr02</sub>** conosce un nuovo percorso per 1·3·0 costituito dall'arco **𝜀<sub>migr02</sub>-𝛾<sub>migr02</sub>**.
+*   Il nodo **𝛽<sub>migr02</sub>** conosce un nuovo percorso per 1·3·0 costituito dagli
+    archi **𝛽<sub>migr02</sub>-𝜀<sub>migr02</sub>-𝛾<sub>migr02</sub>** e un nuovo percorso per 1·3·1 costituito
     dagli archi **𝛽<sub>migr02</sub>-𝛾<sub>migr02</sub>-𝜀<sub>migr02</sub>**.
 
 Tralasciamo di descrivere i comandi che sui vari nodi queste nuove conoscenze potrebbero scatenare o
@@ -121,8 +121,8 @@ ip netns exec migr02 ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:
 ip netns exec migr02 ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:3B:9F:45
 ip netns exec migr02 ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:3B:9F:45
 ip netns exec migr02 ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:3B:9F:45
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3B:9F:45 -j MARK --set-mark 245
-ip rule add fwmark 245 table ntk_from_00:16:3E:3B:9F:45
+ip netns exec migr02 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3B:9F:45 -j MARK --set-mark 245
+ip netns exec migr02 ip rule add fwmark 245 table ntk_from_00:16:3E:3B:9F:45
 ```
 
 **sistema 𝜀**
@@ -167,8 +167,8 @@ ip netns exec migr02 ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:
 ip netns exec migr02 ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:AF:4C:2A
 ip netns exec migr02 ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:AF:4C:2A
 ip netns exec migr02 ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:AF:4C:2A
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:AF:4C:2A -j MARK --set-mark 245
-ip rule add fwmark 245 table ntk_from_00:16:3E:AF:4C:2A
+ip netns exec migr02 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:AF:4C:2A -j MARK --set-mark 245
+ip netns exec migr02 ip rule add fwmark 245 table ntk_from_00:16:3E:AF:4C:2A
 ```
 
 [Pagina seguente](UseCases19.md)
