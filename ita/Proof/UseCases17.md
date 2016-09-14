@@ -2,7 +2,7 @@
 
 [Pagina precedente](UseCases16.md)
 
-#### <a name="Ingresso_lambda_seconda_fase"></a>Ingresso di *𝜆* - Seconda fase
+### <a name="Ingresso_lambda_seconda_fase"></a>Ingresso di *𝜆* - Seconda fase
 
 Ora la nuova identità nel sistema *𝜆*, che è in fase di bootstrap, riceve un ETP dal nodo *𝜀<sub>1</sub>* e
 dal nodo *𝜀<sub>2</sub>*. Assumiamo anche che subito dopo essa ottiene il suo definitivo indirizzo reale 1·1·
