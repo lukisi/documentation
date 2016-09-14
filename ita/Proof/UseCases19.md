@@ -366,4 +366,13 @@ sed -i '/xxx_table_ntk_from_00:16:3E:AF:4C:2A_xxx/d' /etc/iproute2/rt_tables
 sed -i '/xxx_table_ntk_from_00:16:3E:3B:9F:45_xxx/d' /etc/iproute2/rt_tables
 ```
 
+----
+
+L'intero sistema e ogni singolo g-nodo sono ancora internamente connessi e ogni singolo nodo è
+raggiungibile. La nuova rete si presenta come nel disegno seguente.
+
+##### <a name="grafo_5"></a>Grafo 5
+
+![missing image](img/grafo5.png "grafo 5")
+
 [Pagina seguente](UseCases20.md)
