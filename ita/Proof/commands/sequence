@@ -8372,6 +8372,8 @@ ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.60"
 ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.48"; exit 1)
 EOF
 
+echo "Nuovo arco tra i sistemi gamma e epsilon"
+
 cat <<EOF | lxc exec gamma bash
 set -e
 ip route add 169.254.163.36 dev eth1 src 169.254.94.223
@@ -8482,6 +8484,471 @@ ip netns exec migr02 ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:
 ip netns exec migr02 ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:AF:4C:2A
 ip netns exec migr02 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:AF:4C:2A -j MARK --set-mark 245
 ip netns exec migr02 ip rule add fwmark 245 table ntk_from_00:16:3E:AF:4C:2A
+EOF
+
+echo "Dismissione di *𝛽-migr01*"
+
+cat <<EOF | lxc exec beta bash
+set -e
+ip netns exec migr01 ip route flush table main
+ip netns exec migr01 ip link delete migr01_eth1 type macvlan
+ip netns del migr01
+EOF
+
+cat <<EOF | lxc exec gamma bash
+set -e
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.24/29 table ntk
+ip route change unreachable 10.0.0.88/29 table ntk
+ip route change 10.0.0.20/30 table ntk via 169.254.253.216 dev eth1 src 10.0.0.16
+ip route change 10.0.0.84/30 table ntk via 169.254.253.216 dev eth1 src 10.0.0.16
+ip route change 10.0.0.60/30 table ntk via 169.254.253.216 dev eth1 src 10.0.0.56
+ip route change 10.0.0.18/31 table ntk via 169.254.96.141 dev eth1 src 10.0.0.16
+ip route change 10.0.0.82/31 table ntk via 169.254.96.141 dev eth1 src 10.0.0.16
+ip route change 10.0.0.58/31 table ntk via 169.254.96.141 dev eth1 src 10.0.0.56
+ip route change 10.0.0.50/31 table ntk via 169.254.96.141 dev eth1 src 10.0.0.48
+ip route change 10.0.0.17/32 table ntk via 169.254.163.36 dev eth1 src 10.0.0.16
+ip route change 10.0.0.81/32 table ntk via 169.254.163.36 dev eth1 src 10.0.0.16
+ip route change 10.0.0.57/32 table ntk via 169.254.163.36 dev eth1 src 10.0.0.56
+ip route change 10.0.0.49/32 table ntk via 169.254.163.36 dev eth1 src 10.0.0.48
+ip route change 10.0.0.41/32 table ntk via 169.254.163.36 dev eth1 src 10.0.0.40
+
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3C:14:33
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3C:14:33
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:3C:14:33
+ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:3C:14:33
+ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:3C:14:33
+ip route change 10.0.0.20/30 table ntk_from_00:16:3E:3C:14:33 via 169.254.253.216 dev eth1
+ip route change 10.0.0.84/30 table ntk_from_00:16:3E:3C:14:33 via 169.254.253.216 dev eth1
+ip route change 10.0.0.60/30 table ntk_from_00:16:3E:3C:14:33 via 169.254.253.216 dev eth1
+ip route change 10.0.0.18/31 table ntk_from_00:16:3E:3C:14:33 via 169.254.96.141 dev eth1
+ip route change 10.0.0.82/31 table ntk_from_00:16:3E:3C:14:33 via 169.254.96.141 dev eth1
+ip route change 10.0.0.58/31 table ntk_from_00:16:3E:3C:14:33 via 169.254.96.141 dev eth1
+ip route change 10.0.0.50/31 table ntk_from_00:16:3E:3C:14:33 via 169.254.96.141 dev eth1
+ip route change unreachable 10.0.0.17/32 table ntk_from_00:16:3E:3C:14:33
+ip route change unreachable 10.0.0.81/32 table ntk_from_00:16:3E:3C:14:33
+ip route change unreachable 10.0.0.57/32 table ntk_from_00:16:3E:3C:14:33
+ip route change unreachable 10.0.0.49/32 table ntk_from_00:16:3E:3C:14:33
+ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:3C:14:33
+
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change 10.0.0.20/30 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.253.216 dev eth1
+ip route change 10.0.0.84/30 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.253.216 dev eth1
+ip route change 10.0.0.60/30 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.253.216 dev eth1
+ip route change unreachable 10.0.0.18/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.82/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.58/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change 10.0.0.17/32 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.163.36 dev eth1
+ip route change 10.0.0.81/32 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.163.36 dev eth1
+ip route change 10.0.0.57/32 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.163.36 dev eth1
+ip route change 10.0.0.49/32 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.163.36 dev eth1
+ip route change blackhole 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.20/30 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.84/30 table ntk_from_00:16:3E:1A:C4:45
+ip route change unreachable 10.0.0.60/30 table ntk_from_00:16:3E:1A:C4:45
+ip route change 10.0.0.18/31 table ntk_from_00:16:3E:1A:C4:45 via 169.254.96.141 dev eth1
+ip route change 10.0.0.82/31 table ntk_from_00:16:3E:1A:C4:45 via 169.254.96.141 dev eth1
+ip route change 10.0.0.58/31 table ntk_from_00:16:3E:1A:C4:45 via 169.254.96.141 dev eth1
+ip route change blackhole 10.0.0.50/31 table ntk_from_00:16:3E:1A:C4:45
+ip route change 10.0.0.17/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.163.36 dev eth1
+ip route change 10.0.0.81/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.163.36 dev eth1
+ip route change 10.0.0.57/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.163.36 dev eth1
+ip route change blackhole 10.0.0.49/32 table ntk_from_00:16:3E:1A:C4:45
+ip route change blackhole 10.0.0.41/32 table ntk_from_00:16:3E:1A:C4:45
+
+ip rule del fwmark 250 table ntk_from_00:16:3E:EE:AF:D1
+ip route flush table ntk_from_00:16:3E:EE:AF:D1
+sed -i '/xxx_table_ntk_from_00:16:3E:EE:AF:D1_xxx/d' /etc/iproute2/rt_tables
+iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:EE:AF:D1 -j MARK --set-mark 250
+EOF
+
+cat <<EOF | lxc exec epsilon bash
+set -e
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.24/29 table ntk
+ip route change unreachable 10.0.0.88/29 table ntk
+ip route change 10.0.0.20/30 table ntk via 169.254.109.22 dev eth1 src 10.0.0.17
+ip route change 10.0.0.84/30 table ntk via 169.254.109.22 dev eth1 src 10.0.0.17
+ip route change 10.0.0.60/30 table ntk via 169.254.109.22 dev eth1 src 10.0.0.57
+ip route change 10.0.0.18/31 table ntk via 169.254.96.141 dev eth1 src 10.0.0.17
+ip route change 10.0.0.82/31 table ntk via 169.254.96.141 dev eth1 src 10.0.0.17
+ip route change 10.0.0.58/31 table ntk via 169.254.96.141 dev eth1 src 10.0.0.57
+ip route change 10.0.0.50/31 table ntk via 169.254.96.141 dev eth1 src 10.0.0.49
+ip route change 10.0.0.16/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.17
+ip route change 10.0.0.80/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.17
+ip route change 10.0.0.56/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.57
+ip route change 10.0.0.48/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.49
+ip route change 10.0.0.40/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.41
+
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change 10.0.0.20/30 table ntk_from_00:16:3E:5B:78:D5 via 169.254.109.22 dev eth1
+ip route change 10.0.0.84/30 table ntk_from_00:16:3E:5B:78:D5 via 169.254.109.22 dev eth1
+ip route change 10.0.0.60/30 table ntk_from_00:16:3E:5B:78:D5 via 169.254.109.22 dev eth1
+ip route change 10.0.0.18/31 table ntk_from_00:16:3E:5B:78:D5 via 169.254.96.141 dev eth1
+ip route change 10.0.0.82/31 table ntk_from_00:16:3E:5B:78:D5 via 169.254.96.141 dev eth1
+ip route change 10.0.0.58/31 table ntk_from_00:16:3E:5B:78:D5 via 169.254.96.141 dev eth1
+ip route change 10.0.0.50/31 table ntk_from_00:16:3E:5B:78:D5 via 169.254.96.141 dev eth1
+ip route change unreachable 10.0.0.16/32 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.80/32 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.56/32 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.48/32 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
+
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change 10.0.0.20/30 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.109.22 dev eth1
+ip route change 10.0.0.84/30 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.109.22 dev eth1
+ip route change 10.0.0.60/30 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.109.22 dev eth1
+ip route change unreachable 10.0.0.18/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.82/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.58/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change 10.0.0.16/32 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.94.223 dev eth1
+ip route change 10.0.0.80/32 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.94.223 dev eth1
+ip route change 10.0.0.56/32 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.94.223 dev eth1
+ip route change 10.0.0.48/32 table ntk_from_00:16:3E:EC:A3:E1 via 169.254.94.223 dev eth1
+ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:EC:A3:E1
+
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:06:3E:90
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:06:3E:90
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:06:3E:90
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:06:3E:90
+ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:06:3E:90
+ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:06:3E:90
+ip route change unreachable 10.0.0.20/30 table ntk_from_00:16:3E:06:3E:90
+ip route change unreachable 10.0.0.84/30 table ntk_from_00:16:3E:06:3E:90
+ip route change unreachable 10.0.0.60/30 table ntk_from_00:16:3E:06:3E:90
+ip route change 10.0.0.18/31 table ntk_from_00:16:3E:06:3E:90 via 169.254.96.141 dev eth1
+ip route change 10.0.0.82/31 table ntk_from_00:16:3E:06:3E:90 via 169.254.96.141 dev eth1
+ip route change 10.0.0.58/31 table ntk_from_00:16:3E:06:3E:90 via 169.254.96.141 dev eth1
+ip route change blackhole 10.0.0.50/31 table ntk_from_00:16:3E:06:3E:90
+ip route change 10.0.0.16/32 table ntk_from_00:16:3E:06:3E:90 via 169.254.94.223 dev eth1
+ip route change 10.0.0.80/32 table ntk_from_00:16:3E:06:3E:90 via 169.254.94.223 dev eth1
+ip route change 10.0.0.56/32 table ntk_from_00:16:3E:06:3E:90 via 169.254.94.223 dev eth1
+ip route change blackhole 10.0.0.48/32 table ntk_from_00:16:3E:06:3E:90
+ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:06:3E:90
+
+ip rule del fwmark 250 table ntk_from_00:16:3E:EE:AF:D1
+ip route flush table ntk_from_00:16:3E:EE:AF:D1
+sed -i '/xxx_table_ntk_from_00:16:3E:EE:AF:D1_xxx/d' /etc/iproute2/rt_tables
+iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:EE:AF:D1 -j MARK --set-mark 250
+EOF
+
+echo "Dismissione di *𝛽-migr02*"
+
+cat <<EOF | lxc exec beta bash
+set -e
+ip netns exec migr02 ip route flush table main
+ip netns exec migr02 ip link delete migr02_eth1 type macvlan
+ip netns del migr02
+EOF
+
+cat <<EOF | lxc exec gamma bash
+set -e
+ip netns exec migr02 ip route change unreachable 10.0.0.0/29 table ntk
+ip netns exec migr02 ip route change unreachable 10.0.0.64/29 table ntk
+ip netns exec migr02 ip route change unreachable 10.0.0.8/29 table ntk
+ip netns exec migr02 ip route change unreachable 10.0.0.72/29 table ntk
+ip netns exec migr02 ip route change unreachable 10.0.0.24/29 table ntk
+ip netns exec migr02 ip route change unreachable 10.0.0.88/29 table ntk
+ip netns exec migr02 ip route change 10.0.0.16/30 table ntk via 169.254.253.216 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.80/30 table ntk via 169.254.253.216 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.56/30 table ntk via 169.254.253.216 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.20/31 table ntk via 169.254.253.216 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.84/31 table ntk via 169.254.253.216 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.60/31 table ntk via 169.254.253.216 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.48/31 table ntk via 169.254.253.216 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.22/31 table ntk via 169.254.241.153 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.86/31 table ntk via 169.254.241.153 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.62/31 table ntk via 169.254.241.153 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.50/31 table ntk via 169.254.241.153 dev migr02_eth1
+
+ip netns exec migr02 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
+ip netns exec migr02 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
+ip netns exec migr02 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
+ip netns exec migr02 ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:1A:C4:45
+ip netns exec migr02 ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:1A:C4:45
+ip netns exec migr02 ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:1A:C4:45
+ip netns exec migr02 ip route change 10.0.0.16/30 table ntk_from_00:16:3E:1A:C4:45 via 169.254.241.153 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.80/30 table ntk_from_00:16:3E:1A:C4:45 via 169.254.241.153 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.56/30 table ntk_from_00:16:3E:1A:C4:45 via 169.254.241.153 dev migr02_eth1
+ip netns exec migr02 ip route change unreachable 10.0.0.20/31 table ntk_from_00:16:3E:1A:C4:45
+ip netns exec migr02 ip route change unreachable 10.0.0.84/31 table ntk_from_00:16:3E:1A:C4:45
+ip netns exec migr02 ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:1A:C4:45
+ip netns exec migr02 ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:1A:C4:45
+ip netns exec migr02 ip route change 10.0.0.22/31 table ntk_from_00:16:3E:1A:C4:45 via 169.254.241.153 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.86/31 table ntk_from_00:16:3E:1A:C4:45 via 169.254.241.153 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.62/31 table ntk_from_00:16:3E:1A:C4:45 via 169.254.241.153 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.50/31 table ntk_from_00:16:3E:1A:C4:45 via 169.254.241.153 dev migr02_eth1
+
+ip netns exec migr02 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3B:9F:45
+ip netns exec migr02 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3B:9F:45
+ip netns exec migr02 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3B:9F:45
+ip netns exec migr02 ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:3B:9F:45
+ip netns exec migr02 ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:3B:9F:45
+ip netns exec migr02 ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:3B:9F:45
+ip netns exec migr02 ip route change 10.0.0.16/30 table ntk_from_00:16:3E:3B:9F:45 via 169.254.253.216 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.80/30 table ntk_from_00:16:3E:3B:9F:45 via 169.254.253.216 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.56/30 table ntk_from_00:16:3E:3B:9F:45 via 169.254.253.216 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.20/31 table ntk_from_00:16:3E:3B:9F:45 via 169.254.253.216 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.84/31 table ntk_from_00:16:3E:3B:9F:45 via 169.254.253.216 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.60/31 table ntk_from_00:16:3E:3B:9F:45 via 169.254.253.216 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.48/31 table ntk_from_00:16:3E:3B:9F:45 via 169.254.253.216 dev migr02_eth1
+ip netns exec migr02 ip route change unreachable 10.0.0.22/31 table ntk_from_00:16:3E:3B:9F:45
+ip netns exec migr02 ip route change unreachable 10.0.0.86/31 table ntk_from_00:16:3E:3B:9F:45
+ip netns exec migr02 ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:3B:9F:45
+ip netns exec migr02 ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:3B:9F:45
+
+ip netns exec migr02 ip rule del fwmark 247 table ntk_from_00:16:3E:BD:34:98
+ip netns exec migr02 ip route flush table ntk_from_00:16:3E:BD:34:98
+sed -i '/xxx_table_ntk_from_00:16:3E:BD:34:98_xxx/d' /etc/iproute2/rt_tables
+ip netns exec migr02 iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:BD:34:98 -j MARK --set-mark 247
+EOF
+
+cat <<EOF | lxc exec epsilon bash
+set -e
+ip netns exec migr02 ip route change unreachable 10.0.0.0/29 table ntk
+ip netns exec migr02 ip route change unreachable 10.0.0.64/29 table ntk
+ip netns exec migr02 ip route change unreachable 10.0.0.8/29 table ntk
+ip netns exec migr02 ip route change unreachable 10.0.0.72/29 table ntk
+ip netns exec migr02 ip route change unreachable 10.0.0.24/29 table ntk
+ip netns exec migr02 ip route change unreachable 10.0.0.88/29 table ntk
+ip netns exec migr02 ip route change 10.0.0.16/30 table ntk via 169.254.109.22 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.80/30 table ntk via 169.254.109.22 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.56/30 table ntk via 169.254.109.22 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.20/31 table ntk via 169.254.24.198 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.84/31 table ntk via 169.254.24.198 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.60/31 table ntk via 169.254.24.198 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.48/31 table ntk via 169.254.24.198 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.22/31 table ntk via 169.254.109.22 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.86/31 table ntk via 169.254.109.22 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.62/31 table ntk via 169.254.109.22 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.50/31 table ntk via 169.254.109.22 dev migr02_eth1
+
+ip netns exec migr02 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:06:3E:90
+ip netns exec migr02 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:06:3E:90
+ip netns exec migr02 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:06:3E:90
+ip netns exec migr02 ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:06:3E:90
+ip netns exec migr02 ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:06:3E:90
+ip netns exec migr02 ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:06:3E:90
+ip netns exec migr02 ip route change 10.0.0.16/30 table ntk_from_00:16:3E:06:3E:90 via 169.254.24.198 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.80/30 table ntk_from_00:16:3E:06:3E:90 via 169.254.24.198 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.56/30 table ntk_from_00:16:3E:06:3E:90 via 169.254.24.198 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.20/31 table ntk_from_00:16:3E:06:3E:90 via 169.254.24.198 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.84/31 table ntk_from_00:16:3E:06:3E:90 via 169.254.24.198 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.60/31 table ntk_from_00:16:3E:06:3E:90 via 169.254.24.198 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.48/31 table ntk_from_00:16:3E:06:3E:90 via 169.254.24.198 dev migr02_eth1
+ip netns exec migr02 ip route change unreachable 10.0.0.22/31 table ntk_from_00:16:3E:06:3E:90
+ip netns exec migr02 ip route change unreachable 10.0.0.86/31 table ntk_from_00:16:3E:06:3E:90
+ip netns exec migr02 ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:06:3E:90
+ip netns exec migr02 ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:06:3E:90
+
+ip netns exec migr02 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:AF:4C:2A
+ip netns exec migr02 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:AF:4C:2A
+ip netns exec migr02 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:AF:4C:2A
+ip netns exec migr02 ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:AF:4C:2A
+ip netns exec migr02 ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:AF:4C:2A
+ip netns exec migr02 ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:AF:4C:2A
+ip netns exec migr02 ip route change 10.0.0.16/30 table ntk_from_00:16:3E:AF:4C:2A via 169.254.109.22 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.80/30 table ntk_from_00:16:3E:AF:4C:2A via 169.254.109.22 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.56/30 table ntk_from_00:16:3E:AF:4C:2A via 169.254.109.22 dev migr02_eth1
+ip netns exec migr02 ip route change unreachable 10.0.0.20/31 table ntk_from_00:16:3E:AF:4C:2A
+ip netns exec migr02 ip route change unreachable 10.0.0.84/31 table ntk_from_00:16:3E:AF:4C:2A
+ip netns exec migr02 ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:AF:4C:2A
+ip netns exec migr02 ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:AF:4C:2A
+ip netns exec migr02 ip route change 10.0.0.22/31 table ntk_from_00:16:3E:AF:4C:2A via 169.254.109.22 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.86/31 table ntk_from_00:16:3E:AF:4C:2A via 169.254.109.22 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.62/31 table ntk_from_00:16:3E:AF:4C:2A via 169.254.109.22 dev migr02_eth1
+ip netns exec migr02 ip route change 10.0.0.50/31 table ntk_from_00:16:3E:AF:4C:2A via 169.254.109.22 dev migr02_eth1
+
+ip netns exec migr02 ip rule del fwmark 247 table ntk_from_00:16:3E:BD:34:98
+ip netns exec migr02 ip route flush table ntk_from_00:16:3E:BD:34:98
+sed -i '/xxx_table_ntk_from_00:16:3E:BD:34:98_xxx/d' /etc/iproute2/rt_tables
+ip netns exec migr02 iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:BD:34:98 -j MARK --set-mark 247
+EOF
+
+cat <<EOF | lxc exec beta bash
+set -e
+sed -i '/xxx_table_ntk_from_00:16:3E:AF:4C:2A_xxx/d' /etc/iproute2/rt_tables
+sed -i '/xxx_table_ntk_from_00:16:3E:3B:9F:45_xxx/d' /etc/iproute2/rt_tables
+EOF
+
+echo "alfa vede beta gamma delta epsilon mu lambda e rho"
+cat <<EOF | lxc exec alfa bash
+set -e
+ping -q -n -c 1 10.0.0.19 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.19"; exit 1)
+ping -q -n -c 1 10.0.0.83 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.83"; exit 1)
+ping -q -n -c 1 10.0.0.59 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.59"; exit 1)
+ping -q -n -c 1 10.0.0.51 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.51"; exit 1)
+ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.41"; exit 1)
+ping -q -n -c 1 10.0.0.16 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.16"; exit 1)
+ping -q -n -c 1 10.0.0.80 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.80"; exit 1)
+ping -q -n -c 1 10.0.0.56 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.56"; exit 1)
+ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.48"; exit 1)
+ping -q -n -c 1 10.0.0.21 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.21"; exit 1)
+ping -q -n -c 1 10.0.0.85 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.85"; exit 1)
+ping -q -n -c 1 10.0.0.61 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.61"; exit 1)
+ping -q -n -c 1 10.0.0.17 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.17"; exit 1)
+ping -q -n -c 1 10.0.0.81 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.81"; exit 1)
+ping -q -n -c 1 10.0.0.57 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.57"; exit 1)
+ping -q -n -c 1 10.0.0.49 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.49"; exit 1)
+ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.20"; exit 1)
+ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.84"; exit 1)
+ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.60"; exit 1)
+ping -q -n -c 1 10.0.0.22 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.22"; exit 1)
+ping -q -n -c 1 10.0.0.86 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.86"; exit 1)
+ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.62"; exit 1)
+ping -q -n -c 1 10.0.0.23 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.23"; exit 1)
+ping -q -n -c 1 10.0.0.87 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.87"; exit 1)
+ping -q -n -c 1 10.0.0.63 -W 1 &>/dev/null || (echo "alfa: errore ping 10.0.0.63"; exit 1)
+EOF
+echo "beta vede gamma delta epsilon mu lambda e rho"
+cat <<EOF | lxc exec beta bash
+set -e
+ping -q -n -c 1 10.0.0.16 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.16"; exit 1)
+ping -q -n -c 1 10.0.0.80 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.80"; exit 1)
+ping -q -n -c 1 10.0.0.56 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.56"; exit 1)
+ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.48"; exit 1)
+ping -q -n -c 1 10.0.0.21 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.21"; exit 1)
+ping -q -n -c 1 10.0.0.85 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.85"; exit 1)
+ping -q -n -c 1 10.0.0.61 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.61"; exit 1)
+ping -q -n -c 1 10.0.0.17 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.17"; exit 1)
+ping -q -n -c 1 10.0.0.81 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.81"; exit 1)
+ping -q -n -c 1 10.0.0.57 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.57"; exit 1)
+ping -q -n -c 1 10.0.0.49 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.49"; exit 1)
+ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.20"; exit 1)
+ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.84"; exit 1)
+ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.60"; exit 1)
+ping -q -n -c 1 10.0.0.22 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.22"; exit 1)
+ping -q -n -c 1 10.0.0.86 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.86"; exit 1)
+ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.62"; exit 1)
+ping -q -n -c 1 10.0.0.23 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.23"; exit 1)
+ping -q -n -c 1 10.0.0.87 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.87"; exit 1)
+ping -q -n -c 1 10.0.0.63 -W 1 &>/dev/null || (echo "beta: errore ping 10.0.0.63"; exit 1)
+EOF
+echo "gamma vede delta epsilon mu lambda e rho"
+cat <<EOF | lxc exec gamma bash
+set -e
+ping -q -n -c 1 10.0.0.21 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.21"; exit 1)
+ping -q -n -c 1 10.0.0.85 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.85"; exit 1)
+ping -q -n -c 1 10.0.0.61 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.61"; exit 1)
+ping -q -n -c 1 10.0.0.17 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.17"; exit 1)
+ping -q -n -c 1 10.0.0.81 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.81"; exit 1)
+ping -q -n -c 1 10.0.0.57 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.57"; exit 1)
+ping -q -n -c 1 10.0.0.49 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.49"; exit 1)
+ping -q -n -c 1 10.0.0.41 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.41"; exit 1)
+ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.20"; exit 1)
+ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.84"; exit 1)
+ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.60"; exit 1)
+ping -q -n -c 1 10.0.0.22 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.22"; exit 1)
+ping -q -n -c 1 10.0.0.86 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.86"; exit 1)
+ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.62"; exit 1)
+ping -q -n -c 1 10.0.0.23 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.23"; exit 1)
+ping -q -n -c 1 10.0.0.87 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.87"; exit 1)
+ping -q -n -c 1 10.0.0.63 -W 1 &>/dev/null || (echo "gamma: errore ping 10.0.0.63"; exit 1)
+EOF
+echo "delta vede epsilon mu lambda e rho"
+cat <<EOF | lxc exec delta bash
+set -e
+ping -q -n -c 1 10.0.0.17 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.17"; exit 1)
+ping -q -n -c 1 10.0.0.81 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.81"; exit 1)
+ping -q -n -c 1 10.0.0.57 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.57"; exit 1)
+ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.20"; exit 1)
+ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.84"; exit 1)
+ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.60"; exit 1)
+ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.48"; exit 1)
+ping -q -n -c 1 10.0.0.40 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.40"; exit 1)
+ping -q -n -c 1 10.0.0.22 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.22"; exit 1)
+ping -q -n -c 1 10.0.0.86 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.86"; exit 1)
+ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.62"; exit 1)
+ping -q -n -c 1 10.0.0.50 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.50"; exit 1)
+ping -q -n -c 1 10.0.0.23 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.23"; exit 1)
+ping -q -n -c 1 10.0.0.87 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.87"; exit 1)
+ping -q -n -c 1 10.0.0.63 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.63"; exit 1)
+ping -q -n -c 1 10.0.0.51 -W 1 &>/dev/null || (echo "delta: errore ping 10.0.0.51"; exit 1)
+EOF
+echo "epsilon vede mu lambda e rho"
+cat <<EOF | lxc exec epsilon bash
+set -e
+ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null || (echo "epsilon: errore ping 10.0.0.20"; exit 1)
+ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null || (echo "epsilon: errore ping 10.0.0.84"; exit 1)
+ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "epsilon: errore ping 10.0.0.60"; exit 1)
+ping -q -n -c 1 10.0.0.22 -W 1 &>/dev/null || (echo "epsilon: errore ping 10.0.0.22"; exit 1)
+ping -q -n -c 1 10.0.0.86 -W 1 &>/dev/null || (echo "epsilon: errore ping 10.0.0.86"; exit 1)
+ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "epsilon: errore ping 10.0.0.62"; exit 1)
+ping -q -n -c 1 10.0.0.23 -W 1 &>/dev/null || (echo "epsilon: errore ping 10.0.0.23"; exit 1)
+ping -q -n -c 1 10.0.0.87 -W 1 &>/dev/null || (echo "epsilon: errore ping 10.0.0.87"; exit 1)
+ping -q -n -c 1 10.0.0.63 -W 1 &>/dev/null || (echo "epsilon: errore ping 10.0.0.63"; exit 1)
+EOF
+echo "mu vede lambda e rho"
+cat <<EOF | lxc exec mu bash
+set -e
+ping -q -n -c 1 10.0.0.22 -W 1 &>/dev/null || (echo "mu: errore ping 10.0.0.22"; exit 1)
+ping -q -n -c 1 10.0.0.86 -W 1 &>/dev/null || (echo "mu: errore ping 10.0.0.86"; exit 1)
+ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "mu: errore ping 10.0.0.62"; exit 1)
+ping -q -n -c 1 10.0.0.50 -W 1 &>/dev/null || (echo "mu: errore ping 10.0.0.50"; exit 1)
+ping -q -n -c 1 10.0.0.23 -W 1 &>/dev/null || (echo "mu: errore ping 10.0.0.23"; exit 1)
+ping -q -n -c 1 10.0.0.87 -W 1 &>/dev/null || (echo "mu: errore ping 10.0.0.87"; exit 1)
+ping -q -n -c 1 10.0.0.63 -W 1 &>/dev/null || (echo "mu: errore ping 10.0.0.63"; exit 1)
+ping -q -n -c 1 10.0.0.51 -W 1 &>/dev/null || (echo "mu: errore ping 10.0.0.51"; exit 1)
+EOF
+echo "rho vede lambda e alfa beta gamma delta epsilon e mu"
+cat <<EOF | lxc exec rho bash
+set -e
+ping -q -n -c 1 10.0.0.22 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.22"; exit 1)
+ping -q -n -c 1 10.0.0.86 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.86"; exit 1)
+ping -q -n -c 1 10.0.0.62 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.62"; exit 1)
+ping -q -n -c 1 10.0.0.50 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.50"; exit 1)
+ping -q -n -c 1 10.0.0.40 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.40"; exit 1)
+ping -q -n -c 1 10.0.0.18 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.19"; exit 1)
+ping -q -n -c 1 10.0.0.82 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.83"; exit 1)
+ping -q -n -c 1 10.0.0.58 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.59"; exit 1)
+ping -q -n -c 1 10.0.0.19 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.19"; exit 1)
+ping -q -n -c 1 10.0.0.83 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.83"; exit 1)
+ping -q -n -c 1 10.0.0.59 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.59"; exit 1)
+ping -q -n -c 1 10.0.0.16 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.16"; exit 1)
+ping -q -n -c 1 10.0.0.80 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.80"; exit 1)
+ping -q -n -c 1 10.0.0.56 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.56"; exit 1)
+ping -q -n -c 1 10.0.0.21 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.21"; exit 1)
+ping -q -n -c 1 10.0.0.85 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.85"; exit 1)
+ping -q -n -c 1 10.0.0.61 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.61"; exit 1)
+ping -q -n -c 1 10.0.0.49 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.49"; exit 1)
+ping -q -n -c 1 10.0.0.17 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.17"; exit 1)
+ping -q -n -c 1 10.0.0.81 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.81"; exit 1)
+ping -q -n -c 1 10.0.0.57 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.57"; exit 1)
+ping -q -n -c 1 10.0.0.20 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.20"; exit 1)
+ping -q -n -c 1 10.0.0.84 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.84"; exit 1)
+ping -q -n -c 1 10.0.0.60 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.60"; exit 1)
+ping -q -n -c 1 10.0.0.48 -W 1 &>/dev/null || (echo "rho: errore ping 10.0.0.48"; exit 1)
 EOF
 
 echo "test completato"
