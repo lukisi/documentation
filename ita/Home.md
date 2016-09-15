@@ -31,6 +31,7 @@ deve soddisfare alcuni requisiti. Nel documento [Requisiti](Sistema/Requisiti.md
 esame questi requisiti annotando per ogni sistema operativo quali sono le impostazioni da configurare per soddisfarli.
 
 ## ntkd
+
 Per una descrizione formale del ruolo del demone ntkd in una rete Netsukuku si legga la relativa
 [analisi funzionale](DemoneNTKD/AnalisiFunzionale.md).
 
@@ -69,6 +70,15 @@ Il software si compone dei moduli seguenti:
 *   Coordinator
     *   [Analisi funzionale](ModuloCoordinator/AnalisiFunzionale.md)
     *   [Dettagli Tecnici](ModuloCoordinator/DettagliTecnici.md)
+
+Per giungere ad una corretta definizione delle relazioni che il demone ntkd deve avere con i
+singoli moduli tra loro indipendenti, si è realizzato prima un programma *proof-of-concept* per
+un sistema Linux che permette all'utente di interagire e esaminare le rilevazioni dei
+singoli moduli. Tale lavoro è descritto in questi documenti:
+
+*   Proof-of-concept
+    *   [Analisi funzionale](Proof/AnalisiFunzionale.md)
+    *   [Dettagli Tecnici](Proof/DettagliTecnici.md)
 
 ## libnss_andna
 

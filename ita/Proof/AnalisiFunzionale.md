@@ -19,7 +19,11 @@ di routing del kernel di una macchina. Si tratta di un programma specifico per u
 
 Per giungere a delineare le regole generali descritte in questo documento si è proceduto ad un
 esame dettagliato delle operazioni da fare su un sistema a fronte dei vari casi d'uso. Tale
-esame è riportato in questo [documento](./UseCases.md).
+esame è riportato nel documento [Casi d'uso](UseCases.md).
+
+In seguito si è cercato di associare ogni operazione ad uno specifico momento del ciclo di vita
+del programma **qspnclient**: il suo avvio, la rilevazione di qualche segnale da un dato modulo,
+le richieste da parte dell'utente. Questo lavoro è riportato nel documento [Eventi](Eventi.md).
 
 ## <a name="Ruolo_del_qspnclient"></a>Ruolo del qspnclient
 
