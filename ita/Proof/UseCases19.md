@@ -3,9 +3,11 @@
 [Pagina precedente](UseCases18.md)
 
 Ora il singolo nodo **𝛽<sub>migr01</sub>** si domanda se la rimozione dell'indirizzo 0·0·3 che è
-*di connettività* ai livelli da 1 a 1, provoca lo split del g-nodo 0·0·. Si veda la
-[migrazione](UseCases12.md#Migrazione_beta) di *𝛽* e la successiva
-[migrazione](UseCases15.md#Migrazione_phi) di tutto il g-nodo *𝜑*.
+*di connettività* ai livelli da 1 a 1, provoca lo split del g-nodo 0·0·. Si veda la prima
+[migrazione](UseCases12.md#Migrazione_beta) di *𝛽* e poi la successiva
+[migrazione](UseCases15.md#Migrazione_phi) di tutto il g-nodo *𝜑*, in particolare l'indirizzo
+[definitivo](UseCases16.md#Cambio_indirizzo_phi1) che prende *𝜑<sub>1</sub>* di cui fa parte
+l'identità di *𝛽* che ora gestisce il network namespace migr01.
 
 Applichiamo la regola generale esposta nel documento di
 [analisi](../ModuloQspn/AnalisiFunzionale.md#ImplementazioneVerificaRimozione)
