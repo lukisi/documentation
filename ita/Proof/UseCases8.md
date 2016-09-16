@@ -322,8 +322,7 @@ Poi nel sistema *𝛽* si crea una nuova identità, con la relativa creazione di
 namespace per quella vecchia. Durante questa creazione si ha il dialogo tra i moduli Identities
 con il quale si decide a riguardo degli archi-identità, con le relative nuove rotte dirette
 nelle tabelle del kernel.  
-In questo caso a fare ingresso in un'altra rete (vale anche per le migrazioni? **TODO**) è un singolo nodo che costituiva
-l'intera rete (in generale, non aveva altri archi oltre a quello col sistema che ha causato la migrazione).  
+In questo caso a fare ingresso in un'altra rete è un singolo nodo che costituiva l'intera rete.
 Per questo sicuramente non avrà bisogno di coordinarsi con altri sistemi per le fasi di spostamento delle
 vecchie rotte nel nuovo network namespace.
 
