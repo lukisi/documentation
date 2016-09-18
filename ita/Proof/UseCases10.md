@@ -4,7 +4,7 @@
 
 ### Ingresso del g-nodo 𝜇+𝛿 in G𝛾
 
-Il prossimo tipo di evento che ci troviamo ad esaminare è quello di un g-nodo *𝜑* che
+Il prossimo tipo di evento che ci troviamo ad esaminare è quello di un g-nodo *𝜒* che
 costituiva una rete a se, il quale ora si trova ad entrare in una diversa rete grazie ad un
 qualche arco tra due sistemi delle distinte reti.
 
@@ -20,9 +20,9 @@ ip route add 169.254.94.223 dev eth1 src 169.254.253.216
 ip route add 169.254.253.216 dev eth1 src 169.254.94.223
 ```
 
-Attraverso un meccanismo di coordinamento nel g-nodo *𝜑* si decide che questo g-nodo farà ingresso
-in *G<sub>𝛾</sub>*. Viene incaricato *𝛿* di dialogare con *𝛾* per ottenere un posto per *𝜑* in *G<sub>𝛾</sub>*.
-Poi *𝛿* si occupa di propagare in tutto *𝜑* le informazioni riguardanti questo ingresso. Dopo si
+Attraverso un meccanismo di coordinamento nel g-nodo *𝜒* si decide che questo g-nodo farà ingresso
+in *G<sub>𝛾</sub>*. Viene incaricato *𝛿* di dialogare con *𝛾* per ottenere un posto per *𝜒* in *G<sub>𝛾</sub>*.
+Poi *𝛿* si occupa di propagare in tutto *𝜒* le informazioni riguardanti questo ingresso. Dopo si
 avviano le operazioni.
 
 Per prima cosa i sistemi *𝜇* e *𝛿* creano nuove identità e creano un nuovo network namespace per le
@@ -743,8 +743,8 @@ ip route change unreachable 10.0.0.50/32 table ntk_from_00:16:3E:5B:78:D5
 ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
 ```
 
-Infine, uno dei sistemi nel g-nodo di connettività *𝜑* verifica che queste identità di
-connettività possono essere dismesse. Propaga le informazioni nel g-nodo *𝜑* e nei suoi
+Infine, uno dei sistemi nel g-nodo di connettività *𝜒* verifica che queste identità di
+connettività possono essere dismesse. Propaga le informazioni nel g-nodo *𝜒* e nei suoi
 bordernodi esterni. La dismissione provoca delle operazioni, nel nostro esempio nei
 sistemi *𝜇*, *𝛿* e *𝛾*.
 
