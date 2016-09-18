@@ -233,8 +233,8 @@ ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:5B:78:D5
 
 Questa sequenza di operazioni è eseguita dal programma **qspnclient** quando un arco-identità
 viene indicato al QspnManager (o nel costruttore o con il metodo `add_arc`) di una sua
-identità. In essa viene indicato nel file `rt_tables` (se non c'era) lo pseudonimo `ntk_from_XXX`
-della (nuova) tabella; viene istruito il kernel che i pacchetti ricevuti (in un certo network namespace)
+identità. In essa viene aggiunto nel file `rt_tables` (se non c'era) un nuovo pseudonimo di
+tabella `ntk_from_XXX`; viene istruito il kernel che i pacchetti ricevuti (in un certo network namespace)
 da quell'indirizzo MAC vanno *marcati*; la tabella viene popolata con le possibili destinazioni
 tutte segnate inizialmente come *irraggiungibili*. Non viene però aggiunta ancora la regola
 che dice di guardare quella tabella, poiché ancora non si è ricevuto alcun ETP da questo
@@ -243,7 +243,7 @@ arco-identità.
 Nel nostro caso il programma **qspnclient** di *𝛽*, sempre poiché
 l'utente ha comandato di avviare l'ingresso come singolo nodo in altra rete, in seguito alle
 operazioni viste prima, crea il QspnManager della nuova identità indicando l'arco-identità
-con il sistema *𝛾*.
+con il sistema *𝛾*. Questa è la quarta parte delle operazioni.
 
 Analogamente si ha nel sistema *𝛾* che il programma **qspnclient** comunica al QspnManager della
 sua identità il nuovo arco-identità con il sistema *𝛽*.
@@ -451,6 +451,78 @@ e (opzionalmente) l'indirizzo IP anonimizzante.
 
 Infine aggiorna tutte le rotte nella tabella `ntk` per fare in modo di mettere in esse (se disponibile) un src preferito.
 
-Nel nostro caso abbiamo che la nuova identità del sistema *𝛽* adesso ha un indirizzo del tutto *reale*.
+Nel nostro caso, l'utente ha comandato di avviare l'ingresso come singolo nodo in altra rete specificando
+che la migration path più breve è di zero passi. Cioè indicando che esiste fin da subito un
+indirizzo Netsukuku *reale* libero compatibile con gli archi del nodo. Esso è `2·1·1·1`.  
+Quindi il programma **qspnclient**, dopo aver fatto passare la nuova identità per l'indirizzo
+*virtuale* al livello 0 `2·1·1·2`, immediatamente (o pochi istanti dopo) cambia il suo identificativo di livello 0
+da `2` a `1`. Questa è la quinta parte delle operazioni.
+
+### Processazione di un ETP, ancora
+
+**sistema 𝛾**
+```
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.24/29 table ntk
+ip route change unreachable 10.0.0.88/29 table ntk
+ip route change unreachable 10.0.0.16/30 table ntk
+ip route change unreachable 10.0.0.80/30 table ntk
+ip route change unreachable 10.0.0.56/30 table ntk
+ip route change unreachable 10.0.0.20/31 table ntk
+ip route change unreachable 10.0.0.84/31 table ntk
+ip route change unreachable 10.0.0.60/31 table ntk
+ip route change unreachable 10.0.0.48/31 table ntk
+ip route change 10.0.0.23/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.22
+ip route change 10.0.0.87/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.22
+ip route change 10.0.0.63/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.62
+ip route change 10.0.0.51/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.50
+ip route change 10.0.0.41/32 table ntk via 169.254.96.141 dev eth1 src 10.0.0.40
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.20/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.84/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.23/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+```
+
+Di nuovo assistiamo ad una sequenza di operazioni eseguita dal programma **qspnclient** perché un suo
+QspnManager ha terminato di processare un ETP. Infatti il sistema *𝛾* riceve un ETP trasmesso dal
+sistema *𝛽* a seguito del suo cambio di indirizzo.
+
+### Dismissione identità
+
+**sistema 𝛽**
+```
+ip netns exec entr02 ip route flush table main
+ip netns exec entr02 ip link delete entr02_eth1 type macvlan
+ip netns del entr02
+```
+
+Questa sequenza di operazioni è eseguita dal modulo Identities di *𝛽* su richiesta del
+programma **qspnclient**, sempre quando l'utente comanda di avviare l'ingresso come singolo nodo
+in altra rete, qualche istante dopo il completamento delle operazioni viste prima. In questa
+sesta parte di operazioni viene dismessa la vecchia identità del sistema *𝛽*.
+
+Inoltre il modulo Identities lo comunica al sistema *𝛾*:
+
+**sistema 𝛾**
+```
+ip route del 169.254.215.29 dev eth1 src 169.254.94.223
+```
 
 [Pagina seguente](Eventi3.md)
