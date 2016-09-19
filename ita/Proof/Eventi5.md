@@ -2,7 +2,7 @@
 
 [Pagina precedente](Eventi4.md)
 
-### Processazione di un ETP
+### Processazione degli ETP
 
 Di nuovo ci troviamo davanti alle operazioni eseguite dal programma **qspnclient** quando un suo
 QspnManager ha terminato di processare un ETP. In questo caso abbiamo un ETP trasmesso da *𝛾* a *𝛿*, con
@@ -212,5 +212,33 @@ associato all'identità a cui il QspnManager appartiene, vengono aggiornate tutt
 della tabella `ntk` e di quelle tabelle di inoltro dai cui archi abbiamo ricevuto almeno un
 ETP; in seguito viene aggiunta la regola per le tabelle di inoltro il cui arco ha ricevuto
 proprio adesso il primo ETP.
+
+### Dismissione identità
+
+Infine, come sesta parte di operazioni a seguito del comando di completare le operazioni di migrazione/ingresso,
+uno dei sistemi nel g-nodo di connettività *𝜒* verifica che queste identità di
+connettività possono essere dismesse. Sull'esito positivo il programma **qspnclient** istruisce il
+modulo Identities e propaga l'ordine di dismettere le identità.
+
+**sistema 𝜇**
+```
+ip netns exec entr03 ip route flush table main
+ip netns exec entr03 ip link delete entr03_eth1 type macvlan
+ip netns del entr03
+sed -i '/xxx_table_ntk_from_00:16:3E:B9:77:80_xxx/d' /etc/iproute2/rt_tables
+```
+
+**sistema 𝛿**
+```
+ip netns exec entr03 ip route flush table main
+ip netns exec entr03 ip link delete entr03_eth1 type macvlan
+ip netns del entr03
+sed -i '/xxx_table_ntk_from_00:16:3E:DF:23:F5_xxx/d' /etc/iproute2/rt_tables
+```
+
+**sistema 𝛾**
+```
+ip route del 169.254.83.167 dev eth1 src 169.254.94.223
+```
 
 [Pagina seguente](Eventi6.md)
