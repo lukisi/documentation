@@ -98,6 +98,7 @@ IP interno al livello 1 per la destinazione valida come g-nodo di livello 0 (cio
 **sistema 𝛿**
 ```
 (echo; echo "248 ntk_from_00:16:3E:5B:78:D5 # xxx_table_ntk_from_00:16:3E:5B:78:D5_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 248
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:5B:78:D5
@@ -121,6 +122,7 @@ ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
 **sistema 𝛾**
 ```
 (echo; echo "249 ntk_from_00:16:3E:1A:C4:45 # xxx_table_ntk_from_00:16:3E:1A:C4:45_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:1A:C4:45 -j MARK --set-mark 249
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
