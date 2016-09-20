@@ -84,8 +84,8 @@ ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:1A:C4:45
 ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:1A:C4:45
 ```
 
-Nella terza parte di operazioni la nuova identità popola
-il suo network namespace (quello preesistente ereditato dalla vecchia identità) con le
+Nella terza parte di operazioni il programma **qspnclient** popola il network namespace
+della nuova identità (quello preesistente ereditato dalla vecchia identità) con le
 rotte che sono consone al suo nuovo indirizzo.
 
 In questo esempio, sia nel sistema *𝛿* che in *𝜇*, abbiamo come vecchio namespace il
