@@ -142,6 +142,7 @@ Viene costituito un arco nel modulo Qspn delle identità di *𝛼* e *𝛽*.
 **sistema 𝛼**
 ```
 (echo; echo "250 ntk_from_00:16:3E:EC:A3:E1 # xxx_table_ntk_from_00:16:3E:EC:A3:E1_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 250
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
@@ -162,6 +163,7 @@ ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
 **sistema 𝛽**
 ```
 (echo; echo "249 ntk_from_00:16:3E:FD:E2:AA # xxx_table_ntk_from_00:16:3E:FD:E2:AA_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:FD:E2:AA -j MARK --set-mark 249
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:FD:E2:AA
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:FD:E2:AA
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:FD:E2:AA
@@ -217,7 +219,6 @@ ip route change unreachable 10.0.0.60/30 table ntk_from_00:16:3E:EC:A3:E1
 ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
 ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
 ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 250
 ip rule add fwmark 250 table ntk_from_00:16:3E:EC:A3:E1
 ip address add 10.0.0.18 dev eth1
 iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.18
@@ -338,7 +339,6 @@ ip route change 10.0.0.86/32 table ntk_from_00:16:3E:FD:E2:AA via 169.254.94.223
 ip route change 10.0.0.62/32 table ntk_from_00:16:3E:FD:E2:AA via 169.254.94.223 dev eth1
 ip route change blackhole 10.0.0.50/32 table ntk_from_00:16:3E:FD:E2:AA
 ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:FD:E2:AA
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:FD:E2:AA -j MARK --set-mark 249
 ip rule add fwmark 249 table ntk_from_00:16:3E:FD:E2:AA
 ```
 

@@ -154,7 +154,7 @@ In questo caso fino al livello 3, mentre restano in essere gli indirizzi `10.0.0
 
 ### Popolamento nuove rotte della nuova identità
 
-**sistema 𝛽**
+**sistema 𝛼**
 ```
 ip route add unreachable 10.0.0.0/29 table ntk
 ip route add unreachable 10.0.0.64/29 table ntk
@@ -175,5 +175,169 @@ ip route add unreachable 10.0.0.41/32 table ntk
 
 Terza parte di operazioni eseguita dal programma **qspnclient** quando
 l'utente comanda di avviare l'ingresso in altra rete.
+
+### Creazione e popolamento iniziale di tabelle per l'inoltro
+
+**sistema 𝛼**
+```
+(echo; echo "250 ntk_from_00:16:3E:EC:A3:E1 # xxx_table_ntk_from_00:16:3E:EC:A3:E1_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 250
+ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.20/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.84/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.60/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+```
+
+**sistema 𝛽**
+```
+(echo; echo "249 ntk_from_00:16:3E:FD:E2:AA # xxx_table_ntk_from_00:16:3E:FD:E2:AA_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:FD:E2:AA -j MARK --set-mark 249
+ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.22/32 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.86/32 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.62/32 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.50/32 table ntk_from_00:16:3E:FD:E2:AA
+ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:FD:E2:AA
+```
+
+Operazioni eseguite dal programma **qspnclient** in occasione dell'aggiunta di un arco-identità.
+Questa aggiunta avviene nella quarta parte di operazioni eseguita dal programma **qspnclient** quando
+l'utente comanda di avviare l'ingresso in altra rete.
+
+### Cambio di indirizzo della nuova identità
+
+**sistema 𝛼**
+```
+ip route del 10.0.0.16/30 table ntk
+ip route del 10.0.0.80/30 table ntk
+ip route del 10.0.0.56/30 table ntk
+ip route del 10.0.0.16/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route del 10.0.0.80/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route del 10.0.0.56/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.16/31 table ntk
+ip route add unreachable 10.0.0.80/31 table ntk
+ip route add unreachable 10.0.0.56/31 table ntk
+ip route add unreachable 10.0.0.19/32 table ntk
+ip route add unreachable 10.0.0.83/32 table ntk
+ip route add unreachable 10.0.0.59/32 table ntk
+ip route add unreachable 10.0.0.16/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.80/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.56/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.19/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.83/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.59/32 table ntk_from_00:16:3E:EC:A3:E1
+
+ip address add 10.0.0.58 dev eth1
+ip address add 10.0.0.18 dev eth1
+iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.18
+ip address add 10.0.0.82 dev eth1
+
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.24/29 table ntk
+ip route change unreachable 10.0.0.88/29 table ntk
+ip route change unreachable 10.0.0.16/30 table ntk
+ip route change unreachable 10.0.0.80/30 table ntk
+ip route change unreachable 10.0.0.56/30 table ntk
+ip route change unreachable 10.0.0.20/30 table ntk
+ip route change unreachable 10.0.0.84/30 table ntk
+ip route change unreachable 10.0.0.60/30 table ntk
+ip route change unreachable 10.0.0.48/31 table ntk
+ip route change unreachable 10.0.0.51/32 table ntk
+ip route change unreachable 10.0.0.41/32 table ntk
+```
+
+Quinta parte di operazioni eseguita dal programma **qspnclient** quando l'utente comanda
+di avviare l'ingresso in altra rete nel caso in cui esista fin da subito un
+indirizzo Netsukuku *reale* libero compatibile con gli archi del g-nodo che ha fatto ingresso.
+
+### Processazione del ETP
+
+Ora il sistema *𝛼*, che è in fase di bootstrap, riceve un ETP dal sistema *𝛽*.
+
+**sistema 𝛼**
+```
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.24/29 table ntk
+ip route change unreachable 10.0.0.88/29 table ntk
+ip route change 10.0.0.20/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.18
+ip route change 10.0.0.84/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.18
+ip route change 10.0.0.60/30 table ntk via 169.254.96.141 dev eth1 src 10.0.0.58
+ip route change unreachable 10.0.0.16/31 table ntk
+ip route change unreachable 10.0.0.80/31 table ntk
+ip route change unreachable 10.0.0.56/31 table ntk
+ip route change unreachable 10.0.0.48/31 table ntk
+ip route change unreachable 10.0.0.19/32 table ntk
+ip route change unreachable 10.0.0.83/32 table ntk
+ip route change unreachable 10.0.0.59/32 table ntk
+ip route change unreachable 10.0.0.51/32 table ntk
+ip route change unreachable 10.0.0.41/32 table ntk
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.20/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.84/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.60/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.16/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.80/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.56/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.19/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.83/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.59/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+```
+
+Poi il sistema *𝛼* completa il bootstrap e trasmette un ETP al sistema *𝛽*. Questo viene propagato al
+resto della rete.
+
+### Dismissione identità
+
+Nella sesta parte di operazioni a seguito del comando di avviare l'ingresso in altra rete,
+il sistema *𝛼* verifica che la vecchia identità di connettività possa essere dismessa.
+
+**sistema 𝛼**
+```
+ip netns exec entr04 ip route flush table main
+ip netns exec entr04 ip link delete entr04_eth1 type macvlan
+ip netns del entr04
+```
+
+**sistema 𝛽**
+```
+ip route del 169.254.202.128 dev eth1 src 169.254.96.141
+```
 
 [Pagina seguente](Eventi7.md)
