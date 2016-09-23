@@ -262,4 +262,22 @@ Operazioni eseguite dal programma **qspnclient** in occasione dell'aggiunta di u
 Questa aggiunta avviene nella quarta parte di operazioni eseguita dal programma **qspnclient** quando
 l'utente dà il comando `enter_net_phase1`.
 
+### entr05: Dismissione identità
+
+Nell'ultima parte di operazioni a seguito del comando `enter_net_phase1`,
+il sistema *𝜀* verifica che la vecchia identità di connettività possa essere dismessa.
+
+**sistema 𝜀**
+```
+ip netns exec entr05 ip route flush table main
+ip netns exec entr05 ip link delete entr05_eth1 type macvlan
+ip netns del entr05
+```
+
+**sistema 𝛽**
+```
+ip route del 169.254.133.31 dev eth1 src 169.254.96.141
+ip netns exec migr01 ip route del 169.254.133.31 dev migr01_eth1 src 169.254.27.218
+```
+
 [Pagina seguente](Eventi8.md)
