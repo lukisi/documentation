@@ -67,6 +67,8 @@ ip route add 10.0.0.41/32 table ntk via 169.254.110.188 dev eth1 src 10.0.0.40
 
 **sistema 𝜌**
 ```
+sysctl net.ipv4.ip_forward=1
+ip address add 10.0.0.32 dev lo
 ip link set dev eth1 up
 ip address add 169.254.110.188 dev eth1
 ip route add 169.254.109.22 dev eth1 src 169.254.110.188

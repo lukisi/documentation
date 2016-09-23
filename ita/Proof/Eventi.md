@@ -45,6 +45,24 @@ ip address add 169.254.69.30 dev eth1
 Questa sequenza di operazioni è eseguita dal modulo Neighborhood, il quale viene istruito all'avvio
 del programma **qspnclient** su quali interfacce di rete deve gestire.
 
+### Creazione della tabella di routing `ntk`
+
+**sistema 𝛼**
+```
+(echo; echo "251 ntk # xxx_table_ntk_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+ip rule add table ntk
+```
+
+Questa sequenza di operazioni avviene all'avvio del programma **qspnclient**.
+
+Il programma **qspnclient** tiene traccia delle tabelle che ha creato nel file `/etc/iproute2/rt_tables`.
+Ogni volta che deve aggiungere una tabella gli assegna il primo numero identificativo libero
+partendo da 251 e scendendo verso il basso. Ogni volta che deve rimuovere una tabella tiene traccia
+del numero che è stato liberato.
+
+Il numero identificativo della tabella `ntk` è sempre 251 poiché è la prima tabella ad essere
+codificata nel file `/etc/iproute2/rt_tables`.
+
 ### Assegnazione indirizzi IP del primo indirizzo Netsukuku scelto
 
 **sistema 𝛼**
@@ -76,8 +94,6 @@ scendendo fino al livello 1.
 
 **sistema 𝛼**
 ```
-(echo; echo "251 ntk # xxx_table_ntk_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
-ip rule add table ntk
 ip route add unreachable 10.0.0.0/29 table ntk
 ip route add unreachable 10.0.0.64/29 table ntk
 ip route add unreachable 10.0.0.8/29 table ntk
@@ -100,15 +116,7 @@ ip route add unreachable 10.0.0.41/32 table ntk
 
 Questa sequenza di operazioni avviene all'avvio del programma **qspnclient**.
 
-Il programma **qspnclient** tiene traccia delle tabelle che ha creato nel file `/etc/iproute2/rt_tables`.
-Ogni volta che deve aggiungere una tabella gli assegna il primo numero identificativo libero
-partendo da 251 e scendendo verso il basso. Ogni volta che deve rimuovere una tabella tiene traccia
-del numero che è stato liberato.
-
-Il numero identificativo della tabella `ntk` è sempre 251 poiché è la prima tabella ad essere
-codificata nel file `/etc/iproute2/rt_tables`.
-
-La tabella viene popolata fin da subito con tutte le possibili destinazioni, inizialmente segnate
+La tabella `ntk` viene popolata fin da subito con tutte le possibili destinazioni, inizialmente segnate
 come `unreachable`. I possibili indirizzi IP di destinazione, ognuno con suffisso CIDR, sono calcolati in questo modo:
 
 *   Indichiamo con *pos_n(i)* l'identificativo al livello *i* dell'indirizzo Netsukuku *n*.
