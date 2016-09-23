@@ -143,7 +143,7 @@ ip route change unreachable 10.0.0.62/31 table ntk
 ip route change unreachable 10.0.0.50/31 table ntk
 ```
 
-In questa sequenza di operazioni eseguita all'avvio del programma **qspnclient** notiamo
+In questa sequenza di operazioni eseguita all'avvio del programma **qspnclient** nel sistema *𝜆* notiamo
 che la differenza (rispetto ad un nodo comune trattandosi di un nodo che fa da gateway ad una rete
 autonoma che costituisce un g-nodo di livello 1) si trova nella parte che assegna le rotte
 nella tabella `ntk`. Gli indirizzi IP delle possibili destinazioni sono calcolati solo
@@ -164,17 +164,42 @@ stato assegnato alle interfacce di rete gestite.
 
 ### Formazione dell'arco tra *𝜆* e *𝜀*
 
+Sequenza di operazioni eseguita dal modulo Neighborhood.
+
 Non ripetiamo questa trattazione, in quanto del tutto simile a quanto visto nella migrazione di un singolo nodo.
 
 ### entr06: Spostamento vecchia identità di *𝜆* in nuovo network namespace
 
+Prima e seconda parte di operazioni eseguita dal modulo Identities su richiesta del programma **qspnclient** quando
+l'utente dà il comando `enter_net_phase1` nel sistema *𝜆*.
+
 Non ripetiamo questa trattazione, in quanto del tutto simile a quanto visto nella migrazione di un singolo nodo.
 
 L'unica differenza nelle operazioni è dovuta al fatto che *𝜆* è un nodo che fa da gateway
-verso una rete a gestione autonoma di un g-nodo di livello 1. La differenza si trova nella parte che
-ripulisce il vecchio network namespace dalle rotte della vecchia identità, ed è analoga a quanto visto
+verso una rete a gestione autonoma di un g-nodo di livello 1. La differenza si trova nelle parti in cui
+si calcolano gli indirizzi IP delle possibili destinazioni, ed è analoga a quanto visto
 nelle operazioni iniziali.
 
+### entr06: Popolamento nuove rotte della nuova identità
 
+Terza parte di operazioni eseguita dal programma **qspnclient** quando
+l'utente dà il comando `enter_net_phase1` nel sistema *𝜆*.
+
+Non ripetiamo questa trattazione, in quanto del tutto simile a quanto visto nella migrazione di un singolo nodo.
+
+### entr06: Creazione e popolamento iniziale di tabelle per l'inoltro
+
+Operazioni eseguite dal programma **qspnclient** in occasione dell'aggiunta di un arco-identità.
+Questa aggiunta avviene nella quarta parte di operazioni eseguita dal programma **qspnclient** quando
+l'utente dà il comando `enter_net_phase1` nel sistema *𝜆*.
+
+Non ripetiamo questa trattazione, in quanto del tutto simile a quanto visto nella migrazione di un singolo nodo.
+
+### entr06: Dismissione identità
+
+Nell'ultima parte di operazioni a seguito del comando `enter_net_phase1` nel sistema *𝜆*,
+il sistema *𝜆* verifica che la vecchia identità di connettività possa essere dismessa.
+
+Non ripetiamo questa trattazione, in quanto del tutto simile a quanto visto nella migrazione di un singolo nodo.
 
 [Pagina seguente](Eventi12.md)
