@@ -71,22 +71,6 @@ ip rule add fwmark 249 table ntk_from_00:16:3E:3C:14:33
 
 **sistema 𝜆**
 ```
-ip address add 10.0.0.22 dev eth1
-ip address add 10.0.0.86 dev eth1
-ip address add 10.0.0.62 dev eth1
-ip address add 10.0.0.50 dev eth1
-
-iptables -t nat -A PREROUTING -d 10.0.0.22/31 -j NETMAP --to 10.0.0.40/31
-iptables -t nat -A PREROUTING -d 10.0.0.86/31 -j NETMAP --to 10.0.0.40/31
-iptables -t nat -A PREROUTING -d 10.0.0.62/31 -j NETMAP --to 10.0.0.40/31
-iptables -t nat -A PREROUTING -d 10.0.0.50/31 -j NETMAP --to 10.0.0.40/31
-iptables -t nat -A POSTROUTING -d 10.0.0.48/30 -s 10.0.0.40/31 -j NETMAP --to 10.0.0.50/31
-iptables -t nat -A POSTROUTING -d 10.0.0.56/29 -s 10.0.0.40/31 -j NETMAP --to 10.0.0.62/31
-iptables -t nat -A POSTROUTING -d 10.0.0.0/27  -s 10.0.0.40/31 -j NETMAP --to 10.0.0.22/31
-iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -s 10.0.0.40/31 -j NETMAP --to 10.0.0.22/31
-
-iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.22
-
 ip route del 10.0.0.22/31 table ntk
 ip route del 10.0.0.86/31 table ntk
 ip route del 10.0.0.62/31 table ntk
@@ -99,6 +83,33 @@ ip route del 10.0.0.22/31 table ntk_from_00:16:3E:3C:14:33
 ip route del 10.0.0.86/31 table ntk_from_00:16:3E:3C:14:33
 ip route del 10.0.0.62/31 table ntk_from_00:16:3E:3C:14:33
 ip route del 10.0.0.50/31 table ntk_from_00:16:3E:3C:14:33
+
+# il nuovo indirizzo è valido almeno dentro il g-nodo di livello 2
+ip address add 10.0.0.50 dev eth1
+iptables -t nat -A PREROUTING -d 10.0.0.50/31 -j NETMAP --to 10.0.0.40/31
+iptables -t nat -A POSTROUTING -d 10.0.0.48/30 -s 10.0.0.40/31 -j NETMAP --to 10.0.0.50/31
+
+# il nuovo indirizzo è valido almeno dentro il g-nodo di livello 3
+ip address add 10.0.0.62 dev eth1
+iptables -t nat -A PREROUTING -d 10.0.0.62/31 -j NETMAP --to 10.0.0.40/31
+iptables -t nat -A POSTROUTING -d 10.0.0.56/29 -s 10.0.0.40/31 -j NETMAP --to 10.0.0.62/31
+
+# il nuovo indirizzo è valido in tutta la rete
+ip address add 10.0.0.22 dev eth1
+iptables -t nat -A PREROUTING -d 10.0.0.22/31 -j NETMAP --to 10.0.0.40/31
+iptables -t nat -A POSTROUTING -d 10.0.0.0/27  -s 10.0.0.40/31 -j NETMAP --to 10.0.0.22/31
+
+# il gateway accetta di essere un relay anonimizzante
+iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.22
+
+# il gateway accetta di essere contattato in forma anonima
+ip address add 10.0.0.86 dev eth1
+
+# ogni sistema nella sottorete autonoma accetta di essere contattato in forma anonima
+iptables -t nat -A PREROUTING -d 10.0.0.86/31 -j NETMAP --to 10.0.0.40/31
+
+# il gateway permette ai sistemi interni di contattare un sistema esterno in forma anonima
+iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -s 10.0.0.40/31 -j NETMAP --to 10.0.0.22/31
 
 ip route change unreachable 10.0.0.0/29 table ntk
 ip route change unreachable 10.0.0.64/29 table ntk
