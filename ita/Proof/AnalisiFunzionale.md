@@ -1,7 +1,10 @@
 # Proof of concept - Analisi Funzionale
 
 1.  [Ruolo del qspnclient](#Ruolo_del_qspnclient)
+1.  [Operazioni del qspnclient](#Operazioni_del_qspnclient)
     1.  [Interazione programma-utente](#Interazione_programma_utente)
+    1.  [Avvio del programma](#Avvio_programma)
+1.  [Vecchio](#Vecchio)
     1.  [Primi passi](#Primi_passi)
     1.  [Da riordinare](#Da_riordinare)
 1.  [Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IPv4](#Mappatura_indirizzi_ip)
@@ -43,6 +46,8 @@ sistema riesca effettivamente a stabilire connessioni con gli altri sistemi dell
 siano quelle che ci si attende, eccetera. Inoltre il programma consente all'utente di chiedere la visualizzazione
 di tutte le informazioni che il modulo QSPN ha raccolto.
 
+## <a name="Operazioni_del_qspnclient"></a>Operazioni del qspnclient
+
 ### <a name="Interazione_programma_utente"></a>Interazione programma-utente
 
 L'utente avvia il programma *qspnclient* su un sistema 𝛼 eseguendo su una shell il comando *qspnclient init*. In
@@ -59,6 +64,109 @@ Ai parametri che saranno individuati in modo autonomo dai moduli (ad esempio gli
 nodo, gli indirizzi di scheda, ...) verranno associati degli indici progressivi che saranno visualizzati
 all'utente. L'utente si riferirà ad essi tramite questi indici. Questo per rendere più facilmente
 riproducibili gli ambienti di test.
+
+### <a name="Avvio_programma"></a> Avvio del programma
+
+All'avvio del programma **qspnclient** l'utente specifica alcune informazioni:
+
+*   Topologia della rete.
+*   Se il sistema vuole fare da gateway per una sottorete a gestione autonoma, tale sottorete può
+    avere la dimensione di un g-nodo di livello *i* nella topologia di rete specificata. L'utente
+    specifica il livello di tale g-nodo. Default 0.
+*   Lista di interfacce di rete da gestire.
+*   Se il sistema ammette di essere usato come anonimizzatore.
+*   Se il sistema (e tutta la eventuale sottorete autonoma dietro di lui) ammette di essere contattato
+    in forma anonima.
+
+*   Indirizzo Netsukuku **iniziale** del sistema.
+
+#### Parte 1
+
+All'avvio il programma computa l'indirizzo IP sinonimo di localhost per la topologia di rete
+specificata. Il modo di calcolare questo indirizzo è spiegato [sotto](#Mappatura_indirizzi_ip).
+Sia `$ntklocalhost` questo indirizzo IP, ad esempio `10.0.0.32`.
+
+Il programma **qspnclient** esegue queste operazioni:
+
+```
+sysctl net.ipv4.ip_forward=1
+sysctl net.ipv4.conf.all.rp_filter=0
+ip address add $ntklocalhost dev lo
+```
+
+#### Parte 2
+
+Sia `$devlist` la lista di interfacce di rete da gestire, ad esempio `eth1 wlan0`.
+
+Il programma **qspnclient** esegue queste operazioni:
+
+```
+for dev in $devlist; do
+ sysctl net.ipv4.conf.$dev.rp_filter=0
+ sysctl net.ipv4.conf.$dev.arp_ignore=1
+ sysctl net.ipv4.conf.$dev.arp_announce=2
+done
+```
+
+#### Parte 3
+
+Il programma **qspnclient** informa il modulo Neighborhood di ogni interfaccia di rete che
+deve gestire, tramite il metodo `start_monitor`. Il modulo Neighborhood produrrà per questo alcuni comandi al sistema operativo.
+
+Il programma si avvede dell'indirizzo scelto perché il NeighborhoodManager lo notifica con il segnale
+*nic_address_set*. Il programma associa questo proprio indirizzo link-local all'indice
+autoincrementante *linklocal_nextindex*, che parte da 0.
+
+#### Parte 4
+
+Il programma **qspnclient** tiene traccia delle tabelle che ha creato nel file `/etc/iproute2/rt_tables`.
+Ogni volta che deve aggiungere una tabella gli assegna il primo numero identificativo libero
+partendo da 251 e scendendo verso il basso. Ogni volta che deve rimuovere una tabella tiene traccia
+del numero che è stato liberato.
+
+Sia `$tbid_free` il primo identificativo libero, che all'avvio del programma sarà `251`.
+
+Il programma **qspnclient** aggiunge la tabella `ntk` e imposta la relativa regola di
+default (senza fwmark) sul namespace default. Cioè, esegue queste operazioni:
+
+```
+(echo; echo $tbid_free "ntk # xxx_table_ntk_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+ip rule add table ntk
+```
+
+#### Parte 5
+
+Il programma **qspnclient** computa gli indirizzi IP relativi all'indirizzo Netsukuku che inizialmente
+va assegnato al sistema.
+
+Il primo indirizzo IP assegnato è quello globale. Viene assegnato sempre. Sia esso `$globalip`.
+
+Il secondo indirizzo IP assegnato è quello anonimizzante. Viene assegnato opzionalmente, cioè solo
+se il sistema ammette di essere contattato in forma anonima. Sia esso `$anonymousip`.
+
+I successivi indirizzi IP sono quelli interni. Vengono calcolati partendo da quello interno al
+livello *l* - 1 (dove *l* è il numero di livelli della topologia) e scendendo fino al livello 1.
+
+```
+for dev in $devlist; do
+ ip address add $globalip dev $dev
+done
+
+if $allow_anonymous; then
+ for dev in $devlist; do
+  ip address add $anonymousip dev $dev
+ done
+fi
+
+for i = l-1 to 1 step -1
+ internalip = indirizzo IP interno al g-nodo di livello $i
+ for dev in $devlist; do
+  ip address add $internalip dev $dev
+ done
+next
+```
+
+## <a name="Vecchio"></a>Vecchio
 
 ### <a name="Primi_passi"></a>Primi passi
 
@@ -265,14 +373,16 @@ associa ad un indirizzo Netsukuku *reale* un numero di indirizzi IP:
     di tutta la rete. È una diversa rappresentazione, rispetto all'indirizzo IP globale,
     che identifica lo stesso *sistema*; ma questa convoglia in più l'informazione che si vuole
     contattare quel *sistema* restando anonimi.
-*   Un indirizzo IP interno al livello *i* per ogni valore di *i* da 1 a *l* - 1.  
+*   Un indirizzo IP interno al livello *i* per ogni valore di *i* da 0 a *l* - 1.  
     Questo indirizzo IP identifica un preciso *sistema* univocamente all'interno
     di un g-nodo *g* di livello *i*. Questo indirizzo IP si può utilizzare come indirizzo di
     destinazione di un pacchetto IP quando sia il *sistema* mittente che il *sistema*
     identificato (il destinatario) appartengono allo stesso g-nodo *g* di livello *i*. La
     peculiarità di questi indirizzi IP (che si riflette sui pacchetti IP trasmessi a questi
     indirizzi) è che essi non cambiano quando il g-nodo *g* o uno dei suoi g-nodi superiori
-    *migra* all'interno della rete o anche in una diversa rete Netsukuku.
+    *migra* all'interno della rete o anche in una diversa rete Netsukuku.  
+    Anche per il livello 0 si calcola un tale indirizzo IP. Questo indirizzo ha un significato
+    simile a `localhost` nel senso che identifica come destinazione lo stesso sistema mittente.
 
 Ricordiamo che un indirizzo Netsukuku identifica un *nodo del grafo*, cioè una specifica identità
 all'interno di un *sistema*. Però in ogni sistema, in ogni momento, esiste una ed una sola

@@ -96,7 +96,7 @@ L'indirizzo Netsukuku di *g* è 3·1. L'indirizzo IP globale di *g* in notazione
 ### <a name="Indirizzo_interno_nodo"></a>Indirizzo IP di un nodo interno ad un suo g-nodo
 
 Sia *n* un nodo con indirizzo *n<sub>l-1</sub>·...·n<sub>1</sub>·n<sub>0</sub>*. Sia *g* il suo g-nodo
-di livello *i* con 0 < *i* < *l*. Quindi *g* ha indirizzo *n<sub>l-1</sub>·...·n<sub>i</sub>*. Vogliamo
+di livello *i* con 0 ≤ *i* < *l*. Quindi *g* ha indirizzo *n<sub>l-1</sub>·...·n<sub>i</sub>*. Vogliamo
 comporre un indirizzo IP di *n* che sia univoco internamente a *g*.
 
 I valori da *n<sub>0</sub>* a *n<sub>i-1</sub>* sono riportati come visto prima nei relativi bit
