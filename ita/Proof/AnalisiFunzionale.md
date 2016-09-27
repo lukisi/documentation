@@ -167,7 +167,7 @@ for i = l-1 to 1 step -1
 next
 ```
 
-### Parte 6
+#### Parte 6
 
 Il programma **qspnclient** computa gli indirizzi IP di tutte le possibili destinazioni relative
 all'indirizzo Netsukuku che inizialmente va assegnato al sistema. Per ognuno assegna una rotta
@@ -195,7 +195,7 @@ ip route add unreachable $ipaddr table ntk
 
 Questo blocco di comandi va eseguito senza intromissione di altri comandi da altre tasklet.
 
-### Parte 7
+#### Parte 7
 
 Il programma **qspnclient**, se il sistema ammette di essere usato come anonimizzatore, esegue questi
 comandi per istruire il kernel di mascherare il source dei pacchetti IP che vengono inoltrati verso
@@ -245,6 +245,81 @@ ip route change unreachable 10.0.0.41/32 table ntk
 ```
 
 Questo blocco di comandi va eseguito senza intromissione di altri comandi da altre tasklet.
+
+### <a name="Archi_vicini"></a> Archi con i sistemi vicini
+
+Il modulo Neighborhood è quello che si occupa di rilevare i sistemi diretti vicini del sistema corrente
+e di formare con essi degli archi. Il comando che realizza questo collegamento fra i vicini è comunque
+eseguito dal programma **qspnclient** attraverso un delegato che questi fornisce al modulo Neighborhood.
+
+Sia `$peerlinklocal` l'indirizzo IP link-local del sistema rilevato. Sia `$dev` l'interfaccia di rete
+con cui è stato rilevato e `$linklocal` il relativo indirizzo di scheda. Il comando è:
+
+```
+ip route add $peerlinklocal dev $dev src $linklocal
+```
+
+Tuttavia, l'effettivo utilizzo dell'arco è deciso dal programma **qspnclient**. Il programma demanda all'utente
+questa decisione. Questo permette all'utente di dirigere il proprio ambiente di test a piacimento anche in
+particolari scenari, come ad esempio un gruppo di macchine virtuali che condividono un unico dominio di broadcast
+ma vogliono simulare un gruppo di sistemi wireless disposti in un determinato modo.
+
+Per ogni arco che il modulo Neighborhood realizza, le informazioni a disposizione (i due link-local e
+i due MAC address) sono visualizzate all'utente. Soltanto agli archi che l'utente decide di accettare
+e nell'ordine in cui sono accettati, il programma associa un indice autoincrementante *nodearc_nextindex*,
+che parte da 0. In seguito il programma sfrutta questi archi passandoli al modulo Identities.
+
+Sempre per dare all'utente il maggior controllo possibile sulle dinamiche del test, anche il costo
+di un arco che viene rilevato dal modulo Neighborhood non è lo stesso che viene usato dal programma
+**qspnclient**. L'utente quando accetta un arco dice quale costo gli vuole associare. In seguito può
+variarlo a piacimento fino anche a simularne la rimozione.
+
+### <a name="Ingresso_rete_1"></a> Ingresso in una rete - Caso 1
+
+Quando due reti si incontrano, il programma **qspnclient** prevede che sia l'utente a simulare i meccanismi
+di dialogo che portano a decidere:
+
+*   Quale g-nodo fa ingresso in blocco nell'altra rete.
+*   Quale g-nodo lo ospiterà nella nuova rete e con che posizione.
+*   Quale migration path (eventualmente) porterà a liberare quella posizione.
+
+Sarà ancora l'utente a simulare anche i meccanismi che portano all'avvio delle operazioni nei
+vari singoli sistemi con le dovute informazioni.
+
+Esaminiamo il caso più banale: sia *𝛼* un singolo nodo che costituiva una rete a sé; esso si incontra con un
+diverso singolo nodo *𝛽*; il nodo *𝛽* appartiene ad un g-nodo di livello 1 che ha una posizione
+libera per *𝛼*.
+
+La sequenza di istruzioni che l'utente darà ai singoli nodi *𝛼* e *𝛽* sarà questa:
+
+*   Al sistema *𝛼* dà il comando `prepare_enter_net_phase_1`, indicando queste informazioni:
+    *   identità entrante. L'identificativo di una identità di *𝛼*. Sia in questo esempio *𝛼<sub>0</sub>*.
+    *   livello g-nodo entrante. Il livello del g-nodo che fa ingresso. In questo esempio è 0.  
+        L'identità *𝛼<sub>0</sub>* deve produrre una copia (sia essa *𝛼<sub>1</sub>*) che farà
+        ingresso insieme al suo g-nodo di livello 0. Chiamiamo questo g-nodo *𝜑* anche se in questo
+        esempio esso è costituito dal solo *𝛼<sub>0</sub>*.
+    *   g-nodo ospitante. Le informazioni riguardanti il g-nodo *𝜒*, il quale può ospitare *𝜑* nella
+        nuova rete. Consistono nell'indirizzo Netsukuku di *𝜒* e il suo fingerprint.  
+        Sicuramente *𝜒* è di livello maggiore di *𝜑*. Potrebbe essere anche maggiore di *𝜑*+1.
+    *   nuova posizione 1. Le informazioni riguardanti la posizione da assumere dentro *𝜒*. Consistono
+        nella posizione e l'anzianità del g-nodo di livello direttamente inferiore a *𝜒*. Questa posizione
+        è temporanea e *virtuale*.
+    *   nuova posizione 2. Sarà in seguito resa disponibile dentro *𝜒* questa posizione *reale*.
+    *   l'identificativo di questa operazione di ingresso. Chiamiamolo *m<sub>𝜑</sub>*.
+    *   l'identificativo dell'operazione di migrazione (eventuale) al termine della quale si potrà
+        prendere la posizione *reale* di cui sopra dentro *𝜒*. Chiamiamolo *m<sub>𝜓</sub>*, ad indicare che
+        per liberare la posizione ha migrato il g-nodo *𝜓*. Laddove non vi sia bisogno di alcuna
+        migration path, questo identificativo è nullo.
+*   Al sistema *𝛼* dà il comando `enter_net_phase_1`, indicando queste informazioni:
+    *   si proceda con l'operazione di ingresso *m<sub>𝜑</sub>*.
+    *   se *m<sub>𝜓</sub>* era nullo: si indica di procedere immediatamente dopo con l'assegnazione
+        dell'indirizzo *reale* dentro *𝜒*.
+*   Soltanto se *m<sub>𝜓</sub>* non è nullo: al sistema *𝛼* dà il comando `enter_net_phase_2`, indicando queste informazioni:
+    *   è stata completata la migrazione *m<sub>𝜓</sub>*; quindi è ora disponibile l'indirizzo *reale* dentro *𝜒*.
+
+Risulta chiaro che in questo caso banale il tutto si sarebbe potuto fare con un solo comando dato dall'utente
+nel sistema *𝛼* e che si poteva fare a meno di passare per l'indirizzo temporaneo *virtuale*. Ma per
+semplicità manteniamo la sola modalità generica.
 
 ## <a name="Vecchio"></a>Vecchio
 
