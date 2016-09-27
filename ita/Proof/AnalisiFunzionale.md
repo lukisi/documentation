@@ -4,6 +4,7 @@
 1.  [Operazioni del qspnclient](#Operazioni_del_qspnclient)
     1.  [Interazione programma-utente](#Interazione_programma_utente)
     1.  [Avvio del programma](#Avvio_programma)
+    1.  [Primo segnale `bootstrap_complete`](#Primo_bootstrap_complete)
 1.  [Vecchio](#Vecchio)
     1.  [Primi passi](#Primi_passi)
     1.  [Da riordinare](#Da_riordinare)
@@ -136,8 +137,8 @@ ip rule add table ntk
 
 #### Parte 5
 
-Il programma **qspnclient** computa gli indirizzi IP relativi all'indirizzo Netsukuku che inizialmente
-va assegnato al sistema.
+Il programma **qspnclient** computa i propri indirizzi IP, equivalenti all'indirizzo Netsukuku che inizialmente
+il sistema si assegna.
 
 Il primo indirizzo IP assegnato è quello globale. Viene assegnato sempre. Sia esso `$globalip`.
 
@@ -165,6 +166,85 @@ for i = l-1 to 1 step -1
  done
 next
 ```
+
+### Parte 6
+
+Il programma **qspnclient** computa gli indirizzi IP di tutte le possibili destinazioni relative
+all'indirizzo Netsukuku che inizialmente va assegnato al sistema. Per ognuno assegna una rotta
+nella tabella `ntk` come `unreachable`.
+
+I possibili indirizzi IP di destinazione, ognuno con suffisso CIDR, sono calcolati in questo modo:
+
+*   Indichiamo con *l* il numero di livelli nella topologia.
+*   Indichiamo con *n* l'indirizzo Netsukuku del sistema.
+*   Indichiamo con *pos_n(i)* l'identificativo al livello *i* dell'indirizzo Netsukuku *n*.
+*   Indichiamo con *subnet_level* il livello del g-nodo in cui la rete è a gestione autonoma
+    dietro questo gateway.
+*   Per *i* che scende da *l* - 1 a *subnet_level*, per *j* da 0 a *gsize(i)*, se *pos_n(i)* ≠ *j*:
+    *   Calcola indirizzo IP globale di (*i*, *j*) rispetto a *n*.
+    *   Calcola indirizzo IP anonimizzante di (*i*, *j*) rispetto a *n*.
+    *   Per *k* che scende da *l* - 1 a *i* + 1:
+        *   Calcola indirizzo IP interno al livello *k* di (*i*, *j*) rispetto a *n*.
+
+Per ogni indirizzo IP calcolato in questo ciclo, sia esso `$ipaddr` (ad esempio `10.0.0.0/29`),
+il programma **qspnclient** esegue queste operazioni:
+
+```
+ip route add unreachable $ipaddr table ntk
+```
+
+Questo blocco di comandi va eseguito senza intromissione di altri comandi da altre tasklet.
+
+### Parte 7
+
+Il programma **qspnclient**, se il sistema ammette di essere usato come anonimizzatore, esegue questi
+comandi per istruire il kernel di mascherare il source dei pacchetti IP che vengono inoltrati verso
+indirizzi IP anonimizzanti.
+
+Sia `$anonymousrange` il range di indirizzi IP anonimizzanti, calcolato dal programma sulla base
+della topologia, ad esempio `10.0.0.64/27`. L'indirizzo IP che viene rimpiazzato è quello globale del sistema,
+che avevamo già computato, `$globalip`.
+
+```
+iptables -t nat -A POSTROUTING -d $anonymousrange -j SNAT --to $globalip
+```
+
+### <a name="Primo_bootstrap_complete"></a> Primo segnale `bootstrap_complete`
+
+Immediatamente, poiché il sistema è inizialmente isolato, l'identità principale riceve dal QspnManager
+il segnale `bootstrap_complete`.
+
+Alla ricezione del segnale `bootstrap_complete` (da una qualsiasi identità) il programma **qspnclient**
+computa gli indirizzi IP di tutte le possibili destinazioni relative all'indirizzo Netsukuku di
+quella identità. Per ognuno, in base alle conoscenze di quella identità, aggiorna la rotta
+nella tabella `ntk` e nelle tabelle di inoltro (`ntk_from_xxx`) presenti nel network namespace di
+gestione di quella identità.
+
+Nel presente caso assisteremo ad un aggiornamento della sola tabella `ntk`, in cui tutte le destinazioni
+sono irraggiungibili. Ad esempio:
+
+```
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.16/29 table ntk
+ip route change unreachable 10.0.0.80/29 table ntk
+ip route change unreachable 10.0.0.28/30 table ntk
+ip route change unreachable 10.0.0.92/30 table ntk
+ip route change unreachable 10.0.0.60/30 table ntk
+ip route change unreachable 10.0.0.24/31 table ntk
+ip route change unreachable 10.0.0.88/31 table ntk
+ip route change unreachable 10.0.0.56/31 table ntk
+ip route change unreachable 10.0.0.48/31 table ntk
+ip route change unreachable 10.0.0.27/32 table ntk
+ip route change unreachable 10.0.0.91/32 table ntk
+ip route change unreachable 10.0.0.59/32 table ntk
+ip route change unreachable 10.0.0.51/32 table ntk
+ip route change unreachable 10.0.0.41/32 table ntk
+```
+
+Questo blocco di comandi va eseguito senza intromissione di altri comandi da altre tasklet.
 
 ## <a name="Vecchio"></a>Vecchio
 
