@@ -68,215 +68,43 @@ riproducibili gli ambienti di test.
 
 ### <a name="Avvio_programma"></a> Avvio del programma
 
-All'avvio del programma **qspnclient** l'utente specifica alcune informazioni:
+[Dettagli](DettagliOperazioni1.md)
 
-*   Topologia della rete.
-*   Se il sistema vuole fare da gateway per una sottorete a gestione autonoma, tale sottorete può
-    avere la dimensione di un g-nodo di livello *i* nella topologia di rete specificata. L'utente
-    specifica il livello di tale g-nodo. Default 0.
-*   Lista di interfacce di rete da gestire.
-*   Se il sistema ammette di essere usato come anonimizzatore.
-*   Se il sistema (e tutta la eventuale sottorete autonoma dietro di lui) ammette di essere contattato
-    in forma anonima.
+All'avvio del programma **qspnclient** l'utente specifica alcune informazioni persistenti che riguardano
+il sistema e la rete a cui intende collegarsi.
 
-*   Indirizzo Netsukuku **iniziale** del sistema.
+Specifica anche l'indirizzo iniziale per il sistema. Tale indirizzo è temporaneo, almeno nella parte
+dei livelli alti; come tale potrà essere scelto dal programma in modo casuale nel demone *ntkd*. Ma la
+parte dei livelli bassi, se il sistema vuole fare da gateway per una sottorete a gestione autonoma,
+deve comunque poter essere specificata dall'utente.
 
-#### Parte 1
-
-All'avvio il programma computa l'indirizzo IP sinonimo di localhost per la topologia di rete
-specificata. Il modo di calcolare questo indirizzo è spiegato [sotto](#Mappatura_indirizzi_ip).
-Sia `$ntklocalhost` questo indirizzo IP, ad esempio `10.0.0.32`.
-
-Il programma **qspnclient** esegue queste operazioni:
-
-```
-sysctl net.ipv4.ip_forward=1
-sysctl net.ipv4.conf.all.rp_filter=0
-ip address add $ntklocalhost dev lo
-```
-
-#### Parte 2
-
-Sia `$devlist` la lista di interfacce di rete da gestire, ad esempio `eth1 wlan0`.
-
-Il programma **qspnclient** esegue queste operazioni:
-
-```
-for dev in $devlist; do
- sysctl net.ipv4.conf.$dev.rp_filter=0
- sysctl net.ipv4.conf.$dev.arp_ignore=1
- sysctl net.ipv4.conf.$dev.arp_announce=2
-done
-```
-
-#### Parte 3
-
-Il programma **qspnclient** informa il modulo Neighborhood di ogni interfaccia di rete che
-deve gestire, tramite il metodo `start_monitor`. Il modulo Neighborhood produrrà per questo alcuni comandi al sistema operativo.
-
-Il programma si avvede dell'indirizzo scelto perché il NeighborhoodManager lo notifica con il segnale
-*nic_address_set*. Il programma associa questo proprio indirizzo link-local all'indice
-autoincrementante *linklocal_nextindex*, che parte da 0.
-
-#### Parte 4
-
-Il programma **qspnclient** tiene traccia delle tabelle che ha creato nel file `/etc/iproute2/rt_tables`.
-Ogni volta che deve aggiungere una tabella gli assegna il primo numero identificativo libero
-partendo da 251 e scendendo verso il basso. Ogni volta che deve rimuovere una tabella tiene traccia
-del numero che è stato liberato.
-
-Sia `$tbid_free` il primo identificativo libero, che all'avvio del programma sarà `251`.
-
-Il programma **qspnclient** aggiunge la tabella `ntk` e imposta la relativa regola di
-default (senza fwmark) sul namespace default. Cioè, esegue queste operazioni:
-
-```
-(echo; echo $tbid_free "ntk # xxx_table_ntk_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
-ip rule add table ntk
-```
-
-#### Parte 5
-
-Il programma **qspnclient** computa i propri indirizzi IP, equivalenti all'indirizzo Netsukuku che inizialmente
-il sistema si assegna.
-
-Il primo indirizzo IP assegnato è quello globale. Viene assegnato sempre. Sia esso `$globalip`.
-
-Il secondo indirizzo IP assegnato è quello anonimizzante. Viene assegnato opzionalmente, cioè solo
-se il sistema ammette di essere contattato in forma anonima. Sia esso `$anonymousip`.
-
-I successivi indirizzi IP sono quelli interni. Vengono calcolati partendo da quello interno al
-livello *l* - 1 (dove *l* è il numero di livelli della topologia) e scendendo fino al livello 1.
-
-```
-for dev in $devlist; do
- ip address add $globalip dev $dev
-done
-
-if $allow_anonymous; then
- for dev in $devlist; do
-  ip address add $anonymousip dev $dev
- done
-fi
-
-for i = l-1 to 1 step -1
- internalip = indirizzo IP interno al g-nodo di livello $i
- for dev in $devlist; do
-  ip address add $internalip dev $dev
- done
-next
-```
-
-#### Parte 6
-
-Il programma **qspnclient** computa gli indirizzi IP di tutte le possibili destinazioni relative
-all'indirizzo Netsukuku che inizialmente va assegnato al sistema. Per ognuno assegna una rotta
-nella tabella `ntk` come `unreachable`.
-
-I possibili indirizzi IP di destinazione, ognuno con suffisso CIDR, sono calcolati in questo modo:
-
-*   Indichiamo con *l* il numero di livelli nella topologia.
-*   Indichiamo con *n* l'indirizzo Netsukuku del sistema.
-*   Indichiamo con *pos_n(i)* l'identificativo al livello *i* dell'indirizzo Netsukuku *n*.
-*   Indichiamo con *subnet_level* il livello del g-nodo in cui la rete è a gestione autonoma
-    dietro questo gateway.
-*   Per *i* che scende da *l* - 1 a *subnet_level*, per *j* da 0 a *gsize(i)* - 1, se *pos_n(i)* ≠ *j*:
-    *   Calcola, se possibile, indirizzo IP globale di (*i*, *j*) rispetto a *n*.  
-        È possibile se tutte le posizioni di *n* sono *reali* dal livello *i* + 1 al livello *l* - 1.
-    *   Calcola, se possibile, indirizzo IP anonimizzante di (*i*, *j*) rispetto a *n*.
-    *   Per *k* che scende da *l* - 1 a *i* + 1:
-        *   Calcola, se possibile, indirizzo IP interno al livello *k* di (*i*, *j*) rispetto a *n*.  
-            È possibile se tutte le posizioni di *n* sono *reali* dal livello *i* + 1 al livello *k* - 1.
-
-Per ogni indirizzo IP calcolato in questo ciclo, sia esso `$ipaddr` (ad esempio `10.0.0.0/29`),
-il programma **qspnclient** esegue queste operazioni:
-
-```
-ip route add unreachable $ipaddr table ntk
-```
-
-Questo blocco di comandi va eseguito senza intromissione di altri comandi da altre tasklet.
-
-#### Parte 7
-
-Il programma **qspnclient**, se il sistema ammette di essere usato come anonimizzatore, esegue questi
-comandi per istruire il kernel di mascherare il source dei pacchetti IP che vengono inoltrati verso
-indirizzi IP anonimizzanti.
-
-Sia `$anonymousrange` il range di indirizzi IP anonimizzanti, calcolato dal programma sulla base
-della topologia, ad esempio `10.0.0.64/27`. L'indirizzo IP che viene rimpiazzato è quello globale del sistema,
-che avevamo già computato, `$globalip`.
-
-```
-iptables -t nat -A POSTROUTING -d $anonymousrange -j SNAT --to $globalip
-```
+Il programma **qspnclient** all'avvio inizializza il network namespace default del sistema come unico
+nodo di una nuova rete. In seguito farà ingresso in un'altra rete o saranno altri nodi ad unirsi alla
+sua rete.
 
 ### <a name="Primo_bootstrap_complete"></a> Primo segnale `bootstrap_complete`
 
+[Dettagli](DettagliOperazioni2.md)
+
 Immediatamente, poiché il sistema è inizialmente isolato, l'identità principale riceve dal QspnManager
-il segnale `bootstrap_complete`.
-
-Alla ricezione del segnale `bootstrap_complete` (da una qualsiasi identità) il programma **qspnclient**
-computa gli indirizzi IP di tutte le possibili destinazioni relative all'indirizzo Netsukuku di
-quella identità. Per ognuno, in base alle conoscenze di quella identità, aggiorna la rotta
-nella tabella `ntk` e nelle tabelle di inoltro (`ntk_from_xxx`) presenti nel network namespace di
-gestione di quella identità.
-
-Nel presente caso assisteremo ad un aggiornamento della sola tabella `ntk`, in cui tutte le destinazioni
-sono irraggiungibili. Ad esempio:
-
-```
-ip route change unreachable 10.0.0.0/29 table ntk
-ip route change unreachable 10.0.0.64/29 table ntk
-ip route change unreachable 10.0.0.8/29 table ntk
-ip route change unreachable 10.0.0.72/29 table ntk
-ip route change unreachable 10.0.0.16/29 table ntk
-ip route change unreachable 10.0.0.80/29 table ntk
-ip route change unreachable 10.0.0.28/30 table ntk
-ip route change unreachable 10.0.0.92/30 table ntk
-ip route change unreachable 10.0.0.60/30 table ntk
-ip route change unreachable 10.0.0.24/31 table ntk
-ip route change unreachable 10.0.0.88/31 table ntk
-ip route change unreachable 10.0.0.56/31 table ntk
-ip route change unreachable 10.0.0.48/31 table ntk
-ip route change unreachable 10.0.0.27/32 table ntk
-ip route change unreachable 10.0.0.91/32 table ntk
-ip route change unreachable 10.0.0.59/32 table ntk
-ip route change unreachable 10.0.0.51/32 table ntk
-ip route change unreachable 10.0.0.41/32 table ntk
-```
-
-Questo blocco di comandi va eseguito senza intromissione di altri comandi da altre tasklet.
+il segnale `bootstrap_complete`. Su questo segnale il programma **qspnclient** aggiorna le rotte
+del network namespace in base alle sue conoscenze; per il momento è un nodo isolato.
 
 ### <a name="Archi_vicini"></a> Archi con i sistemi vicini
 
-Il modulo Neighborhood è quello che si occupa di rilevare i sistemi diretti vicini del sistema corrente
-e di formare con essi degli archi. Il comando che realizza questo collegamento fra i vicini è comunque
-eseguito dal programma **qspnclient** attraverso un delegato che questi fornisce al modulo Neighborhood.
+[Dettagli](DettagliOperazioni3.md)
 
-Sia `$peerlinklocal` l'indirizzo IP link-local del sistema rilevato. Sia `$dev` l'interfaccia di rete
-con cui è stato rilevato e `$linklocal` il relativo indirizzo di scheda. Il comando è:
-
-```
-ip route add $peerlinklocal dev $dev src $linklocal
-```
-
-Tuttavia, l'effettivo utilizzo dell'arco è deciso dal programma **qspnclient**. Il programma demanda all'utente
-questa decisione. Questo permette all'utente di dirigere il proprio ambiente di test a piacimento anche in
-particolari scenari, come ad esempio un gruppo di macchine virtuali che condividono un unico dominio di broadcast
-ma vogliono simulare un gruppo di sistemi wireless disposti in un determinato modo.
-
-Per ogni arco che il modulo Neighborhood realizza, le informazioni a disposizione (i due link-local e
-i due MAC address) sono visualizzate all'utente. Soltanto agli archi che l'utente decide di accettare
-e nell'ordine in cui sono accettati, il programma associa un indice autoincrementante *nodearc_nextindex*,
-che parte da 0. In seguito il programma sfrutta questi archi passandoli al modulo Identities.
-
-Sempre per dare all'utente il maggior controllo possibile sulle dinamiche del test, anche il costo
-di un arco che viene rilevato dal modulo Neighborhood non è lo stesso che viene usato dal programma
-**qspnclient**. L'utente quando accetta un arco dice quale costo gli vuole associare. In seguito può
-variarlo a piacimento fino anche a simularne la rimozione.
+Il modulo Neighborhood rileva i sistemi diretti vicini del sistema corrente, ma è il programma
+**qspnclient** che li mostra all'utente il quale decide se utilizzarli o meno. In questo modo
+il programma permette all'utente di dirigere il proprio ambiente di test a piacimento per simulare
+particolari scenari. Ad esempio, l'utente può far girare il programma su un gruppo di macchine virtuali
+che condividono un unico dominio di broadcast. L'utente è messo in grado di simulare in tale
+scenario un gruppo di sistemi wireless disposti in un determinato modo, decidendo quali nodi formano
+degli archi e con quale costo (latenza).
 
 ### <a name="Ingresso_rete_1"></a> Ingresso in una rete - Caso 1
+
+[Dettagli](DettagliOperazioni4.md)
 
 Quando due reti si incontrano, il programma **qspnclient** prevede che sia l'utente a simulare i meccanismi
 di dialogo che portano a decidere:
@@ -292,179 +120,7 @@ Esaminiamo il caso più banale: sia *𝛼* un singolo nodo che costituiva una re
 diverso singolo nodo *𝛽*; il nodo *𝛽* appartiene ad un g-nodo di livello 1 che ha una posizione
 libera per *𝛼*.
 
-La sequenza di istruzioni che l'utente darà ai singoli nodi *𝛼* e *𝛽* sarà questa:
-
-*   Al sistema *𝛼* dà il comando `prepare_enter_net_phase_1`, indicando queste informazioni:
-    *   identità entrante. L'identificativo di una identità di *𝛼*. Sia in questo esempio *𝛼<sub>0</sub>*.
-    *   livello g-nodo entrante *k*. Il livello del g-nodo che fa ingresso. In questo esempio è 0.  
-        L'identità *𝛼<sub>0</sub>* deve produrre una copia (sia essa *𝛼<sub>1</sub>*) che farà
-        ingresso insieme al suo g-nodo di livello *k*. Chiamiamo questo g-nodo *𝜑* e il nuovo g-nodo isomorfo *𝜑'*.
-        In questo esempio *𝜑* è costituito dal solo *𝛼<sub>0</sub>* e *𝜑'* è costituito dal solo *𝛼<sub>1</sub>*.
-    *   g-nodo ospitante. Le informazioni riguardanti il g-nodo *𝜒*, il quale può ospitare *𝜑'* nella
-        nuova rete. Consistono nell'indirizzo Netsukuku di *𝜒* e il suo fingerprint.  
-        Sicuramente *𝜒* è di livello maggiore del livello di *𝜑'*, forse anche di più livelli.
-    *   nuova posizione 1. Le informazioni riguardanti la posizione da assumere dentro *𝜒*. Consistono
-        nella posizione e l'anzianità del g-nodo di livello direttamente inferiore a *𝜒* che potrà
-        immediatamente assumere *𝜑'* nella nuova rete. Questa posizione è temporanea e *virtuale*.
-    *   nuova posizione 2. Sarà in seguito resa disponibile dentro *𝜒* questa posizione *reale*.
-    *   posizione di connettività. Le informazioni riguardanti la posizione di connettività nella
-        vecchia rete che dovrà assumere *𝜑*. Consistono nella posizione *virtuale* e l'anzianità del g-nodo di
-        livello direttamente superiore a *𝜑*.
-    *   l'identificativo di questa operazione di ingresso. Chiamiamolo *m<sub>𝜑</sub>*.
-    *   l'identificativo dell'operazione di migrazione (eventuale) al termine della quale si potrà
-        prendere la posizione *reale* di cui sopra dentro *𝜒*. Chiamiamolo *m<sub>𝜓</sub>*, ad indicare che
-        per liberare la posizione ha migrato il g-nodo *𝜓*. Laddove non vi sia bisogno di alcuna
-        migration path, questo identificativo è nullo.
-*   Al sistema *𝛼* dà il comando `enter_net_phase_1`, indicando queste informazioni:
-    *   si proceda con l'operazione di ingresso *m<sub>𝜑</sub>*.
-    *   se *m<sub>𝜓</sub>* era nullo: è implicita la richiesta di procedere immediatamente dopo con l'assegnazione
-        dell'indirizzo *reale* dentro *𝜒*.
-*   Soltanto se *m<sub>𝜓</sub>* non è nullo: al sistema *𝛼* dà il comando `enter_net_phase_2`, indicando queste informazioni:
-    *   è stata completata la migrazione *m<sub>𝜓</sub>*; quindi è ora disponibile l'indirizzo *reale* dentro *𝜒*.
-
-Risulta chiaro che in questo caso banale il tutto si sarebbe potuto fare con un solo comando dato dall'utente
-nel sistema *𝛼* e che si poteva fare a meno di passare per l'indirizzo temporaneo *virtuale*. Ma per
-semplicità manteniamo la sola modalità generica.
-
-#### Comando prepare_enter_net_phase_1
-
-Quando l'utente dà il comando `prepare_enter_net_phase_1` fornisce tutte le informazioni. Il programma
-**qspnclient** a questo punto chiama il metodo `prepare_add_identity` del modulo Identities. Oltre a ciò,
-non esegue nessuna operazione (comando al S.O.) ma soltanto memorizza le informazioni ricevute.
-
-#### Comando enter_net_phase_1
-
-Quando l'utente dà il comando `enter_net_phase_1` fornisce l'identificativo dell'operazione di
-ingresso. Il programma **qspnclient** recupera le informazioni memorizzate prima. Poi chiama il
-metodo `add_identity` del modulo Identities. Il modulo Identities produce quindi queste operazioni:
-
-```
-ip netns add entr02
-ip netns exec entr02 sysctl net.ipv4.ip_forward=1
-ip netns exec entr02 sysctl net.ipv4.conf.all.rp_filter=0
-ip link add dev entr02_eth1 link eth1 type macvlan
-ip link set dev entr02_eth1 netns entr02
-ip netns exec entr02 sysctl net.ipv4.conf.entr02_eth1.rp_filter=0
-ip netns exec entr02 sysctl net.ipv4.conf.entr02_eth1.arp_ignore=1
-ip netns exec entr02 sysctl net.ipv4.conf.entr02_eth1.arp_announce=2
-ip netns exec entr02 ip link set dev entr02_eth1 up
-ip netns exec entr02 ip address add 169.254.215.29 dev entr02_eth1
-ip netns exec entr02 ip route add 169.254.94.223 dev entr02_eth1 src 169.254.215.29
-```
-
-Nei comandi sopra riportati, il nome del network namespace (`entr02`) i nomi delle interfacce
-di rete reali e pseudo (`eth1`, `entr02_eth1`) i relativi indirizzi di scheda (`169.254.215.29`)
-e gli indirizzi link-local dei diretti vicini (`169.254.94.223`) sono tutti gestiti in
-autonomia dal modulo Identities.
-
-Dall'esecuzione del metodo `add_identity` sul modulo Identities è necessario reperire:
-*   identificativo della nuova identità
-*   nome del vecchio network namespace (che passa dalla vecchia identità alla nuova)
-*   nome del nuovo network namespace (che nasce per la vecchia identità)
-*   associazione tra ogni arco-identità della vecchia identità quando era nel vecchio namespace
-    e il corrispettivo arco-identità della vecchia identità nel nuovo namespace (oppure basta
-    che data una identità e un arco-identità passato al modulo Qspn possa recuperare le
-    relative informazioni attuali?)
-
-#### Copia tabelle e regole, spostamento rotte
-
-Il programma **qspnclient** conosce il nome del nuovo namespace. Assumiamo sia `entr02`.
-
-Il programma **qspnclient** conosce il nome del vecchio namespace. Assumiamo sia ``, cioè il default.
-
-Il programma **qspnclient** conosce l'indirizzo Netsukuku che la vecchia identità aveva nel vecchio
-namespace. Assumiamo sia 1·0·1·0.
-
-Il programma **qspnclient** conosce l'indirizzo Netsukuku *virtuale* che la vecchia identità come supporto
-di connettività assume nel nuovo namespace. Assumiamo sia 1·0·1·3.
-
-Il programma **qspnclient** aggiunge nel nuovo namespace la regola per la tabella primaria `ntk`.
-
-```
-ip netns exec entr02 ip rule add table ntk
-```
-
-Richiamando le modalità viste sopra, il programma **qspnclient** calcola tutti i possibili indirizzi IP
-di destinazione, ognuno con suffisso CIDR, relativi all'indirizzo della vecchia identità nel nuovo
-namespace, cioè 1·0·1·3. E li aggiunge alla tabella primaria `ntk` nel nuovo namespace.
-
-```
-ip netns exec entr02 ip route add unreachable 10.0.0.0/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.64/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.16/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.80/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.24/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.88/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.12/30 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.76/30 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.60/30 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.8/31 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.72/31 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.56/31 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.48/31 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.11/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.75/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.59/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.51/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.41/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.10/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.74/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.58/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.50/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.40/32 table ntk
-```
-
-**sistema 𝛽**
-```
-ip route del 10.0.0.0/29 table ntk
-ip route del 10.0.0.64/29 table ntk
-ip route del 10.0.0.16/29 table ntk
-ip route del 10.0.0.80/29 table ntk
-ip route del 10.0.0.24/29 table ntk
-ip route del 10.0.0.88/29 table ntk
-ip route del 10.0.0.12/30 table ntk
-ip route del 10.0.0.76/30 table ntk
-ip route del 10.0.0.60/30 table ntk
-ip route del 10.0.0.8/31 table ntk
-ip route del 10.0.0.72/31 table ntk
-ip route del 10.0.0.56/31 table ntk
-ip route del 10.0.0.48/31 table ntk
-ip route del 10.0.0.11/32 table ntk
-ip route del 10.0.0.75/32 table ntk
-ip route del 10.0.0.59/32 table ntk
-ip route del 10.0.0.51/32 table ntk
-ip route del 10.0.0.41/32 table ntk
-iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.10
-ip address del 10.0.0.10/32 dev eth1
-ip address del 10.0.0.74/32 dev eth1
-ip address del 10.0.0.58/32 dev eth1
-ip address del 10.0.0.50/32 dev eth1
-ip address del 10.0.0.40/32 dev eth1
-ip netns exec entr02 ip route change unreachable 10.0.0.0/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.64/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.16/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.80/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.24/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.88/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.12/30 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.76/30 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.60/30 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.8/31 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.72/31 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.56/31 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.48/31 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.11/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.75/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.59/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.51/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.41/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.10/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.74/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.58/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.50/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.40/32 table ntk
-```
-
+Dopo che l'utente ha istruito il sistema *𝛼* di fare ingresso ... **TODO**
 
 ## <a name="Vecchio"></a>Vecchio
 
