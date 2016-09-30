@@ -84,6 +84,10 @@ Dall'esecuzione del metodo `add_identity` sul modulo Identities è necessario re
 
 #### Copia tabelle e regole, spostamento rotte
 
+Sempre quando l'utente dà il comando `enter_net_phase_1`, in seguito alle operazioni viste
+prima, il programma **qspnclient** provvede come vediamo adesso a spostare la vecchia identità
+nel nuovo namespace e ripulire il vecchio namespace per la nuova identità.
+
 Il programma **qspnclient** conosce il nome del nuovo namespace. Assumiamo sia `entr02`.
 
 Il programma **qspnclient** conosce il nome del vecchio namespace. Assumiamo sia ``, cioè il default.
@@ -100,7 +104,7 @@ Il programma **qspnclient** aggiunge nel nuovo namespace la regola per la tabell
 ip netns exec entr02 ip rule add table ntk
 ```
 
-Richiamando le modalità viste sopra, il programma **qspnclient** calcola tutti i possibili indirizzi IP
+Richiamando le modalità viste [qui](DettagliOperazioni1.md), il programma **qspnclient** calcola tutti i possibili indirizzi IP
 di destinazione, ognuno con suffisso CIDR, relativi all'indirizzo della vecchia identità nel nuovo
 namespace, cioè 1·0·1·3. E li aggiunge alla tabella primaria `ntk` nel nuovo namespace.
 
@@ -130,7 +134,10 @@ ip netns exec entr02 ip route add unreachable 10.0.0.50/32 table ntk
 ip netns exec entr02 ip route add unreachable 10.0.0.40/32 table ntk
 ```
 
-**sistema 𝛽**
+Con le stesse modalità, il programma **qspnclient** calcola tutti i possibili indirizzi IP
+di destinazione relativi all'indirizzo che la vecchia identità aveva nel vecchio
+namespace, cioè 1·0·1·0. E li rimuove dalla tabella primaria `ntk` nel vecchio namespace.
+
 ```
 ip route del 10.0.0.0/29 table ntk
 ip route del 10.0.0.64/29 table ntk
@@ -150,12 +157,28 @@ ip route del 10.0.0.75/32 table ntk
 ip route del 10.0.0.59/32 table ntk
 ip route del 10.0.0.51/32 table ntk
 ip route del 10.0.0.41/32 table ntk
+```
+
+Partendo dal livello del g-nodo entrante *k* (nel nostro caso 0) e salendo fino a
+*l* - 1, solo se il vecchio namespace è il default (come nel nostro caso), il programma **qspnclient**
+rimuove dal vecchio namespace gli indirizzi IP della vecchia identità che non saranno comuni
+con quelli della nuova identità. In particolare, dovendo rimuovere l'indirizzo IP globale, prima
+rimuove la regola (se presente) di source-natting per i pacchetti anonimi che transitano per questo
+sistema. Rimuove anche (se presente) l'indirizzo IP anonimizzante.
+
+```
+ip address del 10.0.0.40/32 dev eth1
+ip address del 10.0.0.50/32 dev eth1
+ip address del 10.0.0.58/32 dev eth1
 iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.10
 ip address del 10.0.0.10/32 dev eth1
 ip address del 10.0.0.74/32 dev eth1
-ip address del 10.0.0.58/32 dev eth1
-ip address del 10.0.0.50/32 dev eth1
-ip address del 10.0.0.40/32 dev eth1
+```
+
+Di nuovo con tutti i possibili indirizzi IP di destinazione relativi all'indirizzo della vecchia identità nel nuovo
+namespace, il programma **qspnclient** aggiorna tutte le rotte nella tabella primaria `ntk` nel nuovo namespace.
+
+```
 ip netns exec entr02 ip route change unreachable 10.0.0.0/29 table ntk
 ip netns exec entr02 ip route change unreachable 10.0.0.64/29 table ntk
 ip netns exec entr02 ip route change unreachable 10.0.0.16/29 table ntk
@@ -179,6 +202,83 @@ ip netns exec entr02 ip route change unreachable 10.0.0.74/32 table ntk
 ip netns exec entr02 ip route change unreachable 10.0.0.58/32 table ntk
 ip netns exec entr02 ip route change unreachable 10.0.0.50/32 table ntk
 ip netns exec entr02 ip route change unreachable 10.0.0.40/32 table ntk
+```
+
+#### Popolamento nuove rotte della nuova identità
+
+Sempre quando l'utente dà il comando `enter_net_phase_1`, in seguito alle operazioni viste
+prima, il programma **qspnclient** provvede come vediamo adesso a preparare il vecchio namespace
+per la nuova identità.
+
+Il programma **qspnclient** calcola tutti i possibili indirizzi IP di destinazione relativi all'indirizzo
+della nuova identità. Li aggiunge alla tabella primaria `ntk` nel vecchio namespace.
+
+```
+ip route add unreachable 10.0.0.0/29 table ntk
+ip route add unreachable 10.0.0.64/29 table ntk
+ip route add unreachable 10.0.0.8/29 table ntk
+ip route add unreachable 10.0.0.72/29 table ntk
+ip route add unreachable 10.0.0.24/29 table ntk
+ip route add unreachable 10.0.0.88/29 table ntk
+ip route add unreachable 10.0.0.16/30 table ntk
+ip route add unreachable 10.0.0.80/30 table ntk
+ip route add unreachable 10.0.0.56/30 table ntk
+ip route add unreachable 10.0.0.20/31 table ntk
+ip route add unreachable 10.0.0.84/31 table ntk
+ip route add unreachable 10.0.0.60/31 table ntk
+ip route add unreachable 10.0.0.48/31 table ntk
+ip route add unreachable 10.0.0.22/32 table ntk
+ip route add unreachable 10.0.0.86/32 table ntk
+ip route add unreachable 10.0.0.62/32 table ntk
+ip route add unreachable 10.0.0.50/32 table ntk
+ip route add unreachable 10.0.0.40/32 table ntk
+ip route add unreachable 10.0.0.23/32 table ntk
+ip route add unreachable 10.0.0.87/32 table ntk
+ip route add unreachable 10.0.0.63/32 table ntk
+ip route add unreachable 10.0.0.51/32 table ntk
+ip route add unreachable 10.0.0.41/32 table ntk
+```
+
+#### Creazione e popolamento iniziale di tabelle per l'inoltro
+
+Sempre quando l'utente dà il comando `enter_net_phase_1`, in seguito alle operazioni viste
+prima, il programma **qspnclient** crea una istanza di QspnManager per la sua nuova identità e gli
+comunica (nel costruttore) che ha un arco-qspn con un altro nodo. Di tale arco-identità il
+programma conosce:
+
+*   MAC address del vicino.
+*   Indirizzo IP linklocal del vicino.
+
+Tenendo traccia inoltre delle tabelle già inserite nel file `/etc/iproute2/rt_tables`, il programma è in grado di
+eseguire le operazioni che seguono. Lo deve fare per tutti gli archi-qspn passati al QspnManager. Come sempre,
+vanno eseguite in blocco senza intromissioni da altre tasklet.
+
+```
+(echo; echo "250 ntk_from_00:16:3E:5B:78:D5 # xxx_table_ntk_from_00:16:3E:5B:78:D5_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 250
+ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.22/32 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.86/32 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.62/32 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.50/32 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.23/32 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.87/32 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.63/32 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:5B:78:D5
+ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:5B:78:D5
 ```
 
 [Operazione seguente](DettagliOperazioni5.md)

@@ -22,8 +22,8 @@ moduli a sostegno (Neighborhood, Identities) per stabilire come impostare le rot
 di routing del kernel di una macchina. Si tratta di un programma specifico per un sistema Linux.
 
 Per giungere a delineare le regole generali descritte in questo documento si è proceduto ad un
-esame dettagliato delle operazioni da fare su un sistema a fronte dei vari casi d'uso. Tale
-esame è riportato nel documento [Casi d'uso](UseCases.md).
+esame dettagliato delle operazioni da fare su un sistema a fronte dei vari casi d'uso. Questo lavoro
+è riportato nel documento [Casi d'uso](UseCases.md).
 
 In seguito si è cercato di associare ogni operazione ad uno specifico momento del ciclo di vita
 del programma **qspnclient**: il suo avvio, la rilevazione di qualche segnale da un dato modulo,
@@ -99,7 +99,7 @@ Il modulo Neighborhood rileva i sistemi diretti vicini del sistema corrente, ma 
 il programma permette all'utente di dirigere il proprio ambiente di test a piacimento per simulare
 particolari scenari. Ad esempio, l'utente può far girare il programma su un gruppo di macchine virtuali
 che condividono un unico dominio di broadcast. L'utente è messo in grado di simulare in tale
-scenario un gruppo di sistemi wireless disposti in un determinato modo, decidendo quali nodi formano
+scenario un gruppo di sistemi wireless disposti in un determinato modo, decidendo quali sistemi formano
 degli archi e con quale costo (latenza).
 
 ### <a name="Ingresso_rete_1"></a> Ingresso in una rete - Caso 1
