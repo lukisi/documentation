@@ -281,4 +281,22 @@ ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:5B:78:D5
 ```
 
+#### Processazione di un ETP
+
+**TODO**
+
+#### Cambio di indirizzo di una identità
+
+##### Un identificativo passa da virtuale a reale (a livello *i*)
+
+**TODO**
+
+##### L'identità interessata era la principale
+
+**TODO**
+
+#### Dismissione identità
+
+**TODO**
+
 [Operazione seguente](DettagliOperazioni5.md)

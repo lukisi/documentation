@@ -5,6 +5,9 @@
     1.  [Interazione programma-utente](#Interazione_programma_utente)
     1.  [Avvio del programma](#Avvio_programma)
     1.  [Primo segnale `bootstrap_complete`](#Primo_bootstrap_complete)
+    1.  [Archi con i sistemi vicini](#Archi_vicini)
+    1.  [Ingresso in una rete - Caso 1](#Ingresso_rete_1)
+    1.  [Un nuovo vicino nella stessa rete viene rilevato](#Nuovo_vicino_stessa_rete)
 1.  [Vecchio](#Vecchio)
     1.  [Primi passi](#Primi_passi)
     1.  [Da riordinare](#Da_riordinare)
@@ -120,7 +123,25 @@ Esaminiamo il caso più banale: sia *𝛼* un singolo nodo che costituiva una re
 diverso singolo nodo *𝛽*; il nodo *𝛽* appartiene ad un g-nodo di livello 1 che ha una posizione
 libera per *𝛼*.
 
-Dopo che l'utente ha istruito il sistema *𝛼* di fare ingresso ... **TODO**
+Dopo che l'utente ha istruito il sistema *𝛼* di fare ingresso, il programma **qspnclient** opera:
+
+*   la duplicazione dell'identità,
+*   lo spostamento della vecchia identità in un nuovo namespace temporaneo,
+*   la preparazione del vecchio namespace per la nuova identità e le prime operazioni della nuova
+    identità per l'effettivo ingresso nella rete,
+*   la dismissione della vecchia identità.
+
+### <a name="Nuovo_vicino_stessa_rete"></a> Un nuovo vicino nella stessa rete viene rilevato
+
+[Dettagli](DettagliOperazioni4.md)
+
+Dall'altra parte, una identità nel sistema *𝛽* rileva un nuovo vicino *𝛼* che inizialmente non fa parte della sua
+rete. Poi viene a sapere (tramite il modulo Identities) che una nuova identità di *𝛼* fa adesso parte della
+sua rete.
+
+In questa occasione il programma **qspnclient** prepara una tabella di inoltro per i pacchetti che
+provengono dal nuovo MAC address rilevato; però questa tabella di inoltro non viene attivata fino a
+quando l'identità di *𝛽* non riceve il primo ETP dalla nuova identità di *𝛼*.
 
 ## <a name="Vecchio"></a>Vecchio
 
