@@ -283,17 +283,102 @@ ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:5B:78:D5
 
 #### Processazione di un ETP
 
-**TODO**
+Sempre quando l'utente dà il comando `enter_net_phase_1`, in seguito alle operazioni viste
+prima, il programma **qspnclient** potrebbe dover attendere il completamento di una migration
+path prima di poter cambiare l'indirizzo della nuova identità; oppure no. Questo a seconda se
+l'utente nel comando `prepare_enter_net_phase_1` ha specificato una migration path oppure ha
+richiesto di procedere immediatamente con l'assegnazione dell'indirizzo *reale* dentro il g-nodo destinazione.
+
+Se deve attendere la migration path, allora è possibile che prima del cambio di indirizzo avvenga
+la ricezione di un ETP e la conseguente uscita dalla fase di bootstrap della nuova identità.
+
+In ogni caso le operazioni eseguite dal programma **qspnclient** quando un suo QspnManager ha terminato
+di processare un ETP sono le stesse. Verranno delineate sotto.
 
 #### Cambio di indirizzo di una identità
 
-##### Un identificativo passa da virtuale a reale (a livello *i*)
+Sempre quando l'utente dà il comando `enter_net_phase_1`, in seguito alle operazioni viste
+prima, il programma **qspnclient** sulla base delle istruzioni che l'utente aveva dato nel
+comando `prepare_enter_net_phase_1`, dopo aver fatto passare la nuova identità per l'indirizzo
+con posizione *virtuale* al livello 0, cambia il suo identificativo di livello 0 con la posizione
+*reale* dentro il g-nodo destinazione. Contemporaneamente, il programma esegue le due sequenze di
+operazioni che vedremo adesso: la prima perché un identificativo dell'indirizzo di una sua
+identità passa da *virtuale* a *reale* e la seconda perchè questo cambio avviene nell'identità *principale*.
 
-**TODO**
+##### Un identificativo passa da virtuale a reale
+
+In questa occasione il programma **qspnclient** rimuove, nel network namespace interessato, dalla tabella `ntk` e da
+tutte le tabelle di inoltro (anche quelle il cui arco non ha ancora ricevuto alcun ETP) le
+rotte verso gli indirizzi che non sono più validi a causa di questo nuovo identificativo *reale*.
+
+Notiamo che questo avviene anche nelle identità *di connettività* (che gestiscono un namespace
+diverso dal default) e anche se l'indirizzo Netsukuku non è del tutto *reale*.
+
+```
+ip route del 10.0.0.23/32 table ntk
+ip route del 10.0.0.87/32 table ntk
+ip route del 10.0.0.63/32 table ntk
+ip route del 10.0.0.51/32 table ntk
+ip route del 10.0.0.41/32 table ntk
+ip route del 10.0.0.23/32 table ntk_from_00:16:3E:5B:78:D5
+ip route del 10.0.0.87/32 table ntk_from_00:16:3E:5B:78:D5
+ip route del 10.0.0.63/32 table ntk_from_00:16:3E:5B:78:D5
+ip route del 10.0.0.51/32 table ntk_from_00:16:3E:5B:78:D5
+ip route del 10.0.0.41/32 table ntk_from_00:16:3E:5B:78:D5
+```
 
 ##### L'identità interessata era la principale
 
 **TODO**
+
+#### Processazione di un ETP
+
+Questa sequenza di operazioni è eseguita dal programma **qspnclient** quando un suo
+QspnManager ha terminato di processare un ETP. In essa, relativamente al network namespace
+associato all'identità a cui il QspnManager appartiene, vengono aggiornate tutte le rotte
+della tabella `ntk` e di quelle tabelle di inoltro dai cui archi abbiamo ricevuto almeno un
+ETP; in seguito viene aggiunta la regola per le tabelle di inoltro il cui arco ha ricevuto
+proprio adesso il primo ETP.
+
+```
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.24/29 table ntk
+ip route change unreachable 10.0.0.88/29 table ntk
+ip route change unreachable 10.0.0.16/30 table ntk
+ip route change unreachable 10.0.0.80/30 table ntk
+ip route change unreachable 10.0.0.56/30 table ntk
+ip route change unreachable 10.0.0.20/31 table ntk
+ip route change unreachable 10.0.0.84/31 table ntk
+ip route change unreachable 10.0.0.60/31 table ntk
+ip route change unreachable 10.0.0.48/31 table ntk
+ip route change 10.0.0.22/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.23
+ip route change 10.0.0.86/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.23
+ip route change 10.0.0.62/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.63
+ip route change 10.0.0.50/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.51
+ip route change 10.0.0.40/32 table ntk via 169.254.94.223 dev eth1 src 10.0.0.41
+ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.20/31 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.84/31 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.22/32 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.86/32 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.62/32 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.50/32 table ntk_from_00:16:3E:5B:78:D5
+ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
+ip rule add fwmark 250 table ntk_from_00:16:3E:5B:78:D5
+```
 
 #### Dismissione identità
 
