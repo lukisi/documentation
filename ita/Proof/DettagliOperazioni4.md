@@ -327,9 +327,45 @@ ip route del 10.0.0.51/32 table ntk_from_00:16:3E:5B:78:D5
 ip route del 10.0.0.41/32 table ntk_from_00:16:3E:5B:78:D5
 ```
 
-##### L'identità interessata era la principale
+##### L'identità interessata dal cambio di indirizzo è la principale
 
-**TODO**
+In questa occasione il programma **qspnclient** aggiunge ad ogni interfaccia di rete reale nel network
+namespace default gli indirizzi propri che prima non era possibile computare e adesso invece sì,
+partendo dal livello più basso e salendo finché possibile.
+
+Poi, solo se l'indirizzo è ora del tutto *reale*, aggiunge (opzionalmente) la regola di source-natting
+e (opzionalmente) l'indirizzo IP anonimizzante.
+
+Infine aggiorna tutte le rotte nella tabella `ntk` per fare in modo di mettere in esse (se disponibile)
+un src preferito. In questo caso non avevamo nessuna rotta nota poiché ancora nessun ETP era stato ricevuto
+e l'ingresso era da parte di un singolo nodo. Comunque riportiamo la sequenza di operazioni completa.
+
+```
+ip address add 10.0.0.41 dev eth1
+ip address add 10.0.0.51 dev eth1
+ip address add 10.0.0.63 dev eth1
+ip address add 10.0.0.23 dev eth1
+iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.23
+ip address add 10.0.0.87 dev eth1
+ip route change unreachable 10.0.0.0/29 table ntk
+ip route change unreachable 10.0.0.64/29 table ntk
+ip route change unreachable 10.0.0.8/29 table ntk
+ip route change unreachable 10.0.0.72/29 table ntk
+ip route change unreachable 10.0.0.24/29 table ntk
+ip route change unreachable 10.0.0.88/29 table ntk
+ip route change unreachable 10.0.0.16/30 table ntk
+ip route change unreachable 10.0.0.80/30 table ntk
+ip route change unreachable 10.0.0.56/30 table ntk
+ip route change unreachable 10.0.0.20/31 table ntk
+ip route change unreachable 10.0.0.84/31 table ntk
+ip route change unreachable 10.0.0.60/31 table ntk
+ip route change unreachable 10.0.0.48/31 table ntk
+ip route change unreachable 10.0.0.22/32 table ntk
+ip route change unreachable 10.0.0.86/32 table ntk
+ip route change unreachable 10.0.0.62/32 table ntk
+ip route change unreachable 10.0.0.50/32 table ntk
+ip route change unreachable 10.0.0.40/32 table ntk
+```
 
 #### Processazione di un ETP
 
@@ -382,6 +418,13 @@ ip rule add fwmark 250 table ntk_from_00:16:3E:5B:78:D5
 
 #### Dismissione identità
 
-**TODO**
+Sempre quando l'utente dà il comando `enter_net_phase_1`, in seguito alle operazioni viste
+prima, il programma **qspnclient** dismette la vecchia identità.
+
+```
+ip netns exec entr02 ip route flush table main
+ip netns exec entr02 ip link delete entr02_eth1 type macvlan
+ip netns del entr02
+```
 
 [Operazione seguente](DettagliOperazioni5.md)
