@@ -133,7 +133,7 @@ Dopo che l'utente ha istruito il sistema *𝛼* di fare ingresso, il programma *
 
 ### <a name="Nuovo_vicino_stessa_rete"></a> Un nuovo vicino nella stessa rete viene rilevato
 
-[Dettagli](DettagliOperazioni4.md)
+[Dettagli](DettagliOperazioni5.md)
 
 Dall'altra parte, una identità nel sistema *𝛽* rileva un nuovo vicino *𝛼* che inizialmente non fa parte della sua
 rete. Poi viene a sapere (tramite il modulo Identities) che una nuova identità di *𝛼* fa adesso parte della
