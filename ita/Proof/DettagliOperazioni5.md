@@ -47,4 +47,40 @@ Anche dalla prospettiva del nodo *𝛽* avremo subito un ETP da processare. Per 
 non ripetiamo le operazioni che il programma **qspnclient** deve fare, sono le stesse viste
 in precedenza nel nodo *𝛼*.
 
+### <a name="Rimosso_vicino_stessa_rete"></a> Un arco con un vicino nella stessa rete viene rimosso
+
+Supponiamo che il programma **qspnclient** riceve dall'utente istruzioni di rimuovere un arco fisico
+verso un diretto vicino. Sarebbe la stessa cosa anche se il programma riceve il segnale `arc_removing`
+dal modulo Neighborhood che significa che un arco fisico non è più funzionante.
+
+**TODO: verificare nel modulo Identities** Il programma istruisce il modulo Identities che questo arco fisico sta per essere rimosso:
+cioè gli dice che sta per essere rimosso dalla tabella `main` del kernel nel network namespace `default` la rotta diretta *principale*,
+cioè quella che collega l'identità principale di questo sistema all'identità principale del sistema vicino.
+
+Il modulo Identities per ogni arco-identità che fa riferimento a questo arco fisico (anche per quello principale)
+emette il **suo** segnale `arc_removing`. Poi, non per l'arco-identità principale ma solo per gli altri,
+rimuove dalla tabella `main` del kernel nel network namespace interessato la rotta diretta. Infine, per tutti gli
+archi-identità, emette il suo segnale `arc_removed`.
+
+Quando riceve il segnale `arc_removing` dal modulo Identities, il programma **qspnclient**, poiché quel
+particolare arco-identità era associato ad un arco-qspn, esegue queste azioni sulla relativa tabella di
+inoltro:
+
+*   Se la relativa tabella di inoltro era stata attivata:
+    *   Rimuove la regola.
+*   Svuota la tabella.
+*   Rimuove lo pseudonimo della tabella nel file `rt_tables`, liberando il numero identificativo.
+*   Rimuove la marcatura dei pacchetti.
+
+```
+ip rule del fwmark 250 table ntk_from_00:16:3E:EE:AF:D1
+ip route flush table ntk_from_00:16:3E:EE:AF:D1
+sed -i '/xxx_table_ntk_from_00:16:3E:EE:AF:D1_xxx/d' /etc/iproute2/rt_tables
+iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:EE:AF:D1 -j MARK --set-mark 250
+```
+
+Vanno eseguite in blocco.
+
+Poi il programma rimuove l'arco-qspn dal QspnManager dell'identità interessata.
+
 [Operazione seguente](DettagliOperazioni6.md)

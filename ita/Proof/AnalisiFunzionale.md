@@ -143,6 +143,33 @@ In questa occasione il programma **qspnclient** prepara una tabella di inoltro p
 provengono dal nuovo MAC address rilevato; però questa tabella di inoltro non viene attivata fino a
 quando l'identità di *𝛽* non riceve il primo ETP dalla nuova identità di *𝛼*.
 
+### <a name="Rimosso_vicino_stessa_rete"></a> Un arco con un vicino nella stessa rete viene rimosso
+
+[Dettagli](DettagliOperazioni5.md#Rimosso_vicino_stessa_rete)
+
+Ci sono alcune situazioni in cui una identità in un sistema deve rimuovere un arco-qspn.
+
+*   Un arco fisico non è più funzionante. Il modulo Neighborhood lo rileva e lo segnala.  
+    Può succedere anche nell'ambiente di test, per esempio se il demone nel sistema vicino va in crash.
+*   L'utente nell'ambiente di test vuole simulare che un arco fisico non sia più funzionante. In questo
+    caso non è il modulo Neighborhood a segnalarlo, ma l'utente a istruire direttamente il programma.
+*   Un sistema vicino rimuove un suo arco-identità con una identità di questo sistema.  
+    Può essere che l'identità del vicino è una identità di connettività e vuole rimuovere questo arco
+    perché è esterno al g-nodo di sua pertinenza.  
+    Può essere anche che l'identità del vicino è l'identità principale e il vicino vuole terminare
+    il demone (gracefully).
+*   Questo sistema richiede per una sua identità la rimozione di un arco-identità.  
+    Le possibili ragioni sono le stesse viste sopra.
+
+Analiziamo il caso in cui un arco fisico non sia più funzionante (realmente o per simulazione).
+
+Il programma **qspnclient** riceve dapprima il segnale `arc_removing` dal modulo Neighborhood (o una
+equivalente istruzione dall'utente).
+
+Il programma **qspnclient** grazie al modulo Identities individua tutti gli archi-identità che sono
+realizzati su questo arco fisico. Per ognuno di essi si occupa di rimuovere le tabelle di inoltro e poi di
+istruire il modulo Qspn.
+
 ## <a name="Vecchio"></a>Vecchio
 
 ### <a name="Primi_passi"></a>Primi passi
