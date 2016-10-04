@@ -8,6 +8,7 @@
     1.  [Archi con i sistemi vicini](#Archi_vicini)
     1.  [Ingresso in una rete - Caso 1](#Ingresso_rete_1)
     1.  [Un nuovo vicino nella stessa rete viene rilevato](#Nuovo_vicino_stessa_rete)
+    1.  [Un arco con un vicino nella stessa rete viene rimosso](#Rimosso_vicino_stessa_rete)
 1.  [Vecchio](#Vecchio)
     1.  [Primi passi](#Primi_passi)
     1.  [Da riordinare](#Da_riordinare)
@@ -105,6 +106,9 @@ che condividono un unico dominio di broadcast. L'utente è messo in grado di sim
 scenario un gruppo di sistemi wireless disposti in un determinato modo, decidendo quali sistemi formano
 degli archi e con quale costo (latenza).
 
+L'utente quando accetta un arco dice quale costo gli vuole associare. In seguito può
+variarlo a piacimento fino anche a simularne la rimozione.
+
 ### <a name="Ingresso_rete_1"></a> Ingresso in una rete - Caso 1
 
 [Dettagli](DettagliOperazioni4.md)
@@ -175,10 +179,8 @@ istruire il modulo Qspn.
 ### <a name="Primi_passi"></a>Primi passi
 
 All'avvio del programma nel sistema viene creata l'istanza di NeighborhoodManager. Poi gli sono passati i nomi delle
-interfacce di rete che dovrà gestire, tramite il metodo *start_monitor*. Ad ogni interfaccia, il modulo Neighborhood associa un
-indirizzo IP link-local scelto a caso. In realtà l'assegnazione dell'indirizzo è fatta proprio
-dal programma attraverso una classe che implementa l'interfaccia INeighborhoodIPRouteManager passata
-al modulo Neighborhood. Quello che fa il modulo Neighborhood è scegliere l'indirizzo.
+interfacce di rete che dovrà gestire, tramite il metodo *start_monitor*. Ad ogni interfaccia, il modulo Neighborhood
+associa un indirizzo IP link-local scelto a caso.
 
 Il programma si avvede dell'indirizzo scelto perché il NeighborhoodManager lo notifica con il segnale
 *nic_address_set*. Il programma associa questo proprio indirizzo link-local all'indice
@@ -186,24 +188,10 @@ autoincrementante *linklocal_nextindex*, che parte da 0.
 
 * * *
 
-L'istanza di NeighborhoodManager deve essere istruita sul numero massimo di archi che può accettare.
-Il programma *qspnclient* specifica un numero elevato. Nonostante questo, ogni arco che il modulo
-Neighborhood realizza passa al vaglio dell'utente che decide se utilizzarlo o meno. Questo permette
-di dirigere il proprio ambiente di test a piacimento anche in particolari scenari, come ad esempio
-un gruppo di macchine virtuali che condividono un unico dominio di broadcast ma vogliono simulare un
-gruppo di sistemi wireless disposti in un determinato modo.
-
 Per ogni arco che il modulo Neighborhood realizza, le informazioni a disposizione (i due link-local e
 i due MAC address) sono visualizzate all'utente. Soltanto agli archi che l'utente decide di accettare
 e nell'ordine in cui sono accettati, il programma associa un indice autoincrementante *nodearc_nextindex*,
 che parte da 0. In seguito il programma sfrutta questi archi passandoli al modulo Identities.
-
-Sempre per dare all'utente il maggior controllo possibile sulle dinamiche del test, anche il costo
-di un arco che viene rilevato dal modulo Neighborhood non è lo stesso che viene usato dal programma
-*qspnclient*. L'utente quando accetta un arco dice quale costo gli vuole associare. In seguito può
-variarlo a piacimento fino anche a simularne la rimozione.
-
-Quindi gli effettivi segnali di *arc_changed* del modulo Neighborhood sono in realtà ignorati dal programma.
 
 * * *
 
@@ -402,7 +390,7 @@ del g-nodo *g*.
 
 Questo permette, come detto prima, che le connessioni realizzate tra due sistemi appartenenti
 al g-nodo *g* non vengano compromesse. Per questo aggiungiamo che la mappatura associa alcuni
-indirizzi IP anche ad un indirizzo Netsukuku *virtuale*, purché siano *reali* i suoi
+indirizzi IP anche ad un indirizzo Netsukuku *virtuale* (ma solo per l'identità principale), purché siano *reali* i suoi
 identificativi da 0 a *k* - 1. Questi sono:
 
 *   Un indirizzo IP interno al livello *i* per ogni valore di *i* da 1 a *k*.
