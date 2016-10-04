@@ -11,15 +11,25 @@
     *   Nei dettagli tecnici del modulo PeerServices si fa riferimento al "documento livelli e bits".  
         Andrà modificata quella parte.
 
-## Calcolo degli indirizzi IP
-
-Questo documento illustra come si calcolano gli indirizzi IP che un *nodo del grafo* vuole assegnarsi.
+## Tipi di nodi del grafo
 
 Nel documento di [analisi](AnalisiFunzionale.md) abbiamo precisato che ogni *identità* che vive in
-un nodo detiene un indirizzo Netsukuku. Ogni identità è quindi un *nodo del grafo*. Inoltre ogni
-identità può volersi assegnare zero o più indirizzi IP.
+un sistema detiene un indirizzo Netsukuku. Ogni identità è quindi un *nodo del grafo*. Però solo l'identità
+*principale* di ogni sistema si assegna degli indirizzi IP legati al suo indirizzo Netsukuku. Infatti
+i processi in esecuzione nel sistema che vogliono accedere alla rete (come mittenti o destinatari di pacchetti
+IP) sono dentro il solo network namespace default.
 
-Ricordiamo inoltre, sempre dal documento di analisi, che abbiamo precisato dei vincoli nella
+L'identità *principale* di un sistema può volersi assegnare zero o più indirizzi IP. A seconda se ha un
+indirizzo Netsukuku completamente *reale* oppure *virtuale* a qualche livello.
+
+## Calcolo degli indirizzi IP
+
+Questo documento illustra come si calcolano gli indirizzi IP che l'identità *principale* di un sistema vuole assegnarsi.
+
+Spiega anche come si calcolano gli indirizzi IP con notazione CIDR che rappresentano una destinazione per un qualsiasi
+*nodo del grafo* che si trova a inviare o inoltrare un pacchetto IP guardando le sue tabelle di routing.
+
+Ricordiamo che nel documento di analisi abbiamo precisato dei vincoli nella
 scelta della topologia della rete:
 
 *   La dimensione di ogni g-nodo, detta *gsize*, deve essere una potenza di 2.
