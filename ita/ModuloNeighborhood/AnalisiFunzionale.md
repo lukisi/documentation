@@ -54,6 +54,19 @@ Quando si inizializza, il modulo produce l'identificativo NeigborhoodNodeID del 
 Il modulo riceve subito l'elenco delle interfacce di rete che deve gestire. Ad ognuna associa un indirizzo
 locale detto *indirizzo di scheda*.
 
+* * *
+
+Si noti che il fatto di associare un indirizzo IP ad una specifica interfaccia di rete
+ha la sua importanza in relazione al protocollo di risoluzione degli indirizzi IP in
+indirizzi MAC ([Address Resolution Protocol](https://en.wikipedia.org/wiki/Address_Resolution_Protocol)).
+Infatti quando un sistema *a* vuole trasmettere un pacchetto IP ad un suo diretto vicino *b*, esso conosce
+l'indirizzo IP di *b* e l'interfaccia di rete di *a* dove trasmettere. Il sistema *a* trasmette un frame Ethernet broadcast
+su quel segmento di rete una richiesta: «chi ha l'indirizzo IP XYZ?». Il sistema *b* risponde indicando al
+sistema *a* l'indirizzo MAC della sua interfaccia di rete. Quindi il sistema *a* può incapsulare il pacchetto
+IP in un frame Ethernet unicast che riporta gli indirizzi MAC dell'interfaccia che trasmette e dell'interfaccia che deve ricevere.
+
+* * *
+
 Rileva i nodi vicini raggiungibili attraverso una (o più) interfacce di rete e ne reperisce l'identificativo
 NeigborhoodNodeID + MAC. Si veda sotto la trattazione dell'argomento degli archi multipli con un unico nodo
 vicino: essi sono ammessi solo se diversi MAC del vicino sono rilevati da diverse interfacce di rete del nodo

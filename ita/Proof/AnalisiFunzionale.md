@@ -582,27 +582,7 @@ può volersi assegnare zero o più indirizzi IPv4.
 
 Vediamo come queste impostazioni si configurano in un sistema Linux e quindi quali operazioni fa il programma *qspnclient*.
 
-In un sistema Linux il sistema si assegna un indirizzo associandolo ad una interfaccia di rete. In realtà
-ogni interfaccia può avere più indirizzi e anche lo stesso indirizzo può essere associato a più interfacce;
-inoltre anche se un indirizzo *x* viene associato alla interfaccia *nicA* e non all'interfaccia *nicB*, un
-pacchetto destinato a *x* ricevuto tramite l'interfaccia *nicB* giunge ugualmente al processo che sta in
-ascolto sull'indirizzo *x*.
-
-Si noti che il fatto di associare un indirizzo IP ad una specifica interfaccia di rete
-ha la sua importanza in relazione al protocollo di risoluzione degli indirizzi IP in
-indirizzi MAC ([Address Resolution Protocol](https://en.wikipedia.org/wiki/Address_Resolution_Protocol)).
-Infatti quando un sistema *a* vuole trasmettere un pacchetto IP ad un suo diretto vicino *b*, esso conosce
-l'indirizzo IP di *b* e l'interfaccia di rete di *a* dove trasmettere. Il sistema *a* trasmette un frame Ethernet broadcast
-su quel segmento di rete una richiesta: «chi ha l'indirizzo IP XYZ?». Il sistema *b* risponde indicando al
-sistema *a* l'indirizzo MAC della sua interfaccia di rete. Quindi il sistema *a* può incapsulare il pacchetto
-IP in un frame Ethernet unicast che riporta gli indirizzi MAC dell'interfaccia che trasmette e dell'interfaccia che deve ricevere.
-
-Se il sistema *b* ha diverse interfacce di rete (all'interno di un unico network namespace) tutte
-collegate allo stesso segmento di rete, il fatto
-di associare diversi indirizzi IP a diverse interfacce può fornire un modo di identificare una precisa
-interfaccia di rete a cui un pacchetto va trasmesso. Questo è usato dal modulo Qspn per distinguere
-i pacchetti che vanno ricevuti da una pseudo-interfaccia, per questo gli indirizzi link-local sono diversi
-su ogni interfaccia e sulle pseudo-interfacce.
+In un sistema Linux il sistema si assegna un indirizzo IP associandolo ad una interfaccia di rete.
 
 Fatta questa premessa, come si comporta il programma?
 
