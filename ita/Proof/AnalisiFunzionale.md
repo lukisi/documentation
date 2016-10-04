@@ -375,8 +375,9 @@ cui la componente di *n* è virtuale. Diciamo che *i* vale *l* se *n* è del tut
 Se è *reale*, nel network namespace default:
 
 *   Per ogni livello *j* da 0 a *l* - 1:
-    *   Per ogni g-nodo *d* di livello *j* che l'identità conosce, e solo quelli la cui
-        componente (a livello *j*) è *reale*:
+    *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
+        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto all'identità. Indipendentemente dal
+            fatto che *d* esista o meno nella rete.
         *   Il sistema computa questi indirizzi IP:
             *   *d<sub>g</sub>* - Indirizzo IP globale del g-nodo *d*.  
                 Si tenga presente che se un processo locale vuole inviare un pacchetto a questo
@@ -424,8 +425,9 @@ più basso in cui la componente è virtuale. Sia *k* il livello più alto in cui
 In questo caso, nel network namespace default:
 
 *   Per ogni livello *j* da 0 a *i*-1:
-    *   Per ogni g-nodo *d* di livello *j* che l'identità conosce, e solo quelli la cui
-        componente (a livello *j*) è *reale*:
+    *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
+        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto all'identità. Indipendentemente dal
+            fatto che *d* esista o meno nella rete.
         *   Il sistema computa questi indirizzi IP:
             *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
                 *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
@@ -454,8 +456,9 @@ In questo caso, nel network namespace default:
                 sopra lo stack TCP/IP di Linux si avvale della rotta che è stata impostata per i pacchetti
                 in *partenza* verso *d<sub>x</sub>*. Perciò il programma *qspnclient* non imposta una ulteriore rotta.
 *   Per ogni livello *j* da *i* a *k*-1:
-    *   Per ogni g-nodo *d* di livello *j* che l'identità conosce, e solo quelli la cui
-        componente (a livello *j*) è *reale*:
+    *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
+        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto all'identità. Indipendentemente dal
+            fatto che *d* esista o meno nella rete.
         *   Il sistema computa questi indirizzi IP:
             *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
                 *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
@@ -479,8 +482,9 @@ In questo caso, nel network namespace default:
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
                 destinazione. La destinazione *d<sub>x</sub>* non può essere "non raggiungibile".
 *   Per ogni livello *j* da *k* a *l*-1:
-    *   Per ogni g-nodo *d* di livello *j* che l'identità conosce, e solo quelli la cui
-        componente (a livello *j*) è *reale*:
+    *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
+        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto all'identità. Indipendentemente dal
+            fatto che *d* esista o meno nella rete.
         *   Il sistema computa questi indirizzi IP:
             *   *d<sub>g</sub>* - Indirizzo IP globale del g-nodo *d*.  
                 In questo caso è impossibile per un processo locale inviare un pacchetto a questo
@@ -518,8 +522,9 @@ la componente è virtuale. Sia *k* il livello più alto in cui la componente è 
 Nel network namespace gestito da questa identità:
 
 *   Per ogni livello *j* da 0 a *k* - 1:
-    *   Per ogni g-nodo *d* di livello *j* che l'identità conosce, e solo quelli la cui
-        componente (a livello *j*) è *reale*:
+    *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
+        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto all'identità. Indipendentemente dal
+            fatto che *d* esista o meno nella rete.
         *   Il sistema computa questi indirizzi IP:
             *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
                 *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
@@ -542,8 +547,9 @@ Nel network namespace gestito da questa identità:
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
                 destinazione. La destinazione *d<sub>x</sub>* non può essere "non raggiungibile".
 *   Per ogni livello *j* da *k* a *l*-1:
-    *   Per ogni g-nodo *d* di livello *j* che l'identità conosce, e solo quelli la cui
-        componente (a livello *j*) è *reale*:
+    *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
+        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto all'identità. Indipendentemente dal
+            fatto che *d* esista o meno nella rete.
         *   Il sistema computa questi indirizzi IP:
             *   *d<sub>g</sub>* - Indirizzo IP globale del g-nodo *d*.  
                 Di nuovo, è impossibile che un processo locale voglia inviare un pacchetto a questi
