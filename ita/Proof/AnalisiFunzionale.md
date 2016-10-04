@@ -326,15 +326,15 @@ indirizzo Netsukuku *virtuale*, durante le operazioni di una migrazione coinvolt
 *migration path*. Durante questo periodo quel sistema (e insieme a quello anche tutti
 gli altri sistemi che appartengono al g-nodo *g* che sta migrando) non può avere un indirizzo
 IP globale. Questo però non inficia sulla possibilità di quel sistema di avere un indirizzo
-IP interno al livello *i* per ogni valore di *i* da 1 a *k*, dove *k* è il livello
+IP interno al livello *i* per ogni valore di *i* da 0 a *k*, dove *k* è il livello
 del g-nodo *g*.
 
 Questo permette, come detto prima, che le connessioni realizzate tra due sistemi appartenenti
 al g-nodo *g* non vengano compromesse. Per questo aggiungiamo che la mappatura associa alcuni
-indirizzi IP anche ad un indirizzo Netsukuku *virtuale* (ma solo per l'identità principale), purché siano *reali* i suoi
-identificativi da 0 a *k* - 1. Questi sono:
+indirizzi IP anche ad un indirizzo Netsukuku *virtuale* (ma solo per l'identità principale), purché
+siano *reali* i suoi identificativi minori di *k*. Questi sono:
 
-*   Un indirizzo IP interno al livello *i* per ogni valore di *i* da 1 a *k*.
+*   Un indirizzo IP interno al livello *i* per ogni valore di *i* da 0 a *k*.
 
 Gli algoritmi di calcolo dei vari tipi di indirizzo IP sono descritti nel documento [IndirizziIP](IndirizziIP.md).
 
