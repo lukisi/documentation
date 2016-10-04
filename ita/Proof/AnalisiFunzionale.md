@@ -257,65 +257,6 @@ comprende solo questa identità. I dati che servono sono forniti dall'utente sul
 primo indirizzo Netsukuku che questa identità si assegna. L'identificativo del fingerprint a livello 0 è scelto
 a caso dal programma e le anzianità sono a zero (primo g-nodo) a tutti i livelli.
 
-Siccome il QSPN è un modulo di identità, ogni istanza di QspnManager viene memorizzata come membro di una
-identità nel modulo Identities. Quindi non è necessario un ulteriore indice perché l'utente possa
-referenziare una istanza di QspnManager: è sufficiente l'indice *nodeid_nextindex*.
-
-* * *
-
-Supponiamo ora che l'utente nel sistema *A* vuole simulare l'ingresso dell'identità *A<sub>0</sub>* in un'altra rete esistente
-attraverso un arco tra i sistemi *A* e *B* e in particolare che collega le identità *A<sub>0</sub>* e *B<sub>0</sub>*.
-
-L'utente chiederà al programma in esecuzione su *A* di costruire una nuova *identità* *A<sub>1</sub>*
-basata su *A<sub>0</sub>*. Facendo questo si duplica anche l'arco-identità *A<sub>0</sub>*-*B<sub>0</sub>*
-in un nuovo arco-identità *A<sub>1</sub>*-*B<sub>0</sub>* e di questo fatto si avvede autonomamente
-l'IdentityManager sia nel sistema *A*, sia nel sistema *B*.
-
-Poi l'utente chiederà al programma in esecuzione su *A*, con un comando interattivo che chiamiamo
-*enter_net*, di costruire per essa una nuova istanza di QspnManager con il costruttore *enter_net*. I dati che
-servono sono forniti dall'utente in modo interattivo: l'indirizzo del nuovo g-nodo prenotato nella
-rete appena scoperta, la sua anzianità, gli archi-identità che ci collegano alla nuova rete, e altri.
-
-Esaminiamo gli archi-identità. Per l'arco-identità *A<sub>1</sub>*-*B<sub>0</sub>* che in questo caso l'utente specifica (tramite
-il suo indice) quando da il comando *enter_net* sul sistema *A*, il programma crea una istanza di IQspnArc
-tale che il modulo QSPN di *A<sub>1</sub>* possa effettuare comunicazioni con il modulo QSPN
-di *B<sub>0</sub>*.
-
-Immediatamente l'utente dovrà dare un comando al programma in esecuzione su *B*, che chiamiamo *add_qspnarc*,
-con il quale gli chiede di costruire e passare al QspnManager di *B<sub>0</sub>* una istanza di IQspnArc
-tale che il modulo QSPN di *B<sub>0</sub>* possa effettuare comunicazioni con il modulo QSPN
-di *A<sub>1</sub>*.
-
-Poi l'utente chiederà al programma in esecuzione su *A* di rendere la vecchia *identità* *A<sub>0</sub>*
-una identità di connettività che andrà da lì a breve a scomparire. Per prima cosa l'utente usa il comando
-*make_connectivity*, il quale con l'omonimo metodo del QspnManager di *A<sub>0</sub>* rende quella identità
-di connettività. L'utente specifica a quale livello l'indirizzo Netsukuku di *A<sub>0</sub>* deve diventare
-*virtuale* (nel nostro caso 0), quale indirizzo virtuale deve prendere e con quale anzianità (dati che sarebbero
-da concordare con il Coordinator) e fino a quale livello arriva la migrazione (nel nostro caso equivale al
-numero totale dei livelli poiché si è entrati in una diversa rete).  
-Ora l'utente deve attendere un po' (un breve istante è sufficiente) per simulare l'attesa che il demone
-*ntkd* farebbe a questo punto per due motivi: bisogna attendere un istante per permettere che l'ETP prodotto
-da *A<sub>0</sub>* per segnalare ai vicini la rimozione del vecchio identificativo *reale*, venga da essi elaborato;
-bisogna inoltre attendere che *A<sub>1</sub>* notifichi il segnale `presence_notified`.  
-Poi l'utente con il comando *remove_outer_arcs* chiede al programma di eseguire l'omonimo metodo del
-QspnManager di *A<sub>0</sub>* per rimuovere gli archi-identità, se ci sono, esterni al massimo g-nodo
-per il quale si rimane di supporto alla connettività. In questo caso per forza non vi sono archi, essendo
-questo g-nodo l'intera vecchia rete.  
-Poi l'utente verifica con il comando *check_connectivity*, il quale usa l'omonimo metodo del
-QspnManager di *A<sub>0</sub>*, che la permanenza di quella identità è ora superflua. Il programma
-scriverà a video l'esito di questa verifica.  
-Infine l'utente con il comando *remove_identity* chiederà al programma nel sistema A di rimuovere l'identità
-*A<sub>0</sub>*.
-
-* * *
-
-Per ogni *identità* creata, nel relativo network namespace, sulla base dell'indirizzo Netsukuku
-ad essa associato, il programma computa un numero di indirizzi IP (in seguito verrà dettagliato
-come siano computati) e se li assegna.
-
-Inoltre, sempre per ogni *identità* e nel relativo network namespace, basandosi sui segnali notificati
-dalla relativa istanza di QspnManager, il programma popola le tabelle di routing del kernel.
-
 * * *
 
 Al lancio del programma *qspnclient* l'utente indica attraverso appositi flag come vuole che il sistema si

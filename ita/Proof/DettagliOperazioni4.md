@@ -26,6 +26,8 @@ La sequenza di istruzioni che l'utente darà ai singoli nodi *𝛼* e *𝛽* sar
     *   posizione di connettività. Le informazioni riguardanti la posizione di connettività nella
         vecchia rete che dovrà assumere *𝜑*. Consistono nella posizione *virtuale* e l'anzianità del g-nodo di
         livello direttamente superiore a *𝜑*.
+    *   nuovi archi-qspn. Cioè quali archi-identità fra quelli di *𝛼<sub>0</sub>* (l'identità entrante)
+        saranno archi nella nuova rete. Oltre a quelli che sono già noti in quanto interni al g-nodo entrante *𝜑'*.
     *   l'identificativo di questa operazione di ingresso. Chiamiamolo *m<sub>𝜑</sub>*.
     *   l'identificativo dell'operazione di migrazione (eventuale) al termine della quale si potrà
         prendere la posizione *reale* di cui sopra dentro *𝜒*. Chiamiamolo *m<sub>𝜓</sub>*, ad indicare che
@@ -243,7 +245,8 @@ ip route add unreachable 10.0.0.41/32 table ntk
 
 Sempre quando l'utente dà il comando `enter_net_phase_1`, in seguito alle operazioni viste
 prima, il programma **qspnclient** crea una istanza di QspnManager per la sua nuova identità e gli
-comunica (nel costruttore) che ha un arco-qspn con un altro nodo. Di tale arco-identità il
+comunica (nel costruttore) di quali archi-qspn dispone. Nel nostro esempio ci sarà un nuovo
+arco-qspn, comunicato dall'utente nel comando `prepare_enter_net_phase_1`. Di tale arco-identità il
 programma conosce:
 
 *   MAC address del vicino.
