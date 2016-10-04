@@ -14,8 +14,9 @@
     1.  [Da riordinare](#Da_riordinare)
 1.  [Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IPv4](#Mappatura_indirizzi_ip)
 1.  [Identità](#Identita)
-    1.  [Identità principale](#Identita_principale)
-    1.  [Identità di connettività](#Identita_di_connettivita)
+    1.  [Assegnazione indirizzi IP](#Indirizzi_ip_propri)
+    1.  [Assegnazione rotte - Identità principale](#Rotte_Identita_principale)
+    1.  [Assegnazione rotte - Identità di connettività](#Rotte_Identita_di_connettivita)
 1.  [Indirizzi IP di ogni identità nel sistema](#Indirizzi_del_sistema)
 1.  [Rotte nelle tabelle di routing](#Rotte_nelle_tabelle_di_routing)
     1.  [Source NATting](#Source_natting)
@@ -338,25 +339,42 @@ siano *reali* i suoi identificativi minori di *k*. Questi sono:
 
 Gli algoritmi di calcolo dei vari tipi di indirizzo IP sono descritti nel documento [IndirizziIP](IndirizziIP.md).
 
-## <a name="Identita"></a>Identità
+## <a name="Identita"></a> Identità
 
 Ogni identità che vive nel sistema ha un suo indirizzo Netsukuku. Inoltre ha una mappa di percorsi, ognuno
 che ha come destinazione (e come passi) un g-nodo *visibile* dal suo indirizzo Netsukuku.
 
 Un sistema ha sempre una identità principale e zero o più identità di connettività.
 
-### <a name="Identita_principale"></a>Identità principale
-
 L'identità principale gestisce il network namespace default. L'identità principale ha un indirizzo
 Netsukuku *definitivo* che può essere *reale* o *virtuale*.
 
+L'identità di connettività gestisce un certo network namespace. L'identità di connettività ha un indirizzo
+Netsukuku *di connettività* che è *virtuale*.
+
+### <a name="Indirizzi_ip_propri"></a> Assegnazione indirizzi IP
+
+Le identità di connettività non si assegnano mai nessun indirizzo IP nel loro network namespace.
+
+L'identità principale, nel network namespace default, si assegna degli indirizzi IP sulla base del
+suo indirizzo Netsukuku.
+
+Sia *n* l'indirizzo Netsukuku dell'identità principale di un sistema. Sia *i* il livello più basso in
+cui la componente di *n* è virtuale. Diciamo che *i* vale *l* se *n* è del tutto *reale*.
+
+*   Per ogni livello *j* da 0 a *i*:
+    *   Se *j* = *l*:
+        *   Il sistema si assegna l'indirizzo IP globale di *n*.
+        *   Il sistema può (opzionalmente) fare da anonimizzatore. Cioè si aggiunge la regola di SNAT.
+        *   Il sistema può (opzionalmente) assegnarsi l'indirizzo IP globale anonimizzante di *n*.
+    *   Altrimenti:
+        *   Il sistema si assegna l'indirizzo IP interno al livello *j* di *n*.
+
+### <a name="Rotte_Identita_principale"></a> Assegnazione rotte - Identità principale
+
 Se è *reale*, nel network namespace default:
 
-*   Il sistema si assegna l'indirizzo IP globale di *n*.
-*   Il sistema può (opzionalmente) assegnarsi l'indirizzo IP globale anonimizzante di *n*.
 *   Per ogni livello *j* da 0 a *l* - 1:
-    *   Il sistema si assegna l'indirizzo IP interno al livello *j* + 1 di *n*
-        (non quando *j* + 1 = *l*; in quel caso abbiamo solo l'indirizzo IP globale).
     *   Per ogni g-nodo *d* di livello *j* che l'identità conosce, e solo quelli la cui
         componente (a livello *j*) è *reale*:
         *   Il sistema computa questi indirizzi IP:
@@ -405,10 +423,7 @@ più basso in cui la componente è virtuale. Sia *k* il livello più alto in cui
 
 In questo caso, nel network namespace default:
 
-*   NON esiste un indirizzo IP globale di *n*.
-*   NON esiste un indirizzo IP globale anonimizzante di *n*.
 *   Per ogni livello *j* da 0 a *i*-1:
-    *   Il sistema si assegna l'indirizzo IP interno al livello *j* + 1 di *n*.
     *   Per ogni g-nodo *d* di livello *j* che l'identità conosce, e solo quelli la cui
         componente (a livello *j*) è *reale*:
         *   Il sistema computa questi indirizzi IP:
@@ -439,7 +454,6 @@ In questo caso, nel network namespace default:
                 sopra lo stack TCP/IP di Linux si avvale della rotta che è stata impostata per i pacchetti
                 in *partenza* verso *d<sub>x</sub>*. Perciò il programma *qspnclient* non imposta una ulteriore rotta.
 *   Per ogni livello *j* da *i* a *k*-1:
-    *   NON esiste un indirizzo IP interno al livello *j* + 1 di *n*.
     *   Per ogni g-nodo *d* di livello *j* che l'identità conosce, e solo quelli la cui
         componente (a livello *j*) è *reale*:
         *   Il sistema computa questi indirizzi IP:
@@ -465,7 +479,6 @@ In questo caso, nel network namespace default:
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
                 destinazione. La destinazione *d<sub>x</sub>* non può essere "non raggiungibile".
 *   Per ogni livello *j* da *k* a *l*-1:
-    *   NON esiste un indirizzo IP interno al livello *j* + 1 di *n*.
     *   Per ogni g-nodo *d* di livello *j* che l'identità conosce, e solo quelli la cui
         componente (a livello *j*) è *reale*:
         *   Il sistema computa questi indirizzi IP:
@@ -497,20 +510,14 @@ In questo caso, nel network namespace default:
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
                 destinazione. La destinazione *d<sub>x</sub>* non può essere "non raggiungibile".
 
-### <a name="Identita_di_connettivita"></a>Identità di connettività
-
-Un sistema può avere 0 o più identità di connettività. L'identità di connettività gestisce un certo
-network namespace. L'identità di connettività ha un indirizzo Netsukuku *di connettività* che è *virtuale*.
+### <a name="Rotte_Identita_di_connettivita"></a> Assegnazione rotte - Identità di connettività
 
 Significa che l'indirizzo ha una o più componenti virtuali. Sia *i* il livello più basso in cui
 la componente è virtuale. Sia *k* il livello più alto in cui la componente è virtuale.
 
 Nel network namespace gestito da questa identità:
 
-*   NON esiste un indirizzo IP globale di *n*.
-*   NON esiste un indirizzo IP globale anonimizzante di *n*.
 *   Per ogni livello *j* da 0 a *k* - 1:
-    *   NON esiste un indirizzo IP interno al livello *j* + 1 di *n*.
     *   Per ogni g-nodo *d* di livello *j* che l'identità conosce, e solo quelli la cui
         componente (a livello *j*) è *reale*:
         *   Il sistema computa questi indirizzi IP:
@@ -535,7 +542,6 @@ Nel network namespace gestito da questa identità:
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
                 destinazione. La destinazione *d<sub>x</sub>* non può essere "non raggiungibile".
 *   Per ogni livello *j* da *k* a *l*-1:
-    *   NON esiste un indirizzo IP interno al livello *j* + 1 di *n*.
     *   Per ogni g-nodo *d* di livello *j* che l'identità conosce, e solo quelli la cui
         componente (a livello *j*) è *reale*:
         *   Il sistema computa questi indirizzi IP:
