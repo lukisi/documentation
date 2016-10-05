@@ -21,6 +21,7 @@
 1.  [Rotte nelle tabelle di routing](#Rotte_nelle_tabelle_di_routing)
     1.  [Source NATting](#Source_natting)
     1.  [Routing](#Routing)
+    1.  [Mappatura di una sottorete](#Net_mapping)
 
 Ci proponiamo di realizzare un programma, **qspnclient**, che si avvale del modulo QSPN e altri
 moduli a sostegno (Neighborhood, Identities) per stabilire come impostare le rotte nelle tabelle
@@ -670,9 +671,12 @@ assumono come requisito una capacità di questo tipo. Nella trattazione che segu
 di concetti (come le tabelle di routing, l'assegnazione degli indirizzi alle interfacce di rete,
 la manipolazione dei pacchetti, ...) che sono da riferirsi ad un particolare network stack.
 
-Esaminiamo prima l'aspetto del source natting e poi del routing.
+Esaminiamo prima l'aspetto del source natting, che permette al sistema (se lo vuole fare) di
+mascherare il source dei pacchetti che hanno una destinazione *anonimizzante*. Poi esaminiamo l'aspetto
+del routing. Infine esaminiamo l'aspetto del net mapping, che permette ad un sistema di fare
+efficacemente da gateway verso una sottorete a gestione autonoma.
 
-### <a name="Source_natting"></a>Source NATting
+### <a name="Source_natting"></a> Source NATting
 
 Il [source NATting](https://en.wikipedia.org/wiki/Network_address_translation) in un sistema Linux
 può essere realizzato istruendo il kernel con il comando `iptables` (utilizzando una regola con
@@ -739,7 +743,7 @@ indicando come nuovo indirizzo mittente il suo indirizzo globale (non quello *an
 Quando il programma termina, se aveva istruito il kernel per fare il source natting, rimuove le regole
 che aveva messe nella catena `POSTROUTING` della tabella `nat`.
 
-### <a name="Routing"></a>Routing
+### <a name="Routing"></a> Routing
 
 In un sistema Linux le rotte vengono memorizzate in diverse tabelle. Queste tabelle hanno un
 identificativo che è un numero da 0 a 255. Hanno anche un nome descrittivo: l'associazione del
@@ -825,4 +829,67 @@ destinazione del percorso. Queste sono le rotte:
 Quando il programma ha finito di usare una tabella (ad esempio se un arco che conosceva non è più presente,
 oppure se il programma termina) svuota la tabella, poi rimuove la regola, poi rimuove il record
 relativo dal file `/etc/iproute2/rt_tables`.
+
+### <a name="Net_mapping"></a> Mappatura di una sottorete
+
+Fra le possibilità offerte da `iptables` c'è l'estensione
+[NETMAP](https://www.netfilter.org/documentation/HOWTO/netfilter-extensions-HOWTO-4.html#ss4.4)
+che ci permette di creare una mappatura 1:1
+tra due reti. Cioè di modificare la parte `network` di un indirizzo IP mantenendo inalterata la parte `host`.
+
+Abbinata alla catena `PREROUTING` della tabella `nat` questa estensione permette di cambiare l'indirizzo
+IP di destinazione di un pacchetto, mentre abbinata alla catena `POSTROUTING` della stessa tabella `nat`
+permette di cambiare l'indirizzo del mittente.  
+[Esempio](https://capcorne.wordpress.com/2009/03/24/natting-a-network-range-with-netmapiptables)
+
+Fatta questa premessa, come si comporta il programma?
+
+Il programma **qspnclient**, se il sistema vuole fare da gateway per una sottorete a gestione
+autonoma, quando l'identità principale del sistema assume un nuovo indirizzo
+Netsukuku, partendo dal livello subito superiore  ad ogni livello
+
+*   Sia *gwl* il livello del g-nodo rappresentato dalla sottorete autonoma.
+*   Sia *range1* l'indirizzo IP con suffisso CIDR che rappresenta la sottorete
+    autonoma dentro il suo g-nodo di livello *gwl*.  
+    Ad esempio `10.0.0.40/31` se *gwl*=1.
+*   Sia *n* l'indirizzo Netsukuku dell'identità principale del sistema.
+*   Per *i* che sale da *gwl*+1 a *l*-1:
+    *   Se *n* ha componenti reali da 0 a *i*-1, cioè è valido dentro il g-nodo di livello *i*:
+        *   Sia *range2* l'indirizzo IP con suffisso CIDR che rappresenta la sottorete
+            autonoma dentro il suo g-nodo di livello *i*. Si basa sulle posizioni di *n*
+            da *gwl* a *i*-1.  
+            Ad esempio `10.0.0.50/31` se *gwl*=1 e *i*=2.  
+            Oppure `10.0.0.62/31` se *gwl*=1 e *i*=3.
+        *   Sia *g* il g-nodo di livello *i* di cui fa parte *n*.  
+            Sia *range3* l'indirizzo IP con suffisso CIDR che comprende l'insieme di tutti
+            i nodi in *g* rappresentati con un indirizzo IP interno al g-nodo *g*. Si basa sulla posizione di *n*
+            al livello *i*-1.  
+            Ad esempio `10.0.0.48/30` se *i*=2.  
+            Oppure `10.0.0.56/29` se *i*=3.
+        *   Il programma esegue:  
+            `iptables -t nat -A PREROUTING -d $range2 -j NETMAP --to $range1`  
+            `iptables -t nat -A POSTROUTING -d $range3 -s $range1 -j NETMAP --to $range2`
+*   Se *n* ha componenti reali da 0 a *l*-1, cioè è del tutto reale:
+    *   Sia *range2* l'indirizzo IP con suffisso CIDR che rappresenta la sottorete
+        autonoma dentro tutta la rete Netsukuku. Si basa sulle posizioni di *n*
+        da *gwl* a *l*-1.  
+        Ad esempio `10.0.0.22/31` se *gwl*=1.
+    *   Sia *range3* l'indirizzo IP con suffisso CIDR che comprende l'insieme di tutti
+        i nodi nella rete Netsukuku rappresentati con indirizzo IP globale.  
+        Ad esempio `10.0.0.0/27`.
+    *   Il programma esegue:  
+        `iptables -t nat -A PREROUTING -d $range2 -j NETMAP --to $range1`  
+        `iptables -t nat -A POSTROUTING -d $range3 -s $range1 -j NETMAP --to $range2`
+    *   Se ogni sistema nella sottorete autonoma accetta di essere contattato in forma anonima:
+        *   Sia *range4* l'indirizzo IP con suffisso CIDR che rappresenta la sottorete
+            autonoma dentro tutta la rete Netsukuku con indirizzo IP anonimizzante. Si basa sulle posizioni di *n*
+            da *gwl* a *l*-1.  
+            Ad esempio `10.0.0.86/31` se *gwl*=1.
+        *   Il programma esegue:  
+            `iptables -t nat -A PREROUTING -d $range4 -j NETMAP --to $range1`  
+    *   Sia *range5* l'indirizzo IP con suffisso CIDR che comprende l'insieme di tutti
+        i nodi nella rete Netsukuku rappresentati con indirizzo IP anonimizzante.  
+        Ad esempio `10.0.0.64/27`.
+    *   Il programma esegue:  
+        `iptables -t nat -A POSTROUTING -d $range5 -s $range1 -j NETMAP --to $range2`
 
