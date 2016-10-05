@@ -656,7 +656,7 @@ anche questi comportamenti:
     *   In questo modo il destinatario del pacchetto saprà a chi rispondere.
 
 Operando in questo modo il gateway permette alla sottorete a gestione autonoma di occuparsi solo del routing
-per gli indirizzi IP interni al g-nodo di livello della sottorete autonoma stessa. Tutti i nodi delle sottorete
+per gli indirizzi IP interni al g-nodo di livello della sottorete autonoma stessa. Tutti i nodi della sottorete
 autonoma potranno comunque comunicare (sia contattare, sia essere contattati) con tutti gli altri nodi della
 rete Netsukuku, purché utilizzino questo sistema come ultimo gateway verso l'esterno.
 
@@ -749,17 +749,10 @@ In un sistema Linux le rotte vengono memorizzate in diverse tabelle. Queste tabe
 identificativo che è un numero da 0 a 255. Hanno anche un nome descrittivo: l'associazione del
 nome al numero (che in realtà è il vero identificativo) è fatta nel file `/etc/iproute2/rt_tables`.
 
-In ogni tabella possono esserci diverse rotte. Ogni rotta ha alcune informazioni importanti:
-
-*   Destinazione. È in formato CIDR. Indica una classe di indirizzi. Solo se il pacchetto è destinato
-    a quella classe allora la rotta va presa in considerazione. Se ci sono più classi che soddisfano il
-    pacchetto, allora si prende quella più restrittiva.
-*   Unreachable. Se presente indica che la destinazione è irraggiungibile.
-*   Gateway (gw) e interfaccia (dev). Dice dove trasmettere il pacchetto.
-*   Mittente preferito (src). Questa informazione è usata solo per i pacchetti trasmessi dal sistema
-    locale, non per i pacchetti da inoltrare. È un indirizzo del sistema locale. Dice quale indirizzo
-    locale usare come mittente, se non viene espressamente specificato un indirizzo locale dal processo
-    che richiede la trasmissione.
+Occorre evidenziare che, in presenza di molteplici network namespace, (di default) il file che
+associa il nome mnemonico della tabella al suo numero, `/etc/iproute2/rt_tables`, è comune a tutti
+i namespace. Invece le regole di scelta della tabella da esaminare e il contenuto delle tabelle
+è distinto in ogni namespace.
 
 Quando un pacchetto va inviato ad una certa destinazione, ci sono delle regole che dicono al sistema su
 quali tabelle guardare. Queste regole, visibili con il comando `ip rule list`, di default dicono di
@@ -774,10 +767,18 @@ senso che i dati del pacchetto non sono affatto modificati, ma solo il sistema l
 marcato; ed è sempre il sistema locale che lo ha precedentemente marcato. Questa marcatura viene
 fatta da una parte del kernel che può essere istruita usando l'azione `MARK` del comando `iptables`.
 
-Occorre evidenziare che, in presenza di molteplici network namespace, (di default) il file che
-associa il nome mnemonico della tabella al suo numero, `/etc/iproute2/rt_tables`, è comune a tutti
-i namespace. Invece le regole di scelta della tabella da esaminare e il contenuto delle tabelle
-è distinto in ogni namespace.
+In ogni tabella possono esserci diverse rotte. Ogni rotta ha alcune informazioni importanti:
+
+*   Destinazione. È in formato CIDR. Indica una classe di indirizzi. Solo se il pacchetto è destinato
+    a quella classe allora la rotta va presa in considerazione. Se ci sono più rotte nella stessa
+    tabella la cui destinazione è una classe che soddisfa il pacchetto, allora si prende quella la
+    cui destinazione è la classe più restrittiva.
+*   Unreachable. Se presente indica che la destinazione è irraggiungibile.
+*   Gateway (gw) e interfaccia (dev). Dice dove trasmettere il pacchetto.
+*   Mittente preferito (src). Questa informazione è usata solo per i pacchetti trasmessi dal sistema
+    locale, non per i pacchetti da inoltrare. È un indirizzo del sistema locale. Dice quale indirizzo
+    locale usare come mittente, se non viene espressamente specificato un indirizzo locale dal processo
+    che richiede la trasmissione.
 
 Fatta questa premessa, come si comporta il programma?
 
@@ -786,45 +787,40 @@ che nella tabella `main` di ogni network namespace siano memorizzate rotte diret
 verso ogni suo diretto vicino (più precisamente verso ogni *identità* sua vicina). In queste rotte
 sono indicati gli indirizzi di scheda delle proprie interfacce e di quelle dei vicini.
 
-Il programma crea una tabella `ntk` con identificativo `YYY`, dove `YYY` è il primo identificativo
-libero nel file `/etc/iproute2/rt_tables`. Tale tabella sarà inizialmente vuota; in essa il programma
-andrà a mettere le rotte di pertinenza della rete Netsukuku, cioè quelle con destinazione nello
-spazio 10.0.0.0/8. Inoltre aggiunge una regola che dice di guardare la tabella `ntk` prima della `main`.
+Il programma, sempre su ogni network namespace, crea una tabella `ntk` con identificativo `YYY`, dove `YYY`
+è il primo identificativo libero nel file `/etc/iproute2/rt_tables`. In essa mette tutte le rotte
+delle possibili destinazioni IP in base all'indirizzo Netsukuku dell'identità che gestisce quel
+namespace.
 
-Il programma, per ogni suo arco, crea un'altra tabella chiamata `ntk_from_XXX` con identificativo `YYY`,
-dove `XXX` è il MAC address del sistema vicino, `YYY` è il primo identificativo libero nel
-file `/etc/iproute2/rt_tables`. Questa tabella conterrà rotte da esaminare solo per i pacchetti da
-inoltrare che ci sono pervenuti attraverso questo arco. Il programma quindi aggiunge una regola che
+Il ruolo fondamentale della tabella `ntk` è svolto nel network namespace default (**TODO** rimuovere
+la tabella `ntk` negli altri namespace nel test e verificare che vada bene). I processi locali
+nel sistema che vogliono trasmettere agli altri sistemi nella rete sono serviti da questa tabella.
+Quindi in essa il programma mette per ogni destinazione raggiungibile e per ogni indirizzo IP con
+cui questa può essere indirizzata (globale, anonimizzante, interni) il gateway per il miglior
+percorso scoperto dal modulo Qspn. Per le destinazioni irraggiungibili (sempre per gli indirizzi
+IP globale, anonimizzante e interni) mette la rotta come `unreachable`.
+
+Consideriamo ora l'identità principale nel namespace default e ogni altra identità nel relativo
+network namespace. Ogni identità ha degli archi-qspn. Per ogni identità nel relativo network
+namespace, per ogni suo arco-qspn, il programma crea un'altra tabella chiamata `ntk_from_XXX` con identificativo `YYY`,
+dove `XXX` è il MAC address del sistema vicino per questo arco-qspn, `YYY` è il primo identificativo libero nel
+file `/etc/iproute2/rt_tables`. Il programma quindi aggiunge una regola nel relativo namespace che
 dice di guardare la tabella `ntk_from_XXX` se il pacchetto da trasmettere è marcato con il numero
-`YYY`. Inoltre istruisce il kernel di marcare con il numero `YYY` i pacchetti che hanno `XXX` come MAC di provenienza.
+`YYY`. Inoltre istruisce il kernel, sempre nel relativo namespace, di marcare con il numero `YYY` i pacchetti IP
+che hanno `XXX` come MAC di provenienza.
 
-Anche le varie tabelle `ntk_from_XXX` conterranno solo rotte di pertinenza della rete Netsukuku, cioè
-quelle con destinazione nello spazio 10.0.0.0/8.
-
-Inoltre, sia la tabella `ntk` sia le varie `ntk_from_XXX` conterranno la rotta "unreachable 10.0.0.0/8".
-Questa rotta verrà presa in esame solo se un pacchetto ha una destinazione all'interno dello spazio
-di Netsukuku, ma per tale destinazione non esistono altre rotte valide con una classe più restrittiva.
-In altre parole, una destinazione per la quale non si conosce nessun percorso. Questa particolare rotta dice
-che il pacchetto non potrà giungere a destinazione e il suo mittente ne va informato.
+Il ruolo di queste tabelle `ntk_from_XXX` è quello di gestire i pacchetti IP da inoltrare che ci sono
+pervenuti attraverso questo arco. Anche in queste tabelle il programma mette tutte le rotte
+delle possibili destinazioni IP in base all'indirizzo Netsukuku dell'identità che gestisce quel
+namespace. Se il modulo QSPN ha scoperto qualche percorso verso una data destinazione, tale che non contenga
+fra i suoi hop il *massimo distinto g-nodo* del vicino collegato a quell'arco, allora il programma
+mette su questa tabella il gateway per il miglior percorso tra questi. Altrimenti mette la rotta come `unreachable`.
 
 Sulla base degli eventi segnalati dal modulo QSPN, e se necessario richiamando i suoi metodi pubblici, il
 programma *qspnclient* popola e mantiene le rotte nelle tabelle `ntk` e `ntk_from_XXX`. I percorsi
 segnalati dal modulo QSPN contengono sempre un arco che parte dal sistema corrente come passo iniziale e da tale arco
 si può risalire all'indirizzo di scheda del vicino. Le rotte nelle tabelle `ntk` e `ntk_from_XXX` infatti
-devono avere come campo gateway (gw) l'indirizzo di scheda del vicino, non il suo indirizzo Netsukuku.
-
-Ogni destinazione nota ad una identità è un g-nodo. Per ogni destinazione il programma *qspnclient*
-sceglie (per ogni tabella come descritto sopra) il miglior percorso.
-
-Per ogni percorso scelto dal programma *qspnclient* per entrare in una tabella, in realtà il programma
-inserisce nella tabella un numero di rotte pari al numero di indirizzi IP che la mappatura di
-cui abbiamo parlato sopra associa ad un indirizzo Netsukuku *reale*. Sia *i* il livello del g-nodo
-destinazione del percorso. Queste sono le rotte:
-
-*   Indirizzo IP globale del g-nodo.
-*   Indirizzo IP globale anonimizzante del g-nodo.
-*   Per ogni valore *t* da *i* + 1 a *l* - 1:
-    *   Indirizzo IP interno al livello *t* del g-nodo.
+devono avere come campo gateway (gw) l'indirizzo di scheda del vicino.
 
 Quando il programma ha finito di usare una tabella (ad esempio se un arco che conosceva non è più presente,
 oppure se il programma termina) svuota la tabella, poi rimuove la regola, poi rimuove il record
