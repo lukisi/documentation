@@ -603,7 +603,7 @@ sistema:
 In queste occasioni il programma **qspnclient** computa gli indirizzi IP che si deve assegnare il
 sistema e quelli che si deve rimuovere. Li associa/rimuove tutti a ognuna delle interfacce di rete reali.
 
-## <a name="Rotte_nelle_tabelle_di_routing"></a>Rotte nelle tabelle di routing
+## <a name="Rotte_nelle_tabelle_di_routing"></a> Rotte nelle tabelle di routing
 
 Il programma deve istruire le policy di routing del sistema (che di norma significa impostare delle
 rotte nelle tabelle di routing) in modo da garantire questi comportamenti:
@@ -612,7 +612,7 @@ rotte nelle tabelle di routing) in modo da garantire questi comportamenti:
     *   L'indirizzo IP *x* identifica un indirizzo Netsukuku reale *d*. Può trattarsi di un
         indirizzo IP globale, globale anonimizzante o interno.
     *   Se il modulo QSPN non ha alcun percorso verso la destinazione *d*:
-        *   Il sistema non trova nelle tabelle del kernel alcuna rotta e segnala al processo
+        *   Il sistema trova nelle tabelle del kernel una rotta in stato `unreachable` e segnala al processo
             che la destinazione *x* è irraggiungibile.
     *   Altrimenti:
         *   Il sistema trova nelle tabelle del kernel una rotta il cui gateway è costituito dal
@@ -624,7 +624,7 @@ rotte nelle tabelle di routing) in modo da garantire questi comportamenti:
         indirizzo IP globale, globale anonimizzante o interno.
     *   Se il modulo QSPN non ha alcun percorso verso la destinazione *d*, tale che non contenga
         fra i suoi hop il *massimo distinto g-nodo* del vicino *v*:
-        *   Il sistema non trova nelle tabelle del kernel alcuna rotta; quindi scarta il pacchetto
+        *   Il sistema trova nelle tabelle del kernel una rotta in stato `unreachable`; quindi scarta il pacchetto
             e invia un pacchetto ICMP «host *x* irraggiungibile» al mittente.
     *   Altrimenti:
         *   Il sistema trova nelle tabelle del kernel una rotta il cui gateway è costituito dal primo
@@ -633,6 +633,31 @@ rotte nelle tabelle di routing) in modo da garantire questi comportamenti:
             *   Opzionalmente, il sistema trova una regola che gli impone di mascherare l'indirizzo
                 del mittente (cioè di indicare se stesso come mittente e inoltrare le comunicazioni di
                 risposta che riceverà al vero mittente).
+
+Inoltre, se il sistema vuole fare da gateway verso una sottorete a gestione autonoma, deve garantire
+anche questi comportamenti:
+
+*   Se un pacchetto è ricevuto da un vicino esterno alla sottorete autonoma ed è destinato ad un indirizzo
+    IP *x* nello spazio destinato alla sottorete autonoma (può trattarsi di un indirizzo IP globale, globale
+    anonimizzante o interno ad un g-nodo di livello superiore al livello del g-nodo che rappresenta la
+    dimensione della sottorete autonoma):
+    *   Prima di procedere al routing, l'indirizzo di destinazione del pacchetto va mappato all'indirizzo IP
+        interno al g-nodo di livello della sottorete autonoma.
+    *   In questo modo il pacchetto obbedirà alle regole di routing (per esempio statiche o gestite da
+        qualche altro software) che sono di competenza della gestione autonoma della sottorete.
+*   Se un pacchetto è ricevuto da un vicino interno alla sottorete autonoma ed è destinato ad un indirizzo
+    IP *x* nello spazio destinato alla rete Netsukuku esterna (può trattarsi di un indirizzo IP globale, globale
+    anonimizzante o interno ad un g-nodo di livello superiore al livello del g-nodo che rappresenta la
+    dimensione della sottorete autonoma):
+    *   Dopo aver scelto il gateway per l'inoltro sulla base delle regole di routing, l'indirizzo di mittente
+        del pacchetto, che era per l'appunto un indirizzo IP interno al g-nodo di livello della sottorete autonoma,
+        va mappato all'indirizzo IP corrispondente a quello di destinazione.
+    *   In questo modo il destinatario del pacchetto saprà a chi rispondere.
+
+Operando in questo modo il gateway permette alla sottorete a gestione autonoma di occuparsi solo del routing
+per gli indirizzi IP interni al g-nodo di livello della sottorete autonoma stessa. Tutti i nodi delle sottorete
+autonoma potranno comunque comunicare (sia contattare, sia essere contattati) con tutti gli altri nodi della
+rete Netsukuku, purché utilizzino questo sistema come ultimo gateway verso l'esterno.
 
 * * *
 
