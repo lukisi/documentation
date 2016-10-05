@@ -574,11 +574,11 @@ Nel network namespace gestito da questa identità:
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
                 destinazione. La destinazione *d<sub>x</sub>* non può essere "non raggiungibile".
 
-## <a name="Indirizzi_del_sistema"></a>Indirizzi IP di ogni identità nel sistema
+## <a name="Indirizzi_del_sistema"></a> Indirizzi IP dell'identità principale del sistema
 
 Come abbiamo visto prima, in un sistema possono esistere diverse identità. Ogni identità detiene un
-indirizzo Netsukuku. A seconda del tipo, sulla base del suo indirizzo Netsukuku ogni identità
-può volersi assegnare zero o più indirizzi IPv4.
+indirizzo Netsukuku. Ma solo l'identità *principale* del sistema, sulla base del suo indirizzo Netsukuku,
+si può assegnare zero o più indirizzi IPv4 che gli permetteranno di comunicare con il resto della rete.
 
 Vediamo come queste impostazioni si configurano in un sistema Linux e quindi quali operazioni fa il programma *qspnclient*.
 
@@ -586,11 +586,22 @@ In un sistema Linux il sistema si assegna un indirizzo IP associandolo ad una in
 
 Fatta questa premessa, come si comporta il programma?
 
-Il programma *qspnclient*, quando crea una *identità*, a seconda del tipo di identità e del suo indirizzo
-Netsukuku, come visto prima, computa gli indirizzi IP che si deve assegnare e li associa tutti
-a ognuna delle interfacce di rete che gestisce quell'identità.
+Il programma **qspnclient** sa quando può cambiare l'indirizzo Netsukuku dell'identità *principale* del
+sistema:
 
-Inoltre, prima di rimuovere una identità, li rimuove da tutte le interfacce che gestisce quell'identità.
+*   All'avvio del programma. In questo momento si costituisce la prima identità nel sistema, che è
+    in quel momento la principale; ad essa viene associato il primo indirizzo Netsukuku che è
+    completamente *reale*.
+*   Quando l'identità principale si duplica. In questo momento la vecchia identità diventa di connettività
+    e il posto di identità principale viene preso dalla nuova identità; ad essa viene associato un
+    nuovo indirizzo Netsukuku che ha **almeno** una componente *virtuale*: quella al livello direttamente
+    inferiore al  g-nodo che ha ospitato l'ultima migrazione/ingresso. Ne potrebbe avere di più
+    se in quel momento una sua componente era già *virtuale*.
+*   Quando l'identità principale cambia uno dei componenti del suo indirizzo Netsukuku da *virtuale*
+    a *reale*.
+
+In queste occasioni il programma **qspnclient** computa gli indirizzi IP che si deve assegnare il
+sistema e quelli che si deve rimuovere. Li associa/rimuove tutti a ognuna delle interfacce di rete reali.
 
 ## <a name="Rotte_nelle_tabelle_di_routing"></a>Rotte nelle tabelle di routing
 
