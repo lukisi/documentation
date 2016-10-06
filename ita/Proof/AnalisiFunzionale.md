@@ -373,11 +373,11 @@ cui la componente di *n* è virtuale. Diciamo che *i* vale *l* se *n* è del tut
 
 ### <a name="Rotte_Identita_principale"></a> Assegnazione rotte - Identità principale
 
-Se è *reale*, nel network namespace default:
+Sia *n* l'indirizzo Netsukuku dell'identità principale. Se *n* è *reale*, nel network namespace default:
 
 *   Per ogni livello *j* da 0 a *l* - 1:
     *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
-        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto all'identità. Indipendentemente dal
+        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto a *n*. Indipendentemente dal
             fatto che *d* esista o meno nella rete.
         *   Il sistema computa questi indirizzi IP:
             *   *d<sub>g</sub>* - Indirizzo IP globale del g-nodo *d*.  
@@ -420,14 +420,14 @@ Se è *reale*, nel network namespace default:
                 *d<sub>x</sub>* e lo stack TCP/IP prende in considerazione questa anche per i pacchetti
                 in *inoltro*. Perciò il programma *qspnclient* non imposta una ulteriore rotta.
 
-Se è *virtuale*, significa che l'indirizzo ha una o più componenti virtuali. Sia *i* il livello
+Se *n* è *virtuale*, significa che ha una o più componenti virtuali. Sia *i* il livello
 più basso in cui la componente è virtuale. Sia *k* il livello più alto in cui la componente è virtuale.
 
 In questo caso, nel network namespace default:
 
-*   Per ogni livello *j* da 0 a *i*-1:
+*   Per ogni livello *j* da 0 a *i* - 1:
     *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
-        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto all'identità. Indipendentemente dal
+        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto a *n*. Indipendentemente dal
             fatto che *d* esista o meno nella rete.
         *   Il sistema computa questi indirizzi IP:
             *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
@@ -456,9 +456,9 @@ In questo caso, nel network namespace default:
                 provenienti da un MAC address che non è fra quelli che l'identità conosce. Ma come detto
                 sopra lo stack TCP/IP di Linux si avvale della rotta che è stata impostata per i pacchetti
                 in *partenza* verso *d<sub>x</sub>*. Perciò il programma *qspnclient* non imposta una ulteriore rotta.
-*   Per ogni livello *j* da *i* a *k*-1:
+*   Per ogni livello *j* da *i* a *k* - 1:
     *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
-        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto all'identità. Indipendentemente dal
+        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto a *n*. Indipendentemente dal
             fatto che *d* esista o meno nella rete.
         *   Il sistema computa questi indirizzi IP:
             *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
@@ -482,9 +482,9 @@ In questo caso, nel network namespace default:
                 provenienti da un MAC address che non è fra quelli che l'identità conosce.  
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
                 destinazione. La destinazione *d<sub>x</sub>* non può essere "non raggiungibile".
-*   Per ogni livello *j* da *k* a *l*-1:
+*   Per ogni livello *j* da *k* a *l* - 1:
     *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
-        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto all'identità. Indipendentemente dal
+        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto a *n*. Indipendentemente dal
             fatto che *d* esista o meno nella rete.
         *   Il sistema computa questi indirizzi IP:
             *   *d<sub>g</sub>* - Indirizzo IP globale del g-nodo *d*.  
@@ -517,14 +517,15 @@ In questo caso, nel network namespace default:
 
 ### <a name="Rotte_Identita_di_connettivita"></a> Assegnazione rotte - Identità di connettività
 
-Significa che l'indirizzo ha una o più componenti virtuali. Sia *i* il livello più basso in cui
+Sia *n* l'indirizzo Netsukuku di un'identità di connettività. 
+Sicuramente *n* ha una o più componenti virtuali. Sia *i* il livello più basso in cui
 la componente è virtuale. Sia *k* il livello più alto in cui la componente è virtuale.
 
 Nel network namespace gestito da questa identità:
 
 *   Per ogni livello *j* da 0 a *k* - 1:
     *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
-        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto all'identità. Indipendentemente dal
+        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto a *n*. Indipendentemente dal
             fatto che *d* esista o meno nella rete.
         *   Il sistema computa questi indirizzi IP:
             *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
@@ -547,9 +548,9 @@ Nel network namespace gestito da questa identità:
                 provenienti da un MAC address che non è fra quelli che l'identità conosce.  
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
                 destinazione. La destinazione *d<sub>x</sub>* non può essere "non raggiungibile".
-*   Per ogni livello *j* da *k* a *l*-1:
+*   Per ogni livello *j* da *k* a *l* - 1:
     *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
-        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto all'identità. Indipendentemente dal
+        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto a *n*. Indipendentemente dal
             fatto che *d* esista o meno nella rete.
         *   Il sistema computa questi indirizzi IP:
             *   *d<sub>g</sub>* - Indirizzo IP globale del g-nodo *d*.  
@@ -857,26 +858,26 @@ Netsukuku, partendo dal livello subito superiore  ad ogni livello
     autonoma dentro il suo g-nodo di livello *gwl*.  
     Ad esempio `10.0.0.40/31` se *gwl*=1.
 *   Sia *n* l'indirizzo Netsukuku dell'identità principale del sistema.
-*   Per *i* che sale da *gwl*+1 a *l*-1:
-    *   Se *n* ha componenti reali da 0 a *i*-1, cioè è valido dentro il g-nodo di livello *i*:
+*   Per *i* che sale da *gwl* + 1 a *l* - 1:
+    *   Se *n* ha componenti reali da 0 a *i* - 1, cioè è valido dentro il g-nodo di livello *i*:
         *   Sia *range2* l'indirizzo IP con suffisso CIDR che rappresenta la sottorete
             autonoma dentro il suo g-nodo di livello *i*. Si basa sulle posizioni di *n*
-            da *gwl* a *i*-1.  
+            da *gwl* a *i* - 1.  
             Ad esempio `10.0.0.50/31` se *gwl*=1 e *i*=2.  
             Oppure `10.0.0.62/31` se *gwl*=1 e *i*=3.
         *   Sia *g* il g-nodo di livello *i* di cui fa parte *n*.  
             Sia *range3* l'indirizzo IP con suffisso CIDR che comprende l'insieme di tutti
             i nodi in *g* rappresentati con un indirizzo IP interno al g-nodo *g*. Si basa sulla posizione di *n*
-            al livello *i*-1.  
+            al livello *i* - 1.  
             Ad esempio `10.0.0.48/30` se *i*=2.  
             Oppure `10.0.0.56/29` se *i*=3.
         *   Il programma esegue:  
             `iptables -t nat -A PREROUTING -d $range2 -j NETMAP --to $range1`  
             `iptables -t nat -A POSTROUTING -d $range3 -s $range1 -j NETMAP --to $range2`
-*   Se *n* ha componenti reali da 0 a *l*-1, cioè è del tutto reale:
+*   Se *n* ha componenti reali da 0 a *l* - 1, cioè è del tutto reale:
     *   Sia *range2* l'indirizzo IP con suffisso CIDR che rappresenta la sottorete
         autonoma dentro tutta la rete Netsukuku. Si basa sulle posizioni di *n*
-        da *gwl* a *l*-1.  
+        da *gwl* a *l* - 1.  
         Ad esempio `10.0.0.22/31` se *gwl*=1.
     *   Sia *range3* l'indirizzo IP con suffisso CIDR che comprende l'insieme di tutti
         i nodi nella rete Netsukuku rappresentati con indirizzo IP globale.  
@@ -887,7 +888,7 @@ Netsukuku, partendo dal livello subito superiore  ad ogni livello
     *   Se ogni sistema nella sottorete autonoma accetta di essere contattato in forma anonima:
         *   Sia *range4* l'indirizzo IP con suffisso CIDR che rappresenta la sottorete
             autonoma dentro tutta la rete Netsukuku con indirizzo IP anonimizzante. Si basa sulle posizioni di *n*
-            da *gwl* a *l*-1.  
+            da *gwl* a *l* - 1.  
             Ad esempio `10.0.0.86/31` se *gwl*=1.
         *   Il programma esegue:  
             `iptables -t nat -A PREROUTING -d $range4 -j NETMAP --to $range1`  
