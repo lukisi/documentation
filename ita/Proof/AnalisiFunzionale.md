@@ -402,17 +402,17 @@ Sia *n* l'indirizzo Netsukuku dell'identità principale. Se *n* è *reale*, nel 
                 Ricordiamo che nelle tabelle di routing del kernel si riporta come informazione solo
                 il primo gateway di una rotta, sebbene l'identità sia a conoscenza di altre informazioni.  
                 Viene impostata la rotta identificata dal miglior percorso noto all'identità per quella
-                destinazione. La destinazione *d<sub>x</sub>* non può essere "non raggiungibile"
-                perché abbiamo appena detto che l'identità conosce la destinazione *d*, quindi almeno
-                un percorso verso *d*.
+                destinazione. La destinazione *d<sub>x</sub>* è "non raggiungibile"
+                se non esiste nella rete la destinazione *d*.
             *   Per ogni MAC address *m* di diretto vicino che l'identità conosce:
                 *   Il sistema imposta una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
                     provenienti da *m*.  
                     Viene impostata la rotta identificata dal miglior percorso noto per quella
                     destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
-                    La destinazione *d<sub>x</sub>* può essere "non raggiungibile" per i pacchetti
-                    in *inoltro* provenienti da *m*: l'identità potrebbe non conoscere nessun percorso
-                    verso *d* che non passi per il massimo distinto g-nodo di *m* per *n*.
+                    La destinazione *d<sub>x</sub>* è "non raggiungibile" per i pacchetti
+                    in *inoltro* provenienti da *m* se non esiste nella rete la destinazione *d*, oppure se
+                    l'identità non conosce nessun percorso verso *d* che non passi per il
+                    massimo distinto g-nodo di *m* per *n*.
             *   Il sistema dovrebbe impostare una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
                 provenienti da un MAC address che non è fra quelli che l'identità conosce.  
                 In realtà, per come funziona lo stack TCP/IP di Linux, tale rotta è superflua. Infatti
@@ -435,6 +435,7 @@ In questo caso, nel network namespace default:
                     Questo indirizzo IP va calcolato solo se tutte le componenti dell'indirizzo di *n*
                     dal livello *j* + 1 al livello *t* - 1 sono *reali*, cosa necessaria affinché
                     l'indirizzo IP interno al livello *t* del g-nodo *d* abbia significato.  
+                    Quindi in questo caso, il ciclo di *t* potrebbe fermarsi a *i*.  
                     Si tenga presente che se un processo locale vuole inviare un pacchetto a questo
                     indirizzo IP, allora come *src* preferito dovrà usare l'indirizzo IP
                     di *n* interno al livello *t*.
@@ -444,14 +445,17 @@ In questo caso, nel network namespace default:
             *   Il sistema imposta una rotta in *partenza* verso *d<sub>x</sub>*. In essa specifica
                 l'indirizzo *n<sub>x</sub>* come *src* preferito.  
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
-                destinazione. La destinazione *d<sub>x</sub>* non può essere "non raggiungibile".
+                destinazione. La destinazione *d<sub>x</sub>* è "non raggiungibile"
+                se non esiste nella rete la destinazione *d*.
             *   Per ogni MAC address *m* di diretto vicino che l'identità conosce:
                 *   Il sistema imposta una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
                     provenienti da *m*.  
                     Viene impostata la rotta identificata dal miglior percorso noto per quella
                     destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
-                    La destinazione *d<sub>x</sub>* può essere "non raggiungibile" per i pacchetti
-                    in *inoltro* provenienti da *m*.
+                    La destinazione *d<sub>x</sub>* è "non raggiungibile" per i pacchetti
+                    in *inoltro* provenienti da *m* se non esiste nella rete la destinazione *d*, oppure se
+                    l'identità non conosce nessun percorso verso *d* che non passi per il
+                    massimo distinto g-nodo di *m* per *n*.
             *   Il sistema dovrebbe impostare una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
                 provenienti da un MAC address che non è fra quelli che l'identità conosce. Ma come detto
                 sopra lo stack TCP/IP di Linux si avvale della rotta che è stata impostata per i pacchetti
@@ -465,6 +469,7 @@ In questo caso, nel network namespace default:
                 *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
                     Questo indirizzo IP va calcolato solo se tutte le componenti dell'indirizzo di *n*
                     dal livello *j* + 1 al livello *t* - 1 sono *reali*.  
+                    Quindi in questo caso, il ciclo di *t* potrebbe fermarsi a *k*.  
                     In questo caso è impossibile per un processo locale inviare un pacchetto a questo
                     indirizzo IP, non potendo usare un indirizzo IP
                     di *n* interno al livello *t*.
@@ -476,12 +481,15 @@ In questo caso, nel network namespace default:
                     provenienti da *m*.  
                     Viene impostata la rotta identificata dal miglior percorso noto per quella
                     destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
-                    La destinazione *d<sub>x</sub>* può essere "non raggiungibile" per i pacchetti
-                    in *inoltro* provenienti da *m*.
+                    La destinazione *d<sub>x</sub>* è "non raggiungibile" per i pacchetti
+                    in *inoltro* provenienti da *m* se non esiste nella rete la destinazione *d*, oppure se
+                    l'identità non conosce nessun percorso verso *d* che non passi per il
+                    massimo distinto g-nodo di *m* per *n*.
             *   Il sistema imposta una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
                 provenienti da un MAC address che non è fra quelli che l'identità conosce.  
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
-                destinazione. La destinazione *d<sub>x</sub>* non può essere "non raggiungibile".
+                destinazione. La destinazione *d<sub>x</sub>* è "non raggiungibile"
+                se non esiste nella rete la destinazione *d*.
 *   Per ogni livello *j* da *k* a *l* - 1:
     *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
         *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto a *n*. Indipendentemente dal
@@ -508,12 +516,15 @@ In questo caso, nel network namespace default:
                     provenienti da *m*.  
                     Viene impostata la rotta identificata dal miglior percorso noto per quella
                     destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
-                    La destinazione *d<sub>x</sub>* può essere "non raggiungibile" per i pacchetti
-                    in *inoltro* provenienti da *m*.
+                    La destinazione *d<sub>x</sub>* è "non raggiungibile" per i pacchetti
+                    in *inoltro* provenienti da *m* se non esiste nella rete la destinazione *d*, oppure se
+                    l'identità non conosce nessun percorso verso *d* che non passi per il
+                    massimo distinto g-nodo di *m* per *n*.
             *   Il sistema imposta una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
                 provenienti da un MAC address che non è fra quelli che l'identità conosce.  
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
-                destinazione. La destinazione *d<sub>x</sub>* non può essere "non raggiungibile".
+                destinazione. La destinazione *d<sub>x</sub>* è "non raggiungibile"
+                se non esiste nella rete la destinazione *d*.
 
 ### <a name="Rotte_Identita_di_connettivita"></a> Assegnazione rotte - Identità di connettività
 
@@ -532,6 +543,7 @@ Nel network namespace gestito da questa identità:
                 *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
                     Questo indirizzo IP va calcolato solo se tutte le componenti dell'indirizzo di *n*
                     dal livello *j* + 1 al livello *t* - 1 sono *reali*.  
+                    Quindi in questo caso, il ciclo di *t* potrebbe fermarsi a *k*.  
                     In questo caso è impossibile che un processo locale voglia inviare un pacchetto a questo
                     indirizzo IP, poiché questa identità non è nel network namespace default.
         *   Esaminiamo ognuno di questi indirizzi IP. Indichiamo con *d<sub>x</sub>*
@@ -542,12 +554,13 @@ Nel network namespace gestito da questa identità:
                     provenienti da *m*.  
                     Viene impostata la rotta identificata dal miglior percorso noto per quella
                     destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
-                    La destinazione *d<sub>x</sub>* può essere "non raggiungibile" per i pacchetti
-                    in *inoltro* provenienti da *m*.
-            *   Il sistema imposta una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
-                provenienti da un MAC address che non è fra quelli che l'identità conosce.  
-                Viene impostata la rotta identificata dal miglior percorso noto per quella
-                destinazione. La destinazione *d<sub>x</sub>* non può essere "non raggiungibile".
+                    La destinazione *d<sub>x</sub>* è "non raggiungibile" per i pacchetti
+                    in *inoltro* provenienti da *m* se non esiste nella rete la destinazione *d*, oppure se
+                    l'identità non conosce nessun percorso verso *d* che non passi per il
+                    massimo distinto g-nodo di *m* per *n*.
+            *   Nel network namespace gestito da questa identità di connettività, al sistema non serve
+                impostare una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
+                provenienti da un MAC address che non è fra quelli che l'identità conosce.
 *   Per ogni livello *j* da *k* a *l* - 1:
     *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
         *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto a *n*. Indipendentemente dal
@@ -569,12 +582,13 @@ Nel network namespace gestito da questa identità:
                     provenienti da *m*.  
                     Viene impostata la rotta identificata dal miglior percorso noto per quella
                     destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
-                    La destinazione *d<sub>x</sub>* può essere "non raggiungibile" per i pacchetti
-                    in *inoltro* provenienti da *m*.
-            *   Il sistema imposta una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
-                provenienti da un MAC address che non è fra quelli che l'identità conosce.  
-                Viene impostata la rotta identificata dal miglior percorso noto per quella
-                destinazione. La destinazione *d<sub>x</sub>* non può essere "non raggiungibile".
+                    La destinazione *d<sub>x</sub>* è "non raggiungibile" per i pacchetti
+                    in *inoltro* provenienti da *m* se non esiste nella rete la destinazione *d*, oppure se
+                    l'identità non conosce nessun percorso verso *d* che non passi per il
+                    massimo distinto g-nodo di *m* per *n*.
+            *   Nel network namespace gestito da questa identità di connettività, al sistema non serve
+                impostare una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
+                provenienti da un MAC address che non è fra quelli che l'identità conosce.
 
 ## <a name="Indirizzi_del_sistema"></a> Indirizzi IP dell'identità principale del sistema
 
