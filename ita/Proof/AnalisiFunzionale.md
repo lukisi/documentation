@@ -800,6 +800,14 @@ cui questa può essere indirizzata (globale, anonimizzante, interni) il gateway 
 percorso scoperto dal modulo Qspn. Per le destinazioni irraggiungibili (sempre per gli indirizzi
 IP globale, anonimizzante e interni) mette la rotta come `unreachable`.
 
+La tabella `ntk` serve anche per i pacchetti IP da inoltrare che ci pervengono da altri sistemi
+che non fanno *strettamente* parte di Netsukuku. Ci riferiamo in questo senso sia a sistemi che
+possono essere NATtati dal sistema corrente, sia a sistemi che appartengono alla sottorete a gestione
+autonoma che usa questo sistema come gateway. In entrambi questi casi infatti, i sistemi vicini non hanno
+con il sistema corrente un "arco-qspn". Sappiamo anche con certezza che questi sistemi vicini usano
+come gateway questo sistema soltanto passando per le sue interfacce di rete che risiedono nel
+network namespace default.
+
 Consideriamo ora l'identità principale nel namespace default e ogni altra identità nel relativo
 network namespace. Ogni identità ha degli archi-qspn. Per ogni identità nel relativo network
 namespace, per ogni suo arco-qspn, il programma crea un'altra tabella chiamata `ntk_from_XXX` con identificativo `YYY`,
