@@ -34,7 +34,8 @@ Viene creato nel sistema *𝛿* un nuovo network namespace "entr03" e in esso vi
 una pseudo-interfaccia "entr03_eth1" sopra l'interfaccia reale "eth1". Questo nuovo network namespace
 sarà gestito da *𝛿<sub>0</sub>* mentre quello precedente (il default) verrà gestito da *𝛿<sub>1</sub>*.  
 Ricordiamo che una identità di connettività quale è ora *𝛿<sub>0</sub>*, nel suo network namespace che non è
-il default, non detiene alcun indirizzo IP associato al suo indirizzo Netsukuku.
+il default, non detiene alcun indirizzo IP associato al suo indirizzo Netsukuku e non contempla la
+tabella `ntk` per i pacchetti originati localmente.
 
 **sistema 𝛿**
 ```
@@ -100,7 +101,6 @@ Il programma *qspnclient* fa queste operazioni preliminari:
 
 **sistema 𝛿**
 ```
-ip netns exec entr03 ip rule add table ntk
 (echo; echo "249 ntk_from_00:16:3E:DF:23:F5 # xxx_table_ntk_from_00:16:3E:DF:23:F5_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
 ip netns exec entr03 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:DF:23:F5 -j MARK --set-mark 249
 ip netns exec entr03 ip rule add fwmark 249 table ntk_from_00:16:3E:DF:23:F5
@@ -116,7 +116,6 @@ verso destinazioni interne al g-nodo che ha migrato:
 
 **sistema 𝛿**
 ```
-ip netns exec entr03 ip route add unreachable 10.0.0.40/32 table ntk
 ip netns exec entr03 ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:DF:23:F5
 
 ip route del 10.0.0.28/32 table ntk
@@ -153,23 +152,6 @@ destinazione da aggiungere nel nuovo network namespace. La 3·1·0·.
 
 **sistema 𝛿**
 ```
-ip netns exec entr03 ip route add unreachable 10.0.0.0/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.64/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.8/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.72/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.16/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.80/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.24/30 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.88/30 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.56/30 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.30/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.94/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.62/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.50/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.28/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.92/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.60/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.48/31 table ntk
 ip netns exec entr03 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:DF:23:F5
@@ -233,25 +215,6 @@ noti alla vecchia identità *𝛿<sub>0</sub>*.
 
 **sistema 𝛿**
 ```
-ip netns exec entr03 ip route change unreachable 10.0.0.0/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.64/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.8/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.72/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.16/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.80/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.24/30 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.88/30 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.56/30 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.30/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.94/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.62/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.50/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.28/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.92/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.60/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.48/31 table ntk
-ip netns exec entr03 ip route change 10.0.0.40/32 table ntk via 169.254.242.91 dev entr03_eth1
-
 ip netns exec entr03 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:DF:23:F5

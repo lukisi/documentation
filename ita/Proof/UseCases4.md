@@ -178,12 +178,7 @@ Il modulo Identities fa queste operazioni:
 ip netns exec entr01 ip route add 169.254.253.216 dev entr01_eth1 src 169.254.101.161
 ```
 
-Il programma *qspnclient* fa queste operazioni preliminari:
-
-**sistema 𝜇**
-```
-ip netns exec entr01 ip rule add table ntk
-```
+Il programma *qspnclient* non ha tebelle `ntk_from_xxx` da replicare nel nuovo namespace.
 
 Il programma *qspnclient* non deve fare alcuna operazione su rotte verso destinazioni interne al g-nodo
 che ha migrato poiché si tratta della migrazione di un singolo nodo.
@@ -208,32 +203,13 @@ destinazione da aggiungere nel nuovo network namespace. La 1·0·1·1.
       10.0.0.41/32
 ```
 
+Nonostante abbiamo mostrato come il programma *qspnclient* calcoli tutte le destinazioni possibili (e i relativi
+indirizzi IP) per l'identità che si sposta nel nuovo network namespace, c'è da dire che non ci sono archi
+per questa identità e quindi non ci sono tabelle `ntk_from_xxx` nel nuovo network namespace. Risulta quindi superflua
+la sua stessa esistenza, nonché temporanea.
+
 **sistema 𝜇**
 ```
-ip netns exec entr01 ip route add unreachable 10.0.0.0/29 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.64/29 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.16/29 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.80/29 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.24/29 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.88/29 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.12/30 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.76/30 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.60/30 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.8/31 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.72/31 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.56/31 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.48/31 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.10/32 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.74/32 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.58/32 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.50/32 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.40/32 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.11/32 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.75/32 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.59/32 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.51/32 table ntk
-ip netns exec entr01 ip route add unreachable 10.0.0.41/32 table ntk
-
 ip route del 10.0.0.0/29 table ntk
 ip route del 10.0.0.64/29 table ntk
 ip route del 10.0.0.16/29 table ntk
@@ -267,35 +243,8 @@ ip address del 10.0.0.51/32 dev eth1
 ip address del 10.0.0.41/32 dev eth1
 ```
 
-Il programma *qspnclient* aggiorna le rotte nel nuovo network namespace sulla base dei migliori percorsi
-noti alla vecchia identità *𝜇<sub>0</sub>*.
-
-**sistema 𝜇**
-```
-ip netns exec entr01 ip route change unreachable 10.0.0.0/29 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.64/29 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.16/29 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.80/29 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.24/29 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.88/29 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.12/30 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.76/30 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.60/30 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.8/31 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.72/31 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.56/31 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.48/31 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.10/32 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.74/32 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.58/32 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.50/32 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.40/32 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.11/32 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.75/32 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.59/32 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.51/32 table ntk
-ip netns exec entr01 ip route change unreachable 10.0.0.41/32 table ntk
-```
+Il programma *qspnclient* aggiornerebbe le rotte nel nuovo network namespace sulla base dei migliori percorsi
+noti alla vecchia identità *𝜇<sub>0</sub>*; se non fosse che in questo caso non ha tabelle.
 
 Poi il sistema *𝜇* per la nuova identità *𝜇<sub>1</sub>* istanzia un QspnManager con il
 costruttore `enter_net` passandogli un QspnArc per l'arco-identità *𝜇<sub>1</sub>-𝛿<sub>0</sub>*.
@@ -430,6 +379,7 @@ ricevuti su questo arco.
 **sistema 𝜇**
 ```
 (echo; echo "250 ntk_from_00:16:3E:1A:C4:45 # xxx_table_ntk_from_00:16:3E:1A:C4:45_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:1A:C4:45 -j MARK --set-mark 250
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
@@ -518,7 +468,6 @@ la nuova tabella, il programma *qspnclient* la aggiunge.
 
 **sistema 𝜇**
 ```
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:1A:C4:45 -j MARK --set-mark 250
 ip rule add fwmark 250 table ntk_from_00:16:3E:1A:C4:45
 ```
 
