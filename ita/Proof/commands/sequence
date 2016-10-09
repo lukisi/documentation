@@ -839,6 +839,7 @@ EOF
 cat <<EOF | lxc exec delta bash
 set -e
 (echo; echo "250 ntk_from_00:16:3E:2D:8D:DE # xxx_table_ntk_from_00:16:3E:2D:8D:DE_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:2D:8D:DE -j MARK --set-mark 250
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:2D:8D:DE
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:2D:8D:DE
@@ -893,7 +894,6 @@ ip route change unreachable 10.0.0.92/32 table ntk
 ip route change unreachable 10.0.0.60/32 table ntk
 ip route change unreachable 10.0.0.48/32 table ntk
 ip route change unreachable 10.0.0.40/32 table ntk
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:2D:8D:DE -j MARK --set-mark 250
 ip rule add fwmark 250 table ntk_from_00:16:3E:2D:8D:DE
 EOF
 
