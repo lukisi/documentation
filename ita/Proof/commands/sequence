@@ -1754,30 +1754,6 @@ lxc exec beta -- ip route add 169.254.202.128 dev eth1 src 169.254.96.141
 echo "alfa0 in network namespace entr04"
 cat <<EOF | lxc exec alfa bash
 set -e
-ip netns exec entr04 ip rule add table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.0/29 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.64/29 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.8/29 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.72/29 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.16/29 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.80/29 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.28/30 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.92/30 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.60/30 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.24/31 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.88/31 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.56/31 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.48/31 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.27/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.91/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.59/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.51/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.41/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.26/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.90/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.58/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.50/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.40/32 table ntk
 ip route del 10.0.0.0/29 table ntk
 ip route del 10.0.0.64/29 table ntk
 ip route del 10.0.0.8/29 table ntk
@@ -1802,29 +1778,6 @@ ip address del 10.0.0.90/32 dev eth1
 ip address del 10.0.0.58/32 dev eth1
 ip address del 10.0.0.50/32 dev eth1
 ip address del 10.0.0.40/32 dev eth1
-ip netns exec entr04 ip route change unreachable 10.0.0.0/29 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.64/29 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.8/29 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.72/29 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.16/29 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.80/29 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.28/30 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.92/30 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.60/30 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.24/31 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.88/31 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.56/31 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.48/31 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.27/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.91/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.59/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.51/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.41/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.26/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.90/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.58/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.50/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.40/32 table ntk
 EOF
 
 echo "alfa1 in G-gamma"
@@ -1853,6 +1806,7 @@ EOF
 cat <<EOF | lxc exec alfa bash
 set -e
 (echo; echo "250 ntk_from_00:16:3E:EC:A3:E1 # xxx_table_ntk_from_00:16:3E:EC:A3:E1_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 250
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
@@ -1873,6 +1827,7 @@ EOF
 cat <<EOF | lxc exec beta bash
 set -e
 (echo; echo "249 ntk_from_00:16:3E:FD:E2:AA # xxx_table_ntk_from_00:16:3E:FD:E2:AA_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:FD:E2:AA -j MARK --set-mark 249
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:FD:E2:AA
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:FD:E2:AA
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:FD:E2:AA
@@ -1925,7 +1880,6 @@ ip route change unreachable 10.0.0.60/30 table ntk_from_00:16:3E:EC:A3:E1
 ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
 ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
 ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 250
 ip rule add fwmark 250 table ntk_from_00:16:3E:EC:A3:E1
 EOF
 # alfa gets real address
@@ -2047,7 +2001,6 @@ ip route change 10.0.0.86/32 table ntk_from_00:16:3E:FD:E2:AA via 169.254.94.223
 ip route change 10.0.0.62/32 table ntk_from_00:16:3E:FD:E2:AA via 169.254.94.223 dev eth1
 ip route change blackhole 10.0.0.50/32 table ntk_from_00:16:3E:FD:E2:AA
 ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:FD:E2:AA
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:FD:E2:AA -j MARK --set-mark 249
 ip rule add fwmark 249 table ntk_from_00:16:3E:FD:E2:AA
 EOF
 # gamma gets ETP from beta
