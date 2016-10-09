@@ -435,6 +435,7 @@ echo "beta1 in G-gamma"
 cat <<EOF | lxc exec beta bash
 set -e
 (echo; echo "250 ntk_from_00:16:3E:5B:78:D5 # xxx_table_ntk_from_00:16:3E:5B:78:D5_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 250
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:5B:78:D5
@@ -504,7 +505,6 @@ ip route change unreachable 10.0.0.87/32 table ntk_from_00:16:3E:5B:78:D5
 ip route change unreachable 10.0.0.63/32 table ntk_from_00:16:3E:5B:78:D5
 ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:5B:78:D5
 ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:5B:78:D5
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 250
 ip rule add fwmark 250 table ntk_from_00:16:3E:5B:78:D5
 EOF
 
