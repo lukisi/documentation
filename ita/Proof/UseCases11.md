@@ -47,30 +47,6 @@ nel network namespace default.
 
 **sistema 𝛼**
 ```
-ip netns exec entr04 ip rule add table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.0/29 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.64/29 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.8/29 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.72/29 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.16/29 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.80/29 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.28/30 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.92/30 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.60/30 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.24/31 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.88/31 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.56/31 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.48/31 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.27/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.91/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.59/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.51/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.41/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.26/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.90/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.58/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.50/32 table ntk
-ip netns exec entr04 ip route add unreachable 10.0.0.40/32 table ntk
 ip route del 10.0.0.0/29 table ntk
 ip route del 10.0.0.64/29 table ntk
 ip route del 10.0.0.8/29 table ntk
@@ -95,29 +71,6 @@ ip address del 10.0.0.90/32 dev eth1
 ip address del 10.0.0.58/32 dev eth1
 ip address del 10.0.0.50/32 dev eth1
 ip address del 10.0.0.40/32 dev eth1
-ip netns exec entr04 ip route change unreachable 10.0.0.0/29 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.64/29 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.8/29 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.72/29 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.16/29 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.80/29 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.28/30 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.92/30 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.60/30 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.24/31 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.88/31 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.56/31 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.48/31 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.27/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.91/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.59/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.51/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.41/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.26/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.90/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.58/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.50/32 table ntk
-ip netns exec entr04 ip route change unreachable 10.0.0.40/32 table ntk
 ip address add 10.0.0.50 dev eth1
 ip address add 10.0.0.40 dev eth1
 ip route add unreachable 10.0.0.0/29 table ntk
