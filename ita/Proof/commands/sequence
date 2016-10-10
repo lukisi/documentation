@@ -4545,6 +4545,7 @@ ip rule del fwmark 248 table ntk_from_00:16:3E:3C:14:33
 ip route flush table ntk_from_00:16:3E:3C:14:33
 iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:3C:14:33 -j MARK --set-mark 248
 
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3B:9F:45 -j MARK --set-mark 246
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3B:9F:45
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3B:9F:45
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3B:9F:45
@@ -4563,7 +4564,6 @@ ip route add unreachable 10.0.0.82/32 table ntk_from_00:16:3E:3B:9F:45
 ip route add unreachable 10.0.0.58/32 table ntk_from_00:16:3E:3B:9F:45
 ip route add unreachable 10.0.0.50/32 table ntk_from_00:16:3E:3B:9F:45
 ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:3B:9F:45
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3B:9F:45 -j MARK --set-mark 246
 
 ip route change unreachable 10.0.0.0/29 table ntk
 ip route change unreachable 10.0.0.64/29 table ntk
@@ -4640,13 +4640,13 @@ ip route change 10.0.0.82/32 table ntk_from_00:16:3E:3B:9F:45 via 169.254.69.30 
 ip route change 10.0.0.58/32 table ntk_from_00:16:3E:3B:9F:45 via 169.254.69.30 dev eth1
 ip route change blackhole 10.0.0.50/32 table ntk_from_00:16:3E:3B:9F:45
 ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:3B:9F:45
-
 ip rule add fwmark 246 table ntk_from_00:16:3E:3B:9F:45
 
 ip rule del fwmark 250 table ntk_from_00:16:3E:5B:78:D5
 ip route flush table ntk_from_00:16:3E:5B:78:D5
 iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 250
 
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:AF:4C:2A -j MARK --set-mark 247
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:AF:4C:2A
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:AF:4C:2A
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:AF:4C:2A
@@ -4665,7 +4665,6 @@ ip route add unreachable 10.0.0.82/32 table ntk_from_00:16:3E:AF:4C:2A
 ip route add unreachable 10.0.0.58/32 table ntk_from_00:16:3E:AF:4C:2A
 ip route add unreachable 10.0.0.50/32 table ntk_from_00:16:3E:AF:4C:2A
 ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:AF:4C:2A
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:AF:4C:2A -j MARK --set-mark 247
 
 ip route change unreachable 10.0.0.0/29 table ntk
 ip route change unreachable 10.0.0.64/29 table ntk
@@ -4723,6 +4722,7 @@ ip route change 10.0.0.82/32 table ntk_from_00:16:3E:AF:4C:2A via 169.254.69.30 
 ip route change 10.0.0.58/32 table ntk_from_00:16:3E:AF:4C:2A via 169.254.69.30 dev eth1
 ip route change blackhole 10.0.0.50/32 table ntk_from_00:16:3E:AF:4C:2A
 ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:AF:4C:2A
+ip rule add fwmark 247 table ntk_from_00:16:3E:AF:4C:2A
 
 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3B:9F:45
 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3B:9F:45
@@ -4742,8 +4742,6 @@ ip route change 10.0.0.82/32 table ntk_from_00:16:3E:3B:9F:45 via 169.254.69.30 
 ip route change 10.0.0.58/32 table ntk_from_00:16:3E:3B:9F:45 via 169.254.69.30 dev eth1
 ip route change blackhole 10.0.0.50/32 table ntk_from_00:16:3E:3B:9F:45
 ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:3B:9F:45
-
-ip rule add fwmark 247 table ntk_from_00:16:3E:AF:4C:2A
 EOF
 
 cat <<EOF | lxc exec delta bash
@@ -4754,6 +4752,7 @@ iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK -
 sed -i '/xxx_table_ntk_from_00:16:3E:5B:78:D5_xxx/d' /etc/iproute2/rt_tables
 
 (echo; echo "249 ntk_from_00:16:3E:AF:4C:2A # xxx_table_ntk_from_00:16:3E:AF:4C:2A_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:AF:4C:2A -j MARK --set-mark 249
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:AF:4C:2A
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:AF:4C:2A
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:AF:4C:2A
@@ -4772,7 +4771,6 @@ ip route add unreachable 10.0.0.84/32 table ntk_from_00:16:3E:AF:4C:2A
 ip route add unreachable 10.0.0.60/32 table ntk_from_00:16:3E:AF:4C:2A
 ip route add unreachable 10.0.0.48/32 table ntk_from_00:16:3E:AF:4C:2A
 ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:AF:4C:2A
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:AF:4C:2A -j MARK --set-mark 249
 
 ip route change unreachable 10.0.0.0/29 table ntk
 ip route change unreachable 10.0.0.64/29 table ntk
@@ -4811,6 +4809,7 @@ ip route change 10.0.0.84/32 table ntk_from_00:16:3E:AF:4C:2A via 169.254.119.17
 ip route change 10.0.0.60/32 table ntk_from_00:16:3E:AF:4C:2A via 169.254.119.176 dev eth1
 ip route change 10.0.0.48/32 table ntk_from_00:16:3E:AF:4C:2A via 169.254.119.176 dev eth1
 ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:AF:4C:2A
+ip rule add fwmark 249 table ntk_from_00:16:3E:AF:4C:2A
 
 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:2D:8D:DE
 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:2D:8D:DE
@@ -4830,16 +4829,16 @@ ip route change unreachable 10.0.0.84/32 table ntk_from_00:16:3E:2D:8D:DE
 ip route change unreachable 10.0.0.60/32 table ntk_from_00:16:3E:2D:8D:DE
 ip route change unreachable 10.0.0.48/32 table ntk_from_00:16:3E:2D:8D:DE
 ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:2D:8D:DE
-
-ip rule add fwmark 249 table ntk_from_00:16:3E:AF:4C:2A
 EOF
 
 cat <<EOF | lxc exec lambda bash
 set -e
 ip route flush table ntk_from_00:16:3E:3C:14:33
+iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:3C:14:33 -j MARK --set-mark 250
 sed -i '/xxx_table_ntk_from_00:16:3E:3C:14:33_xxx/d' /etc/iproute2/rt_tables
 
 (echo; echo "250 ntk_from_00:16:3E:3B:9F:45 # xxx_table_ntk_from_00:16:3E:3B:9F:45_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3B:9F:45 -j MARK --set-mark 250
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3B:9F:45
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3B:9F:45
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3B:9F:45
