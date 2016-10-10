@@ -44,6 +44,7 @@ ip route add unreachable 10.0.0.82/31 table ntk
 ip route add unreachable 10.0.0.58/31 table ntk
 ip route add unreachable 10.0.0.50/31 table ntk
 
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 249
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
@@ -101,24 +102,6 @@ ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:EE:AF:D1
 
 **sistema 𝛽**
 ```
-ip netns exec migr01 ip route add unreachable 10.0.0.0/29 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.64/29 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.8/29 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.72/29 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.24/29 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.88/29 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.20/30 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.84/30 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.60/30 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.16/31 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.80/31 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.56/31 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.48/31 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.18/31 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.82/31 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.58/31 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.50/31 table ntk
-
 ip netns exec migr01 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
 ip netns exec migr01 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3C:14:33
 ip netns exec migr01 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3C:14:33
@@ -194,6 +177,7 @@ ip route add unreachable 10.0.0.82/31 table ntk_from_00:16:3E:EE:AF:D1
 ip route add unreachable 10.0.0.58/31 table ntk_from_00:16:3E:EE:AF:D1
 ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:EE:AF:D1
 
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 248
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
@@ -212,6 +196,7 @@ ip route add unreachable 10.0.0.82/31 table ntk_from_00:16:3E:EC:A3:E1
 ip route add unreachable 10.0.0.58/31 table ntk_from_00:16:3E:EC:A3:E1
 ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:EC:A3:E1
 
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:1A:C4:45 -j MARK --set-mark 249
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
@@ -233,6 +218,7 @@ ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:1A:C4:45
 
 **sistema 𝛽**
 ```
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3C:14:33 -j MARK --set-mark 248
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3C:14:33
@@ -252,6 +238,7 @@ ip route add unreachable 10.0.0.58/32 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.50/32 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:3C:14:33
 
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 250
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:5B:78:D5
@@ -298,6 +285,7 @@ ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:3C:14:33
 **sistema 𝛿**
 ```
 (echo; echo "248 ntk_from_00:16:3E:5B:78:D5 # xxx_table_ntk_from_00:16:3E:5B:78:D5_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 248
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:5B:78:D5
@@ -337,8 +325,7 @@ Per brevità indichiamo le varie operazioni nei sistemi come se avvenissero tutt
 propagazione di tutti gli ETP.  
 Ricordiamo che quando si aggiornano le rotte per i pacchetti da inoltrare provenienti da un dato
 arco si fa soltanto per gli archi tramite i quali si è già ricevuto almeno un ETP. Inoltre se questo
-è il primo aggiornamento dopo aver ricevuto il primo ETP da quell'arco, allora si aggiunge la regola
-e la marcatura.
+è il primo aggiornamento dopo aver ricevuto il primo ETP da quell'arco, allora si aggiunge la regola.
 
 **sistema 𝛽**
 ```
@@ -436,7 +423,6 @@ ip route change 10.0.0.82/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.69.30 
 ip route change 10.0.0.58/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.69.30 dev eth1
 ip route change 10.0.0.50/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.69.30 dev eth1
 ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 250
 ip rule add fwmark 250 table ntk_from_00:16:3E:5B:78:D5
 
 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
@@ -457,7 +443,6 @@ ip route change 10.0.0.82/32 table ntk_from_00:16:3E:3C:14:33 via 169.254.69.30 
 ip route change 10.0.0.58/32 table ntk_from_00:16:3E:3C:14:33 via 169.254.69.30 dev eth1
 ip route change 10.0.0.50/32 table ntk_from_00:16:3E:3C:14:33 via 169.254.69.30 dev eth1
 ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:3C:14:33
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3C:14:33 -j MARK --set-mark 248
 ip rule add fwmark 248 table ntk_from_00:16:3E:3C:14:33
 ```
 
@@ -538,7 +523,6 @@ ip route change 10.0.0.84/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.119.17
 ip route change 10.0.0.60/32 table ntk_from_00:16:3E:5B:78:D5 via 169.254.119.176 dev eth1
 ip route change blackhole 10.0.0.48/32 table ntk_from_00:16:3E:5B:78:D5
 ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 248
 ip rule add fwmark 248 table ntk_from_00:16:3E:5B:78:D5
 ```
 
@@ -600,7 +584,6 @@ ip route change unreachable 10.0.0.82/31 table ntk_from_00:16:3E:EC:A3:E1
 ip route change unreachable 10.0.0.58/31 table ntk_from_00:16:3E:EC:A3:E1
 ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:EC:A3:E1
 ip route change blackhole 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 248
 ip rule add fwmark 248 table ntk_from_00:16:3E:EC:A3:E1
 
 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
@@ -621,7 +604,6 @@ ip route change 10.0.0.82/31 table ntk_from_00:16:3E:1A:C4:45 via 169.254.96.141
 ip route change 10.0.0.58/31 table ntk_from_00:16:3E:1A:C4:45 via 169.254.96.141 dev eth1
 ip route change blackhole 10.0.0.50/31 table ntk_from_00:16:3E:1A:C4:45
 ip route change blackhole 10.0.0.41/32 table ntk_from_00:16:3E:1A:C4:45
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:1A:C4:45 -j MARK --set-mark 249
 ip rule add fwmark 249 table ntk_from_00:16:3E:1A:C4:45
 ```
 
@@ -664,7 +646,6 @@ ip route change unreachable 10.0.0.82/31 table ntk_from_00:16:3E:EC:A3:E1
 ip route change unreachable 10.0.0.58/31 table ntk_from_00:16:3E:EC:A3:E1
 ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:EC:A3:E1
 ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:EC:A3:E1
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 249
 ip rule add fwmark 249 table ntk_from_00:16:3E:EC:A3:E1
 
 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EE:AF:D1
@@ -689,26 +670,6 @@ ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:EE:AF:D1
 
 **sistema 𝛽**
 ```
-ip netns exec migr01 ip route change unreachable 10.0.0.0/29 table ntk
-ip netns exec migr01 ip route change unreachable 10.0.0.64/29 table ntk
-ip netns exec migr01 ip route change unreachable 10.0.0.8/29 table ntk
-ip netns exec migr01 ip route change unreachable 10.0.0.72/29 table ntk
-ip netns exec migr01 ip route change unreachable 10.0.0.24/29 table ntk
-ip netns exec migr01 ip route change unreachable 10.0.0.88/29 table ntk
-ip netns exec migr01 ip route change 10.0.0.20/30 table ntk via 169.254.94.223 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.84/30 table ntk via 169.254.94.223 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.60/30 table ntk via 169.254.94.223 dev migr01_eth1
-ip netns exec migr01 ip route change unreachable 10.0.0.16/31 table ntk
-ip netns exec migr01 ip route change unreachable 10.0.0.80/31 table ntk
-ip netns exec migr01 ip route change unreachable 10.0.0.56/31 table ntk
-ip netns exec migr01 ip route change unreachable 10.0.0.48/31 table ntk
-ip netns exec migr01 ip route change 10.0.0.18/31 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.82/31 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.58/31 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.50/31 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.40/32 table ntk via 169.254.94.223 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.41/32 table ntk via 169.254.163.36 dev migr01_eth1
-
 ip netns exec migr01 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
 ip netns exec migr01 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3C:14:33
 ip netns exec migr01 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3C:14:33
