@@ -193,7 +193,6 @@ ip route change 10.0.0.80/32 table ntk_from_00:16:3E:06:3E:90 via 169.254.27.218
 ip route change 10.0.0.56/32 table ntk_from_00:16:3E:06:3E:90 via 169.254.27.218 dev eth1
 ip route change blackhole 10.0.0.48/32 table ntk_from_00:16:3E:06:3E:90
 ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:06:3E:90
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:06:3E:90 -j MARK --set-mark 248
 ip rule add fwmark 248 table ntk_from_00:16:3E:06:3E:90
 
 ip netns exec migr02 ip route change unreachable 10.0.0.0/29 table ntk
@@ -249,7 +248,6 @@ ip netns exec migr02 ip route change unreachable 10.0.0.22/31 table ntk_from_00:
 ip netns exec migr02 ip route change unreachable 10.0.0.86/31 table ntk_from_00:16:3E:06:3E:90
 ip netns exec migr02 ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:06:3E:90
 ip netns exec migr02 ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:06:3E:90 -j MARK --set-mark 248
 ip netns exec migr02 ip rule add fwmark 248 table ntk_from_00:16:3E:06:3E:90
 ```
 
