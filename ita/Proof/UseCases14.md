@@ -80,12 +80,10 @@ ip route change unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route change unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EE:AF:D1
+ip rule add fwmark 250 table ntk_from_00:16:3E:EE:AF:D1
 
 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 249
 ip rule add fwmark 249 table ntk_from_00:16:3E:EC:A3:E1
-
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EE:AF:D1 -j MARK --set-mark 250
-ip rule add fwmark 250 table ntk_from_00:16:3E:EE:AF:D1
 
 ip address add 10.0.0.23 dev eth1
 iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.23

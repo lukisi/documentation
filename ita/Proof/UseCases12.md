@@ -489,6 +489,7 @@ iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK -
 sed -i '/xxx_table_ntk_from_00:16:3E:EC:A3:E1_xxx/d' /etc/iproute2/rt_tables
 
 (echo; echo "250 ntk_from_00:16:3E:EE:AF:D1 # xxx_table_ntk_from_00:16:3E:EE:AF:D1_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EE:AF:D1 -j MARK --set-mark 250
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EE:AF:D1
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EE:AF:D1
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EE:AF:D1
@@ -507,7 +508,6 @@ ip route add unreachable 10.0.0.83/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route add unreachable 10.0.0.59/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EE:AF:D1
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EE:AF:D1 -j MARK --set-mark 250
 
 ip route change unreachable 10.0.0.0/29 table ntk
 ip route change unreachable 10.0.0.64/29 table ntk
@@ -527,6 +527,7 @@ ip route change unreachable 10.0.0.83/32 table ntk
 ip route change unreachable 10.0.0.59/32 table ntk
 ip route change unreachable 10.0.0.51/32 table ntk
 ip route change unreachable 10.0.0.41/32 table ntk
+
 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EE:AF:D1
 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EE:AF:D1
 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EE:AF:D1
@@ -545,7 +546,6 @@ ip route change unreachable 10.0.0.83/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route change unreachable 10.0.0.59/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EE:AF:D1
-
 ip rule add fwmark 250 table ntk_from_00:16:3E:EE:AF:D1
 ```
 
@@ -557,6 +557,7 @@ iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK -
 sed -i '/xxx_table_ntk_from_00:16:3E:EC:A3:E1_xxx/d' /etc/iproute2/rt_tables
 
 (echo; echo "250 ntk_from_00:16:3E:EE:AF:D1 # xxx_table_ntk_from_00:16:3E:EE:AF:D1_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EE:AF:D1 -j MARK --set-mark 250
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EE:AF:D1
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EE:AF:D1
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EE:AF:D1
@@ -575,7 +576,6 @@ ip route add unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route add unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EE:AF:D1
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EE:AF:D1 -j MARK --set-mark 250
 
 ip route change unreachable 10.0.0.0/29 table ntk
 ip route change unreachable 10.0.0.64/29 table ntk
@@ -595,6 +595,7 @@ ip route change 10.0.0.87/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.22
 ip route change 10.0.0.63/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.62
 ip route change 10.0.0.51/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.50
 ip route change 10.0.0.41/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.40
+
 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
@@ -613,6 +614,7 @@ ip route change 10.0.0.87/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218
 ip route change 10.0.0.63/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
 ip route change 10.0.0.51/32 table ntk_from_00:16:3E:1A:C4:45 via 169.254.27.218 dev eth1
 ip route change blackhole 10.0.0.41/32 table ntk_from_00:16:3E:1A:C4:45
+
 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EE:AF:D1
 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EE:AF:D1
 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EE:AF:D1
@@ -631,7 +633,6 @@ ip route change unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route change unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route change unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EE:AF:D1
-
 ip rule add fwmark 250 table ntk_from_00:16:3E:EE:AF:D1
 ```
 
@@ -646,6 +647,7 @@ iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK -
 sed -i '/xxx_table_ntk_from_00:16:3E:EC:A3:E1_xxx/d' /etc/iproute2/rt_tables
 
 (echo; echo "250 ntk_from_00:16:3E:EE:AF:D1 # xxx_table_ntk_from_00:16:3E:EE:AF:D1_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EE:AF:D1 -j MARK --set-mark 250
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EE:AF:D1
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EE:AF:D1
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EE:AF:D1
@@ -766,10 +768,8 @@ Infatti la nuova identità dovrà attendere un ETP da questi archi prima di pote
 **sistema 𝛽**
 ```
 ip rule del fwmark 250 table ntk_from_00:16:3E:5B:78:D5
-iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 250
 
 ip rule del fwmark 249 table ntk_from_00:16:3E:FD:E2:AA
-iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:FD:E2:AA -j MARK --set-mark 249
 ```
 
 Ora consideriamo che la vecchia identità *𝛽<sub>1</sub>* comunica con un ETP ai suoi vicini *𝛼*
