@@ -807,8 +807,7 @@ Il programma, sempre su ogni network namespace, crea una tabella `ntk` con ident
 delle possibili destinazioni IP in base all'indirizzo Netsukuku dell'identità che gestisce quel
 namespace.
 
-Il ruolo fondamentale della tabella `ntk` è svolto nel network namespace default (**TODO** rimuovere
-la tabella `ntk` negli altri namespace nel test e verificare che vada bene). I processi locali
+Il ruolo fondamentale della tabella `ntk` è svolto nel network namespace default. I processi locali
 nel sistema che vogliono trasmettere agli altri sistemi nella rete sono serviti da questa tabella.
 Quindi in essa il programma mette per ogni destinazione raggiungibile e per ogni indirizzo IP con
 cui questa può essere indirizzata (globale, anonimizzante, interni) il gateway per il miglior

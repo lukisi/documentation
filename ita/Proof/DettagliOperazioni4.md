@@ -92,7 +92,7 @@ nel nuovo namespace e ripulire il vecchio namespace per la nuova identità.
 
 Il programma **qspnclient** conosce il nome del nuovo namespace. Assumiamo sia `entr02`.
 
-Il programma **qspnclient** conosce il nome del vecchio namespace. Assumiamo sia ``, cioè il default.
+Il programma **qspnclient** conosce il nome del vecchio namespace. Assumiamo sia "" (stringa vuota), cioè il default.
 
 Il programma **qspnclient** conosce l'indirizzo Netsukuku che la vecchia identità aveva nel vecchio
 namespace. Assumiamo sia 1·0·1·0.
@@ -100,45 +100,21 @@ namespace. Assumiamo sia 1·0·1·0.
 Il programma **qspnclient** conosce l'indirizzo Netsukuku *virtuale* che la vecchia identità come supporto
 di connettività assume nel nuovo namespace. Assumiamo sia 1·0·1·3.
 
-Il programma **qspnclient** aggiunge nel nuovo namespace la regola per la tabella primaria `ntk`.
-
-```
-ip netns exec entr02 ip rule add table ntk
-```
-
 Richiamando le modalità viste [qui](DettagliOperazioni1.md), il programma **qspnclient** calcola tutti i possibili indirizzi IP
 di destinazione, ognuno con suffisso CIDR, relativi all'indirizzo della vecchia identità nel nuovo
-namespace, cioè 1·0·1·3. E li aggiunge alla tabella primaria `ntk` nel nuovo namespace.
+namespace, cioè 1·0·1·3. Li memorizza associandoli a quella identità, ma in realtà in questo caso specifico
+non li usa in quanto la vecchia identità non ha nessun arco ed è destinata a sparire immediatamente.
 
-```
-ip netns exec entr02 ip route add unreachable 10.0.0.0/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.64/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.16/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.80/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.24/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.88/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.12/30 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.76/30 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.60/30 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.8/31 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.72/31 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.56/31 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.48/31 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.11/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.75/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.59/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.51/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.41/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.10/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.74/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.58/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.50/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.40/32 table ntk
-```
+Se la vecchia identità avesse avuto degli archi-qspn avrebbe usato nel nuovo network namespace le relative
+tabelle di inoltro. In esse il programma avrebbe dovuto aggiungere (in stato `unreachable`) tutti gli
+indirizzi IP di cui sopra. **TODO**: invece di dire questo, si rimandi al "caso_X" in cui si mostra come si fa.
 
 Con le stesse modalità, il programma **qspnclient** calcola tutti i possibili indirizzi IP
 di destinazione relativi all'indirizzo che la vecchia identità aveva nel vecchio
-namespace, cioè 1·0·1·0. E li rimuove dalla tabella primaria `ntk` nel vecchio namespace.
+namespace, cioè 1·0·1·0. (**TODO**: in effetti erano precedentemente associati a quella identità)
+
+Nel vecchio namespace questi indirizzi erano stati aggiunti alle tabelle presenti. Nel caso in
+esame si tratta della tabella `ntk` nel namespace default. Vanno ora rimossi.
 
 ```
 ip route del 10.0.0.0/29 table ntk
@@ -177,34 +153,12 @@ ip address del 10.0.0.10/32 dev eth1
 ip address del 10.0.0.74/32 dev eth1
 ```
 
-Di nuovo con tutti i possibili indirizzi IP di destinazione relativi all'indirizzo della vecchia identità nel nuovo
-namespace, il programma **qspnclient** aggiorna tutte le rotte nella tabella primaria `ntk` nel nuovo namespace.
-
-```
-ip netns exec entr02 ip route change unreachable 10.0.0.0/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.64/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.16/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.80/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.24/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.88/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.12/30 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.76/30 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.60/30 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.8/31 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.72/31 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.56/31 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.48/31 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.11/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.75/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.59/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.51/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.41/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.10/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.74/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.58/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.50/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.40/32 table ntk
-```
+Prendiamo di nuovo in considerazione tutti i possibili indirizzi IP di destinazione relativi all'indirizzo
+della vecchia identità nel nuovo namespace.
+Se la vecchia identità avesse avuto degli archi-qspn avrebbe usato nel nuovo network namespace le relative
+tabelle di inoltro. In esse, ma soltanto nelle tabelle di inoltro che hanno come nodo vicino un altro
+nodo che partecipa alla migrazione/ingresso, il programma avrebbe dovuto aggiornare lo stato delle rotte su tutti gli
+indirizzi IP di cui sopra. **TODO**: invece di dire questo, si rimandi al "caso_X" in cui si mostra come si fa.
 
 #### Popolamento nuove rotte della nuova identità
 
@@ -213,7 +167,10 @@ prima, il programma **qspnclient** provvede come vediamo adesso a preparare il v
 per la nuova identità.
 
 Il programma **qspnclient** calcola tutti i possibili indirizzi IP di destinazione relativi all'indirizzo
-della nuova identità. Li aggiunge alla tabella primaria `ntk` nel vecchio namespace.
+della nuova identità. Li memorizza associandoli a questa nuova identità.
+
+Questi vanno ora aggiunti alle tabelle presenti nel vecchio namespace. In questo caso si tratta della
+tabella `ntk` nel namespace default.
 
 ```
 ip route add unreachable 10.0.0.0/29 table ntk
@@ -304,14 +261,16 @@ Sempre quando l'utente dà il comando `enter_net_phase_1`, in seguito alle opera
 prima, il programma **qspnclient** sulla base delle istruzioni che l'utente aveva dato nel
 comando `prepare_enter_net_phase_1`, dopo aver fatto passare la nuova identità per l'indirizzo
 con posizione *virtuale* al livello 0, cambia il suo identificativo di livello 0 con la posizione
-*reale* dentro il g-nodo destinazione. Contemporaneamente, il programma esegue le due sequenze di
+*reale* dentro il g-nodo destinazione. Cioè comunica questa variazione alla relativa istanza del modulo Qspn.
+
+Oltre a ciò, il programma **qspnclient** esegue di seguito le due sequenze di
 operazioni che vedremo adesso: la prima perché un identificativo dell'indirizzo di una sua
 identità passa da *virtuale* a *reale* e la seconda perchè questo cambio avviene nell'identità *principale*.
 
 ##### Un identificativo passa da virtuale a reale
 
-In questa occasione il programma **qspnclient** rimuove, nel network namespace interessato, dalla tabella `ntk` e da
-tutte le tabelle di inoltro (anche quelle il cui arco non ha ancora ricevuto alcun ETP) le
+In questa occasione il programma **qspnclient** rimuove, nel network namespace interessato, da tutte le tabelle
+presenti (anche quelle di inoltro il cui arco non ha ancora ricevuto alcun ETP) le
 rotte verso gli indirizzi che non sono più validi a causa di questo nuovo identificativo *reale*.
 
 Notiamo che questo avviene anche nelle identità *di connettività* (che gestiscono un namespace
@@ -374,9 +333,9 @@ ip route change unreachable 10.0.0.40/32 table ntk
 
 Questa sequenza di operazioni è eseguita dal programma **qspnclient** quando un suo
 QspnManager ha terminato di processare un ETP. In essa, relativamente al network namespace
-associato all'identità a cui il QspnManager appartiene, vengono aggiornate tutte le rotte
-della tabella `ntk` e di quelle tabelle di inoltro dai cui archi abbiamo ricevuto almeno un
-ETP; in seguito viene aggiunta la regola per le tabelle di inoltro il cui arco ha ricevuto
+associato all'identità a cui il QspnManager appartiene, vengono aggiornate tutte le rotte di
+tutte le tabelle presenti, ma per quelle di inoltro solo se abbiamo ricevuto almeno un
+ETP da quell'arco; in seguito viene aggiunta la regola per le tabelle di inoltro il cui arco ha ricevuto
 proprio adesso il primo ETP.
 
 ```

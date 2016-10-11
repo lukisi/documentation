@@ -10,8 +10,7 @@ il segnale `bootstrap_complete`.
 Alla ricezione del segnale `bootstrap_complete` (da una qualsiasi identità) il programma **qspnclient**
 computa gli indirizzi IP di tutte le possibili destinazioni relative all'indirizzo Netsukuku di
 quella identità. Per ognuno, in base alle conoscenze di quella identità, aggiorna la rotta
-nella tabella `ntk` e nelle tabelle di inoltro (`ntk_from_xxx`) presenti nel network namespace di
-gestione di quella identità.
+nelle tabelle (`ntk*`) presenti nel network namespace di gestione di quella identità.
 
 Nel presente caso assisteremo ad un aggiornamento della sola tabella `ntk`, in cui tutte le destinazioni
 sono irraggiungibili. Ad esempio:
