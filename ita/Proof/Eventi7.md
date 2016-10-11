@@ -95,30 +95,6 @@ l'utente dà il comando `enter_net_phase1`.
 
 **sistema 𝜀**
 ```
-ip netns exec entr05 ip rule add table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.0/29 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.64/29 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.8/29 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.72/29 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.16/29 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.80/29 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.24/30 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.88/30 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.56/30 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.30/31 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.94/31 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.62/31 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.50/31 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.28/32 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.92/32 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.60/32 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.48/32 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.40/32 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.29/32 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.93/32 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.61/32 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.49/32 table ntk
-ip netns exec entr05 ip route add unreachable 10.0.0.41/32 table ntk
 ip route del 10.0.0.0/29 table ntk
 ip route del 10.0.0.64/29 table ntk
 ip route del 10.0.0.8/29 table ntk
@@ -143,29 +119,6 @@ ip address del 10.0.0.92/32 dev eth1
 ip address del 10.0.0.60/32 dev eth1
 ip address del 10.0.0.48/32 dev eth1
 ip address del 10.0.0.40/32 dev eth1
-ip netns exec entr05 ip route change unreachable 10.0.0.0/29 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.64/29 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.8/29 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.72/29 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.16/29 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.80/29 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.24/30 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.88/30 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.56/30 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.30/31 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.94/31 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.62/31 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.50/31 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.28/32 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.92/32 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.60/32 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.48/32 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.40/32 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.29/32 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.93/32 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.61/32 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.49/32 table ntk
-ip netns exec entr05 ip route change unreachable 10.0.0.41/32 table ntk
 ```
 
 Seconda parte di operazioni eseguita dal programma **qspnclient** quando
