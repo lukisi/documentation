@@ -7,7 +7,7 @@ All'avvio del programma **qspnclient** l'utente specifica alcune informazioni:
 *   Topologia della rete.
 *   Se il sistema vuole fare da gateway per una sottorete a gestione autonoma, tale sottorete può
     avere la dimensione di un g-nodo di livello *i* nella topologia di rete specificata. L'utente
-    specifica il livello di tale g-nodo. Default 0.
+    specifica il livello di tale g-nodo. Indichiamolo in questa trattazione con la variabile `$subnetlevel`. Default 0.
 *   Lista di interfacce di rete da gestire.
 *   Se il sistema ammette di essere usato come anonimizzatore.
 *   Se il sistema (e tutta la eventuale sottorete autonoma dietro di lui) ammette di essere contattato
@@ -80,7 +80,7 @@ Il secondo indirizzo IP assegnato è quello anonimizzante. Viene assegnato opzio
 se il sistema ammette di essere contattato in forma anonima. Sia esso `$anonymousip`.
 
 I successivi indirizzi IP sono quelli interni. Vengono calcolati partendo da quello interno al
-livello *l* - 1 (dove *l* è il numero di livelli della topologia) e scendendo fino al livello 1.
+livello *l* - 1 (dove *l* è il numero di livelli della topologia) e scendendo fino al livello `$subnetlevel` + 1.
 
 ```
 for dev in $devlist; do
@@ -93,7 +93,7 @@ if $allow_anonymous; then
  done
 fi
 
-for i = l-1 to 1 step -1
+for i = l - 1 to $subnetlevel + 1 step -1
  internalip = indirizzo IP interno al g-nodo di livello $i
  for dev in $devlist; do
   ip address add $internalip dev $dev
@@ -112,9 +112,7 @@ I possibili indirizzi IP di destinazione, ognuno con suffisso CIDR, sono calcola
 *   Indichiamo con *l* il numero di livelli nella topologia.
 *   Indichiamo con *n* l'indirizzo Netsukuku del sistema.
 *   Indichiamo con *pos_n(i)* l'identificativo al livello *i* dell'indirizzo Netsukuku *n*.
-*   Indichiamo con *subnet_level* il livello del g-nodo in cui la rete è a gestione autonoma
-    dietro questo gateway.
-*   Per *i* che scende da *l* - 1 a *subnet_level*, per *j* da 0 a *gsize(i)* - 1, se *pos_n(i)* ≠ *j*:
+*   Per *i* che scende da *l* - 1 a `$subnetlevel`, per *j* da 0 a *gsize(i)* - 1, se *pos_n(i)* ≠ *j*:
     *   Calcola, se possibile, indirizzo IP globale di (*i*, *j*) rispetto a *n*.  
         È possibile se tutte le posizioni di *n* sono *reali* dal livello *i* + 1 al livello *l* - 1.
     *   Calcola, se possibile, indirizzo IP anonimizzante di (*i*, *j*) rispetto a *n*.
