@@ -1322,11 +1322,6 @@ ip route change 10.0.0.40/32 table ntk via 169.254.27.218 dev eth1 src 10.0.0.41
 
 **sistema 𝛽**
 ```
-ip netns exec migr01 ip route del 10.0.0.16/31 table ntk
-ip netns exec migr01 ip route del 10.0.0.80/31 table ntk
-ip netns exec migr01 ip route del 10.0.0.56/31 table ntk
-ip netns exec migr01 ip route del 10.0.0.48/31 table ntk
-
 ip netns exec migr01 ip route del 10.0.0.16/31 table ntk_from_00:16:3E:3C:14:33
 ip netns exec migr01 ip route del 10.0.0.80/31 table ntk_from_00:16:3E:3C:14:33
 ip netns exec migr01 ip route del 10.0.0.56/31 table ntk_from_00:16:3E:3C:14:33
@@ -1336,23 +1331,6 @@ ip netns exec migr01 ip route del 10.0.0.16/31 table ntk_from_00:16:3E:5B:78:D5
 ip netns exec migr01 ip route del 10.0.0.80/31 table ntk_from_00:16:3E:5B:78:D5
 ip netns exec migr01 ip route del 10.0.0.56/31 table ntk_from_00:16:3E:5B:78:D5
 ip netns exec migr01 ip route del 10.0.0.48/31 table ntk_from_00:16:3E:5B:78:D5
-
-ip netns exec migr01 ip route add unreachable 10.0.0.16/32 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.80/32 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.56/32 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.48/32 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.17/32 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.81/32 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.57/32 table ntk
-ip netns exec migr01 ip route add unreachable 10.0.0.49/32 table ntk
-ip netns exec migr01 ip route change 10.0.0.16/32 table ntk via 169.254.94.223 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.80/32 table ntk via 169.254.94.223 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.56/32 table ntk via 169.254.94.223 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.48/32 table ntk via 169.254.94.223 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.17/32 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.81/32 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.57/32 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.49/32 table ntk via 169.254.163.36 dev migr01_eth1
 
 ip netns exec migr01 ip route add unreachable 10.0.0.16/32 table ntk_from_00:16:3E:3C:14:33
 ip netns exec migr01 ip route add unreachable 10.0.0.80/32 table ntk_from_00:16:3E:3C:14:33
