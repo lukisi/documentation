@@ -82,6 +82,7 @@ sistemi *𝛾* e *𝜀* alla creazione e popolamento iniziale delle nuove tabell
 **sistema 𝛾**
 ```
 (echo; echo "246 ntk_from_00:16:3E:3C:14:33 # xxx_table_ntk_from_00:16:3E:3C:14:33_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3C:14:33 -j MARK --set-mark 246
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3C:14:33
@@ -100,10 +101,10 @@ ip route add unreachable 10.0.0.81/32 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.57/32 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.49/32 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:3C:14:33
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3C:14:33 -j MARK --set-mark 246
 ip rule add fwmark 246 table ntk_from_00:16:3E:3C:14:33
 
 (echo; echo "245 ntk_from_00:16:3E:3B:9F:45 # xxx_table_ntk_from_00:16:3E:3B:9F:45_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+ip netns exec migr02 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3B:9F:45 -j MARK --set-mark 245
 ip netns exec migr02 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3B:9F:45
 ip netns exec migr02 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3B:9F:45
 ip netns exec migr02 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3B:9F:45
@@ -121,13 +122,13 @@ ip netns exec migr02 ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:
 ip netns exec migr02 ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:3B:9F:45
 ip netns exec migr02 ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:3B:9F:45
 ip netns exec migr02 ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:3B:9F:45
-ip netns exec migr02 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3B:9F:45 -j MARK --set-mark 245
 ip netns exec migr02 ip rule add fwmark 245 table ntk_from_00:16:3E:3B:9F:45
 ```
 
 **sistema 𝜀**
 ```
 (echo; echo "246 ntk_from_00:16:3E:5B:78:D5 # xxx_table_ntk_from_00:16:3E:5B:78:D5_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 246
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:5B:78:D5
@@ -146,10 +147,10 @@ ip route add unreachable 10.0.0.80/32 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.56/32 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.48/32 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 246
 ip rule add fwmark 246 table ntk_from_00:16:3E:5B:78:D5
 
 (echo; echo "245 ntk_from_00:16:3E:AF:4C:2A # xxx_table_ntk_from_00:16:3E:AF:4C:2A_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+ip netns exec migr02 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:AF:4C:2A -j MARK --set-mark 245
 ip netns exec migr02 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:AF:4C:2A
 ip netns exec migr02 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:AF:4C:2A
 ip netns exec migr02 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:AF:4C:2A
@@ -167,7 +168,6 @@ ip netns exec migr02 ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:
 ip netns exec migr02 ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:AF:4C:2A
 ip netns exec migr02 ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:AF:4C:2A
 ip netns exec migr02 ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:AF:4C:2A
-ip netns exec migr02 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:AF:4C:2A -j MARK --set-mark 245
 ip netns exec migr02 ip rule add fwmark 245 table ntk_from_00:16:3E:AF:4C:2A
 ```
 
