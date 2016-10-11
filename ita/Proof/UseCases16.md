@@ -262,6 +262,7 @@ ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
 **sistema 𝜆**
 ```
 (echo; echo "249 ntk_from_00:16:3E:3C:14:33 # xxx_table_ntk_from_00:16:3E:3C:14:33_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3C:14:33 -j MARK --set-mark 249
 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3C:14:33
 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3C:14:33

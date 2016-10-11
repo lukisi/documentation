@@ -45,6 +45,7 @@ ip route change unreachable 10.0.0.22/31 table ntk_from_00:16:3E:3B:9F:45
 ip route change unreachable 10.0.0.86/31 table ntk_from_00:16:3E:3B:9F:45
 ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:3B:9F:45
 ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:3B:9F:45
+ip rule add fwmark 250 table ntk_from_00:16:3E:3B:9F:45
 
 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3C:14:33
@@ -63,11 +64,6 @@ ip route change unreachable 10.0.0.22/31 table ntk_from_00:16:3E:3C:14:33
 ip route change unreachable 10.0.0.86/31 table ntk_from_00:16:3E:3C:14:33
 ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:3C:14:33
 ip route change blackhole 10.0.0.50/31 table ntk_from_00:16:3E:3C:14:33
-
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3B:9F:45 -j MARK --set-mark 250
-ip rule add fwmark 250 table ntk_from_00:16:3E:3B:9F:45
-
-iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3C:14:33 -j MARK --set-mark 249
 ip rule add fwmark 249 table ntk_from_00:16:3E:3C:14:33
 
 ip address add 10.0.0.22 dev eth1
@@ -195,24 +191,6 @@ ip route change blackhole 10.0.0.48/32 table ntk_from_00:16:3E:06:3E:90
 ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:06:3E:90
 ip rule add fwmark 248 table ntk_from_00:16:3E:06:3E:90
 
-ip netns exec migr02 ip route change unreachable 10.0.0.0/29 table ntk
-ip netns exec migr02 ip route change unreachable 10.0.0.64/29 table ntk
-ip netns exec migr02 ip route change unreachable 10.0.0.8/29 table ntk
-ip netns exec migr02 ip route change unreachable 10.0.0.72/29 table ntk
-ip netns exec migr02 ip route change unreachable 10.0.0.24/29 table ntk
-ip netns exec migr02 ip route change unreachable 10.0.0.88/29 table ntk
-ip netns exec migr02 ip route change 10.0.0.16/30 table ntk via 169.254.109.22 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.80/30 table ntk via 169.254.109.22 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.56/30 table ntk via 169.254.109.22 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.20/31 table ntk via 169.254.42.4 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.84/31 table ntk via 169.254.42.4 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.60/31 table ntk via 169.254.42.4 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.48/31 table ntk via 169.254.42.4 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.22/31 table ntk via 169.254.109.22 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.86/31 table ntk via 169.254.109.22 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.62/31 table ntk via 169.254.109.22 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.50/31 table ntk via 169.254.109.22 dev migr02_eth1
-
 ip netns exec migr02 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:BD:34:98
 ip netns exec migr02 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:BD:34:98
 ip netns exec migr02 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:BD:34:98
@@ -334,30 +312,6 @@ ip route change blackhole 10.0.0.40/32 table ntk_from_00:16:3E:3C:14:33
 
 **sistema 𝛽**
 ```
-ip netns exec migr01 ip route change unreachable 10.0.0.0/29 table ntk
-ip netns exec migr01 ip route change unreachable 10.0.0.64/29 table ntk
-ip netns exec migr01 ip route change unreachable 10.0.0.8/29 table ntk
-ip netns exec migr01 ip route change unreachable 10.0.0.72/29 table ntk
-ip netns exec migr01 ip route change unreachable 10.0.0.24/29 table ntk
-ip netns exec migr01 ip route change unreachable 10.0.0.88/29 table ntk
-ip netns exec migr01 ip route change 10.0.0.20/30 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.84/30 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.60/30 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.18/31 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.82/31 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.58/31 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.50/31 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.16/32 table ntk via 169.254.94.223 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.80/32 table ntk via 169.254.94.223 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.56/32 table ntk via 169.254.94.223 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.48/32 table ntk via 169.254.94.223 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.40/32 table ntk via 169.254.94.223 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.17/32 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.81/32 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.57/32 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.49/32 table ntk via 169.254.163.36 dev migr01_eth1
-ip netns exec migr01 ip route change 10.0.0.41/32 table ntk via 169.254.163.36 dev migr01_eth1
-
 ip netns exec migr01 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
 ip netns exec migr01 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3C:14:33
 ip netns exec migr01 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3C:14:33
@@ -409,24 +363,6 @@ ip netns exec migr01 ip route change 10.0.0.41/32 table ntk_from_00:16:3E:5B:78:
 
 **sistema 𝛽**
 ```
-ip netns exec migr02 ip route change unreachable 10.0.0.0/29 table ntk
-ip netns exec migr02 ip route change unreachable 10.0.0.64/29 table ntk
-ip netns exec migr02 ip route change unreachable 10.0.0.8/29 table ntk
-ip netns exec migr02 ip route change unreachable 10.0.0.72/29 table ntk
-ip netns exec migr02 ip route change unreachable 10.0.0.24/29 table ntk
-ip netns exec migr02 ip route change unreachable 10.0.0.88/29 table ntk
-ip netns exec migr02 ip route change 10.0.0.16/30 table ntk via 169.254.241.153 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.80/30 table ntk via 169.254.241.153 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.56/30 table ntk via 169.254.241.153 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.20/31 table ntk via 169.254.24.198 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.84/31 table ntk via 169.254.24.198 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.60/31 table ntk via 169.254.24.198 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.48/31 table ntk via 169.254.24.198 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.22/31 table ntk via 169.254.241.153 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.86/31 table ntk via 169.254.241.153 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.62/31 table ntk via 169.254.241.153 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.50/31 table ntk via 169.254.241.153 dev migr02_eth1
-
 ip netns exec migr02 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:AF:4C:2A
 ip netns exec migr02 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:AF:4C:2A
 ip netns exec migr02 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:AF:4C:2A
@@ -545,24 +481,6 @@ ip route change blackhole 10.0.0.41/32 table ntk_from_00:16:3E:1A:C4:45
 
 **sistema 𝛾**
 ```
-ip netns exec migr02 ip route change unreachable 10.0.0.0/29 table ntk
-ip netns exec migr02 ip route change unreachable 10.0.0.64/29 table ntk
-ip netns exec migr02 ip route change unreachable 10.0.0.8/29 table ntk
-ip netns exec migr02 ip route change unreachable 10.0.0.72/29 table ntk
-ip netns exec migr02 ip route change unreachable 10.0.0.24/29 table ntk
-ip netns exec migr02 ip route change unreachable 10.0.0.88/29 table ntk
-ip netns exec migr02 ip route change 10.0.0.16/30 table ntk via 169.254.253.216 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.80/30 table ntk via 169.254.253.216 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.56/30 table ntk via 169.254.253.216 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.20/31 table ntk via 169.254.253.216 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.84/31 table ntk via 169.254.253.216 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.60/31 table ntk via 169.254.253.216 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.48/31 table ntk via 169.254.253.216 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.22/31 table ntk via 169.254.42.4 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.86/31 table ntk via 169.254.42.4 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.62/31 table ntk via 169.254.42.4 dev migr02_eth1
-ip netns exec migr02 ip route change 10.0.0.50/31 table ntk via 169.254.42.4 dev migr02_eth1
-
 ip netns exec migr02 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
 ip netns exec migr02 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
 ip netns exec migr02 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
