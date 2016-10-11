@@ -112,11 +112,8 @@ identità.
 
 **sistema 𝛿**
 ```
-ip netns exec entr03 ip rule add table ntk
 (echo; echo "249 ntk_from_00:16:3E:DF:23:F5 # xxx_table_ntk_from_00:16:3E:DF:23:F5_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
 ip netns exec entr03 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:DF:23:F5 -j MARK --set-mark 249
-ip netns exec entr03 ip rule add fwmark 249 table ntk_from_00:16:3E:DF:23:F5
-ip netns exec entr03 ip route add unreachable 10.0.0.40/32 table ntk
 ip netns exec entr03 ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:DF:23:F5
 ip route del 10.0.0.28/32 table ntk
 ip route del 10.0.0.92/32 table ntk
@@ -126,23 +123,6 @@ ip route del 10.0.0.28/32 table ntk_from_00:16:3E:2D:8D:DE
 ip route del 10.0.0.92/32 table ntk_from_00:16:3E:2D:8D:DE
 ip route del 10.0.0.60/32 table ntk_from_00:16:3E:2D:8D:DE
 ip route del 10.0.0.48/32 table ntk_from_00:16:3E:2D:8D:DE
-ip netns exec entr03 ip route add unreachable 10.0.0.0/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.64/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.8/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.72/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.16/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.80/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.24/30 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.88/30 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.56/30 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.30/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.94/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.62/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.50/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.28/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.92/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.60/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.48/31 table ntk
 ip netns exec entr03 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:DF:23:F5
@@ -191,24 +171,6 @@ ip address del 10.0.0.29/32 dev eth1
 ip address del 10.0.0.93/32 dev eth1
 ip address del 10.0.0.61/32 dev eth1
 ip address del 10.0.0.49/32 dev eth1
-ip netns exec entr03 ip route change unreachable 10.0.0.0/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.64/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.8/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.72/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.16/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.80/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.24/30 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.88/30 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.56/30 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.30/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.94/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.62/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.50/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.28/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.92/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.60/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.48/31 table ntk
-ip netns exec entr03 ip route change 10.0.0.40/32 table ntk via 169.254.242.91 dev entr03_eth1
 ip netns exec entr03 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:DF:23:F5
@@ -227,15 +189,13 @@ ip netns exec entr03 ip route change unreachable 10.0.0.92/31 table ntk_from_00:
 ip netns exec entr03 ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:DF:23:F5
 ip netns exec entr03 ip route change unreachable 10.0.0.40/32 table ntk_from_00:16:3E:DF:23:F5
+ip netns exec entr03 ip rule add fwmark 249 table ntk_from_00:16:3E:DF:23:F5
 ```
 
 **sistema 𝜇**
 ```
-ip netns exec entr03 ip rule add table ntk
 (echo; echo "249 ntk_from_00:16:3E:B9:77:80 # xxx_table_ntk_from_00:16:3E:B9:77:80_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
 ip netns exec entr03 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:B9:77:80 -j MARK --set-mark 249
-ip netns exec entr03 ip rule add fwmark 249 table ntk_from_00:16:3E:B9:77:80
-ip netns exec entr03 ip route add unreachable 10.0.0.41/32 table ntk
 ip netns exec entr03 ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:B9:77:80
 ip route del 10.0.0.29/32 table ntk
 ip route del 10.0.0.93/32 table ntk
@@ -245,23 +205,6 @@ ip route del 10.0.0.29/32 table ntk_from_00:16:3E:1A:C4:45
 ip route del 10.0.0.93/32 table ntk_from_00:16:3E:1A:C4:45
 ip route del 10.0.0.61/32 table ntk_from_00:16:3E:1A:C4:45
 ip route del 10.0.0.49/32 table ntk_from_00:16:3E:1A:C4:45
-ip netns exec entr03 ip route add unreachable 10.0.0.0/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.64/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.8/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.72/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.16/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.80/29 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.24/30 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.88/30 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.56/30 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.30/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.94/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.62/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.50/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.28/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.92/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.60/31 table ntk
-ip netns exec entr03 ip route add unreachable 10.0.0.48/31 table ntk
 ip netns exec entr03 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:B9:77:80
 ip netns exec entr03 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:B9:77:80
 ip netns exec entr03 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:B9:77:80
@@ -310,24 +253,6 @@ ip address del 10.0.0.28/32 dev eth1
 ip address del 10.0.0.92/32 dev eth1
 ip address del 10.0.0.60/32 dev eth1
 ip address del 10.0.0.48/32 dev eth1
-ip netns exec entr03 ip route change unreachable 10.0.0.0/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.64/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.8/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.72/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.16/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.80/29 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.24/30 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.88/30 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.56/30 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.30/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.94/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.62/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.50/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.28/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.92/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.60/31 table ntk
-ip netns exec entr03 ip route change unreachable 10.0.0.48/31 table ntk
-ip netns exec entr03 ip route change 10.0.0.41/32 table ntk via 169.254.83.167 dev entr03_eth1
 ip netns exec entr03 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:B9:77:80
 ip netns exec entr03 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:B9:77:80
 ip netns exec entr03 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:B9:77:80
@@ -346,6 +271,7 @@ ip netns exec entr03 ip route change unreachable 10.0.0.92/31 table ntk_from_00:
 ip netns exec entr03 ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:B9:77:80
 ip netns exec entr03 ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:B9:77:80
 ip netns exec entr03 ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:B9:77:80
+ip netns exec entr03 ip rule add fwmark 249 table ntk_from_00:16:3E:B9:77:80
 ```
 
 Questa sequenza di operazioni è eseguita dal programma **qspnclient**, sempre quando
@@ -357,8 +283,8 @@ e prepara il vecchio network namespace che dovrà ospitare la nuova identità.
 Trattandosi di un g-nodo di livello 1, rispetto a prima nel caso di ingresso di un singolo nodo, notiamo che
 vengono fatte queste operazioni:
 
-*   Vengono aggiunte nel namespace nuovo le regole per guardare la tabella di uscita (`ntk`) e le tabelle
-    di inoltro (`ntk_from_xxx`).  
+*   Vengono aggiunte nel namespace nuovo le marcature per i pacchetti provenienti dagli archi-qspn con il
+    codice delle relative tabelle di inoltro (`ntk_from_xxx`).  
     Le tabelle di inoltro riferite ad altri nodi appartenenti al g-nodo che migra cambiano nome: ad esempio in *𝛿*
     la tabella di inoltro che prima era `ntk_from_00:16:3E:2D:8D:DE` diventa `ntk_from_00:16:3E:DF:23:F5`
     nel network namespace `entr03`. Infatti l'arco-identità con *𝜇*, che ha partecipato anch'esso alla
@@ -375,6 +301,10 @@ vengono fatte queste operazioni:
     destinazione in più al livello 1) e rimossi dalle tabelle del namespace vecchio.
 *   Poi, se il vecchio namespace era il default, si rimuove da esso la (eventuale) regola di source-natting e
     gli indirizzi IP propri tranne quelli interni a un livello minore o uguale al livello del g-nodo che migra.
-*   Infine si aggiornano nel namespace nuovo in tutte le tabelle tutte le rotte.
+*   Infine, per le tabelle di inoltro riferite ad altri nodi appartenenti al g-nodo che migra, senza attendere
+    da questi archi un nuovo ETP, si aggiornano nel namespace nuovo in tali tabelle tutte le rotte e si aggiunge
+    la relativa regola.  
+    Invece, per le tabelle di inoltro riferite ad altri nodi non appartenenti al g-nodo che migra, dovremo
+    attendere un nuovo ETP da questi archi prima di aggiornare le rotte e aggiungere le regole.
 
 [Pagina seguente](Eventi4.md)
