@@ -79,30 +79,6 @@ interfacce reali sono gestite e quali archi vanno duplicati.
 
 **sistema 𝛽**
 ```
-ip netns exec entr02 ip rule add table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.0/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.64/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.16/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.80/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.24/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.88/29 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.12/30 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.76/30 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.60/30 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.8/31 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.72/31 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.56/31 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.48/31 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.11/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.75/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.59/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.51/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.41/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.10/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.74/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.58/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.50/32 table ntk
-ip netns exec entr02 ip route add unreachable 10.0.0.40/32 table ntk
 ip route del 10.0.0.0/29 table ntk
 ip route del 10.0.0.64/29 table ntk
 ip route del 10.0.0.16/29 table ntk
@@ -127,37 +103,25 @@ ip address del 10.0.0.74/32 dev eth1
 ip address del 10.0.0.58/32 dev eth1
 ip address del 10.0.0.50/32 dev eth1
 ip address del 10.0.0.40/32 dev eth1
-ip netns exec entr02 ip route change unreachable 10.0.0.0/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.64/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.16/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.80/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.24/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.88/29 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.12/30 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.76/30 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.60/30 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.8/31 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.72/31 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.56/31 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.48/31 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.11/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.75/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.59/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.51/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.41/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.10/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.74/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.58/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.50/32 table ntk
-ip netns exec entr02 ip route change unreachable 10.0.0.40/32 table ntk
 ```
 
 Questa sequenza di operazioni è eseguita dal programma **qspnclient**, sempre quando
 l'utente comanda di avviare l'ingresso come singolo nodo in altra rete, in seguito alle
-operazioni viste prima. In questa seconda parte di operazioni la vecchia identità replica
+operazioni viste prima. In questa seconda parte di operazioni il programma, per la vecchia identità, replica
 nel nuovo network namespace la situazione che era prima nel suo vecchio network namespace
-(in questo esempio dal namespace *default* al namespace *entr02*) considerando però il
-suo cambio di indirizzo. Inoltre prepara il vecchio network namespace che dovrà ospitare
+(in questo esempio dal namespace *default* al namespace *entr02*) considerando però questi cambiamenti:
+
+*   La tabella `ntk` (per i pacchetti generati localmente) è presente solo nel network namespace default.
+*   Tutti gli archi-qspn che la vecchia identità aveva restano gli stessi. Però le relative
+    tabelle `ntk_from_xxx` passando da un namespace ad un altro possono cambiare nome, cioè
+    se la migrazione coinvolge anche il nodo vicino cambia anche il MAC address associato al vicino.
+*   L'indirizzo Netsukuku della vecchia identità assume una componente *virtuale* ad un
+    livello in cui prima era *reale* e questo aggiunge una possibile destinazione a quel livello.
+*   ...
+
+Nell'esempio presente la vecchia identità non aveva nessun arco-qspn.
+
+Inoltre il programma prepara il vecchio network namespace che dovrà ospitare
 la nuova identità: cioè elimina le vecchie rotte e gli indirizzi propri e la (eventuale)
 regola di source-natting.
 
