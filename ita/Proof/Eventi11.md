@@ -162,6 +162,21 @@ Queste vanno eseguite pochi istanti dopo l'avvio del programma **qspnclient** di
 tabella `ntk` sia stata predisposta e l'indirizzo IP interno al g-nodo di livello 1 sia
 stato assegnato alle interfacce di rete gestite.
 
+Questa pseudo-coordinazione con il programma **qspnclient** (o il demone *ntkd*) non si rende
+necessaria se l'interfaccia di rete che collega il sistema al resto della sottorete a gestione
+autonoma è diversa da quelle controllate dal programma. Situazione che potrebbe essere più frequente
+nei casi d'uso di questo tipo. Ad esempio, supponiamo che il sistema *𝜆* sia collegato al sistema
+*𝜌* attraverso l'interfaccia di rete `eth2`. Allora questa sequenza di operazioni nel sistema
+*𝜆* potrebbe essere eseguita in qualsiasi momento, all'avvio del sistema:
+
+**sistema 𝜆**
+```
+ip address add 10.0.111.222 dev eth2
+ip route add 169.254.110.188 dev eth1 src 169.254.111.222
+ip address add 10.0.0.40 dev eth2
+ip route add 10.0.0.41/32 via 169.254.110.188 dev eth2 src 10.0.0.40
+```
+
 ### Formazione dell'arco tra *𝜆* e *𝜀*
 
 Sequenza di operazioni eseguita dal modulo Neighborhood.
