@@ -1,0 +1,152 @@
+
+
+				    Netsukuku
+			
+			- Close the world, txEn eht nepO -
+
+
+
+----					
+
+  0. Preface
+
+  1. Netsukuku
+
+  2. The Netsukuku protocol
+  
+	2.1  The QSPN - routing discovery algorithm 
+
+  	2.2  Netsukuku topology
+
+	2.3  ANDNA - A Netsukuku Domain Name Architecture
+
+	2.4  Internet and Netsukuku
+
+  3. Netsukuku RFCs
+	
+  4. FAQ
+  
+  5. HOWTOs
+  
+  6. Contacts and Credits
+  
+----
+
+  0.  Preface
+
+  This text is the index of the Netsukuku documentation.
+
+  The Netsukuku website is:
+  
+  http://netsukuku.freaknet.org
+
+
+  1.  Netsukuku
+ 
+  Netsukuku general document:
+
+  http://netsukuku.freaknet.org/doc/main_doc/netsukuku.pdf
+
+  Netsukuku is a P2P network system designed to handle a large number of nodes
+  with minimal CPU and memory resources. It can be easily used to build a
+  worldwide distributed, anonymous and not controlled network, separated from
+  the Internet, without the support of any servers, ISPs or authority
+  controls.
+  In this document, we give a generic and non technical description of the
+  Netsukuku network, emphasizing its main ideas and features.
+
+  
+  2.  The Netsukuku protocol
+
+  The following are technical documents describing, in details, the design and
+  the mechanisms of Netsukuku.
+  They are a must for anyone who wants to understand how Netsukuku works.
+
+
+  2.1  The QSPN - routing discovery algorithm 
+
+  http://netsukuku.freaknet.org/doc/main_doc/qspn.pdf
+
+  This document describes the QSPN, the routing discovery algorithm used
+  by Netsukuku.
+  Through a deductive analysis the main proprieties of the QSPN are
+  shown. Moreover, a second version of the algorithm, is presented.
+
+
+  2.2  Netsukuku topology
+
+  Network topology document:
+
+  http://netsukuku.freaknet.org/doc/main_doc/topology.pdf
+
+  In this document, we describe the structure of the Netsukuku
+  topology. Moreover, we show how it is possible to use the QSPN v2 on
+  the high levels of the topology.
+
+
+  2.3  ANDNA - A Netsukuku Domain Name Architecture
+
+  The Domain Name system of Netsukuku:
+		
+  http://netsukuku.freaknet.org/doc/main_doc/andna.pdf
+
+  In this document, we present the ANDNA system. 
+  ANDNA is the distributed, non hierarchical and decentralised system 
+  of hostname management used in the Netsukuku network.
+
+  
+  2.4  Internet and Netsukuku
+
+  Issues regarding the Netsukuku compatibility with the Internet:
+
+  http://netsukuku.freaknet.org/doc/main_doc/inetntk.pdf
+
+  Netsukuku is completely independent from the Internet. However, a good
+  level of integration between the two networks must be preserved.
+  In this document, we present the techniques that allow Netsukuku to be
+  compatible with the standard Internet. Moreover, we show how it is
+  possible to use virtual Internet tunnels to temporarily replace missing
+  physical links.
+
+  
+  3.   Netsukuku RFCs
+
+  The Netsukuku RFCs (NTK_RFC) are work in progress documents that expands,
+  improve or corrects the Netsukuku protocol.
+
+  You can find their up to date version in the Netsukuku wiki:
+
+  http://lab.dyne.org/Netsukuku_RFC
+
+  Their static version can be found here:
+
+  http://netsukuku.freaknet.org/index.php?pag=documentation&dir=main_documentation/ntk_rfc
+
+  and here:
+
+  http://netsukuku.freaknet.org/doc/main_doc/ntk_rfc
+
+
+  4.   FAQ
+
+  Frequently Asked Questions:
+
+  http://www.netsukuku.org/index.php?pag=faq
+
+  http://netsukuku.freaknet.org/doc/faq/
+
+
+  5.   HOWTOs
+
+  Various HOWTOs:
+
+  http://netsukuku.freaknet.org/index.php?pag=documentation&dir=howto
+
+  http://netsukuku.freaknet.org/doc/howto/
+
+
+  6.   Contacts and Credits
+  
+  Mailing list, IRC channel and authors contacts:
+
+  http://netsukuku.freaknet.org/?pag=contacts

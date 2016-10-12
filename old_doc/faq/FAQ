@@ -1,0 +1,348 @@
+
+  `0. General FAQs`_
+
+  	-  `What is Netsukuku?`_
+	-  `What is the current status of the project?`_
+	-  `Why did you choose that name?`_
+	-  `Why another p2p network?`_
+	-  `Are you totally sure it will work?`_
+	-  `Where are current Netsukuku networks that I can connect to?`_
+	-  `How can I join to Netsukuku?`_
+	-  `What can I do to help the development of Netsukuku?`_
+
+  `1. Technical FAQs`_
+
+	-  `What is Netsukuku? What's behind the scene?`_
+	-  `What is the performance of the network? Why should it work?`_
+	-  `What about the security of my packets? Everyone will be able to sniff them!`_
+	-  `How does a new node begin to locate any of the other nodes in the network?`_
+	-  `Will you provide "Internet to Netsukuku" tunnels?`_
+	-  `What can be done on the Netsukuku network?`_
+	-  `Will glibc be able to resolve names for the ANDNA system?`_
+
+  `2. Software`_
+
+	-  `On what OS does it run?`_
+	-  `What are the requirements for running Netsukuku?`_
+	-  `Will Netsukuku be ported to Windows?`_
+	-  `Will Netsukuku be ported to handled devices?`_
+	-  `Do I need an access point to use a wifi link?`_
+	-  `Why the code is not written in java?`_
+
+
+-------
+
+
+0. General FAQs
+===============
+
+What is Netsukuku?
+------------------
+
+The Netsukuku project is based on the very simple idea of exploiting the
+great potentiality of the wifi connectivity, making the PCs of wireless
+communities act as routers and handle together an ad-hoc network even
+bigger than the Internet.
+
+Netsukuku is an ad-hoc network system designed to handle massive numbers
+of nodes with minimal consumption of CPU and memory resources. It can
+be used to build a world-wide distributed, fault-tolerant, anonymous,
+and censorship-immune network, fully independent from the Internet.
+Netsukuku does not rely upon any form of backbone router, internet
+service provider network, or any centralized system, although it may
+take advantage of existing systems of this nature to augment unity and
+connectivity of the existing Netsukuku network.
+
+A new Netsukuku user needs do little more than install an antenna within range
+of other local nodes, linking themselves into the network, and run the
+Netsukuku software on their computer to take advantage of it. The number of
+interconnected nodes can grow endlessly.
+If a node is out of the range of any wifi signals, a "virtual tunnel" over
+their Internet connection will supply the missing radio link.
+
+Over the Netsukuku network various primary distributed services are guaranteed.
+One of these is ANDNA (A Netsukuku Domain Name Architecture), which is 
+the non hierarchical and decentralized system of hostname management used in
+the Netsukuku network. It fully replaces the DNS and any node can register up
+to 256 hostnames.
+
+For a more detailed plain-english review of the ideas behind the Netsukuku
+project, with a focus upon core concepts and capabilities see: `netsukuku.pdf
+<http://netsukuku.freaknet.org/doc/main_doc/netsukuku.pdf>`_
+
+For a technical description of Netsukuku see `What is Netsukuku? What's behind the scene?`_
+
+For anything else, read the `main documentation <http://netsukuku.freaknet.org/doc/main_doc/netsukuku>`_
+
+
+What is the current status of the project?
+------------------------------------------
+
+The project is well and alive. 
+
+There's no operative software available yet, but we are almost done with
+the first minimal release of `PyNtk <http://dev.hinezumi.org/browser/netsukuku/trunk/pyntk>`_. 
+It is a working Python implementation of Netsukuku and has just the basic features
+to create a simple Netsukuku network, along with hostname management.
+
+We'are also strengthening the theory, researching and writing proofs for the
+validity and performance of the Netsukuku algorithms.
+
+Check out our `roadmap <http://lab.dyne.org/Ntk_TODO>`_ 
+
+
+Why did you choose that name?
+-----------------------------
+
+Netsukuku sounds like "network" in Japanese, and we like Japanese stuff. 
+Moreover, when the project started, no results could be found for "Netsukuku" 
+on Google. Hence, choosing this name was a natural choice for us.
+
+
+Why another p2p network?
+------------------------
+
+Netsukuku is not a p2p net built upon the Internet, i.e. overlay network. 
+It is a physical network and it is a dynamic routing system designed to 
+handle up to 2^32 nodes without any servers or central systems, in this way, it
+is possible to build a physical network separated from the Internet. 
+Read `What is Netsukuku?`_
+
+Are you totally sure it will work?
+----------------------------------
+
+Netsukuku should reasonably work. The most intuitive argument is this:
+Netsukuku is just trying to automate what the Internet does everyday, that is
+keeping routes, assigning IP addresses and resolving hostnames.
+
+By the way, we are currently researching and writing proofs for the validity
+and performance of the Netsukuku algorithms.
+
+As for now, in the documentation every claim is supported by a
+complete reasoning.  You can find detailed explanation of the protocols, the
+way of working of the algorithms and how and why they have been chosen.
+And if the doc isn't enough, you can always communicate with the developers 
+(mailinglist).
+
+As a side note, there isn't any written rules forbidding contributor to
+develop new algorithms.  If you want to help in the development, read the
+docs, code and contact us ;)
+
+
+Where are current Netsukuku networks that I can connect to?
+--------------------------------------------------------------
+
+The first operative release of the Netsukuku software hasn't been released
+yet. Therefore, there shouldn't be any. Check out the website_ for updates.
+
+
+How can I join to Netsukuku?
+----------------------------
+
+Take out your wifi antenna, and start the Netsukuku software, then wait and tell 
+all your neighbors to do the same.
+
+
+What can I do to help the development of Netsukuku?
+---------------------------------------------------
+
+It is up to you. Some examples of things you can do:
+
+	* help the developer writing the Netsukuku software.
+	* study the Netsukuku theory and algorithms. Improve it.
+	* expand and translate the documentation.
+
+Check out the `TODO list <http://lab.dyne.org/Ntk_TODO>`_ .
+
+`Contact us <http://netsukuku.freaknet.org/?pag=contacts>`_ for any
+question or contribution.
+
+
+1. Technical FAQs
+=================
+
+What is Netsukuku? What's behind the scene?
+-------------------------------------------
+
+You can call Netsukuku a "scalable ad-hoc network architecture for cheap
+self-configuring Internets".
+Scalable ad-hoc network architectures give the possibility to build
+and sustain a network as large as the Internet without any manual
+intervention.
+Netsukuku adopts a modified distance vector routing mechanism that
+is well integrated in different layers of its hierarchical network
+topology. The Netsukuku software is distributed and requires very few
+memory and computational resources: the high degree of self-similarity
+of its topology grants the ability to store the entire network routing
+table in just few kilobytes; the routing discovery algorithm consists
+only in the non-invasive generation and propagation of Tracer Packets.
+Thanks to these low requirements, it is possible to run the software
+inside low-performance computers, access points and embedded devices.
+Some relevant features that exploit the architecture offered by Netsukuku
+are: a distributed, non hierarchical and decentralised system of hostname
+management; the easy integration of P2P overlay services; an Internet
+tunnelling system that connects nodes which aren't physically linked;
+a system which enables full anonymity, hiding the source and destination
+of packets and encrypting them.  Using wireless technologies, the users
+of Netsukuku can build and sustain a wide area network by sharing a
+small part of their PC resources, without requiring any third party
+specific support.
+
+For more information see the `main documentation`__
+
+__ MainDoc_
+
+
+What is the performance of the network? Why should it work?
+-----------------------------------------------------------
+
+We're currently researching and writing proofs for the validity and
+performance of the Netsukuku topology and routing system. Hence, you are
+invited to wait the Netsukuku developers or to try find proofs yourself.
+
+If you want to evaluate the Netsukuku protocol performance, you should
+take into account the following factors (in order of priority):
+
+   - Topology (how the logic structure of the network is organised)
+   - Dynamics of the topology: what happens when a node changes its
+     status (see "7 Hooking phase")
+   - IP distribution (see "7.1 Uniform gnodes"): how the IP addresses are
+     allocated, trying to avoid waste of space.
+   - Routing in high levels (see "6 Flat levels"): how the QSPN is used
+     in the high level of the hierarchy.
+   - "7.2 Internal connection": what happens when the network is split in
+     two separated nets.
+   - ETP: valuate its performance, etc...
+
+The real difficulty doesn't concern the particular routing algorithm used, 
+but lies in the network structure and organisation. For example, instead of the 
+QSPN you can try to use a normal routing discovery method: it will always work
+inside a group of nodes (256).
+
+Then you have to take into account the higher levels of the hierarchy,
+i.e. group of group of nodes, but here you can still try to use your
+favorite Distance Vector routing scheme.
+
+For further information, you can find the appropriate documentation `here`__.
+
+__ MainDoc_
+
+
+What about the security of my packets? Everyone will be able to sniff them!
+------------------------------------------------------------------------------
+
+The situation in Netsukuku isn't much different from the current Internet:
+	
+ - in the Internet, only those the ISPs, the routers and the backbones
+   can sniff, alter and destroy your traffic.
+ 
+ - in Netsukuku, only the nodes belonging to the temporary route, which
+   you are using for your connection, will be able to sniff, alter
+   and destroy your traffic. However  consider that:
+ 	
+     1) with the use of multipath your traffic is split among
+        different routes, thus each route will be able to read only
+        a partial portion of your traffic.
+     
+     2) for each connection you have a potential different route
+
+Both in the Internet and in Netsukuku, you can always use secure
+protocols, such as https, SSH, SSL, and so on to protect your traffic.
+Moreover in Netsukuku, there will be a complete cryptographic layer, which
+guarantees security and anonymity for any connection 
+(see `Carciofo <http://netsukuku.freaknet.org/files/doc/main_doc/ntk_rfc/Ntk_carciofo>`_ ).
+
+How does a new node begin to locate any of the other nodes in the network?
+-----------------------------------------------------------------------------
+
+The Netsukuku radar sends echo packets about every 10 seconds, if someone
+replies it communicates with it.
+
+Will you provide "Internet to Netsukuku" tunnels?
+----------------------------------------------------
+
+Yes, `Viphilama
+<http://netsukuku.freaknet.org/files/doc/main_doc/ntk_rfc/Ntk_viphilama>`_
+will provide an automatic tunnelling system.
+
+What can be done on the Netsukuku network?
+------------------------------------------
+
+Whatever you already do in the current Internet, that is any IP application is
+supported. 
+
+
+Will glibc be able to resolve names for the ANDNA system?
+------------------------------------------------------------
+
+ANDNA comes with a DNS wrapper so it is transparent to all the programs
+using glibc. Read the `andna manual <http://netsukuku.freaknet.org/doc/manuals/andna>`_ .
+
+What sort of performance does Netsukuku have? Is it any good for voice chat video chat?
+------------------------------------------------------------------------------------------
+
+What do you mean by performance? 
+
+:Network performance: 
+  it is dependent on the links quality. If the nodes are
+  linked by 100Mbps cable you will feel like in a large LAN. 
+  The distance from yourself and the destination node is also relevant.
+  Remember that the Netsukuku daemon chooses only the best way to reach
+  the other nodes, but cannot improve the roads themselves.
+
+:Software performance: 
+  Netsukuku has been designed to run on Access Point and
+  low-spec devices. PyNtk uses a stripped version of python (under 500Kb).
+
+
+2. Software
+===========
+
+On what OS does it run?
+--------------------------
+
+For now it runs only on GNU/Linux, but it is easy to port it on other OS.
+If you want to join in the development let us now ;)
+
+What are the requirements for running Netsukuku?
+---------------------------------------------------
+
+For the Python implementation, you need iproute2 and stackless python.
+Stackless python normally isn't bundled with common GNU/Linux distributions,
+however a HOWTO is available in the Netsukuku site.
+
+Will Netsukuku be ported to Windows?
+---------------------------------------
+
+:Short answer: if you code the port, yes.
+:Answer: We need coders for that. There are a lot of things to be done and the Windows port is what we care less.
+
+Will Netsukuku be ported to handled devices?
+-----------------------------------------------
+
+We are currently working on flashing Netsukuku on Access Points (like
+Linksys). See http://netsukuku.freaknet.org/openwrt/
+
+Do I need an access point to use a wifi link?
+------------------------------------------------
+
+You just need a wifi network card. Put it in ad-hoc mode using "netsukuku"
+as essid. See http://netsukuku.freaknet.org/doc/manuals/ntk-wifi
+
+Why the code is not written in java?
+---------------------------------------
+
+Are you kidding?
+
+
+
+----
+
+
+My question is not answered here!
+------------------------------------
+
+`Contact us`_
+
+.. _MainDoc: http://netsukuku.freaknet.org/index.php?pag=documentation&dir=main_documentation
+.. _website: http://netsukuku.freaknet.org
