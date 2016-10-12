@@ -43,11 +43,13 @@ ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
 
 #### Processazione di un ETP
 
-Anche dalla prospettiva del nodo *𝛽* avremo subito un ETP da processare. Per questo evento
-non ripetiamo le operazioni che il programma **qspnclient** deve fare, sono le stesse viste
+Anche dalla prospettiva del nodo *𝛽* avremo subito un ETP da processare. Non ripetiamo le operazioni che il
+programma **qspnclient** deve fare a seguito della completata processazione di un ETP, sono le stesse viste
 in precedenza nel nodo *𝛼*.
 
 ### <a name="Rimosso_vicino_stessa_rete"></a> Un arco con un vicino nella stessa rete viene rimosso
+
+#### Rimozione di un arco fisico non più funzionante
 
 Supponiamo che il programma **qspnclient** riceve dall'utente istruzioni di rimuovere un arco fisico
 verso un diretto vicino. Sarebbe la stessa cosa anche se il programma riceve il segnale `arc_removing`
@@ -87,5 +89,25 @@ sed -i '/xxx_table_ntk_from_00:16:3E:EE:AF:D1_xxx/d' /etc/iproute2/rt_tables
 Vanno eseguite in blocco.
 
 Poi il programma rimuove l'arco-qspn dal QspnManager dell'identità interessata.
+
+#### Rimozione di un arco-identità su richiesta dell'identità vicina
+
+Supponiamo invece che sia il modulo Identities del vicino a decidere di rimuovere un arco-identità
+con noi. Può avvenire perché una identità di connettività nel sistema vicino rimuove i
+suoi archi esterni, oppure perché viene dismessa, oppure perché l'intero sistema vicino si sta
+disconnettendo dalla rete.
+
+Il modulo Identities del sistema vicino lo comunica al modulo Identities nel nostro sistema, il
+quale adesso emette il suo segnale `arc_removing`.
+
+Allo stesso modo in cui abbiamo visto prima, il programma **qspnclient** reagisce a questo segnale
+se quel particolare arco-identità era associato ad un arco-qspn.
+
+#### Rimozione di un arco-identità per scelta del programma
+
+Supponiamo invece che sia il programma **qspnclient** nel nostro sistema a decidere di rimuovere un
+arco-identità con un vicino. Cioè quando rimuoviamo gli archi esterni di una nostra identità di connettività.
+
+In questo caso è il programma stesso a sapere che deve eseguire le operazioni viste prima.
 
 [Operazione seguente](DettagliOperazioni6.md)
