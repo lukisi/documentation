@@ -27,7 +27,8 @@ La sequenza di istruzioni che l'utente darà ai singoli nodi *𝛼* e *𝛽* sar
         vecchia rete che dovrà assumere *𝜑*. Consistono nella posizione *virtuale* e l'anzianità del g-nodo di
         livello direttamente superiore a *𝜑*.
     *   nuovi archi-qspn. Cioè quali archi-identità fra quelli di *𝛼<sub>0</sub>* (l'identità entrante)
-        saranno archi nella nuova rete. Oltre a quelli che sono già noti in quanto interni al g-nodo entrante *𝜑'*.
+        saranno archi nella nuova rete. Oltre a quelli che sono già noti in quanto interni al g-nodo entrante *𝜑'*.  
+        Ricordiamo che ogni arco-identità riceve un identificativo che viene mostrato all'utente.
     *   l'identificativo di questa operazione di ingresso. Chiamiamolo *m<sub>𝜑</sub>*.
     *   l'identificativo dell'operazione di migrazione (eventuale) al termine della quale si potrà
         prendere la posizione *reale* di cui sopra dentro *𝜒*. Chiamiamolo *m<sub>𝜓</sub>*, ad indicare che
