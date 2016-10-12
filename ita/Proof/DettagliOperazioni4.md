@@ -75,14 +75,20 @@ di rete reali e pseudo (`eth1`, `entr02_eth1`) i relativi indirizzi di scheda (`
 e gli indirizzi link-local dei diretti vicini (`169.254.94.223`) sono tutti gestiti in
 autonomia dal modulo Identities.
 
+Prima di avviare il metodo `add_identity` il programma **qspnclient** conosce il nome del vecchio
+network namespace, perché esso è associato all'identità vecchia.
+
 Dall'esecuzione del metodo `add_identity` sul modulo Identities è necessario reperire:
+
 *   identificativo della nuova identità
-*   nome del vecchio network namespace (che passa dalla vecchia identità alla nuova)
 *   nome del nuovo network namespace (che nasce per la vecchia identità)
 *   associazione tra ogni arco-identità della vecchia identità quando era nel vecchio namespace
     e il corrispettivo arco-identità della vecchia identità nel nuovo namespace (oppure basta
     che data una identità e un arco-identità passato al modulo Qspn possa recuperare le
     relative informazioni attuali?)
+
+Il nome del vecchio network namespace viene ora associato alla nuova identità, mentre quello del
+nuovo network namespace viene associato alla vecchia identità.
 
 #### Copia tabelle e regole, spostamento rotte
 

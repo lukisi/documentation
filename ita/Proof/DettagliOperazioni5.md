@@ -69,14 +69,19 @@ inoltro:
 *   Se la relativa tabella di inoltro era stata attivata:
     *   Rimuove la regola.
 *   Svuota la tabella.
-*   Rimuove lo pseudonimo della tabella nel file `rt_tables`, liberando il numero identificativo.
 *   Rimuove la marcatura dei pacchetti.
+*   Rimuove l'associazione tra questa identità e questa tabella. **TODO: spostare questa informazione:** Esiste
+    quindi una associazione tra una identità e un elenco di tabelle (ad esempio una lista di identificativi
+    numerici, i quali sono nel file `rt_tables`; inoltre esiste una mappa globale dell'applicazione che associa
+    il numero alla stringa del MAC).
+*   Se nessuna identità ha una associazione con questa tabella:
+    *   Rimuove lo pseudonimo della tabella nel file `rt_tables`, liberando il numero identificativo.
 
 ```
 ip rule del fwmark 250 table ntk_from_00:16:3E:EE:AF:D1
 ip route flush table ntk_from_00:16:3E:EE:AF:D1
-sed -i '/xxx_table_ntk_from_00:16:3E:EE:AF:D1_xxx/d' /etc/iproute2/rt_tables
 iptables -t mangle -D PREROUTING -m mac --mac-source 00:16:3E:EE:AF:D1 -j MARK --set-mark 250
+sed -i '/xxx_table_ntk_from_00:16:3E:EE:AF:D1_xxx/d' /etc/iproute2/rt_tables
 ```
 
 Vanno eseguite in blocco.

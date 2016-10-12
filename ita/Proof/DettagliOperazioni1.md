@@ -2,7 +2,7 @@
 
 ### <a name="Avvio_programma"></a> Avvio del programma
 
-All'avvio del programma **qspnclient** l'utente specifica alcune informazioni:
+All'avvio del programma **qspnclient** l'utente specifica alcune informazioni persistenti:
 
 *   Topologia della rete.
 *   Se il sistema vuole fare da gateway per una sottorete a gestione autonoma, tale sottorete può
@@ -12,6 +12,8 @@ All'avvio del programma **qspnclient** l'utente specifica alcune informazioni:
 *   Se il sistema ammette di essere usato come anonimizzatore.
 *   Se il sistema (e tutta la eventuale sottorete autonoma dietro di lui) ammette di essere contattato
     in forma anonima.
+
+Inoltre l'utente specifica alcune informazioni temporanee:
 
 *   Indirizzo Netsukuku **iniziale** del sistema.
 
