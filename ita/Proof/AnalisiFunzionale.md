@@ -161,19 +161,14 @@ Ci sono alcune situazioni in cui una identità in un sistema deve rimuovere un a
     caso non è il modulo Neighborhood a segnalarlo, ma l'utente a istruire direttamente il programma.
 *   Un sistema vicino rimuove un suo arco-identità con una identità di questo sistema.  
     Può essere che l'identità del vicino è una identità di connettività e vuole rimuovere questo arco
-    perché è esterno al g-nodo di sua pertinenza.  
+    perché è esterno al g-nodo di sua pertinenza. Oppure l'identità viene dismessa.  
     Può essere anche che l'identità del vicino è l'identità principale e il vicino vuole terminare
     il demone (gracefully).
 *   Questo sistema richiede per una sua identità la rimozione di un arco-identità.  
     Le possibili ragioni sono le stesse viste sopra.
 
-Analiziamo il caso in cui un arco fisico non sia più funzionante (realmente o per simulazione).
-
-Il programma **qspnclient** riceve dapprima il segnale `arc_removing` dal modulo Neighborhood (o una
-equivalente istruzione dall'utente).
-
-Il programma **qspnclient** grazie al modulo Identities individua tutti gli archi-identità che sono
-realizzati su questo arco fisico. Per ognuno di essi si occupa di rimuovere le tabelle di inoltro e poi di
+In ogni caso, quando il programma **qspnclient** si avvede della rimozione di un arco-identità
+il quale era associato ad un arco-qspn, si occupa di rimuovere le tabelle di inoltro e poi di
 istruire il modulo Qspn.
 
 ## <a name="Vecchio"></a>Vecchio
