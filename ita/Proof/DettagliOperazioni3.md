@@ -44,7 +44,13 @@ Alla creazione di un arco (intesa come detto sopra) il programma **qspnclient** 
 autoincrementante *nodearc_nextindex*, che parte da 0, e lo mostra all'utente. In seguito il programma
 sfrutta questi archi passandoli al modulo Identities.
 
-Il modulo Identities a sua volta segnala quando vengono creati o rimossi gli archi-identità.
+Il modulo Identities a sua volta segnala quando vengono creati o rimossi gli archi-identità. Nel segnalarlo
+rende noto al programma:
+
+*   L'identità nel sistema corrente.
+*   L'arco fisico su cui poggia.
+*   Il MAC address e il link-local dell'identità del vicino.
+
 Il programma **qspnclient** associa ad ogni arco-identità un indice
 autoincrementante *identityarc_nextindex*, che parte da 0, e lo mostra all'utente.
 
