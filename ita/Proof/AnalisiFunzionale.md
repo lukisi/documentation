@@ -9,6 +9,7 @@
     1.  [Ingresso in una rete - Caso 1](#Ingresso_rete_1)
     1.  [Un nuovo vicino nella stessa rete viene rilevato](#Nuovo_vicino_stessa_rete)
     1.  [Un arco con un vicino nella stessa rete viene rimosso](#Rimosso_vicino_stessa_rete)
+    1.  [Ingresso in una rete - Caso 2](#Ingresso_rete_2)
 1.  [Vecchio](#Vecchio)
     1.  [Primi passi](#Primi_passi)
     1.  [Da riordinare](#Da_riordinare)
@@ -170,6 +171,27 @@ Ci sono alcune situazioni in cui una identità in un sistema deve rimuovere un a
 In ogni caso, quando il programma **qspnclient** si avvede della rimozione di un arco-identità
 il quale era associato ad un arco-qspn, si occupa di rimuovere le tabelle di inoltro e poi di
 istruire il modulo Qspn.
+
+### <a name="Ingresso_rete_2"></a> Ingresso in una rete - Caso 2
+
+[Dettagli](DettagliOperazioni6.md)
+
+Esaminiamo un altro caso di incontro di due reti distinte. Sia *𝜑* un g-nodo di livello *i* internamente
+connesso costituito da alcuni nodi, ad esempio *𝛿<sub>0</sub>* e *𝜇<sub>1</sub>*. Avvenga che tale
+g-nodo si incontra per effetto di qualche arco con una diversa rete. Sia *𝜒* un g-nodo di questa rete
+di livello *k* maggiore di *i* che ha un posto *reale* libero al livello *k* - 1 per *𝜑'*.
+
+**Osservazione.**
+Quando un g-nodo *𝜑* di livello *i* migra o fa ingresso in una rete, sicuramente il suo indirizzo Netsukuku
+è tale che tutte le posizioni maggiori o uguali a *i* sono *reali*. Questo ci assicura che se *𝜑'* prende
+posto in un g-nodo *𝜒* di livello *k* maggiore di *i* + 1, allora il nuovo indirizzo Netsukuku di ogni
+singolo nodo in *𝜑'* sarà composto di:
+
+*   Gli identificativi di *𝜒* per i livelli da *l* - 1 a *k*.
+*   L'identificativo assegnato a *𝜑'* al livello *k* - 1.
+*   Gli identificativi di *𝜑* per i livelli da *k* - 2 a 0.
+
+Questo ci assicura che i livelli da *l* - 1 a *i* sono tutti *reali*.
 
 ## <a name="Vecchio"></a>Vecchio
 

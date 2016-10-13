@@ -81,12 +81,10 @@ network namespace, perché esso è associato all'identità vecchia.
 
 Dall'esecuzione del metodo `add_identity` sul modulo Identities è necessario reperire:
 
-*   identificativo della nuova identità
-*   nome del nuovo network namespace (che nasce per la vecchia identità)
+*   identificativo della nuova identità.
+*   nome del nuovo network namespace che nasce per la vecchia identità.
 *   associazione tra ogni arco-identità della vecchia identità quando era nel vecchio namespace
-    e il corrispettivo arco-identità della vecchia identità nel nuovo namespace (oppure basta
-    che data una identità e un arco-identità passato al modulo Qspn possa recuperare le
-    relative informazioni attuali?)
+    e il corrispettivo arco-identità della vecchia identità nel nuovo namespace.
 
 Il nome del vecchio network namespace viene ora associato alla nuova identità, mentre quello del
 nuovo network namespace viene associato alla vecchia identità.
