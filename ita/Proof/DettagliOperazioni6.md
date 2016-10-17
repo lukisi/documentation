@@ -115,7 +115,7 @@ ip netns exec entr03 ip route add 169.254.83.167 dev entr03_eth1 src 169.254.242
 Dopo l'esecuzione del metodo `add_identity` il programma verifica tra tutti gli archi-identità che erano
 in precedenza associati ad un arco-qspn quali hanno cambiato le loro proprietà MAC address e IP link-local.
 
-#### Copia tabelle e regole, spostamento rotte
+#### <a name="Spostamento_rotte_identita"></a> Spostamento delle rotte della vecchia identità
 
 Abbiamo precedentemente detto quali sono le informazioni che il programma **qspnclient** ha relativamente
 all'operazione di ingresso e quali arriva a conoscere con l'esecuzione del metodo `add_identity`.
@@ -131,7 +131,10 @@ abbiamo 3·1·2·X, dove X vale 0 per *𝛿<sub>0</sub>* e 1 per *𝜇<sub>1</su
 
 Il programma **qspnclient** calcola tutti i possibili indirizzi IP di destinazione, ognuno con suffisso CIDR,
 relativi all'indirizzo della vecchia identità nel nuovo namespace. Il programma li memorizza associandoli a
-quella identità. Per prima cosa li aggiunge nello stato `unreachable`.
+quella identità.
+
+Inizialmente il programma aggiunge le rotte verso questi indirizzi IP nello stato `unreachable` in tutte le
+tabelle di inoltro che vanno usate nel nuovo network namespace.
 
 **sistema 𝛿**
 ```
@@ -162,7 +165,8 @@ ulteriore destinazione possibile come g-nodo di livello 1; mentre per le possibi
 come g-nodo di livello 0 abbiamo che soltanto gli indirizzi IP interni al livello 1 (e inferiori)
 sono validi.
 
-Poi il programma...
+Poi il programma **qspnclient** rimuove dalle tabelle presenti nel vecchio network namespace le rotte
+verso i possibili indirizzi IP di destinazione relativi all'indirizzo che la vecchia identità aveva nel vecchio namespace.
 
 **sistema 𝛿**
 ```
@@ -202,18 +206,24 @@ ip route del 10.0.0.60/32 table ntk_from_00:16:3E:2D:8D:DE
 ip route del 10.0.0.48/32 table ntk_from_00:16:3E:2D:8D:DE
 ```
 
-Poi il programma...
+Poi il programma **qspnclient**, solo se il vecchio namespace è il default (come nel nostro caso),
+rimuove dal vecchio namespace gli indirizzi IP della vecchia identità che non saranno comuni
+con quelli della nuova identità.
 
 **sistema 𝛿**
 ```
+ip address del 10.0.0.49/32 dev eth1
+ip address del 10.0.0.61/32 dev eth1
 iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.29
 ip address del 10.0.0.29/32 dev eth1
 ip address del 10.0.0.93/32 dev eth1
-ip address del 10.0.0.61/32 dev eth1
-ip address del 10.0.0.49/32 dev eth1
 ```
 
-Poi il programma...
+Prendiamo di nuovo in considerazione tutti i possibili indirizzi IP di destinazione relativi all'indirizzo
+della vecchia identità nel nuovo namespace. In tutte le tabelle di inoltro che vanno usate nel nuovo
+network namespace, ma soltanto nelle tabelle di inoltro che hanno come nodo vicino un altro
+nodo che partecipa alla migrazione/ingresso, il programma aggiorna lo stato delle rotte sulla
+base delle conoscenze che l'identità aveva da prima e aggiunge la regola.
 
 **sistema 𝛿**
 ```
@@ -238,19 +248,12 @@ ip netns exec entr03 ip route change unreachable 10.0.0.40/32 table ntk_from_00:
 ip netns exec entr03 ip rule add fwmark 249 table ntk_from_00:16:3E:DF:23:F5
 ```
 
+Analogamente avremo queste operazioni nell'altro sistema la cui identità fa ingresso.
+
 **sistema 𝜇**
 ```
 (echo; echo "249 ntk_from_00:16:3E:B9:77:80 # xxx_table_ntk_from_00:16:3E:B9:77:80_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
 ip netns exec entr03 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:B9:77:80 -j MARK --set-mark 249
-ip netns exec entr03 ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:B9:77:80
-ip route del 10.0.0.29/32 table ntk
-ip route del 10.0.0.93/32 table ntk
-ip route del 10.0.0.61/32 table ntk
-ip route del 10.0.0.49/32 table ntk
-ip route del 10.0.0.29/32 table ntk_from_00:16:3E:1A:C4:45
-ip route del 10.0.0.93/32 table ntk_from_00:16:3E:1A:C4:45
-ip route del 10.0.0.61/32 table ntk_from_00:16:3E:1A:C4:45
-ip route del 10.0.0.49/32 table ntk_from_00:16:3E:1A:C4:45
 ip netns exec entr03 ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:B9:77:80
 ip netns exec entr03 ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:B9:77:80
 ip netns exec entr03 ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:B9:77:80
@@ -268,6 +271,8 @@ ip netns exec entr03 ip route add unreachable 10.0.0.28/31 table ntk_from_00:16:
 ip netns exec entr03 ip route add unreachable 10.0.0.92/31 table ntk_from_00:16:3E:B9:77:80
 ip netns exec entr03 ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:B9:77:80
 ip netns exec entr03 ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:B9:77:80
+ip netns exec entr03 ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:B9:77:80
+
 ip route del 10.0.0.0/29 table ntk
 ip route del 10.0.0.64/29 table ntk
 ip route del 10.0.0.8/29 table ntk
@@ -281,6 +286,10 @@ ip route del 10.0.0.30/31 table ntk
 ip route del 10.0.0.94/31 table ntk
 ip route del 10.0.0.62/31 table ntk
 ip route del 10.0.0.50/31 table ntk
+ip route del 10.0.0.29/32 table ntk
+ip route del 10.0.0.93/32 table ntk
+ip route del 10.0.0.61/32 table ntk
+ip route del 10.0.0.49/32 table ntk
 ip route del 10.0.0.0/29 table ntk_from_00:16:3E:1A:C4:45
 ip route del 10.0.0.64/29 table ntk_from_00:16:3E:1A:C4:45
 ip route del 10.0.0.8/29 table ntk_from_00:16:3E:1A:C4:45
@@ -294,11 +303,17 @@ ip route del 10.0.0.30/31 table ntk_from_00:16:3E:1A:C4:45
 ip route del 10.0.0.94/31 table ntk_from_00:16:3E:1A:C4:45
 ip route del 10.0.0.62/31 table ntk_from_00:16:3E:1A:C4:45
 ip route del 10.0.0.50/31 table ntk_from_00:16:3E:1A:C4:45
+ip route del 10.0.0.29/32 table ntk_from_00:16:3E:1A:C4:45
+ip route del 10.0.0.93/32 table ntk_from_00:16:3E:1A:C4:45
+ip route del 10.0.0.61/32 table ntk_from_00:16:3E:1A:C4:45
+ip route del 10.0.0.49/32 table ntk_from_00:16:3E:1A:C4:45
+
+ip address del 10.0.0.48/32 dev eth1
+ip address del 10.0.0.60/32 dev eth1
 iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.28
 ip address del 10.0.0.28/32 dev eth1
 ip address del 10.0.0.92/32 dev eth1
-ip address del 10.0.0.60/32 dev eth1
-ip address del 10.0.0.48/32 dev eth1
+
 ip netns exec entr03 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:B9:77:80
 ip netns exec entr03 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:B9:77:80
 ip netns exec entr03 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:B9:77:80

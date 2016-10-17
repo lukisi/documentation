@@ -89,7 +89,7 @@ Dall'esecuzione del metodo `add_identity` sul modulo Identities è necessario re
 Il nome del vecchio network namespace viene ora associato alla nuova identità, mentre quello del
 nuovo network namespace viene associato alla vecchia identità.
 
-#### Copia tabelle e regole, spostamento rotte
+#### <a name="Spostamento_rotte_identita"></a> Spostamento delle rotte della vecchia identità
 
 Sempre quando l'utente dà il comando `enter_net_phase_1`, in seguito alle operazioni viste
 prima, il programma **qspnclient** provvede come vediamo adesso a spostare la vecchia identità
@@ -111,14 +111,13 @@ namespace, cioè 1·0·1·3. Li memorizza associandoli a quella identità, ma in
 non li usa in quanto la vecchia identità non ha nessun arco ed è destinata a sparire immediatamente.
 
 Se la vecchia identità avesse avuto degli archi-qspn avrebbe usato nel nuovo network namespace le relative
-tabelle di inoltro. In esse il programma avrebbe dovuto aggiungere (in stato `unreachable`) tutti gli
-indirizzi IP di cui sopra. **TODO**: invece di dire questo, si rimandi al "caso_X" in cui si mostra come si fa.
+tabelle di inoltro. Vedremo nel ["caso 2"](DettagliOperazioni6.md#Spostamento_rotte_identita) cosa si fa per
+tali archi-qspn.
 
-Con le stesse modalità, il programma **qspnclient** calcola tutti i possibili indirizzi IP
-di destinazione relativi all'indirizzo che la vecchia identità aveva nel vecchio
-namespace, cioè 1·0·1·0. (**TODO**: in effetti erano precedentemente associati a quella identità)
-
-Nel vecchio namespace questi indirizzi erano stati aggiunti alle tabelle presenti. Nel caso in
+In precedenza il programma **qspnclient** aveva calcolato tutti i possibili indirizzi IP
+di destinazione relativi all'indirizzo che la vecchia identità aveva nel vecchio namespace, cioè 1·0·1·0,
+e li aveva associati a quella identità. Prima di sostituirli con quelli nuovi, il programma li
+recupera: infatti nel vecchio namespace questi indirizzi erano stati aggiunti alle tabelle presenti. Nel caso in
 esame si tratta della tabella `ntk` nel namespace default. Vanno ora rimossi.
 
 ```
@@ -157,13 +156,6 @@ iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.10
 ip address del 10.0.0.10/32 dev eth1
 ip address del 10.0.0.74/32 dev eth1
 ```
-
-Prendiamo di nuovo in considerazione tutti i possibili indirizzi IP di destinazione relativi all'indirizzo
-della vecchia identità nel nuovo namespace.
-Se la vecchia identità avesse avuto degli archi-qspn avrebbe usato nel nuovo network namespace le relative
-tabelle di inoltro. In esse, ma soltanto nelle tabelle di inoltro che hanno come nodo vicino un altro
-nodo che partecipa alla migrazione/ingresso, il programma avrebbe dovuto aggiornare lo stato delle rotte su tutti gli
-indirizzi IP di cui sopra. **TODO**: invece di dire questo, si rimandi al "caso_X" in cui si mostra come si fa.
 
 #### Popolamento nuove rotte della nuova identità
 
