@@ -166,7 +166,11 @@ come g-nodo di livello 0 abbiamo che soltanto gli indirizzi IP interni al livell
 sono validi.
 
 Poi il programma **qspnclient** rimuove dalle tabelle presenti nel vecchio network namespace le rotte
-verso i possibili indirizzi IP di destinazione relativi all'indirizzo che la vecchia identità aveva nel vecchio namespace.
+verso i possibili indirizzi IP di destinazione relativi all'indirizzo che la vecchia identità aveva nel
+vecchio namespace.  
+Non rimuove però le rotte verso indirizzi IP interni al g-nodo che fa ingresso in blocco. In questo
+caso gli indirizzi IP interni al g-nodo di livello 1 che portano a destinazioni che sono g-nodi
+di livello 0. Cioè 10.0.0.40/32 per *𝛿* e 10.0.0.41/32 per *𝜇*.
 
 **sistema 𝛿**
 ```
@@ -333,6 +337,63 @@ ip netns exec entr03 ip route change unreachable 10.0.0.60/31 table ntk_from_00:
 ip netns exec entr03 ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:B9:77:80
 ip netns exec entr03 ip route change unreachable 10.0.0.41/32 table ntk_from_00:16:3E:B9:77:80
 ip netns exec entr03 ip rule add fwmark 249 table ntk_from_00:16:3E:B9:77:80
+```
+
+#### Popolamento nuove rotte della nuova identità
+
+Sempre quando l'utente dà il comando `enter_net_phase_1`, in seguito alle operazioni viste
+prima, il programma **qspnclient** provvede come vediamo adesso a preparare il vecchio namespace
+per la nuova identità.
+
+Il programma **qspnclient** calcola tutti i possibili indirizzi IP di destinazione relativi all'indirizzo
+della nuova identità. Li memorizza associandoli a questa nuova identità.
+
+Nel vecchio network namespace abbiamo alcune tabelle pre-esistenti (che erano usate per la vecchia
+identità) e che vanno mantenute in quanto saranno usate dalla nuova identità. In questo caso si tratta della
+tabella `ntk` nel namespace default e della tabella di inoltro `ntk_from_00:16:3E:2D:8D:DE` che resta
+valida per la nuova identità in quanto identifica un arco interno al g-nodo che ha fatto ingresso.
+
+Tra gli indirizzi IP associati alla nuova identità, alcuni erano presenti nelle tabelle che erano
+pre-esistenti nel vecchio network namespace e non sono stati rimossi nella precedente fase.
+Cioè 10.0.0.40/32 per *𝛿* e 10.0.0.41/32 per *𝜇*.  
+Gli altri vanno ora aggiunti alle tabelle pre-esistenti nel vecchio namespace.
+
+**sistema 𝛿**
+```
+ip route add unreachable 10.0.0.0/29 table ntk
+ip route add unreachable 10.0.0.64/29 table ntk
+ip route add unreachable 10.0.0.8/29 table ntk
+ip route add unreachable 10.0.0.72/29 table ntk
+ip route add unreachable 10.0.0.24/29 table ntk
+ip route add unreachable 10.0.0.88/29 table ntk
+ip route add unreachable 10.0.0.16/30 table ntk
+ip route add unreachable 10.0.0.80/30 table ntk
+ip route add unreachable 10.0.0.56/30 table ntk
+ip route add unreachable 10.0.0.20/31 table ntk
+ip route add unreachable 10.0.0.84/31 table ntk
+ip route add unreachable 10.0.0.60/31 table ntk
+ip route add unreachable 10.0.0.48/31 table ntk
+ip route add unreachable 10.0.0.22/31 table ntk
+ip route add unreachable 10.0.0.86/31 table ntk
+ip route add unreachable 10.0.0.62/31 table ntk
+ip route add unreachable 10.0.0.50/31 table ntk
+ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.22/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.86/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:2D:8D:DE
+ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:2D:8D:DE
 ```
 
 [Operazione seguente](DettagliOperazioni7.md)
