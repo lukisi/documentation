@@ -20,9 +20,14 @@ questa decisione. Questo permette all'utente di dirigere il proprio ambiente di 
 particolari scenari, come ad esempio un gruppo di macchine virtuali che condividono un unico dominio di broadcast
 ma vogliono simulare un gruppo di sistemi wireless disposti in un determinato modo.
 
-Per ogni arco che il modulo Neighborhood realizza, le informazioni a disposizione (il nome dell'interfaccia
-di rete reale nel sistema locale, il MAC address e il link-local dell'interfaccia di rete reale nel
-sistema vicino) sono visualizzate all'utente.
+Quando il modulo Neighborhood realizza un arco, il programma **qspnclient** mostra all'utente le informazioni
+relative insieme ad un indice autoincrementante *neighborarc_nextindex*, che parte da 0, con il quale
+l'utente lo identifica nei comandi che vedremo sotto. Le informazioni relative all'arco sono:
+
+*   Il nome dell'interfaccia di rete reale nel sistema locale (insieme al suo MAC address perché l'utente abbia
+    un riferimento quando dà i comandi nel sistema all'altro capo).
+*   Il MAC address e il link-local dell'interfaccia di rete reale nel sistema vicino.
+*   Il costo misurato (RTT in microsecondi).
 
 Sempre per dare all'utente il maggior controllo possibile sulle dinamiche del test, anche il costo
 di un arco che viene rilevato dal modulo Neighborhood non è lo stesso che viene usato dal programma
@@ -31,7 +36,9 @@ di un arco che viene rilevato dal modulo Neighborhood non è lo stesso che viene
 Quando l'utente decide di accettare un arco lo comunica al programma **qspnclient** con il comando
 `add_real_arc` e indica quale costo gli vuole associare. Se vuole in seguito variare il costo
 lo può fare con il comando `change_real_arc`. Se vuole in seguito simularne la completa rimozione
-lo può fare con il comando `remove_real_arc`.
+lo può fare con il comando `remove_real_arc`.  
+L'utente quando dà uno di questi comandi ad un sistema dovrà in tempi rapidi dare il relativo omologo
+comando al sistema all'altro capo.
 
 Quando l'utente aggiunge un arco avviene nel programma **qspnclient** quello che nel vero demone *ntkd* avverrebbe
 appena il modulo Neighborhood segnala la creazione di un arco.  
