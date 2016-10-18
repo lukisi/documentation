@@ -4,14 +4,38 @@
 
 ### <a name="Ingresso_rete_1"></a> Ingresso in una rete - Caso 1
 
-Sia *𝛼* un singolo nodo che costituiva una rete a sé; esso si incontra con un
-diverso singolo nodo *𝛽*; il nodo *𝛽* appartiene ad un g-nodo di livello 1 che ha una posizione
-libera per *𝛼*.
+Sia *𝛼* un sistema. In esso l'identità *𝛼<sub>0</sub>* costituiva una rete a sé. Esso si incontra con un
+diverso sistema *𝛽*. In esso l'identità *𝛽<sub>0</sub>* appartiene ad un g-nodo di livello 1 che ha una posizione
+libera per un singolo nodo.
+
+Ricordiamo che usando il programma **qspnclient** l'utente (sia nel sistema *𝛼* che nel sistema *𝛽*) vede
+che il modulo Neighborhood ha realizzato un arco fisico. Poi decide che tale arco vada effettivamente
+sfruttato e lo comunica a entrambi i sistemi in tempi rapidi. A questo punto l'utente vede che
+il modulo Identities ha realizzato un arco-identità per l'identità principale del sistema (sia in *𝛼*
+che in *𝛽*) e vede l'indice con cui può identificare tale arco-identità al programma **qspnclient**.
+
+Assumiamo che gli indirizzi link-local delle interfacce di rete reali che vengono a trovarsi a
+portata di collegamento siano 169.254.96.141 per il sistema *𝛼* e 169.254.94.223 per il sistema *𝛽*.
+Quindi il modulo Neighborhood ha già prodotto questi comandi:
+
+**sistema 𝛼**
+```
+ip route add 169.254.94.223 dev eth1 src 169.254.96.141
+```
+
+**sistema 𝛽**
+```
+ip route add 169.254.96.141 dev eth1 src 169.254.94.223
+```
+
+Assumiamo anche che l'utente abbia dato i comandi per accettare tale arco su entrambi i sistemi
+e che abbia annotato gli identificativi dell'arco-identità che il modulo Identities (sia in *𝛼*
+che in *𝛽*) ha realizzato per le relative identità principali.
 
 La sequenza di istruzioni che l'utente darà ai singoli nodi *𝛼* e *𝛽* sarà questa:
 
 *   Al sistema *𝛼* dà il comando `prepare_enter_net_phase_1`, indicando queste informazioni:
-    *   identità entrante. L'identificativo di una identità di *𝛼*. Sia in questo esempio *𝛼<sub>0</sub>*.
+    *   identità entrante. L'identificativo di una identità di *𝛼*. In questo esempio è *𝛼<sub>0</sub>*.
     *   livello g-nodo entrante *k*. Il livello del g-nodo che fa ingresso. In questo esempio è 0.  
         L'identità *𝛼<sub>0</sub>* deve produrre una copia (sia essa *𝛼<sub>1</sub>*) che farà
         ingresso insieme al suo g-nodo di livello *k*. Chiamiamo questo g-nodo *𝜑* e il nuovo g-nodo isomorfo *𝜑'*.
@@ -27,8 +51,9 @@ La sequenza di istruzioni che l'utente darà ai singoli nodi *𝛼* e *𝛽* sar
         vecchia rete che dovrà assumere *𝜑*. Consistono nella posizione *virtuale* e l'anzianità del g-nodo di
         livello direttamente superiore a *𝜑*.
     *   nuovi archi-qspn. Cioè quali archi-identità fra quelli di *𝛼<sub>0</sub>* (l'identità entrante)
-        saranno archi nella nuova rete. Oltre a quelli che sono già noti in quanto interni al g-nodo entrante *𝜑'*.  
-        Ricordiamo che ogni arco-identità riceve un identificativo che viene mostrato all'utente.
+        saranno archi nella nuova rete. Oltre a quelli che sono già noti in quanto interni al g-nodo entrante *𝜑*.
+        In realtà gli archi-identità che diverranno archi-qspn sono quelli duplicati per l'identità
+        *𝛼<sub>1</sub>*.
     *   l'identificativo di questa operazione di ingresso. Chiamiamolo *m<sub>𝜑</sub>*.
     *   l'identificativo dell'operazione di migrazione (eventuale) al termine della quale si potrà
         prendere la posizione *reale* di cui sopra dentro *𝜒*. Chiamiamolo *m<sub>𝜓</sub>*, ad indicare che
@@ -38,11 +63,15 @@ La sequenza di istruzioni che l'utente darà ai singoli nodi *𝛼* e *𝛽* sar
     *   si proceda con l'operazione di ingresso *m<sub>𝜑</sub>*.
     *   se *m<sub>𝜓</sub>* era nullo: è implicita la richiesta di procedere immediatamente dopo con l'assegnazione
         dell'indirizzo *reale* dentro *𝜒*.
+*   Al sistema *𝛽* dà il comando `add_qspn_arc`, indicando queste informazioni:
+    *   identità locale. L'identificativo di una identità di *𝛽*. In questo esempio è *𝛽<sub>0</sub>*.
+    *   nuovo arco-qspn. Cioè un arco-identità fra quelli di *𝛽<sub>0</sub>* che diverrà un arco-qspn.
+        In realtà l'arco-identità indicato è un arco-identità tra *𝛽<sub>0</sub>* e *𝛼<sub>0</sub>*,
+        mentre quello che diverrà arco-qspn è quello duplicato tra *𝛽<sub>0</sub>* e *𝛼<sub>1</sub>*.
 *   Soltanto se *m<sub>𝜓</sub>* non è nullo: al sistema *𝛼* dà il comando `enter_net_phase_2`, indicando queste informazioni:
     *   è stata completata la migrazione *m<sub>𝜓</sub>*; quindi è ora disponibile l'indirizzo *reale* dentro *𝜒*.
 
-Risulta chiaro che in questo caso banale il tutto si sarebbe potuto fare con un solo comando dato dall'utente
-nel sistema *𝛼* e che si poteva fare a meno di passare per l'indirizzo temporaneo *virtuale*. Ma per
+Risulta chiaro che in questo caso banale si poteva fare a meno di passare per l'indirizzo temporaneo *virtuale*. Ma per
 semplicità manteniamo la sola modalità generica.
 
 #### Comando prepare_enter_net_phase_1
@@ -57,6 +86,7 @@ Quando l'utente dà il comando `enter_net_phase_1` fornisce l'identificativo del
 ingresso. Il programma **qspnclient** recupera le informazioni memorizzate prima. Poi chiama il
 metodo `add_identity` del modulo Identities. Il modulo Identities produce quindi queste operazioni:
 
+**sistema 𝛼**
 ```
 ip netns add entr02
 ip netns exec entr02 sysctl net.ipv4.ip_forward=1
@@ -89,6 +119,14 @@ Dall'esecuzione del metodo `add_identity` sul modulo Identities è necessario re
 Il nome del vecchio network namespace viene ora associato alla nuova identità, mentre quello del
 nuovo network namespace viene associato alla vecchia identità.
 
+Nel sistema *𝛽* il modulo Identities in autonomia (a fronte del comando `enter_net_phase_1` dato nel sistema
+*𝛼*) produce queste operazioni:
+
+**sistema 𝛽**
+```
+ip route add 169.254.215.29 dev eth1 src 169.254.94.223
+```
+
 #### <a name="Spostamento_rotte_identita"></a> Spostamento delle rotte della vecchia identità
 
 Sempre quando l'utente dà il comando `enter_net_phase_1`, in seguito alle operazioni viste
@@ -120,6 +158,7 @@ e li aveva associati a quella identità. Prima di sostituirli con quelli nuovi, 
 recupera: infatti nel vecchio namespace questi indirizzi erano stati aggiunti alle tabelle presenti. Nel caso in
 esame si tratta della tabella `ntk` nel namespace default. Vanno ora rimossi.
 
+**sistema 𝛼**
 ```
 ip route del 10.0.0.0/29 table ntk
 ip route del 10.0.0.64/29 table ntk
@@ -148,6 +187,7 @@ con quelli della nuova identità. In particolare, dovendo rimuovere l'indirizzo 
 rimuove la regola (se presente) di source-natting per i pacchetti anonimi che transitano per questo
 sistema. Rimuove anche (se presente) l'indirizzo IP anonimizzante.
 
+**sistema 𝛼**
 ```
 ip address del 10.0.0.40/32 dev eth1
 ip address del 10.0.0.50/32 dev eth1
@@ -169,6 +209,7 @@ della nuova identità. Li memorizza associandoli a questa nuova identità.
 Questi vanno ora aggiunti alle tabelle presenti nel vecchio namespace. In questo caso si tratta della
 tabella `ntk` nel namespace default.
 
+**sistema 𝛼**
 ```
 ip route add unreachable 10.0.0.0/29 table ntk
 ip route add unreachable 10.0.0.64/29 table ntk
@@ -210,6 +251,7 @@ Tenendo traccia inoltre delle tabelle già inserite nel file `/etc/iproute2/rt_t
 eseguire le operazioni che seguono. Lo deve fare per tutti gli archi-qspn passati al QspnManager. Come sempre,
 vanno eseguite in blocco senza intromissioni da altre tasklet.
 
+**sistema 𝛼**
 ```
 (echo; echo "250 ntk_from_00:16:3E:5B:78:D5 # xxx_table_ntk_from_00:16:3E:5B:78:D5_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
 iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:5B:78:D5 -j MARK --set-mark 250
@@ -236,6 +278,40 @@ ip route add unreachable 10.0.0.87/32 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.63/32 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:5B:78:D5
+```
+
+Quando l'utente dà il comando `add_qspn_arc` nel sistema *𝛽*, il programma **qspnclient**
+aggiunge sulla relativa istanza di QspnManager un nuovo arco-qspn. Di tale arco-identità il
+programma conosce:
+
+*   MAC address del vicino.
+*   Indirizzo IP linklocal del vicino.
+
+Il programma è in grado di eseguire le operazioni che seguono. Come sempre,
+vanno eseguite in blocco senza intromissioni da altre tasklet.
+
+**sistema 𝛽**
+```
+(echo; echo "250 ntk_from_00:16:3E:EC:A3:E1 # xxx_table_ntk_from_00:16:3E:EC:A3:E1_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 250
+ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.23/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
 ```
 
 #### Processazione di un ETP
@@ -273,6 +349,7 @@ rotte verso gli indirizzi che non sono più validi a causa di questo nuovo ident
 Notiamo che questo avviene anche nelle identità *di connettività* (che gestiscono un namespace
 diverso dal default) e anche se l'indirizzo Netsukuku non è del tutto *reale*.
 
+**sistema 𝛼**
 ```
 ip route del 10.0.0.23/32 table ntk
 ip route del 10.0.0.87/32 table ntk
@@ -299,6 +376,7 @@ Infine aggiorna tutte le rotte nella tabella `ntk` per fare in modo di mettere i
 un src preferito. In questo caso non avevamo nessuna rotta nota poiché ancora nessun ETP era stato ricevuto
 e l'ingresso era da parte di un singolo nodo. Comunque riportiamo la sequenza di operazioni completa.
 
+**sistema 𝛼**
 ```
 ip address add 10.0.0.41 dev eth1
 ip address add 10.0.0.51 dev eth1
@@ -342,6 +420,7 @@ tutte le tabelle presenti, ma per quelle di inoltro solo se abbiamo ricevuto alm
 ETP da quell'arco; in seguito viene aggiunta la regola per le tabelle di inoltro il cui arco ha ricevuto
 proprio adesso il primo ETP.
 
+**sistema 𝛼**
 ```
 ip route change unreachable 10.0.0.0/29 table ntk
 ip route change unreachable 10.0.0.64/29 table ntk
@@ -387,6 +466,7 @@ ip rule add fwmark 250 table ntk_from_00:16:3E:5B:78:D5
 Sempre quando l'utente dà il comando `enter_net_phase_1`, in seguito alle operazioni viste
 prima, il programma **qspnclient** dismette la vecchia identità.
 
+**sistema 𝛼**
 ```
 ip netns exec entr02 ip route flush table main
 ip netns exec entr02 ip link delete entr02_eth1 type macvlan
