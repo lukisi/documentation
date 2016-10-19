@@ -244,7 +244,8 @@ ip route del 10.0.0.48/32 table ntk_from_00:16:3E:2D:8D:DE
 
 Poi il programma **qspnclient**, solo se il vecchio namespace è il default (come nel nostro caso),
 rimuove dal vecchio namespace gli indirizzi IP della vecchia identità che non saranno comuni
-con quelli della nuova identità.
+con quelli della nuova identità. Cioè quelli interni ai g-nodi di livello maggiore del
+livello del nuovo g-nodo che si è costituito nella nuova rete.
 
 **sistema 𝛿**
 ```
@@ -254,6 +255,28 @@ iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.29
 ip address del 10.0.0.29/32 dev eth1
 ip address del 10.0.0.93/32 dev eth1
 ```
+
+* * *
+
+**Osservazione.**
+In generale può succedere che un g-nodo di livello *i* fa ingresso in altra rete
+andando a costituire un nuovo g-nodo di livello *j* in un g-nodo esistente di livello *j* + 1, con *j* > *i*.  
+Ad esempio un singolo nodo, invece di costituire un nuovo singolo nodo all'interno di un g-nodo esistente
+di livello 1, potrebbe trovarsi a costituire un nuovo g-nodo di livello 1 all'interno di un g-nodo esistente
+di livello 2.
+
+Quando un g-nodo *𝜑* di livello *i* migra o fa ingresso in una rete, sicuramente il suo indirizzo Netsukuku
+è tale che tutte le posizioni maggiori o uguali a *i* sono *reali*. Questo ci assicura che se *𝜑'* prende
+posto in un g-nodo *𝜒* di livello *k* maggiore di *i* + 1, allora il nuovo indirizzo Netsukuku di ogni
+singolo nodo in *𝜑'* sarà composto di:
+
+*   Gli identificativi di *𝜒* per i livelli da *l* - 1 a *k*.
+*   L'identificativo assegnato a *𝜑'* al livello *k* - 1.
+*   Gli identificativi di *𝜑* per i livelli da *k* - 2 a 0.
+
+Questo ci assicura che i livelli da *l* - 1 a *i* sono tutti *reali*.
+
+* * *
 
 Prendiamo di nuovo in considerazione tutti i possibili indirizzi IP di destinazione relativi all'indirizzo
 della vecchia identità nel nuovo namespace. In tutte le tabelle di inoltro che vanno usate nel nuovo
@@ -386,8 +409,9 @@ tabella `ntk` nel namespace default e della tabella di inoltro `ntk_from_00:16:3
 valida per la nuova identità in quanto identifica un arco interno al g-nodo che ha fatto ingresso.
 
 Tra gli indirizzi IP associati alla nuova identità, alcuni erano presenti nelle tabelle che erano
-pre-esistenti nel vecchio network namespace e non sono stati rimossi nella precedente fase.
-Cioè 10.0.0.40/32 per *𝛿* e 10.0.0.41/32 per *𝜇*.  
+pre-esistenti nel vecchio network namespace e non sono stati rimossi nella precedente fase.  
+Cioè quelli interni ai g-nodi di livello minore o uguale al livello del nuovo g-nodo che si è
+costituito nella nuova rete. Cioè 10.0.0.40/32 per *𝛿* e 10.0.0.41/32 per *𝜇*.  
 Gli altri vanno ora aggiunti alle tabelle pre-esistenti nel vecchio namespace.
 
 **sistema 𝛿**
@@ -651,7 +675,7 @@ ip route change unreachable 10.0.0.49/32 table ntk_from_00:16:3E:1A:C4:45
 
 In questa occasione il programma **qspnclient** aggiunge ad ogni interfaccia di rete reale nel network
 namespace default gli indirizzi propri che prima non era possibile computare e adesso invece sì,
-partendo dal livello più basso e salendo finché possibile.
+partendo dal livello del nuovo g-nodo che si è costituito nella nuova rete e salendo finché possibile.
 
 Poi, solo se l'indirizzo è ora del tutto *reale*, aggiunge (opzionalmente) la regola di source-natting
 e (opzionalmente) l'indirizzo IP anonimizzante.

@@ -197,18 +197,6 @@ L'utente istruisce il sistema *𝛿* di fare ingresso, insieme al suo g-nodo di 
 L'utente istruisce il sistema *𝜇* di fare ingresso, insieme al suo g-nodo di livello 1, nella rete in un dato g-nodo.
 Poi l'utente istruisce i sistemi della nuova rete sulla presenza di nuovi archi nella rete.
 
-**Osservazione.**
-Quando un g-nodo *𝜑* di livello *i* migra o fa ingresso in una rete, sicuramente il suo indirizzo Netsukuku
-è tale che tutte le posizioni maggiori o uguali a *i* sono *reali*. Questo ci assicura che se *𝜑'* prende
-posto in un g-nodo *𝜒* di livello *k* maggiore di *i* + 1, allora il nuovo indirizzo Netsukuku di ogni
-singolo nodo in *𝜑'* sarà composto di:
-
-*   Gli identificativi di *𝜒* per i livelli da *l* - 1 a *k*.
-*   L'identificativo assegnato a *𝜑'* al livello *k* - 1.
-*   Gli identificativi di *𝜑* per i livelli da *k* - 2 a 0.
-
-Questo ci assicura che i livelli da *l* - 1 a *i* sono tutti *reali*.
-
 ## <a name="Vecchio"></a>Vecchio
 
 ### <a name="Primi_passi"></a>Primi passi
