@@ -130,13 +130,25 @@ Esaminiamo il caso più banale: sia *𝛼* un singolo nodo che costituiva una re
 diverso singolo nodo *𝛽*; il nodo *𝛽* appartiene ad un g-nodo di livello 1 che ha una posizione
 libera per *𝛼*.
 
+L'utente istruisce il sistema *𝛼* di fare ingresso nella rete in un dato g-nodo. Poi l'utente istruisce
+il sistema *𝛽* sulla presenza di un nuovo arco nella rete, tramite il quale esso può trasmettere
+e ricevere degli ETP per esplorare la rete.
+
 Dopo che l'utente ha istruito il sistema *𝛼* di fare ingresso, il programma **qspnclient** opera:
 
 *   la duplicazione dell'identità,
 *   lo spostamento della vecchia identità in un nuovo namespace temporaneo,
-*   la preparazione del vecchio namespace per la nuova identità e le prime operazioni della nuova
-    identità per l'effettivo ingresso nella rete,
+*   la preparazione del vecchio namespace per la nuova identità,
+*   la costituzione di nuove tabelle per l'inoltro sulla base degli archi nuovi,
 *   la dismissione della vecchia identità.
+
+Dopo che l'utente ha istruito il sistema *𝛽* sulla presenza di un nuovo arco nella rete, il programma **qspnclient** opera:
+
+*   la costituzione di una nuova tabella per l'inoltro.
+
+Dopo che sono stati processati nuovi ETP (sia in *𝛼* che in *𝛽*) il programma **qspnclient** opera:
+
+*   l'aggiornamento delle rotte nelle varie tabelle.
 
 ### <a name="Nuovo_vicino_stessa_rete"></a> Un nuovo vicino nella stessa rete viene rilevato
 
@@ -180,6 +192,10 @@ Esaminiamo un altro caso di incontro di due reti distinte. Sia *𝜑* un g-nodo 
 connesso costituito da alcuni nodi, ad esempio *𝛿<sub>0</sub>* e *𝜇<sub>1</sub>*. Avvenga che tale
 g-nodo si incontra per effetto di qualche arco con una diversa rete. Sia *𝜒* un g-nodo di questa rete
 di livello *k* maggiore di *i* che ha un posto *reale* libero al livello *k* - 1 per *𝜑'*.
+
+L'utente istruisce il sistema *𝛿* di fare ingresso, insieme al suo g-nodo di livello 1, nella rete in un dato g-nodo.
+L'utente istruisce il sistema *𝜇* di fare ingresso, insieme al suo g-nodo di livello 1, nella rete in un dato g-nodo.
+Poi l'utente istruisce i sistemi della nuova rete sulla presenza di nuovi archi nella rete.
 
 **Osservazione.**
 Quando un g-nodo *𝜑* di livello *i* migra o fa ingresso in una rete, sicuramente il suo indirizzo Netsukuku
