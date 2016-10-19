@@ -484,4 +484,12 @@ ip netns exec entr02 ip link delete entr02_eth1 type macvlan
 ip netns del entr02
 ```
 
+Nel sistema *𝛽* il modulo Identities in autonomia (a fronte della dismissione della vecchia identità di
+*𝛼*) produce queste operazioni:
+
+**sistema 𝛽**
+```
+ip route del 169.254.215.29 dev eth1 src 169.254.94.223
+```
+
 [Operazione seguente](DettagliOperazioni5.md)
