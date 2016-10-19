@@ -65,9 +65,20 @@ La sequenza di istruzioni che l'utente darà ai singoli nodi *𝛼* e *𝛽* sar
         dell'indirizzo *reale* dentro *𝜒*.
 *   Al sistema *𝛽* dà il comando `add_qspn_arc`, indicando queste informazioni:
     *   identità locale. L'identificativo di una identità di *𝛽*. In questo esempio è *𝛽<sub>0</sub>*.
-    *   nuovo arco-qspn. Cioè un arco-identità fra quelli di *𝛽<sub>0</sub>* che diverrà un arco-qspn.
-        In realtà l'arco-identità indicato è un arco-identità tra *𝛽<sub>0</sub>* e *𝛼<sub>0</sub>*,
-        mentre quello che diverrà arco-qspn è quello duplicato tra *𝛽<sub>0</sub>* e *𝛼<sub>1</sub>*.
+    *   nuovo arco-qspn. Cioè un arco-identità fra quelli di *𝛽<sub>0</sub>* che diverrà un arco-qspn.  
+        In realtà se l'utente volesse individuare l'arco-identità di *𝛽<sub>0</sub>* prima di dare
+        il comando `enter_net_phase_1` nel sistema *𝛼*, allora l'unico che esiste è quello tra *𝛽<sub>0</sub>*
+        e *𝛼<sub>0</sub>*. Invece quello che vogliamo far diventare un arco-qspn è quello duplicato
+        tra *𝛽<sub>0</sub>* e *𝛼<sub>1</sub>*.  
+        Nel momento in cui l'utente dà il comando `enter_net_phase_1` nel sistema *𝛼* avviene che
+        si duplica *𝛼<sub>0</sub>* in *𝛼<sub>1</sub>* e si duplica l'arco-identità *𝛽<sub>0</sub>*-*𝛼<sub>0</sub>*
+        in *𝛽<sub>0</sub>*-*𝛼<sub>1</sub>*. Nel sistema *𝛽* il modulo Identities produrrà due eventi: la
+        modifica delle proprietà (peer-MAC e peer-link-local) dell'arco-identità *𝛽<sub>0</sub>*-*𝛼<sub>0</sub>*
+        e l'aggiunta dell'arco-identità *𝛽<sub>0</sub>*-*𝛼<sub>1</sub>* con le vecchie proprietà (peer-MAC e
+        peer-link-local) dell'arco-identità *𝛽<sub>0</sub>*-*𝛼<sub>0</sub>*. Questo significa che
+        se il comando `add_qspn_arc` nel sistema *𝛽* viene dato con sufficiente ritardo, sarà possibile
+        identificare l'arco *𝛽<sub>0</sub>*-*𝛼<sub>1</sub>* indicando il MAC address del vicino, il quale
+        è noto all'utente anche prima.
 *   Soltanto se *m<sub>𝜓</sub>* non è nullo: al sistema *𝛼* dà il comando `enter_net_phase_2`, indicando queste informazioni:
     *   è stata completata la migrazione *m<sub>𝜓</sub>*; quindi è ora disponibile l'indirizzo *reale* dentro *𝜒*.
 
