@@ -76,13 +76,15 @@ La sequenza di istruzioni che l'utente darà ai sistemi *𝛿* e *𝜇* sarà qu
     *   nuovi archi-qspn: nessuno.
     *   identificativo di questa operazione di ingresso: *m<sub>𝜑</sub>*.
     *   identificativo della previa operazione di migrazione: nullo.
-*   Al sistema *𝛾* dà il comando `add_qspn_arc`, indicando queste informazioni:
-    *   identità locale. *𝛾<sub>0</sub>*.
-    *   nuovo arco-qspn. Il peer-MAC dell'arco-identità *𝛿<sub>0</sub>*-*𝛾<sub>0</sub>* nel sistema *𝛾*.
 *   Al sistema *𝛿* dà il comando `enter_net_phase_1`, indicando queste informazioni:
     *   identificativo di operazione di ingresso: *m<sub>𝜑</sub>*.
 *   Al sistema *𝜇* dà il comando `enter_net_phase_1`, indicando queste informazioni:
     *   identificativo di operazione di ingresso: *m<sub>𝜑</sub>*.
+*   Al sistema *𝛾* dà il comando `add_qspn_arc`, indicando queste informazioni:
+    *   identità locale. *𝛾<sub>0</sub>*.
+    *   nuovo arco-qspn. Il peer-MAC dell'arco-identità *𝛿<sub>0</sub>*-*𝛾<sub>0</sub>* nel sistema *𝛾*.
+*   Poiché *"identificativo della previa operazione di migrazione"* è nullo, non serve dare il
+    comando `enter_net_phase_2` ai sistemi *𝛿* e *𝜇*.
 
 #### Comando prepare_enter_net_phase_1
 
