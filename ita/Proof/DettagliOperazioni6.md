@@ -408,7 +408,8 @@ della nuova identità. Li memorizza associandoli a questa nuova identità.
 Nel vecchio network namespace abbiamo alcune tabelle pre-esistenti (che erano usate per la vecchia
 identità) e che vanno mantenute in quanto saranno usate dalla nuova identità. In questo caso si tratta della
 tabella `ntk` nel namespace default e della tabella di inoltro `ntk_from_00:16:3E:2D:8D:DE` che resta
-valida per la nuova identità in quanto identifica un arco interno al g-nodo che ha fatto ingresso.
+valida per la nuova identità in quanto identifica un arco interno al g-nodo che ha fatto ingresso (il programma
+lo capisce dal fatto che l'arco-identità originante ha cambiato il peer-MAC nel nuovo network namespace).
 
 Tra gli indirizzi IP associati alla nuova identità, alcuni erano presenti nelle tabelle che erano
 pre-esistenti nel vecchio network namespace e non sono stati rimossi nella precedente fase.  
