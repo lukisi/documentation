@@ -154,9 +154,9 @@ Dopo che sono stati processati nuovi ETP (sia in *𝛼* che in *𝛽*) il progra
 
 [Dettagli](DettagliOperazioni5.md)
 
-Dall'altra parte, una identità nel sistema *𝛽* rileva un nuovo vicino *𝛼* che inizialmente non fa parte della sua
-rete. Poi viene a sapere (tramite il modulo Identities) che una nuova identità di *𝛼* fa adesso parte della
-sua rete.
+Quando il modulo Identities costituisce l'arco-identità principale sopra un arco fisico, le due identità
+collegate potrebbero essere già nella stessa rete. In questo caso l'utente deve istruire
+entrambi i sistemi sulla presenza di un nuovo arco nella rete.
 
 In questa occasione il programma **qspnclient** prepara una tabella di inoltro per i pacchetti che
 provengono dal nuovo MAC address rilevato; però questa tabella di inoltro non viene attivata fino a

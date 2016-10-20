@@ -105,6 +105,7 @@ next
 
 #### Parte 6
 
+<a name="computo_indirizzi_ip_destinazioni"></a>
 Il programma **qspnclient** computa gli indirizzi IP di tutte le possibili destinazioni relative
 all'indirizzo Netsukuku che inizialmente va assegnato al sistema. Per ognuno assegna una rotta
 nella tabella `ntk` come `unreachable`.

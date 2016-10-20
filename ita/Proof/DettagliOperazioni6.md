@@ -29,7 +29,7 @@ ip route add 169.254.253.216 dev eth1 src 169.254.94.223
 ```
 
 L'utente ha dato i comandi per accettare tale arco su entrambi i sistemi. Il modulo Identities ha
-quindi realizzato per le relative identità principali un nuovo arco-identità. L'utente ha
+quindi realizzato per le relative identità principali un nuovo arco-identità *𝛿<sub>0</sub>*-*𝛾<sub>0</sub>*. L'utente ha
 annotato l'identificativo del nuovo arco-identità nel sistema *𝛿* e il peer-MAC nel
 sistema *𝛾*.
 
@@ -53,7 +53,8 @@ La sequenza di istruzioni che l'utente darà ai sistemi *𝛿* e *𝜇* sarà qu
         *   Anzianità: 1.
     *   nuovi archi-qspn: 1.
         *   `identityarc_index`: 4. Assumiamo che questo sia il valore assegnato come identificativo
-            all'arco-identità *𝛿<sub>0</sub>*-*𝛾<sub>0</sub>*.
+            all'arco-identità *𝛿<sub>0</sub>*-*𝛾<sub>0</sub>* nel sistema *𝛿* prima della duplicazione
+            dell'identità *𝛿<sub>0</sub>*.
     *   identificativo di questa operazione di ingresso: *m<sub>𝜑</sub>*.
     *   identificativo della previa operazione di migrazione: nullo.
 *   Al sistema *𝜇* dà il comando `prepare_enter_net_phase_1`, indicando queste informazioni:
@@ -77,7 +78,7 @@ La sequenza di istruzioni che l'utente darà ai sistemi *𝛿* e *𝜇* sarà qu
     *   identificativo della previa operazione di migrazione: nullo.
 *   Al sistema *𝛾* dà il comando `add_qspn_arc`, indicando queste informazioni:
     *   identità locale. *𝛾<sub>0</sub>*.
-    *   nuovo arco-qspn. Il peer-MAC del nuovo arco-identità nel sistema *𝛾*.
+    *   nuovo arco-qspn. Il peer-MAC dell'arco-identità *𝛿<sub>0</sub>*-*𝛾<sub>0</sub>* nel sistema *𝛾*.
 *   Al sistema *𝛿* dà il comando `enter_net_phase_1`, indicando queste informazioni:
     *   identificativo di operazione di ingresso: *m<sub>𝜑</sub>*.
 *   Al sistema *𝜇* dà il comando `enter_net_phase_1`, indicando queste informazioni:
@@ -162,6 +163,7 @@ livello *"livello g-nodo entrante"* la *"posizione di connettività"*. Quindi in
 abbiamo 3·1·2·X, dove X vale 0 per *𝛿<sub>0</sub>* e 1 per *𝜇<sub>1</sub>*.
 
 Il programma **qspnclient** calcola tutti i possibili indirizzi IP di destinazione, ognuno con suffisso CIDR,
+(come riportato [qui](DettagliOperazioni1.md#computo_indirizzi_ip_destinazioni))
 relativi all'indirizzo della vecchia identità nel nuovo namespace. Il programma li memorizza associandoli a
 quella identità.
 
@@ -260,19 +262,19 @@ ip address del 10.0.0.93/32 dev eth1
 
 **Osservazione.**
 In generale può succedere che un g-nodo di livello *i* fa ingresso in altra rete
-andando a costituire un nuovo g-nodo di livello *j* in un g-nodo esistente di livello *j* + 1, con *j* > *i*.  
-Ad esempio un singolo nodo, invece di costituire un nuovo singolo nodo all'interno di un g-nodo esistente
-di livello 1, potrebbe trovarsi a costituire un nuovo g-nodo di livello 1 all'interno di un g-nodo esistente
+andando a costituire un nuovo g-nodo di livello *j* in un g-nodo esistente di livello *j* + 1, con *j* ≥ *i*.  
+Ad esempio un singolo nodo potrebbe costituire un nuovo singolo nodo all'interno di un g-nodo esistente
+di livello 1, oppure potrebbe trovarsi a costituire un nuovo g-nodo di livello 1 all'interno di un g-nodo esistente
 di livello 2.
 
 Quando un g-nodo *𝜑* di livello *i* migra o fa ingresso in una rete, sicuramente il suo indirizzo Netsukuku
-è tale che tutte le posizioni maggiori o uguali a *i* sono *reali*. Questo ci assicura che se *𝜑'* prende
-posto in un g-nodo *𝜒* di livello *k* maggiore di *i* + 1, allora il nuovo indirizzo Netsukuku di ogni
-singolo nodo in *𝜑'* sarà composto di:
+è tale che tutte le posizioni maggiori o uguali a *i* sono *reali*. Perciò quando *𝜑'* prende
+posto in un g-nodo *𝜒* di livello *k* maggiore di *i*, comporremo il nuovo indirizzo Netsukuku di ogni
+singolo nodo in *𝜑'* in questo modo:
 
 *   Gli identificativi di *𝜒* per i livelli da *l* - 1 a *k*.
 *   L'identificativo assegnato a *𝜑'* al livello *k* - 1.
-*   Gli identificativi di *𝜑* per i livelli da *k* - 2 a 0.
+*   Gli identificativi che aveva la precedente identità in *𝜑* per i livelli da *k* - 2 a 0.
 
 Questo ci assicura che i livelli da *l* - 1 a *i* sono tutti *reali*.
 
