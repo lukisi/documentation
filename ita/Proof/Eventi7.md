@@ -230,7 +230,6 @@ ip netns del entr05
 **sistema 𝛽**
 ```
 ip route del 169.254.133.31 dev eth1 src 169.254.96.141
-ip netns exec migr01 ip route del 169.254.133.31 dev migr01_eth1 src 169.254.27.218
 ```
 
 [Pagina seguente](Eventi8.md)

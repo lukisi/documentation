@@ -19,7 +19,6 @@ ip netns exec migr01 ip address add 169.254.27.218 dev migr01_eth1
 ip netns exec migr01 ip route add 169.254.69.30 dev migr01_eth1 src 169.254.27.218
 ip netns exec migr01 ip route add 169.254.94.223 dev migr01_eth1 src 169.254.27.218
 ip netns exec migr01 ip route add 169.254.163.36 dev migr01_eth1 src 169.254.27.218
-ip netns exec migr01 ip route add 169.254.133.31 dev migr01_eth1 src 169.254.27.218
 ```
 
 **sistema 𝛼**
@@ -35,7 +34,6 @@ ip route add 169.254.27.218 dev eth1 src 169.254.94.223
 **sistema 𝜀**
 ```
 ip route add 169.254.27.218 dev eth1 src 169.254.163.36
-ip netns exec entr05 ip route add 169.254.27.218 dev entr05_eth1 src 169.254.133.31
 ```
 
 Sequenza di operazioni eseguita dal modulo Identities su richiesta del programma **qspnclient** quando
