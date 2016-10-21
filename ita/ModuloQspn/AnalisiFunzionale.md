@@ -81,7 +81,7 @@ per *p*. I concetti qui enunciati di g-nodi e livelli verranno chiariti in segui
 
 Il modulo QSPN nel nodo *n* considera *vicino di n* un nodo *v* se è a conoscenza di uno o più archi che collegano
 *n* a *v*. La conoscenza degli archi a disposizione del nodo *n* viene passata al modulo come requisito. Il modulo
-assume che i nodi collegati ai suoi archi appartengano alla sua stessa rete.
+QSPN assume che i nodi collegati ai suoi archi appartengano alla sua stessa rete.
 
 Per ogni arco di cui il modulo QSPN viene portato a conoscenza, esso genera un identificativo che possa essere
 considerato univoco. Si adotta un numero random in uno spazio sufficientemente grande. Questo identificativo
@@ -95,16 +95,19 @@ tramite un arco che conosce. Questo fatto comporta il seguente problema.
 Siano *n* e *v* due nodi appartenenti alla stessa rete che non hanno alcun arco tra di loro, cioè non sono vicini.
 Supponiamo che viene a formarsi un collegamento diretto tra di essi, che quindi diventano vicini. Il nodo *n* si
 avvede per primo della presenza di *v* e lo contatta per formare un arco (questo avviene al di fuori del modulo QSPN).
-Il nodo *v* conferma. Di seguito entrambi avviano una prima misurazione del costo dell'arco. Soltanto a misurazione
-avvenuta il modulo QSPN viene informato della presenza di un arco. Sia *n* il nodo che per primo completa la misurazione.
+Il nodo *v* conferma. Di seguito entrambi avviano una prima misurazione del costo dell'arco (anche questo avviene al
+di fuori del modulo QSPN). Di seguito i sistemi verificano se appartengono alla stessa rete (anche questo avviene al
+di fuori del modulo QSPN). Solo in caso affermativo i sistemi informano ciascuno il proprio modulo QSPN
+della presenza di un arco. Sia *n* il sistema che per primo dà questa informazione al suo modulo QSPN.
 Il modulo QSPN del nodo *n* riceve la notifica di un nuovo arco e cerca di contattare il nodo *v* per richiedere un ETP.
-Il nodo *v* non ha ancora completato la misurazione, quindi il modulo QSPN del nodo *v* non trova l'arco nella sua lista.
+Il nodo *v* non ha ancora dato questa informazione al suo modulo QSPN, quindi il modulo non trova l'arco nella sua lista.
 
 Questo problema rende necessario che quando il modulo QSPN in un nodo *v* riceve una richiesta da un vicino e non trova
 l'arco relativo nella sua lista, prima aspetti un certo tempo e verifichi di nuovo la presenza dell'arco. Dopo questa
 attesa, che chiamiamo *tempo di rilevamento dell'arco*, se l'arco risulta ancora sconosciuto, il modulo potrà ignorare
 la richiesta o rifiutarla con una eccezione. La durata di questa attesa deve essere passata al modulo QSPN dal suo
-utilizzatore, in quanto il modulo non conosce i dettagli dell'iter di misurazione del costo dell'arco.
+utilizzatore, in quanto il modulo QSPN non conosce i dettagli dell'iter che porta il suo utilizzatore a comunicargli
+la presenza di un arco.
 
 <a name="StrutturaGerarchica"></a>
 
