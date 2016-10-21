@@ -78,7 +78,13 @@ La sequenza di istruzioni che l'utente darà ai singoli nodi *𝛼* e *𝛽* sar
         peer-link-local) dell'arco-identità *𝛽<sub>0</sub>*-*𝛼<sub>0</sub>*. Questo significa che
         se il comando `add_qspn_arc` nel sistema *𝛽* viene dato con sufficiente ritardo, sarà possibile
         identificare l'arco *𝛽<sub>0</sub>*-*𝛼<sub>1</sub>* indicando il MAC address del vicino, il quale
-        è noto all'utente anche prima.
+        è noto all'utente anche prima.  
+        Allo stesso tempo, è necessario che il comando `add_qspn_arc` nel sistema *𝛽* venga dato in tempi
+        vicini al comando `enter_net_phase_1` nel sistema *𝛼*: cioè è necessario che da una parte la costruzione
+        dell'istanza di QspnManager di *𝛼* con il nuovo arco-qspn verso *𝛽*, dall'altra parte la comunicazione
+        all'istanza di QspnManager di *𝛽* riguardo il nuovo arco-qspn verso *𝛼*, avvengano in tempi vicini.  
+        Per conciliare queste necessità, il *tempo di rilevamento dell'arco* che il programma **qspnclient**
+        fornisce al modulo Qspn è abbastanza alto.
 *   Soltanto se *m<sub>𝜓</sub>* non è nullo: al sistema *𝛼* dà il comando `enter_net_phase_2`, indicando queste informazioni:
     *   è stata completata la migrazione *m<sub>𝜓</sub>*; quindi è ora disponibile l'indirizzo *reale* dentro *𝜒*.
 

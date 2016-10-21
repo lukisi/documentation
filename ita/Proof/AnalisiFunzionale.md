@@ -10,6 +10,7 @@
     1.  [Un nuovo vicino nella stessa rete viene rilevato](#Nuovo_vicino_stessa_rete)
     1.  [Un arco con un vicino nella stessa rete viene rimosso](#Rimosso_vicino_stessa_rete)
     1.  [Ingresso in una rete - Caso 2](#Ingresso_rete_2)
+    1.  [Migrazione per ingresso - Caso 1](#Migrazione_ingresso_1)
 1.  [Vecchio](#Vecchio)
     1.  [Primi passi](#Primi_passi)
     1.  [Da riordinare](#Da_riordinare)
@@ -196,6 +197,31 @@ di livello *k* maggiore di *i* che ha un posto *reale* libero al livello *k* -�
 L'utente istruisce il sistema *𝛿* di fare ingresso, insieme al suo g-nodo di livello 1, nella rete in un dato g-nodo.
 L'utente istruisce il sistema *𝜇* di fare ingresso, insieme al suo g-nodo di livello 1, nella rete in un dato g-nodo.
 Poi l'utente istruisce i sistemi della nuova rete sulla presenza di nuovi archi nella rete.
+
+### <a name="Migrazione_ingresso_1"></a> Migrazione per ingresso - Caso 1
+
+[Dettagli](DettagliOperazioni7.md)
+
+A volte per permettere l'ingresso di un g-nodo in una rete è necessario operare una o più migrazioni
+di altri g-nodi nella rete ospitante. Questa lista di migrazioni è detta *migration path*.
+
+Esaminiamo il caso banale: sia *𝜑* un g-nodo di livello 1 composto da *𝛽<sub>1</sub>* e *𝛾<sub>0</sub>*.
+Sia *𝜀<sub>0</sub>* un singolo nodo che vuole entrare in *𝜑*. Per permettere l'ingresso è necessario
+che *𝛽<sub>1</sub>* migri in un diverso g-nodo di livello 1, *𝜓* adiacente a *𝜑*.
+
+L'utente istruisce il sistema *𝜀* di fare ingresso come singolo nodo in *𝜑*, indicando che il cambio
+della posizione a livello 0 del suo nuovo indirizzo Netsukuku da *virtuale* a *reale* potrà avvenire solo
+al termine della migrazione *m<sub>𝛽</sub>*.  
+Poi l'utente istruisce i sistemi della nuova rete sulla presenza di nuovi archi nella rete. Potrebbe essere
+anche il solo nodo *𝛽<sub>1</sub>* ad avere un arco verso *𝜀*: infatti esso resta come identità di
+connettività in *𝜑*.  
+Poi l'utente istruisce il sistema *𝛽* di migrare come singolo nodo in *𝜓*, indicando che il cambio
+della posizione a livello 0 del suo nuovo indirizzo Netsukuku da *virtuale* a *reale* potrà avvenire
+immediatamente.  
+Anche per questa migrazione come per l'ingresso, l'utente istruisce gli altri sistemi della rete
+sulla presenza di nuovi archi. In questo caso abbiamo ad esempio il nodo *𝛼* che aveva un arco verso *𝛽<sub>1</sub>*
+e ora ha un nuovo arco verso *𝛽<sub>2</sub>*.  
+Infine l'utente istruisce il sistema *𝜀* che la migrazione *m<sub>𝛽</sub>* è terminata.
 
 ## <a name="Vecchio"></a>Vecchio
 
