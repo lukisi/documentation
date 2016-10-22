@@ -26,7 +26,7 @@ L'utente ha annotato l'identificativo del nuovo arco-identità nel sistema *𝜀
 
 L'utente stabilisce la migration path che porta a liberare un posto in *𝜑*. Il nodo *𝛽<sub>1</sub>* è
 un border-nodo di *𝜑*: infatti esso ha un arco verso *𝛼<sub>1</sub>* (l'identità principale nel
-sistema *𝛼*) che appartiene al g-nodo *𝜓* di livello 1 che ha un posto libero. L'utente quindi
+sistema *𝛼*) che appartiene al g-nodo *𝜓* di livello 1. Il g-nodo *𝜓* ha un posto libero. L'utente quindi
 si annota l'identificativo dell'arco-identità *𝛽<sub>1</sub>*-*𝛼<sub>1</sub>* nel sistema *𝛽* e
 il relativo peer-MAC nel sistema *𝛼*.
 
@@ -75,9 +75,6 @@ La sequenza di istruzioni che l'utente darà ai sistemi sarà questa:
     *   posizione di connettività.
         *   Identificativo: 3.
         *   Anzianità: 3.
-    *   nuovi archi-qspn: 1.
-        *   `identityarc_index`: l'identificativo dell'arco-identità *𝛽<sub>1</sub>*-*𝛼<sub>1</sub>*
-            nel sistema *𝛽* prima della duplicazione dell'identità *𝛽<sub>1</sub>*.
     *   identificativo di questa operazione di ingresso: *m<sub>𝛽</sub>*.
     *   identificativo della previa operazione di migrazione: nullo.
 *   Al sistema *𝛽* dà il comando `migrate`, indicando queste informazioni:
@@ -88,5 +85,94 @@ La sequenza di istruzioni che l'utente darà ai sistemi sarà questa:
         sistema *𝛼* prima della duplicazione dell'identità *𝛽<sub>1</sub>*.
 *   Al sistema *𝜀* dà il comando `enter_net_phase_2`, indicando queste informazioni:
     *   è stata completata la migrazione *m<sub>𝛽</sub>*; quindi è ora disponibile l'indirizzo *reale* dentro *𝜑*.
+
+#### Comando prepare_enter_net_phase_1 al sistema *𝜀*
+
+Il programma **qspnclient** chiama il metodo `prepare_add_identity` del modulo Identities e memorizza le
+informazioni relative all'ingresso.
+
+#### Comando enter_net_phase_1 al sistema *𝜀*
+
+Il programma **qspnclient** recupera le informazioni relative all'ingresso e chiama il metodo `add_identity`
+del modulo Identities. Il modulo Identities produce quindi queste operazioni:
+
+**sistema 𝜀**
+```
+ip netns add entr05
+ip netns exec entr05 sysctl net.ipv4.ip_forward=1
+ip netns exec entr05 sysctl net.ipv4.conf.all.rp_filter=0
+ip link add dev entr05_eth1 link eth1 type macvlan
+ip link set dev entr05_eth1 netns entr05
+ip netns exec entr05 sysctl net.ipv4.conf.entr05_eth1.rp_filter=0
+ip netns exec entr05 sysctl net.ipv4.conf.entr05_eth1.arp_ignore=1
+ip netns exec entr05 sysctl net.ipv4.conf.entr05_eth1.arp_announce=2
+ip netns exec entr05 ip link set dev entr05_eth1 up
+ip netns exec entr05 ip address add 169.254.133.31 dev entr05_eth1
+ip netns exec entr05 ip route add 169.254.96.141 dev entr05_eth1 src 169.254.133.31
+```
+
+Il programma **qspnclient** memorizza lo scambio di network namespace tra le due identità *𝜀<sub>0</sub>* e
+*𝜀<sub>1</sub>*.
+
+Nel sistema *𝛽* il modulo Identities in autonomia (a fronte del comando `enter_net_phase_1` dato nel sistema
+*𝜀*) produce queste operazioni:
+
+**sistema 𝛽**
+```
+ip route add 169.254.133.31 dev eth1 src 169.254.96.141
+```
+
+#### <a name="Spostamento_rotte_identita"></a> Spostamento delle rotte della vecchia identità
+
+Il programma **qspnclient** decide quali tabelle di inoltro vanno usate nel nuovo network namespace.
+In questo caso, nessuna. Infatti il sistema *𝜀* era isolato.
+
+Il programma **qspnclient** calcola l'indirizzo della vecchia identità nel nuovo namespace a partire
+dall'indirizzo Netsukuku precedente della vecchia identità (assumiamo sia 3·1·0·0), sostituendo al
+livello *"livello g-nodo entrante"* la *"posizione di connettività"*. Quindi in questo caso abbiamo 3·1·0·2.
+Calcola tutti i possibili indirizzi IP di destinazione e li memorizza associandoli a quella identità.
+
+Ma prima recupera tutti i possibili indirizzi IP di destinazione relativi all'indirizzo che quella identità
+aveva nel vecchio namespace, cioè 3·1·0·0, per rimuoverli dalle tabelle presenti nel vecchio namespace. Nel caso in
+esame si tratta della tabella `ntk` nel namespace default.
+
+**sistema 𝜀**
+```
+ip route del 10.0.0.0/29 table ntk
+ip route del 10.0.0.64/29 table ntk
+ip route del 10.0.0.8/29 table ntk
+ip route del 10.0.0.72/29 table ntk
+ip route del 10.0.0.16/29 table ntk
+ip route del 10.0.0.80/29 table ntk
+ip route del 10.0.0.24/30 table ntk
+ip route del 10.0.0.88/30 table ntk
+ip route del 10.0.0.56/30 table ntk
+ip route del 10.0.0.30/31 table ntk
+ip route del 10.0.0.94/31 table ntk
+ip route del 10.0.0.62/31 table ntk
+ip route del 10.0.0.50/31 table ntk
+ip route del 10.0.0.29/32 table ntk
+ip route del 10.0.0.93/32 table ntk
+ip route del 10.0.0.61/32 table ntk
+ip route del 10.0.0.49/32 table ntk
+ip route del 10.0.0.41/32 table ntk
+```
+
+Partendo dal livello del nuovo g-nodo che si è costituito nella nuova rete (nel nostro caso 0) e salendo fino a
+*l* - 1, solo se il vecchio namespace è il default (come nel nostro caso), il programma **qspnclient**
+rimuove dal vecchio namespace gli indirizzi IP della vecchia identità che non saranno comuni
+con quelli della nuova identità. In particolare, dovendo rimuovere l'indirizzo IP globale, prima
+rimuove la regola (se presente) di source-natting per i pacchetti anonimi che transitano per questo
+sistema. Rimuove anche (se presente) l'indirizzo IP anonimizzante.
+
+**sistema 𝜀**
+```
+ip address del 10.0.0.40/32 dev eth1
+ip address del 10.0.0.48/32 dev eth1
+ip address del 10.0.0.60/32 dev eth1
+iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.28
+ip address del 10.0.0.28/32 dev eth1
+ip address del 10.0.0.92/32 dev eth1
+```
 
 [Operazione seguente](DettagliOperazioni8.md)

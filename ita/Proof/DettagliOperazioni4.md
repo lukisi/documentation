@@ -198,7 +198,7 @@ ip route del 10.0.0.51/32 table ntk
 ip route del 10.0.0.41/32 table ntk
 ```
 
-Partendo dal livello del g-nodo entrante *k* (nel nostro caso 0) e salendo fino a
+Partendo dal livello del nuovo g-nodo che si è costituito nella nuova rete (nel nostro caso 0) e salendo fino a
 *l* - 1, solo se il vecchio namespace è il default (come nel nostro caso), il programma **qspnclient**
 rimuove dal vecchio namespace gli indirizzi IP della vecchia identità che non saranno comuni
 con quelli della nuova identità. In particolare, dovendo rimuovere l'indirizzo IP globale, prima
