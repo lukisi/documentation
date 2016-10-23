@@ -56,7 +56,7 @@ La sequenza di istruzioni che l'utente darà ai sistemi sarà questa:
 *   Al sistema *𝜀* dà il comando `enter_net_phase_1`, indicando queste informazioni:
     *   si proceda con l'operazione di ingresso *m<sub>𝜀</sub>*.
 *   Al sistema *𝛽* dà il comando `add_qspn_arc`, indicando queste informazioni:
-    *   identità locale. *𝛽<sub>0</sub>*.
+    *   identità locale. *𝛽<sub>1</sub>*.
     *   nuovo arco-qspn. Il peer-MAC dell'arco-identità *𝜀<sub>0</sub>*-*𝛽<sub>1</sub>* nel
         sistema *𝛽* prima della duplicazione dell'identità *𝜀<sub>0</sub>*.
 *   Al sistema *𝛽* dà il comando `prepare_migrate`, indicando queste informazioni:
@@ -221,6 +221,106 @@ ip route add unreachable 10.0.0.87/32 table ntk
 ip route add unreachable 10.0.0.63/32 table ntk
 ip route add unreachable 10.0.0.51/32 table ntk
 ip route add unreachable 10.0.0.41/32 table ntk
+```
+
+#### Creazione e popolamento iniziale di tabelle per l'inoltro
+
+Sempre quando l'utente dà il comando `enter_net_phase_1`, in seguito alle operazioni viste
+prima, il programma **qspnclient** crea una istanza di QspnManager per la sua nuova identità e gli
+comunica (nel costruttore) di quali archi-qspn dispone.
+
+Nel nostro esempio ci sarà un nuovo
+arco-qspn, comunicato dall'utente nel comando `prepare_enter_net_phase_1`. Di tale arco-identità il
+programma conosce:
+
+*   MAC address del vicino.
+*   Indirizzo IP linklocal del vicino.
+
+Tenendo traccia inoltre delle tabelle già inserite nel file `/etc/iproute2/rt_tables`, il programma è in grado di
+eseguire le operazioni che seguono. Lo deve fare per tutti gli archi-qspn passati al QspnManager. Come sempre,
+vanno eseguite in blocco senza intromissioni da altre tasklet.
+
+**sistema 𝜀**
+```
+(echo; echo "250 ntk_from_00:16:3E:EC:A3:E1 # xxx_table_ntk_from_00:16:3E:EC:A3:E1_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:EC:A3:E1 -j MARK --set-mark 250
+ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.22/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.86/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.62/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.50/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.23/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.87/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
+ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
+```
+
+Quando l'utente dà il comando `add_qspn_arc` nel sistema *𝛽*, il programma **qspnclient**
+aggiunge sulla relativa istanza di QspnManager un nuovo arco-qspn. Di tale arco-identità il
+programma conosce:
+
+*   MAC address del vicino.
+*   Indirizzo IP linklocal del vicino.
+
+Il programma è in grado di eseguire le operazioni che seguono. Come sempre,
+vanno eseguite in blocco senza intromissioni da altre tasklet.
+
+**sistema 𝛽**
+```
+(echo; echo "248 ntk_from_00:16:3E:3C:14:33 # xxx_table_ntk_from_00:16:3E:3C:14:33_xxx") | tee -a /etc/iproute2/rt_tables >/dev/null
+iptables -t mangle -A PREROUTING -m mac --mac-source 00:16:3E:3C:14:33 -j MARK --set-mark 248
+ip route add unreachable 10.0.0.0/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.64/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.8/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.72/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.24/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.88/29 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.16/30 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.80/30 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.56/30 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.20/31 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.84/31 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.60/31 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.48/31 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.22/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.86/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.62/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.50/32 table ntk_from_00:16:3E:3C:14:33
+ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:3C:14:33
+```
+
+#### Dismissione identità
+
+Sempre quando l'utente dà il comando `enter_net_phase_1`, in seguito alle operazioni viste
+prima, il programma **qspnclient** dismette la vecchia identità.
+
+**sistema 𝜀**
+```
+ip netns exec entr05 ip route flush table main
+ip netns exec entr05 ip link delete entr05_eth1 type macvlan
+ip netns del entr05
+```
+
+Nel sistema *𝛽* il modulo Identities in autonomia (a fronte della dismissione della vecchia identità di
+*𝜀*) produce queste operazioni:
+
+**sistema 𝛽**
+```
+ip route del 169.254.133.31 dev eth1 src 169.254.96.141
 ```
 
 [Operazione seguente](DettagliOperazioni8.md)
