@@ -58,8 +58,10 @@ La sequenza di istruzioni che l'utente darà ai sistemi sarà questa:
 *   Al sistema *𝛽* dà il comando `add_qspn_arc`, indicando queste informazioni:
     *   identità locale. *𝛽<sub>1</sub>*.
     *   nuovo arco-qspn. Il peer-MAC dell'arco-identità *𝜀<sub>0</sub>*-*𝛽<sub>1</sub>* nel
-        sistema *𝛽* prima della duplicazione dell'identità *𝜀<sub>0</sub>*.
-*   Al sistema *𝛽* dà il comando `prepare_migrate`, indicando queste informazioni:
+        sistema *𝛽* prima della duplicazione dell'identità *𝜀<sub>0</sub>*.  
+        È necessario che il comando `add_qspn_arc` nel sistema *𝛽* venga dato dopo il completamento
+        del comando `enter_net_phase_1` nel sistema *𝜀* con sufficiente ritardo, ma in tempi rapidi.
+*   Al sistema *𝛽* dà il comando `prepare_migrate_phase_1`, indicando queste informazioni:
     *   identità migrante: *𝛽<sub>1</sub>*. Sia il duplicato *𝛽<sub>2</sub>*.
     *   livello g-nodo migrante: 0.
     *   g-nodo ospitante *𝜓*:
@@ -77,12 +79,14 @@ La sequenza di istruzioni che l'utente darà ai sistemi sarà questa:
         *   Anzianità: 3.
     *   identificativo di questa operazione di ingresso: *m<sub>𝛽</sub>*.
     *   identificativo della previa operazione di migrazione: nullo.
-*   Al sistema *𝛽* dà il comando `migrate`, indicando queste informazioni:
+*   Al sistema *𝛽* dà il comando `migrate_phase_1`, indicando queste informazioni:
     *   si proceda con l'operazione di migrazione *m<sub>𝛽</sub>*.
 *   Al sistema *𝛼* dà il comando `add_qspn_arc`, indicando queste informazioni:
     *   identità locale. *𝛼<sub>1</sub>*.
     *   nuovo arco-qspn. Il peer-MAC dell'arco-identità *𝛽<sub>1</sub>*-*𝛼<sub>1</sub>* nel
-        sistema *𝛼* prima della duplicazione dell'identità *𝛽<sub>1</sub>*.
+        sistema *𝛼* prima della duplicazione dell'identità *𝛽<sub>1</sub>*.  
+        È necessario che il comando `add_qspn_arc` nel sistema *𝛼* venga dato dopo il completamento
+        del comando `migrate_phase_1` nel sistema *𝛽* con sufficiente ritardo, ma in tempi rapidi.
 *   Al sistema *𝜀* dà il comando `enter_net_phase_2`, indicando queste informazioni:
     *   è stata completata la migrazione *m<sub>𝛽</sub>*; quindi è ora disponibile l'indirizzo *reale* dentro *𝜑*.
 
@@ -268,6 +272,8 @@ ip route add unreachable 10.0.0.63/32 table ntk_from_00:16:3E:EC:A3:E1
 ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EC:A3:E1
 ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EC:A3:E1
 ```
+
+#### Comando add_qspn_arc al sistema *𝛽*
 
 Quando l'utente dà il comando `add_qspn_arc` nel sistema *𝛽*, il programma **qspnclient**
 aggiunge sulla relativa istanza di QspnManager un nuovo arco-qspn. Di tale arco-identità il

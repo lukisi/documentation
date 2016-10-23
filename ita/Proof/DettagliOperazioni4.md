@@ -298,6 +298,8 @@ ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:5B:78:D5
 ```
 
+#### Comando add_qspn_arc
+
 Quando l'utente dà il comando `add_qspn_arc` nel sistema *𝛽*, il programma **qspnclient**
 aggiunge sulla relativa istanza di QspnManager un nuovo arco-qspn. Di tale arco-identità il
 programma conosce:

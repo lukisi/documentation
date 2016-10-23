@@ -82,7 +82,13 @@ La sequenza di istruzioni che l'utente darà ai sistemi *𝛿* e *𝜇* sarà qu
     *   identificativo di operazione di ingresso: *m<sub>𝜑</sub>*.
 *   Al sistema *𝛾* dà il comando `add_qspn_arc`, indicando queste informazioni:
     *   identità locale. *𝛾<sub>0</sub>*.
-    *   nuovo arco-qspn. Il peer-MAC dell'arco-identità *𝛿<sub>0</sub>*-*𝛾<sub>0</sub>* nel sistema *𝛾*.
+    *   nuovo arco-qspn. Il peer-MAC dell'arco-identità *𝛿<sub>0</sub>*-*𝛾<sub>0</sub>* nel sistema *𝛾*.  
+        È necessario che il comando `add_qspn_arc` nel sistema *𝛾* venga dato dopo il completamento
+        del comando `enter_net_phase_1` nel sistema *𝛿* con sufficiente ritardo affinché il peer-MAC che
+        l'utente specifica sia ormai associato all'arco-identità *𝛿<sub>1</sub>*-*𝛾<sub>0</sub>*, cioè
+        l'arco con la nuova identità di *𝛿*. Allo stesso tempo è necessario che sia dato in tempi rapidi
+        dopo il comando `enter_net_phase_1` nel sistema *𝛿* perché non deve scadere il tempo di rilevamento
+        dell'arco per il modulo Qspn.
 *   Poiché *"identificativo della previa operazione di migrazione"* è nullo, non serve dare il
     comando `enter_net_phase_2` ai sistemi *𝛿* e *𝜇*.
 
@@ -540,6 +546,8 @@ ip route add unreachable 10.0.0.62/31 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.50/31 table ntk_from_00:16:3E:5B:78:D5
 ip route add unreachable 10.0.0.40/32 table ntk_from_00:16:3E:5B:78:D5
 ```
+
+#### Comando add_qspn_arc
 
 Quando l'utente dà il comando `add_qspn_arc` nel sistema *𝛾*, il programma **qspnclient**
 aggiunge sulla relativa istanza di QspnManager un nuovo arco-qspn. Di tale arco-identità il
