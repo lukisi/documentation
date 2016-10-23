@@ -203,8 +203,10 @@ sono validi.
 
 Poi il programma **qspnclient** rimuove dalle tabelle presenti nel vecchio network namespace le rotte
 verso i possibili indirizzi IP di destinazione relativi all'indirizzo che la vecchia identità aveva nel
-vecchio namespace.  
-Non rimuove però le rotte verso indirizzi IP interni al g-nodo che fa ingresso in blocco. In questo
+vecchio namespace e che ora non sono più validi.  
+Consideriamo le destinazioni di livello minore del livello del g-nodo che fa ingresso in blocco. Relativamente
+a queste consideriamo gli indirizzi IP interni ai g-nodi di livello minore o uguale al livello del g-nodo che
+fa ingresso in blocco. Tali rotte non vanno rimosse. In questo
 caso gli indirizzi IP interni al g-nodo di livello 1 che portano a destinazioni che sono g-nodi
 di livello 0. Cioè 10.0.0.40/32 per *𝛿* e 10.0.0.41/32 per *𝜇*.
 
@@ -413,10 +415,11 @@ tabella `ntk` nel namespace default e della tabella di inoltro `ntk_from_00:16:3
 valida per la nuova identità in quanto identifica un arco interno al g-nodo che ha fatto ingresso (il programma
 lo capisce dal fatto che l'arco-identità originante ha cambiato il peer-MAC nel nuovo network namespace).
 
-Tra gli indirizzi IP associati alla nuova identità, alcuni erano presenti nelle tabelle che erano
+Tra gli indirizzi IP di possibili destinazioni associate alla nuova identità, alcuni erano presenti nelle tabelle che erano
 pre-esistenti nel vecchio network namespace e non sono stati rimossi nella precedente fase.  
-Cioè quelli interni ai g-nodi di livello minore o uguale al livello del nuovo g-nodo che si è
-costituito nella nuova rete. Cioè 10.0.0.40/32 per *𝛿* e 10.0.0.41/32 per *𝜇*.  
+Cioè, relativamente alle destinazioni di livello minore del livello del g-nodo che fa ingresso in blocco,
+gli indirizzi IP interni ai g-nodi di livello minore o uguale al livello del g-nodo che
+fa ingresso in blocco. Cioè 10.0.0.40/32 per *𝛿* e 10.0.0.41/32 per *𝜇*.  
 Gli altri vanno ora aggiunti alle tabelle pre-esistenti nel vecchio namespace.
 
 **sistema 𝛿**

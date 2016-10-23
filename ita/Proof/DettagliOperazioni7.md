@@ -133,8 +133,11 @@ livello *"livello g-nodo entrante"* la *"posizione di connettività"*. Quindi in
 Calcola tutti i possibili indirizzi IP di destinazione e li memorizza associandoli a quella identità.
 
 Ma prima recupera tutti i possibili indirizzi IP di destinazione relativi all'indirizzo che quella identità
-aveva nel vecchio namespace, cioè 3·1·0·0, per rimuoverli dalle tabelle presenti nel vecchio namespace. Nel caso in
-esame si tratta della tabella `ntk` nel namespace default.
+aveva nel vecchio namespace, cioè 3·1·0·0, e che ora non sono più validi.  
+Cioè, relativamente a tutte le destinazioni, gli indirizzi IP globali e quelli interni ai g-nodi di livello
+maggiore del livello del g-nodo che fa ingresso in blocco.  
+Le rotte verso tali indirizzi vanno rimosse dalle tabelle presenti nel vecchio namespace. Nel caso in
+esame si tratta di tutte le rotte (in quanto il g-nodo che fa ingresso è di livello 0) nella tabella `ntk` nel namespace default.
 
 **sistema 𝜀**
 ```
@@ -173,6 +176,51 @@ ip address del 10.0.0.60/32 dev eth1
 iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.28
 ip address del 10.0.0.28/32 dev eth1
 ip address del 10.0.0.92/32 dev eth1
+```
+
+#### Popolamento nuove rotte della nuova identità
+
+Sempre quando l'utente dà il comando `enter_net_phase_1`, in seguito alle operazioni viste
+prima, il programma **qspnclient** provvede come vediamo adesso a preparare il vecchio namespace
+per la nuova identità.
+
+Il programma **qspnclient** calcola tutti i possibili indirizzi IP di destinazione relativi all'indirizzo
+della nuova identità. Li memorizza associandoli a questa nuova identità.
+
+Nel vecchio network namespace abbiamo alcune tabelle pre-esistenti (che erano usate per la vecchia
+identità) e che vanno mantenute in quanto saranno usate dalla nuova identità. In questo caso si tratta della
+sola tabella `ntk` nel namespace default.
+
+Nel caso in esame, poiché il livello del g-nodo che entra è 0, non ci sono indirizzi IP di possibili
+destinazioni che non erano stati rimossi dalle tabelle nella precedente fase. Altrimenti andrebbero considerati.  
+Nel nostro caso tutti gli indirizzi IP di destinazione appena calcolati vanno ora aggiunti alle tabelle
+pre-esistenti nel vecchio namespace.
+
+**sistema 𝜀**
+```
+ip route add unreachable 10.0.0.0/29 table ntk
+ip route add unreachable 10.0.0.64/29 table ntk
+ip route add unreachable 10.0.0.8/29 table ntk
+ip route add unreachable 10.0.0.72/29 table ntk
+ip route add unreachable 10.0.0.24/29 table ntk
+ip route add unreachable 10.0.0.88/29 table ntk
+ip route add unreachable 10.0.0.16/30 table ntk
+ip route add unreachable 10.0.0.80/30 table ntk
+ip route add unreachable 10.0.0.56/30 table ntk
+ip route add unreachable 10.0.0.20/31 table ntk
+ip route add unreachable 10.0.0.84/31 table ntk
+ip route add unreachable 10.0.0.60/31 table ntk
+ip route add unreachable 10.0.0.48/31 table ntk
+ip route add unreachable 10.0.0.22/32 table ntk
+ip route add unreachable 10.0.0.86/32 table ntk
+ip route add unreachable 10.0.0.62/32 table ntk
+ip route add unreachable 10.0.0.50/32 table ntk
+ip route add unreachable 10.0.0.40/32 table ntk
+ip route add unreachable 10.0.0.23/32 table ntk
+ip route add unreachable 10.0.0.87/32 table ntk
+ip route add unreachable 10.0.0.63/32 table ntk
+ip route add unreachable 10.0.0.51/32 table ntk
+ip route add unreachable 10.0.0.41/32 table ntk
 ```
 
 [Operazione seguente](DettagliOperazioni8.md)
