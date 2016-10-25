@@ -1,6 +1,6 @@
-# Proof of concept - Dettagli Operazioni - Pagina 7
+# Proof of concept - Dettagli Operazioni - Pagina 8
 
-[Operazione precedente](DettagliOperazioni6.md)
+[Operazione precedente](DettagliOperazioni7.md)
 
 ### <a name="Migrazione_ingresso_1"></a> Migrazione per ingresso - Caso 1
 
@@ -521,4 +521,15 @@ ip rule del fwmark 250 table ntk_from_00:16:3E:5B:78:D5
 ip rule del fwmark 249 table ntk_from_00:16:3E:FD:E2:AA
 ```
 
-[Operazione seguente](DettagliOperazioni8.md)
+#### migr01: Cambio di indirizzo della vecchia identità
+
+Poi il programma **qspnclient**, sempre a seguito del comando `migrate_phase_1`, istruisce
+il QspnManager sul cambio di indirizzo della vecchia identità. Nell'esempio corrente abbiamo
+che tale identità assume un identificativo *virtuale* al livello 0.
+
+Questo determina la produzione di un ETP che viene trasmesso dal sistema *𝛽* ai suoi vicini e che
+interessa solo il sistema *𝛾*. Avremo quindi una serie di operazioni eseguite dal programma **qspnclient**
+nel sistema *𝛾* a seguito della processazione di un ETP. Queste non vengono riportate qui in quanto sono
+state trattate in precedenza.
+
+[Operazione seguente](DettagliOperazioni9.md)
