@@ -46,7 +46,7 @@ ip route add 169.254.27.218 dev eth1 src 169.254.94.223
 ip route add 169.254.27.218 dev eth1 src 169.254.163.36
 ```
 
-#### <a name="Spostamento_rotte_identita"></a> Spostamento delle rotte della vecchia identità
+#### <a name="Migrazione_Spostamento_rotte_identita"></a> Migrazione: Spostamento delle rotte della vecchia identità
 
 Il programma **qspnclient** decide quali tabelle di inoltro vanno usate nel nuovo network namespace.
 In questo caso abbiamo l'arco-identità *𝛽<sub>1</sub>*-*𝛼<sub>1</sub>* che era associato ad un arco-qspn
@@ -199,7 +199,7 @@ ip netns exec migr01 ip route change blackhole 10.0.0.41/32 table ntk_from_00:16
 ip netns exec migr01 ip rule add fwmark 249 table ntk_from_00:16:3E:FD:E2:AA
 ```
 
-#### migr01: Aggiornamento dei gateway che si sono spostati in un diverso namespace
+#### Migrazione: Aggiornamento dei gateway che si sono spostati in un diverso namespace
 
 In questa situazione notiamo che la preparazione del vecchio namespace per la nuova identità
 viene rimandata a dopo che i vicini di *𝛽<sub>1</sub>* abbiano modificato le
@@ -407,7 +407,7 @@ ip route add unreachable 10.0.0.51/32 table ntk_from_00:16:3E:EE:AF:D1
 ip route add unreachable 10.0.0.41/32 table ntk_from_00:16:3E:EE:AF:D1
 ```
 
-#### migr01: Pulizia del vecchio namespace per la nuova identità
+#### Migrazione: Pulizia del vecchio namespace per la nuova identità
 
 Poi il programma **qspnclient** rimuove dalle tabelle presenti nel vecchio network namespace le rotte
 verso i possibili indirizzi IP di destinazione relativi all'indirizzo che la vecchia identità aveva nel
@@ -521,7 +521,7 @@ ip rule del fwmark 250 table ntk_from_00:16:3E:5B:78:D5
 ip rule del fwmark 249 table ntk_from_00:16:3E:FD:E2:AA
 ```
 
-#### migr01: Cambio di indirizzo della vecchia identità
+#### Migrazione: Cambio di indirizzo della vecchia identità
 
 Poi il programma **qspnclient**, sempre a seguito del comando `migrate_phase_1`, istruisce
 il QspnManager sul cambio di indirizzo della vecchia identità. Nell'esempio corrente abbiamo

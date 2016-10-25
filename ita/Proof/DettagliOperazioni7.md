@@ -26,9 +26,15 @@ L'utente ha annotato l'identificativo del nuovo arco-identità nel sistema *𝜀
 
 L'utente stabilisce la migration path che porta a liberare un posto in *𝜑*. Il nodo *𝛽<sub>1</sub>* è
 un border-nodo di *𝜑*: infatti esso ha un arco verso *𝛼<sub>1</sub>* (l'identità principale nel
-sistema *𝛼*) che appartiene al g-nodo *𝜓* di livello 1. Il g-nodo *𝜓* ha un posto libero. L'utente quindi
-si annota l'identificativo dell'arco-identità *𝛽<sub>1</sub>*-*𝛼<sub>1</sub>* nel sistema *𝛽* e
-il relativo peer-MAC nel sistema *𝛼*.
+sistema *𝛼*) che appartiene al g-nodo *𝜓* di livello 1. Il g-nodo *𝜓* ha un posto libero.
+
+Siccome *𝛽<sub>1</sub>* deve migrare ma rimane nella stessa rete, la nuova identità avrà esattamente gli
+stessi archi-qspn della vecchia. Cioè, per ogni suo arco-identità (duplicato da un arco-identità della vecchia)
+avrà un arco-qspn se e solo se la vecchia identità aveva un arco-qspn. Quindi l'utente non deve istruire il
+programma su quali archi-qspn assegnare alla nuova identità. Ma deve istruire il programma sui nuovi archi-qspn
+nei sistemi vicini. L'utente quindi, relativamente agli archi-identità *𝛽<sub>1</sub>*-*𝛼<sub>1</sub>*,
+*𝛽<sub>1</sub>*-*𝛾<sub>0</sub>* e *𝛽<sub>1</sub>*-*𝜀<sub>1</sub>*, si annota il peer-MAC relativo nei
+sistemi rispettivi *𝛼*, *𝛾* e *𝜀*.
 
 La sequenza di istruzioni che l'utente darà ai sistemi sarà questa:
 
@@ -87,6 +93,12 @@ La sequenza di istruzioni che l'utente darà ai sistemi sarà questa:
         sistema *𝛼* prima della duplicazione dell'identità *𝛽<sub>1</sub>*.  
         È necessario che il comando `add_qspn_arc` nel sistema *𝛼* venga dato dopo il completamento
         del comando `migrate_phase_1` nel sistema *𝛽* con sufficiente ritardo, ma in tempi rapidi.
+*   Al sistema *𝛾* dà il comando `add_qspn_arc`, indicando queste informazioni:
+    *   identità locale. *𝛾<sub>0</sub>*.
+    *   nuovo arco-qspn. Il peer-MAC dell'arco-identità con *𝛽<sub>1</sub>* prima della duplicazione.
+*   Al sistema *𝜀* dà il comando `add_qspn_arc`, indicando queste informazioni:
+    *   identità locale. *𝜀<sub>1</sub>*.
+    *   nuovo arco-qspn. Il peer-MAC dell'arco-identità con *𝛽<sub>1</sub>* prima della duplicazione.
 *   Al sistema *𝜀* dà il comando `enter_net_phase_2`, indicando queste informazioni:
     *   è stata completata la migrazione *m<sub>𝛽</sub>*; quindi è ora disponibile l'indirizzo *reale* dentro *𝜑*.
 
