@@ -57,7 +57,11 @@ sed -i '/xxx_table_ntk_from_00:16:3E:EE:AF:D1_xxx/d' /etc/iproute2/rt_tables
 
 Vanno eseguite in blocco.
 
-Poi il programma rimuove l'arco-qspn dal QspnManager dell'identità interessata.
+Poi il programma rimuove l'arco-qspn dal QspnManager dell'identità interessata. Questo lo
+porterà a fare degli aggiornamenti alle rotte su tutte le tabelle di routing gestite da quella identità.
+Solo dopo tali variazioni il modulo Identities potrà procedere con la rimozione della rotta diretta
+verso l'indirizzo IP linklocal associato come *peer* a questo arco-identità, poiché
+esso non appare più come gateway nelle rotte delle altre tabelle.
 
 #### Rimozione di un arco-identità su richiesta dell'identità vicina
 
