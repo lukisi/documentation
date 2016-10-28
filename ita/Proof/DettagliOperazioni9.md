@@ -341,4 +341,20 @@ ip netns exec migr01 ip route change unreachable 10.0.0.40/32 table ntk_from_00:
 ip netns exec migr01 ip route del 169.254.69.30 dev migr01_eth1 src 169.254.27.218
 ```
 
+#### Migrazione: Controllo di persistenza dell'identità di connettività
+
+A questo punto delle operazioni svolte a fronte del comando `migrate_phase_1`, il programma **qspnclient**,
+sempre nella tasklet di cui abbiamo detto sopra, avvierà un controllo periodico per vedere quando
+l'identità di connettività possa essere rimossa.
+
+Allo scadere di ogni periodo, il programma vede se la sua identità in esame è al momento il
+*Coordinator* del g-nodo di connettività. Devono essere *reali* tutte le posizioni del suo
+indirizzo Netsukuku, ad eccezione di quella del livello trattato da questa precisa migrazione.
+
+Se risulta essere l'attuale *Coordinator* (e se non è già in corso la dismissione) il programma
+si occupa di controllare se il g-nodo di connettività possa essere rimosso. In caso affermativo
+si occupa di propagare l'informazione a tutti i membri e in seguito di avviare le operazioni.
+
+Vedremo questo caso più avanti.
+
 [Operazione seguente](DettagliOperazioni10.md)
