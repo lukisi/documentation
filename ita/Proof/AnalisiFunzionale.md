@@ -11,6 +11,7 @@
     1.  [Un arco con un vicino nella stessa rete viene rimosso](#Rimosso_vicino_stessa_rete)
     1.  [Ingresso in una rete - Caso 2](#Ingresso_rete_2)
     1.  [Migrazione per ingresso - Caso 1](#Migrazione_ingresso_1)
+    1.  [Migrazione per ingresso - Caso 2](#Migrazione_ingresso_2)
 1.  [Vecchio](#Vecchio)
     1.  [Primi passi](#Primi_passi)
     1.  [Da riordinare](#Da_riordinare)
@@ -219,9 +220,20 @@ Poi l'utente istruisce il sistema *𝛽* di migrare come singolo nodo in *𝜓*,
 della posizione a livello 0 del suo nuovo indirizzo Netsukuku da *virtuale* a *reale* potrà avvenire
 immediatamente.  
 Anche per questa migrazione come per l'ingresso, l'utente istruisce gli altri sistemi della rete
-sulla presenza di nuovi archi. In questo caso abbiamo ad esempio il nodo *𝛼* che aveva un arco verso *𝛽<sub>1</sub>*
-e ora ha un nuovo arco verso *𝛽<sub>2</sub>*.  
+sulla presenza di nuovi archi. In questo caso abbiamo ad esempio i nodi *𝛼*, *𝛾* e *𝜀* che avevano
+ciascuno un arco verso *𝛽<sub>1</sub>* e ora hanno un nuovo arco verso *𝛽<sub>2</sub>*.  
 Infine l'utente istruisce il sistema *𝜀* che la migrazione *m<sub>𝛽</sub>* è terminata.
+
+### <a name="Migrazione_ingresso_2"></a> Migrazione per ingresso - Caso 2
+
+[Dettagli](DettagliOperazioni11.md)
+
+Esaminiamo un caso più complesso: sia *𝜑* un g-nodo di livello 1. Sia *𝜆* un nuovo sistema che ha un solo
+arco fisico che lo collega con un nodo che è dentro *𝜑*. Il sistema *𝜆* vuole entrare nella rete come
+gateway per una sottorete autonoma, riservando un g-nodo di livello 1.  
+Assumiamo che *𝜑* appartiene al g-nodo di livello 2 *𝜓* che è saturo. Assumiamo che *𝜔* sia un g-nodo di
+livello 2 non saturo adiacente a *𝜑*. Per permettere l'ingresso di *𝜆* si decide di far migrare *𝜑* da *𝜓*
+in *𝜔* per lasciare un posto per *𝜆* dentro *𝜓*.
 
 ## <a name="Vecchio"></a>Vecchio
 
