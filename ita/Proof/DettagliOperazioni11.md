@@ -181,19 +181,130 @@ Dalla rivelazione dell'arco-fisico *𝜆*-*𝜀*, il modulo Neighborhood ha già
 
 **sistema 𝜆**
 ```
-ip route add 169.254.YYYY dev eth1 src 169.254.XXXX
+ip route add 169.254.163.36 dev eth1 src 169.254.109.22
 ```
 
 **sistema 𝜀**
 ```
-ip route add 169.254.XXXX dev eth1 src 169.254.YYYY
+ip route add 169.254.109.22 dev eth1 src 169.254.163.36
 ```
 
 L'utente ha dato i comandi per accettare tale arco su entrambi i sistemi. Il modulo Identities ha
 quindi realizzato per le relative identità principali un nuovo arco-identità *𝜆<sub>0</sub>*-*𝜀<sub>1</sub>*.
 L'utente ha annotato l'identificativo del nuovo arco-identità nel sistema *𝜆* e il peer-MAC nel sistema *𝜀*.
 
-L'utente stabilisce la migration path che porta a liberare un posto in *𝜓*. ...
+Indichiamo con *𝜑<sub>0</sub>* la vecchia identità del g-nodo *𝜑*, composta come dicevamo
+da *𝜀<sub>1</sub>*, *𝛽<sub>1</sub>* e *𝛾<sub>0</sub>* in *𝜓*.  
+Assumiamo che l'indirizzo di *𝜓* sia 2·1·. Assumiamo che in esso l'indirizzo di *𝜑<sub>0</sub>* sia 2·1·1·.  
+Assumiamo che l'indirizzo di *𝜔* sia 2·0·. Assumiamo che in esso sia libero l'indirizzo 2·0·2·.  
 
+L'utente stabilisce la migration path che porta a liberare un posto in *𝜓*.  
+Con questa migrazione *𝜑<sub>0</sub>* assume indirizzo *di connettività* 2·1·3· e si costituisce *𝜑<sub>1</sub>*,
+un nuovo g-nodo *isomorfo*, composto da *𝜀<sub>2</sub>*, *𝛽<sub>3</sub>* e *𝛾<sub>1</sub>*.  
+Temporaneamente *𝜑<sub>1</sub>* assume indirizzo virtuale 2·0·2·. Dopo poco *𝜑<sub>1</sub>* assume indirizzo 2·0·0·.  
+L'identità *𝜑<sub>0</sub>* non viene dismessa finché una verifica con `check_connectivity` non darà esito positivo.
+
+La sequenza di istruzioni che l'utente darà ai sistemi sarà questa:
+
+*   Al sistema *𝜆* dà il comando `prepare_enter_net_phase_1`, indicando queste informazioni:
+    *   identità entrante: *𝜆<sub>0</sub>*. Sia il duplicato *𝜆<sub>1</sub>*.
+    *   livello g-nodo entrante: 1.
+    *   g-nodo ospitante *𝜓*:
+        *   Livello: 1.
+        *   Indirizzo Netsukuku: 2·1·.
+        *   Fingerprint a livello 2.
+    *   nuova posizione virtuale:
+        *   Identificativo: 2.
+        *   Anzianità: 3.
+    *   nuova posizione reale:
+        *   Identificativo: 1.
+        *   Anzianità: 4.
+    *   posizione di connettività.
+        *   Identificativo: 2.
+        *   Anzianità: 1.
+    *   nuovi archi-qspn: 1.
+        *   `identityarc_index`: l'identificativo dell'arco-identità *𝜆<sub>0</sub>*-*𝜀<sub>1</sub>*
+            nel sistema *𝜆* prima della duplicazione dell'identità *𝜆<sub>0</sub>*.
+    *   identificativo di questa operazione di ingresso: *m<sub>𝜆</sub>*.
+    *   identificativo della previa operazione di migrazione: *m<sub>𝜑</sub>*.
+*   Al sistema *𝜆* dà il comando `enter_net_phase_1`, indicando queste informazioni:
+    *   si proceda con l'operazione di ingresso *m<sub>𝜆</sub>*.
+*   Al sistema *𝜀* dà il comando `add_qspn_arc`, indicando queste informazioni:
+    *   identità locale. *𝜀<sub>1</sub>*.
+    *   nuovo arco-qspn. Il peer-MAC dell'arco-identità con *𝜆<sub>0</sub>* prima della duplicazione.
+*   Al sistema *𝜀* dà il comando `prepare_migrate_phase_1`, indicando queste informazioni:
+    *   identità migrante: *𝜀<sub>1</sub>*. Sia il duplicato *𝜀<sub>2</sub>*.
+    *   livello g-nodo migrante: 1.
+    *   g-nodo ospitante *𝜔*:
+        *   Livello: 2.
+        *   Indirizzo Netsukuku: 2·0·.
+        *   Fingerprint a livello 2.
+    *   nuova posizione virtuale:
+        *   Identificativo: 2.
+        *   Anzianità: 3.
+    *   nuova posizione reale:
+        *   Identificativo: 0.
+        *   Anzianità: 4.
+    *   posizione di connettività.
+        *   Identificativo: 3.
+        *   Anzianità: 3.
+    *   identificativo di questa operazione di migrazione: *m<sub>𝜑</sub>*.
+    *   identificativo della previa operazione di migrazione: nullo.
+*   Al sistema *𝛽* dà il comando `prepare_migrate_phase_1`, indicando queste informazioni:
+    *   identità migrante: *𝛽<sub>1</sub>*. Sia il duplicato *𝛽<sub>3</sub>*.
+    *   livello g-nodo migrante: 1.
+    *   g-nodo ospitante *𝜔*:
+        *   Livello: 2.
+        *   Indirizzo Netsukuku: 2·0·.
+        *   Fingerprint a livello 2.
+    *   nuova posizione virtuale:
+        *   Identificativo: 2.
+        *   Anzianità: 3.
+    *   nuova posizione reale:
+        *   Identificativo: 0.
+        *   Anzianità: 4.
+    *   posizione di connettività.
+        *   Identificativo: 3.
+        *   Anzianità: 3.
+    *   identificativo di questa operazione di migrazione: *m<sub>𝜑</sub>*.
+    *   identificativo della previa operazione di migrazione: nullo.
+*   Al sistema *𝛾* dà il comando `prepare_migrate_phase_1`, indicando queste informazioni:
+    *   identità migrante: *𝛾<sub>0</sub>*. Sia il duplicato *𝛾<sub>1</sub>*.
+    *   livello g-nodo migrante: 1.
+    *   g-nodo ospitante *𝜔*:
+        *   Livello: 2.
+        *   Indirizzo Netsukuku: 2·0·.
+        *   Fingerprint a livello 2.
+    *   nuova posizione virtuale:
+        *   Identificativo: 2.
+        *   Anzianità: 3.
+    *   nuova posizione reale:
+        *   Identificativo: 0.
+        *   Anzianità: 4.
+    *   posizione di connettività.
+        *   Identificativo: 3.
+        *   Anzianità: 3.
+    *   identificativo di questa operazione di migrazione: *m<sub>𝜑</sub>*.
+    *   identificativo della previa operazione di migrazione: nullo.
+*   Al sistema *𝜀* dà il comando `migrate_phase_1`, indicando queste informazioni:
+    *   si proceda con l'operazione di migrazione *m<sub>𝜑</sub>*.
+*   Al sistema *𝛽* dà il comando `migrate_phase_1`, indicando queste informazioni:
+    *   si proceda con l'operazione di migrazione *m<sub>𝜑</sub>*.
+*   Al sistema *𝛾* dà il comando `migrate_phase_1`, indicando queste informazioni:
+    *   si proceda con l'operazione di migrazione *m<sub>𝜑</sub>*.
+*   Al sistema *𝛽* dà il comando `add_qspn_arc`, indicando queste informazioni:
+    *   identità locale. *𝛽<sub>2</sub>*.
+    *   nuovo arco-qspn. Il peer-MAC dell'arco-identità con *𝛾<sub>0</sub>* prima della duplicazione.
+*   Al sistema *𝛽* dà il comando `add_qspn_arc`, indicando queste informazioni:
+    *   identità locale. *𝛽<sub>2</sub>*.
+    *   nuovo arco-qspn. Il peer-MAC dell'arco-identità con *𝜀<sub>1</sub>* prima della duplicazione.
+*   Al sistema *𝛿* dà il comando `add_qspn_arc`, indicando queste informazioni:
+    *   identità locale. *𝛿<sub>1</sub>*.
+    *   nuovo arco-qspn. Il peer-MAC dell'arco-identità con *𝛾<sub>0</sub>* prima della duplicazione.
+*   Al sistema *𝜆* dà il comando `add_qspn_arc`, indicando queste informazioni:
+    *   identità locale. *𝜆<sub>1</sub>*.
+    *   nuovo arco-qspn. Il peer-MAC dell'arco-identità con *𝜀<sub>1</sub>* prima della duplicazione.
+*   Al sistema *𝜆* dà il comando `enter_net_phase_2`, indicando queste informazioni:
+    *   è stata completata la migrazione *m<sub>𝜑</sub>*; quindi è ora disponibile l'indirizzo *reale* dentro *𝜓*.
 
 [Operazione seguente](DettagliOperazioni12.md)

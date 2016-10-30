@@ -83,7 +83,7 @@ La sequenza di istruzioni che l'utente darà ai sistemi sarà questa:
     *   posizione di connettività.
         *   Identificativo: 3.
         *   Anzianità: 3.
-    *   identificativo di questa operazione di ingresso: *m<sub>𝛽</sub>*.
+    *   identificativo di questa operazione di migrazione: *m<sub>𝛽</sub>*.
     *   identificativo della previa operazione di migrazione: nullo.
 *   Al sistema *𝛽* dà il comando `migrate_phase_1`, indicando queste informazioni:
     *   si proceda con l'operazione di migrazione *m<sub>𝛽</sub>*.
