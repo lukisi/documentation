@@ -307,4 +307,75 @@ La sequenza di istruzioni che l'utente darà ai sistemi sarà questa:
 *   Al sistema *𝜆* dà il comando `enter_net_phase_2`, indicando queste informazioni:
     *   è stata completata la migrazione *m<sub>𝜑</sub>*; quindi è ora disponibile l'indirizzo *reale* dentro *𝜓*.
 
+#### Comando prepare_enter_net_phase_1 al sistema *𝜆*
+
+Analogo a quanto visto nel caso 1.
+
+#### Comando enter_net_phase_1 al sistema *𝜆*
+
+Creazione del nuovo network namespace: analogo a quanto visto nel caso 1.
+
+#### Spostamento delle rotte della vecchia identità
+
+Analogo a quanto visto nel caso 1, con alcune accortezze.
+
+Visto che il livello della sottorete autonoma è 1, si considerano le possibili destinazioni
+solo fino ai g-nodi di livello 1. Inoltre per ogni possibile g-nodo destinazione, visto che il livello
+del g-nodo che entra in blocco è 1, si rimuovono gli indirizzi IP interni ai g-nodi solo di livello maggiore 
+di 1.
+
+Infine, siccome si rimuoveranno i propri indirizzi IP interni (oltre al globale e anonimizzante) ai
+g-nodi di livello maggiore di 1, si rimuovono anche le relative regole di rimappatura.
+
+**sistema 𝜆**
+```
+ip route del 10.0.0.0/29 table ntk
+ip route del 10.0.0.64/29 table ntk
+ip route del 10.0.0.16/29 table ntk
+ip route del 10.0.0.80/29 table ntk
+ip route del 10.0.0.24/29 table ntk
+ip route del 10.0.0.88/29 table ntk
+ip route del 10.0.0.8/30 table ntk
+ip route del 10.0.0.72/30 table ntk
+ip route del 10.0.0.56/30 table ntk
+ip route del 10.0.0.14/31 table ntk
+ip route del 10.0.0.78/31 table ntk
+ip route del 10.0.0.62/31 table ntk
+ip route del 10.0.0.50/31 table ntk
+
+iptables -t nat -D PREROUTING -d 10.0.0.48/31 -j NETMAP --to 10.0.0.40/31
+iptables -t nat -D POSTROUTING -d 10.0.0.48/30 -s 10.0.0.40/31 -j NETMAP --to 10.0.0.48/31
+
+iptables -t nat -D PREROUTING -d 10.0.0.60/31 -j NETMAP --to 10.0.0.40/31
+iptables -t nat -D POSTROUTING -d 10.0.0.56/29 -s 10.0.0.40/31 -j NETMAP --to 10.0.0.60/31
+
+iptables -t nat -D PREROUTING -d 10.0.0.12/31 -j NETMAP --to 10.0.0.40/31
+iptables -t nat -D POSTROUTING -d 10.0.0.0/27  -s 10.0.0.40/31 -j NETMAP --to 10.0.0.12/31
+
+iptables -t nat -D PREROUTING -d 10.0.0.76/31 -j NETMAP --to 10.0.0.40/31
+iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -s 10.0.0.40/31 -j NETMAP --to 10.0.0.12/31
+
+ip address del 10.0.0.48/32 dev eth1
+ip address del 10.0.0.60/32 dev eth1
+iptables -t nat -D POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.12
+ip address del 10.0.0.12/32 dev eth1
+ip address del 10.0.0.76/32 dev eth1
+```
+
+#### Popolamento nuove rotte della nuova identità
+
+Analogo a quanto visto nel caso 1.
+
+#### Creazione e popolamento iniziale di tabelle per l'inoltro
+
+Analogo a quanto visto nel caso 1.
+
+#### Comando add_qspn_arc al sistema *𝜀*
+
+Analogo a quanto visto nel caso 1.
+
+#### Dismissione identità
+
+Analogo a quanto visto nel caso 1.
+
 [Operazione seguente](DettagliOperazioni12.md)
