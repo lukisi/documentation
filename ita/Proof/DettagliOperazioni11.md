@@ -10,7 +10,8 @@ ha nessun arco verso altri nodi Netsukuku.
 
 #### Fasi iniziali in *𝜆*
 
-Rivediamo in dettaglio le fasi iniziali in un sistema.
+Ripassiamo le fasi iniziali in un sistema. Sono corrette anche nel caso di un sistema che fa da
+gateway.
 
 **sistema 𝜆**
 ```
@@ -47,32 +48,91 @@ ip route add unreachable 10.0.0.14/31 table ntk
 ip route add unreachable 10.0.0.78/31 table ntk
 ip route add unreachable 10.0.0.62/31 table ntk
 ip route add unreachable 10.0.0.50/31 table ntk
-# PREROUTING => map destination
-iptables -t nat -A PREROUTING -d 10.0.0.12/31 -j NETMAP --to 10.0.0.40/31
-iptables -t nat -A PREROUTING -d 10.0.0.76/31 -j NETMAP --to 10.0.0.40/31
-iptables -t nat -A PREROUTING -d 10.0.0.60/31 -j NETMAP --to 10.0.0.40/31
-iptables -t nat -A PREROUTING -d 10.0.0.48/31 -j NETMAP --to 10.0.0.40/31
-# POSTROUTING => map source
-iptables -t nat -A POSTROUTING -d 10.0.0.48/30 -s 10.0.0.40/31 -j NETMAP --to 10.0.0.48/31
-iptables -t nat -A POSTROUTING -d 10.0.0.56/29 -s 10.0.0.40/31 -j NETMAP --to 10.0.0.60/31
-iptables -t nat -A POSTROUTING -d 10.0.0.0/27  -s 10.0.0.40/31 -j NETMAP --to 10.0.0.12/31
-iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -s 10.0.0.40/31 -j NETMAP --to 10.0.0.12/31
 
 iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -j SNAT --to 10.0.0.12
+```
 
-ip route change unreachable 10.0.0.0/29 table ntk
-ip route change unreachable 10.0.0.64/29 table ntk
-ip route change unreachable 10.0.0.16/29 table ntk
-ip route change unreachable 10.0.0.80/29 table ntk
-ip route change unreachable 10.0.0.24/29 table ntk
-ip route change unreachable 10.0.0.88/29 table ntk
-ip route change unreachable 10.0.0.8/30 table ntk
-ip route change unreachable 10.0.0.72/30 table ntk
-ip route change unreachable 10.0.0.56/30 table ntk
-ip route change unreachable 10.0.0.14/31 table ntk
-ip route change unreachable 10.0.0.78/31 table ntk
-ip route change unreachable 10.0.0.62/31 table ntk
-ip route change unreachable 10.0.0.50/31 table ntk
+Alla fine vanno aggiunte queste operazioni:
+
+*   Indichiamo con *l* il numero di livelli nella topologia.
+*   Indichiamo con *n* l'indirizzo Netsukuku del sistema.
+*   Indichiamo con *pos_n(i)* l'identificativo al livello *i* dell'indirizzo Netsukuku *n*.
+*   Se `$subnetlevel` > 0:
+    *   Per *i* che sale da `$subnetlevel` a *l* - 1:
+        *   Se *pos_n(i)* ≥ *gsize(i)*, cioè se la posizione è *virtuale* al livello *i* (questa condizione
+            è sempre falsa nel caso delle operazioni iniziali del sistema):
+            *   Esci dal ciclo *i*.
+        *   Se *i* < *l* - 1:
+            *   Per i pacchetti IP che passano per questo sistema e sono destinati ad
+                un indirizzo IP interno al g-nodo di livello *i* + 1 che identifica un nodo
+                interno alla mia sottorete autonoma (di livello `$subnetlevel`) e che quindi
+                necessariamente provengono dall'esterno della sottorete, esegui la rimappatura
+                dell'IP di destinazione affinché risulti nel range degli indirizzi IP
+                interni al g-nodo di livello `$subnetlevel`.
+            *   Per i pacchetti IP che passano per questo sistema, che hanno per IP di mittente
+                un indirizzo IP interno al g-nodo di livello `$subnetlevel` (che cioè
+                provengono dall'interno della sottorete autonoma) e che sono destinati ad
+                un indirizzo IP interno al g-nodo di livello *i* + 1, esegui la rimappatura
+                dell'IP di mittente affinché risulti nel range degli indirizzi IP
+                interni al g-nodo di livello *i* e identifichi un nodo
+                interno alla mia sottorete autonoma.
+        *   Altrimenti (cioè per *i* = *l* - 1):
+            *   Per i pacchetti IP che passano per questo sistema e sono destinati ad
+                un indirizzo IP globale che identifica un nodo
+                interno alla mia sottorete autonoma (di livello `$subnetlevel`) e che quindi
+                necessariamente provengono dall'esterno della sottorete, esegui la rimappatura
+                dell'IP di destinazione affinché risulti nel range degli indirizzi IP
+                interni al g-nodo di livello `$subnetlevel`.
+            *   Per i pacchetti IP che passano per questo sistema, che hanno per IP di mittente
+                un indirizzo IP interno al g-nodo di livello `$subnetlevel` (che cioè
+                provengono dall'interno della sottorete autonoma) e che sono destinati ad
+                un indirizzo IP globale, esegui la rimappatura
+                dell'IP di mittente affinché risulti nel range degli indirizzi IP
+                globali e identifichi un nodo
+                interno alla mia sottorete autonoma.
+            *   Se si vuole che ogni sistema nella sottorete autonoma ammetta di essere contattato in forma anonima:
+                *   Per i pacchetti IP che passano per questo sistema e sono destinati ad
+                    un indirizzo IP anonimizzante che identifica un nodo
+                    interno alla mia sottorete autonoma (di livello `$subnetlevel`) e che quindi
+                    necessariamente provengono dall'esterno della sottorete, esegui la rimappatura
+                    dell'IP di destinazione affinché risulti nel range degli indirizzi IP
+                    interni al g-nodo di livello `$subnetlevel`.  
+                    Non è possibile ammettere che qualche nodo sia contattabile in forma anonima
+                    senza di fatto renderlo possibile a tutti; in quanto l'indirizzo anonimizzante di
+                    destinazione viene rimappato all'indirizzo interno esattamente come viene
+                    rimappato l'indirizzo globale.
+            *   Naturalmente, il gateway permette ai sistemi interni di contattare un sistema esterno in forma anonima. Quindi:
+                *   Per i pacchetti IP che passano per questo sistema, che hanno per IP di mittente
+                    un indirizzo IP interno al g-nodo di livello `$subnetlevel` (che cioè
+                    provengono dall'interno della sottorete autonoma) e che sono destinati ad
+                    un indirizzo IP anonimizzante, esegui la rimappatura
+                    dell'IP di mittente affinché risulti nel range degli indirizzi IP
+                    globali e identifichi un nodo
+                    interno alla mia sottorete autonoma.
+
+Le rimappature sono fatte con l'operazione "NETMAP" fornita da `iptables`.  
+L'operazione "NETMAP" nella catena PREROUTING modifica l'IP di destinazione del pacchetto. La
+stessa operazione nella catena POSTROUTING modifica l'IP di mittente del pacchetto.
+
+**sistema 𝜆**
+```
+# Per i = 1
+iptables -t nat -A PREROUTING -d 10.0.0.48/31 -j NETMAP --to 10.0.0.40/31
+iptables -t nat -A POSTROUTING -d 10.0.0.48/30 -s 10.0.0.40/31 -j NETMAP --to 10.0.0.48/31
+
+# Per i = 2
+iptables -t nat -A PREROUTING -d 10.0.0.60/31 -j NETMAP --to 10.0.0.40/31
+iptables -t nat -A POSTROUTING -d 10.0.0.56/29 -s 10.0.0.40/31 -j NETMAP --to 10.0.0.60/31
+
+# Per i = 3
+iptables -t nat -A PREROUTING -d 10.0.0.12/31 -j NETMAP --to 10.0.0.40/31
+iptables -t nat -A POSTROUTING -d 10.0.0.0/27  -s 10.0.0.40/31 -j NETMAP --to 10.0.0.12/31
+
+# Se vogliamo che ogni sistema nella sottorete autonoma accetti di essere contattato in forma anonima:
+iptables -t nat -A PREROUTING -d 10.0.0.76/31 -j NETMAP --to 10.0.0.40/31
+
+# Sicuramente il gateway permette ai sistemi interni di contattare un sistema esterno in forma anonima.
+iptables -t nat -A POSTROUTING -d 10.0.0.64/27 -s 10.0.0.40/31 -j NETMAP --to 10.0.0.12/31
 ```
 
 Sono lasciate a qualche altro meccanismo nel sistema *𝜆* le operazioni che riguardano l'instradamento

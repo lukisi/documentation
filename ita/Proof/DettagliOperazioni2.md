@@ -7,6 +7,10 @@
 Immediatamente, poiché il sistema è inizialmente isolato, l'identità principale riceve dal QspnManager
 il segnale `bootstrap_complete`.
 
+**TODO: rimuovere tutto.** Forse non c'è bisogno di nessuna operazione al segnale `bootstrap_complete`, in quanto
+gli aggiornamenti alle rotte sono fatti dopo la processazione di ogni ETP. Sono fatti anche quando
+cambia una posizione del proprio indirizzo Netsukuku.
+
 Alla ricezione del segnale `bootstrap_complete` (da una qualsiasi identità) il programma **qspnclient**
 computa gli indirizzi IP di tutte le possibili destinazioni relative all'indirizzo Netsukuku di
 quella identità. Per ognuno, in base alle conoscenze di quella identità, aggiorna la rotta

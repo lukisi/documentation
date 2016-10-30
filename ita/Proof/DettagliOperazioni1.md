@@ -82,7 +82,7 @@ Il secondo indirizzo IP assegnato è quello anonimizzante. Viene assegnato opzio
 se il sistema ammette di essere contattato in forma anonima. Sia esso `$anonymousip`.
 
 I successivi indirizzi IP sono quelli interni. Vengono calcolati partendo da quello interno al
-livello *l* - 1 (dove *l* è il numero di livelli della topologia) e scendendo fino al livello `$subnetlevel` + 1.
+livello *l* - 1 (dove *l* è il numero di livelli della topologia) e scendendo fino al livello 1.
 
 ```
 for dev in $devlist; do
@@ -95,7 +95,7 @@ if $allow_anonymous; then
  done
 fi
 
-for i = l - 1 to $subnetlevel + 1 step -1
+for i = l - 1 to 1 step -1
  internalip = indirizzo IP interno al g-nodo di livello $i
  for dev in $devlist; do
   ip address add $internalip dev $dev
