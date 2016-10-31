@@ -12,9 +12,7 @@
     1.  [Ingresso in una rete - Caso 2](#Ingresso_rete_2)
     1.  [Migrazione per ingresso - Caso 1](#Migrazione_ingresso_1)
     1.  [Migrazione per ingresso - Caso 2](#Migrazione_ingresso_2)
-1.  [Vecchio](#Vecchio)
-    1.  [Primi passi](#Primi_passi)
-    1.  [Da riordinare](#Da_riordinare)
+1.  [Vecchio da riordinare](#Vecchio)
 1.  [Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IPv4](#Mappatura_indirizzi_ip)
 1.  [Identità](#Identita)
     1.  [Assegnazione indirizzi IP](#Indirizzi_ip_propri)
@@ -90,6 +88,14 @@ deve comunque poter essere specificata dall'utente.
 Il programma **qspnclient** all'avvio inizializza il network namespace default del sistema come unico
 nodo di una nuova rete. In seguito farà ingresso in un'altra rete o saranno altri nodi ad unirsi alla
 sua rete.
+
+Il programma **qspnclient** all'avvio crea (tramite il modulo Identities) la prima identità *principale*
+del sistema. A prescindere dall'oggetto che il modulo Identities usa per riferirsi ad una identità
+nel sistema, il programma associa a questa prima identità l'indice autoincrementante *nodeid_nextindex*,
+che parte da 0. In seguito il programma quando crea una nuova identità col metodo *add_identity* del
+modulo Identities, associa alla nuova identità il prossimo valore di *nodeid_nextindex* e lo mostra
+all'utente. Quindi l'utente può usare questo indice per dare al programma **qspnclient** comandi
+concernenti una certa identità.
 
 ### <a name="Archi_vicini"></a> Archi con i sistemi vicini
 
@@ -227,35 +233,7 @@ Assumiamo che *𝜑* appartiene al g-nodo di livello 2 *𝜓* che è saturo. Ass
 livello 2 non saturo adiacente a *𝜑*. Per permettere l'ingresso di *𝜆* si decide di far migrare *𝜑* da *𝜓*
 in *𝜔* per lasciare un posto per *𝜆* dentro *𝜓*.
 
-## <a name="Vecchio"></a>Vecchio
-
-### <a name="Primi_passi"></a>Primi passi
-
-All'avvio del programma nel sistema viene creata l'istanza di NeighborhoodManager. Poi gli sono passati i nomi delle
-interfacce di rete che dovrà gestire, tramite il metodo *start_monitor*. Ad ogni interfaccia, il modulo Neighborhood
-associa un indirizzo IP link-local scelto a caso.
-
-Il programma si avvede dell'indirizzo scelto perché il NeighborhoodManager lo notifica con il segnale
-*nic_address_set*. Il programma associa questo proprio indirizzo link-local all'indice
-autoincrementante *linklocal_nextindex*, che parte da 0.
-
-* * *
-
-Per ogni arco che il modulo Neighborhood realizza, le informazioni a disposizione (i due link-local e
-i due MAC address) sono visualizzate all'utente. Soltanto agli archi che l'utente decide di accettare
-e nell'ordine in cui sono accettati, il programma associa un indice autoincrementante *nodearc_nextindex*,
-che parte da 0. In seguito il programma sfrutta questi archi passandoli al modulo Identities.
-
-* * *
-
-All'avvio del programma nel sistema viene creata l'istanza di IdentityManager. Questi nel
-costruttore crea la prima identità *principale* del sistema e per essa genera un NodeID casuale. Il programma
-recupera tale NodeID col metodo *get_main_id()* e lo associa all'indice autoincrementante *nodeid_nextindex*,
-che parte da 0. In seguito il programma quando crea una nuova identità col metodo *add_identity* associa la
-nuova istanza di NodeID al prossimo valore di *nodeid_nextindex*. Quindi l'utente può usare questo indice per
-dare dalla console comandi concernenti una certa identità.
-
-### <a name="Da_riordinare"></a>Da riordinare
+## <a name="Vecchio"></a>Vecchio da riordinare
 
 Alla creazione di una nuova identità, il modulo Identities crea un nuovo network namespace. In realtà la creazione
 del network namespace è fatta proprio dal programma attraverso una classe che implementa l'interfaccia
