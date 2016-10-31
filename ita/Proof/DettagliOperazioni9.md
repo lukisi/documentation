@@ -309,9 +309,9 @@ qualche istante affinché i vicini abbiano il tempo di processarlo, il programma
 di cui abbiamo detto sopra) rimuove dalla vecchia identità *𝛽<sub>1</sub>* gli archi esterni al g-nodo *di connettività*.
 
 Questa operazione viene fatta attraverso l'istanza di QspnManager associata a *𝛽<sub>1</sub>*. Se questa operazione
-effettivamente rimuove alcuni archi-identità (che sicuramente erano associati ad archi-qspn) allora il
-programma **qspnclient** riceverà il segnale `arc_removing` del modulo Identities e si comporterà di
-conseguenza come descritto in precedenza [qui](DettagliOperazioni5.md#Rimosso_vicino_stessa_rete).
+effettivamente rimuove alcuni archi-qspn, allora il programma **qspnclient** rimuoverà anche i relativi archi-identità
+dal modulo Identities e (pur senza ricevere il segnale `arc_removing` del modulo Identities) si comporterà
+come descritto in precedenza [qui](DettagliOperazioni5.md#Rimosso_vicino_stessa_rete).
 
 **sistema 𝛽**
 ```

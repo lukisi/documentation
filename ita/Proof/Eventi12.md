@@ -130,24 +130,6 @@ ip netns exec migr02 ip route change unreachable 10.0.0.62/31 table ntk_from_00:
 ip netns exec migr02 ip route change blackhole 10.0.0.50/31 table ntk_from_00:16:3E:EC:A3:E1
 ip netns exec migr02 ip rule add fwmark 249 table ntk_from_00:16:3E:EC:A3:E1
 
-ip netns exec migr02 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip route change unreachable 10.0.0.72/29 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip route change unreachable 10.0.0.24/29 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip route change unreachable 10.0.0.88/29 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip route change unreachable 10.0.0.16/30 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip route change unreachable 10.0.0.80/30 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip route change unreachable 10.0.0.56/30 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip route change unreachable 10.0.0.20/31 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip route change unreachable 10.0.0.84/31 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip route change unreachable 10.0.0.60/31 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip route change unreachable 10.0.0.48/31 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip route change unreachable 10.0.0.22/31 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip route change unreachable 10.0.0.86/31 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:06:3E:90
-
 ip netns exec migr02 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:BD:34:98
 ip netns exec migr02 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:BD:34:98
 ip netns exec migr02 ip route change unreachable 10.0.0.8/29 table ntk_from_00:16:3E:BD:34:98
@@ -171,7 +153,7 @@ ip netns exec migr02 ip rule add fwmark 247 table ntk_from_00:16:3E:BD:34:98
 #### migr02: Aggiornamento dei gateway che si sono spostati in un diverso namespace
 
 Ora il programma *qspnclient* nel sistema *𝜀* lascia il tempo ai sistemi vicini esterni a *𝜑* di modificare le
-rotte che prevedono di usare *𝜀<sub>old</sub>* come gateway.  
+rotte che prevedono di usare *𝜀<sub>1</sub>* come gateway.  
 Dopo prosegue con la pulizia del vecchio namespace per la nuova identità.
 
 #### migr02: Pulizia del vecchio namespace per la nuova identità
@@ -257,7 +239,7 @@ ip address del 10.0.0.63/32 dev eth1
 ip address del 10.0.0.51/32 dev eth1
 ```
 
-Siccome il vicino *𝛽<sub>default</sub>* è esterno al g-nodo *𝜑* che ha migrato, dal vecchio network namespace
+Siccome il vicino *𝛽<sub>2</sub>* è esterno al g-nodo *𝜑* che ha migrato, dal vecchio network namespace
 della vecchia identità va rimossa anche la regola per la tabella di inoltro relativa.
 Infatti la nuova identità dovrà attendere un ETP da questo arco prima di poter aggiornare la tabella.
 
