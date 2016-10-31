@@ -9,9 +9,9 @@ All'avvio del programma **qspnclient** l'utente specifica alcune informazioni pe
     avere la dimensione di un g-nodo di livello *i* nella topologia di rete specificata. L'utente
     specifica il livello di tale g-nodo. Indichiamolo in questa trattazione con la variabile `$subnetlevel`. Default 0.
 *   Lista di interfacce di rete da gestire.
-*   Se il sistema ammette di essere usato come anonimizzatore.
+*   Se il sistema ammette di essere usato come anonimizzatore. Default *True*.
 *   Se il sistema (e tutta la eventuale sottorete autonoma dietro di lui) ammette di essere contattato
-    in forma anonima.
+    in forma anonima. Default *False*.
 
 Inoltre l'utente specifica alcune informazioni temporanee:
 
