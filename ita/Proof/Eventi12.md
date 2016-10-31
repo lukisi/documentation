@@ -147,7 +147,6 @@ ip netns exec migr02 ip route change unreachable 10.0.0.22/31 table ntk_from_00:
 ip netns exec migr02 ip route change unreachable 10.0.0.86/31 table ntk_from_00:16:3E:06:3E:90
 ip netns exec migr02 ip route change unreachable 10.0.0.62/31 table ntk_from_00:16:3E:06:3E:90
 ip netns exec migr02 ip route change unreachable 10.0.0.50/31 table ntk_from_00:16:3E:06:3E:90
-ip netns exec migr02 ip rule add fwmark 248 table ntk_from_00:16:3E:06:3E:90
 
 ip netns exec migr02 ip route change unreachable 10.0.0.0/29 table ntk_from_00:16:3E:BD:34:98
 ip netns exec migr02 ip route change unreachable 10.0.0.64/29 table ntk_from_00:16:3E:BD:34:98
