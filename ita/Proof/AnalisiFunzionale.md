@@ -91,14 +91,6 @@ Il programma **qspnclient** all'avvio inizializza il network namespace default d
 nodo di una nuova rete. In seguito farà ingresso in un'altra rete o saranno altri nodi ad unirsi alla
 sua rete.
 
-### <a name="Primo_bootstrap_complete"></a> Primo segnale `bootstrap_complete`
-
-[Dettagli](DettagliOperazioni2.md)
-
-Immediatamente, poiché il sistema è inizialmente isolato, l'identità principale riceve dal QspnManager
-il segnale `bootstrap_complete`. Su questo segnale il programma **qspnclient** aggiorna le rotte
-del network namespace in base alle sue conoscenze; per il momento è un nodo isolato.
-
 ### <a name="Archi_vicini"></a> Archi con i sistemi vicini
 
 [Dettagli](DettagliOperazioni3.md)

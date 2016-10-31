@@ -160,7 +160,7 @@ namespace. Assumiamo sia 1·0·1·0.
 Il programma **qspnclient** conosce l'indirizzo Netsukuku *virtuale* che la vecchia identità come supporto
 di connettività assume nel nuovo namespace. Assumiamo sia 1·0·1·3.
 
-Richiamando le modalità viste [qui](DettagliOperazioni1.md#computo_indirizzi_ip_destinazioni),
+Richiamando le modalità viste [qui](DettagliOperazioni2.md#computo_indirizzi_ip_destinazioni),
 il programma **qspnclient** calcola tutti i possibili indirizzi IP
 di destinazione, ognuno con suffisso CIDR, relativi all'indirizzo della vecchia identità nel nuovo
 namespace, cioè 1·0·1·3. Li memorizza associandoli a quella identità, ma in realtà in questo caso specifico

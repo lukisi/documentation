@@ -171,7 +171,7 @@ livello *"livello g-nodo entrante"* la *"posizione di connettività"*. Quindi in
 abbiamo 3·1·2·X, dove X vale 0 per *𝛿<sub>0</sub>* e 1 per *𝜇<sub>1</sub>*.
 
 Il programma **qspnclient** calcola tutti i possibili indirizzi IP di destinazione, ognuno con suffisso CIDR,
-(come riportato [qui](DettagliOperazioni1.md#computo_indirizzi_ip_destinazioni))
+(come riportato [qui](DettagliOperazioni2.md#computo_indirizzi_ip_destinazioni))
 relativi all'indirizzo della vecchia identità nel nuovo namespace. Il programma li memorizza associandoli a
 quella identità.
 
