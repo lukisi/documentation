@@ -12,7 +12,6 @@
     1.  [Ingresso in una rete - Caso 2](#Ingresso_rete_2)
     1.  [Migrazione per ingresso - Caso 1](#Migrazione_ingresso_1)
     1.  [Migrazione per ingresso - Caso 2](#Migrazione_ingresso_2)
-1.  [Vecchio da riordinare](#Vecchio)
 1.  [Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IPv4](#Mappatura_indirizzi_ip)
 1.  [Identità](#Identita)
     1.  [Assegnazione indirizzi IP](#Indirizzi_ip_propri)
@@ -827,9 +826,9 @@ permette di cambiare l'indirizzo del mittente.
 
 Fatta questa premessa, come si comporta il programma?
 
-Il programma **qspnclient**, se il sistema vuole fare da gateway per una sottorete a gestione
+Se il sistema vuole fare da gateway per una sottorete a gestione
 autonoma, quando l'identità principale del sistema assume un nuovo indirizzo
-Netsukuku, partendo dal livello subito superiore  ad ogni livello
+Netsukuku, il programma **qspnclient** deve assicurarsi che ci siano queste regole:
 
 *   Sia *gwl* il livello del g-nodo rappresentato dalla sottorete autonoma.
 *   Sia *range1* l'indirizzo IP con suffisso CIDR che rappresenta la sottorete
@@ -849,9 +848,9 @@ Netsukuku, partendo dal livello subito superiore  ad ogni livello
             al livello *i* - 1.  
             Ad esempio `10.0.0.48/30` se *i*=2.  
             Oppure `10.0.0.56/29` se *i*=3.
-        *   Il programma esegue:  
-            `iptables -t nat -A PREROUTING -d $range2 -j NETMAP --to $range1`  
-            `iptables -t nat -A POSTROUTING -d $range3 -s $range1 -j NETMAP --to $range2`
+        *   Devono esserci queste regole:  
+            `nella tabella  PREROUTING: -d $range2 -j NETMAP --to $range1`  
+            `nella tabella POSTROUTING: -d $range3 -s $range1 -j NETMAP --to $range2`
 *   Se *n* ha componenti reali da 0 a *l* - 1, cioè è del tutto reale:
     *   Sia *range2* l'indirizzo IP con suffisso CIDR che rappresenta la sottorete
         autonoma dentro tutta la rete Netsukuku. Si basa sulle posizioni di *n*
@@ -860,19 +859,22 @@ Netsukuku, partendo dal livello subito superiore  ad ogni livello
     *   Sia *range3* l'indirizzo IP con suffisso CIDR che comprende l'insieme di tutti
         i nodi nella rete Netsukuku rappresentati con indirizzo IP globale.  
         Ad esempio `10.0.0.0/27`.
-    *   Il programma esegue:  
-        `iptables -t nat -A PREROUTING -d $range2 -j NETMAP --to $range1`  
-        `iptables -t nat -A POSTROUTING -d $range3 -s $range1 -j NETMAP --to $range2`
+    *   Devono esserci queste regole:  
+        `nella tabella  PREROUTING: -d $range2 -j NETMAP --to $range1`  
+        `nella tabella POSTROUTING: -d $range3 -s $range1 -j NETMAP --to $range2`
     *   Se ogni sistema nella sottorete autonoma accetta di essere contattato in forma anonima:
         *   Sia *range4* l'indirizzo IP con suffisso CIDR che rappresenta la sottorete
             autonoma dentro tutta la rete Netsukuku con indirizzo IP anonimizzante. Si basa sulle posizioni di *n*
             da *gwl* a *l* - 1.  
             Ad esempio `10.0.0.86/31` se *gwl*=1.
-        *   Il programma esegue:  
-            `iptables -t nat -A PREROUTING -d $range4 -j NETMAP --to $range1`  
+        *   Devono esserci queste regole:  
+            `nella tabella  PREROUTING: -d $range4 -j NETMAP --to $range1`  
     *   Sia *range5* l'indirizzo IP con suffisso CIDR che comprende l'insieme di tutti
         i nodi nella rete Netsukuku rappresentati con indirizzo IP anonimizzante.  
         Ad esempio `10.0.0.64/27`.
-    *   Il programma esegue:  
-        `iptables -t nat -A POSTROUTING -d $range5 -s $range1 -j NETMAP --to $range2`
+    *   Devono esserci queste regole:  
+        `nella tabella POSTROUTING: -d $range5 -s $range1 -j NETMAP --to $range2`
+
+Quindi il programma **qspnclient**, conoscendo l'indirizzo Netsukuku precedente e quello nuovo dell'identità
+principale del sistema, produce i comandi `iptables -t nat -A` e `iptables -t nat -D` necessari.
 
