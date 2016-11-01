@@ -21,7 +21,7 @@ particolari scenari, come ad esempio un gruppo di macchine virtuali che condivid
 ma vogliono simulare un gruppo di sistemi wireless disposti in un determinato modo.
 
 Quando il modulo Neighborhood realizza un arco, il programma **qspnclient** mostra all'utente le informazioni
-relative insieme ad un indice autoincrementante *neighborarc_nextindex*, che parte da 0, con il quale
+relative insieme ad una chiave (una stringa composta dai due MAC address) con la quale
 l'utente lo identifica nei comandi che vedremo sotto. Le informazioni relative all'arco sono:
 
 *   Il nome dell'interfaccia di rete reale nel sistema locale (insieme al suo MAC address perché l'utente abbia
@@ -47,9 +47,8 @@ appena il modulo Neighborhood segnala la variazione di costo di un arco.
 Quando l'utente simula la rimozione di un arco avviene nel programma **qspnclient** quello che nel vero demone *ntkd* avverrebbe
 appena il modulo Neighborhood segnala la rimozione di un arco.
 
-Alla creazione di un arco (intesa come detto sopra) il programma **qspnclient** associa all'arco un indice
-autoincrementante *nodearc_nextindex*, che parte da 0, e lo mostra all'utente. In seguito il programma
-sfrutta questi archi passandoli al modulo Identities.
+Alla creazione di un arco (intesa come detto sopra) il programma **qspnclient** inizia ad utilizzarlo
+passandolo al modulo Identities.
 
 Il modulo Identities a sua volta segnala quando vengono creati o rimossi gli archi-identità. Nel segnalarlo
 rende noto al programma:

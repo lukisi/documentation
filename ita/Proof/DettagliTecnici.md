@@ -87,26 +87,34 @@ in una diversa rete (vedremo il comando `prepare_enter_net_phase_1`) la topologi
 
 * * *
 
-Quando il programma riceve dal modulo Neighborhood la notifica che un arco è stato realizzato, esso mostra
+Quando il programma riceve dal modulo Neighborhood la notifica che un arco fisico è stato realizzato, esso mostra
 le informazioni (link-local e MAC dei due estremi) dell'arco a video. Inoltre mette la relativa istanza di
 INeighborhoodArc nel dizionario *neighborhood_arcs* con una chiave stringa composta dai due MAC address.
 
-In seguito l'utente può rivederli con il comando interattivo *show_neighborhood_arcs*.
+In seguito l'utente può rivederli con il comando `show_neighborhood_arcs`.
 
-In seguito l'utente può dare istruzione di accettare un arco con il comando interattivo *add_nodearc* indicando:
+Quando l'utente decide di accettare un arco lo comunica al programma **qspnclient** con il comando
+`add_real_arc` e indica:
 
 *   MAC della propria interfaccia.
 *   MAC del vicino.
 *   Costo in latenza in microsecondi.
 
-Il programma a questo punto crea una istanza della classe ProofOfConcept.Arc che ha questi membri:
+Se vuole in seguito variare il costo
+lo può fare con il comando `change_real_arc`. Se vuole in seguito simularne la completa rimozione
+lo può fare con il comando `remove_real_arc`.  
+L'utente quando dà uno di questi comandi ad un sistema dovrà in tempi rapidi dare il relativo omologo
+comando al sistema all'altro capo.
+
+Il programma **qspnclient** (quando l'utente accetta un arco fisico) crea una istanza della
+classe ProofOfConcept.Arc che ha questi membri:
 
 *   `int cost`.
 *   `INeighborhoodArc neighborhood_arc`.
 *   `ProofOfConcept.IdmgmtArc idmgmt_arc`.
 
-Associa questa istanza di ProofOfConcept.Arc al prossimo valore dell'indice autoincrementante
-*nodearc_nextindex*, nel dizionario *nodearcs*.
+Mette questa istanza di ProofOfConcept.Arc in un altro dizionario, *nodearcs*, usando sempre come
+chiave la stringa composta dai due MAC address.
 
 Poi il programma, basandosi su questa istanza di ProofOfConcept.Arc, istanzia una classe
 ProofOfConcept.IdmgmtArc che implementa IIdmgmtArc che andrà passata al modulo Identities nel
