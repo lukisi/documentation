@@ -39,6 +39,8 @@ che comunque viene ignorato dal programma.
 Dopo aver costruito IdentityManager il programma si mette in ascolto dei suoi segnali *identity_arc_added*,
 *changed* e *removed*.
 
+* * *
+
 Il programma *qspnclient* vuole tenere traccia delle identità che sono nel nodo. Lo fa tramite il
 dizionario *nodeids*, in cui la chiave è l'indice autoincrementante *nodeid_nextindex* e il valore è
 una istanza della classe *IdentityData*. Dentro questa classe il programma mantiene alcune informazioni, tra le quali:
@@ -55,40 +57,21 @@ identità gestisce il network namespace default, quindi `network_stack = ""`.
 
 * * *
 
-Dopo aver recuperaro il NodeID della sua prima identità, il programma *qspnclient* crea la prima istanza di
+Dopo aver recuperaro il NodeID della sua prima identità, il programma **qspnclient** crea la prima istanza di
 QspnManager e la associa a questa identità con il metodo *set_identity_module* di IdentityManager usando il nome di modulo "qspn".
 
 Questa prima istanza di QspnManager viene realizzata col costruttore *create_net*. Per avvalersi di questo
 costruttore, al programma serve solo conoscere la topologia della rete e l'indirizzo Netsukuku del nodo. Queste
-due informazioni sono passate al programma dalla riga di comando tramite i primi due argomenti.
+due informazioni sono passate al programma al momento del suo avvio. L'utente dà il comando `qspnclient init`
+sulla riga di comando di una shell del sistema e specifica nei primi due argomenti successivi queste informazioni:
 
-*   args\[1] = topologia. Ad esempio la stringa "4.16.256.256" indica una rete a 4 livelli, dove la gsize al livello 3
+*   args\[2] = topologia. Ad esempio la stringa "4.16.256.256" indica una rete a 4 livelli, dove la gsize al livello 3
     è 4, ecc. ecc.
-*   args\[2] = indirizzo. Ad esempio la stringa "3.10.123.45" indica un indirizzo valido nella suddetta topologia.
+*   args\[3] = indirizzo. Ad esempio la stringa "3.10.123.45" indica un indirizzo Netsukuku valido nella suddetta topologia.
 
-Per comodità, il programma *qspnclient* assume che la topologia di rete usata sia la stessa per tutti i
-nodi che prendono parte al testbed. Questo significa che quando l'utente richiederà l'ingresso di un nodo
-in una diversa rete (vedere sotto il comando interattivo *enter_net*) la topologia non dovrà essere di nuovo specificata.
-
-Abbiamo già detto che alla prima *identità* il programma *qspnclient* associa la prima istanza della classe
-*NetworkStack*, che è destinata al network namespace default.
-
-In seguito, quando si forma una nuova identità (con il comando interattivo *add_identity*),
-necessariamente viene anche creato un nuovo network namespace temporaneo. Allora il programma *qspnclient*
-creerà una nuova istanza della classe NetworkStack destinata a quel network namespace.
-
-Quando viene creata una istanza di QspnManager (qui e anche con il comando interattivo *enter_net*)
-come prima operazione con l'istanza di NetworkStack che gestisce il network namespace associato
-a questa identità, il programma *qspnclient* assegna al nodo gli indirizzi IP che servono. Usa per questo
-il metodo `add_address` di NetworkStack.
-
-In questo caso specifico del costruttore *create_net*, siamo di fronte ad una identità principale che detiene un
-indirizzo Netsukuku *reale* *n*. Quindi il programma assegna al nodo:
-
-*   L'indirizzo IP globale di *n*.
-*   L'indirizzo IP globale anonimizzante di *n*.
-*   Per tutti i livelli *j* da 0 a *l* - 2 (indicando con *l* il numero dei livelli della topologia):
-    *   L'indirizzo IP interno al livello *j* + 1 di *n*.
+Per comodità, il programma **qspnclient** assume che la topologia di rete usata sia la stessa per tutti i
+nodi che prendono parte alla simulazione. Questo significa che quando l'utente richiederà l'ingresso di un nodo
+in una diversa rete (vedremo il comando `prepare_enter_net_phase_1`) la topologia non dovrà essere di nuovo specificata.
 
 * * *
 
