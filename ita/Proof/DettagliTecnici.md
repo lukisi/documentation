@@ -8,6 +8,18 @@ nel namespace `ProofOfConcept` mentre usa i diversi namespace `Netsukuku.*` per 
 classi dei vari moduli. Nel namespace `Netsukuku` sono definite le classi fornite dalle
 librerie *ntkd-common* e *ntkdrpc*.
 
+### Interazione programma-utente
+
+L'utente avvia il programma **qspnclient** su un sistema eseguendo su una shell il comando `qspnclient init`. In
+questo momento fornisce alcuni dati iniziali come argomenti. Il programma
+non restituisce il controllo della shell all'utente; la utilizza invece per visualizzare alcune informazioni
+utili durante le sue operazioni.
+
+Per le successive comunicazioni con il programma, l'utente dovrà aprire una nuova shell sul sistema e
+da questa dare altri comandi (ad esempio `qspnclient prepare_enter_net_phase_1`, ...) e con essi altri dati. Questi comandi
+e informazioni saranno comunicate al programma *qspnclient* già in esecuzione, poi il comando restituirà
+all'utente la shell, eventualmente dopo aver visualizzato le informazioni pertinenti.
+
 * * *
 
 Il programma **qspnclient** riceve all'avvio dall'utente, con una serie di flag *-i*, l'elenco
@@ -27,7 +39,7 @@ riceve questo segnale il programma **qspnclient** crea una istanza di ProofOfCon
 Poi aggiunge tale istanza alla lista *handlednics*.
 
 In questo stesso momento i dati di questa istanza di ProofOfConcept.HandledNic vengono mostrati a video
-con il relativo indice. In seguito l'utente può rivederli con il comando interattivo *show_handlednics*.
+con il relativo indice. In seguito l'utente può rivederli con il comando `show_handlednics`.
 
 Poi il programma inizializza il modulo Identities (col costruttore di IdentityManager) passando l'elenco delle
 interfacce di rete gestite (che sono in *handlednics*), ognuna col relativo MAC e indirizzo link-local.
