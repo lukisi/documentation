@@ -54,7 +54,7 @@ Dopo aver costruito IdentityManager il programma si mette in ascolto dei suoi se
 * * *
 
 Il programma *qspnclient* vuole tenere traccia delle identità che sono nel nodo. Lo fa tramite il
-dizionario *nodeids*, in cui la chiave è l'indice autoincrementante *nodeid_nextindex* e il valore è
+dizionario *local_identities*, in cui la chiave è l'indice autoincrementante *local_identity_nextindex* e il valore è
 una istanza della classe *IdentityData*. Dentro questa classe il programma mantiene alcune informazioni, tra le quali:
 
 *   `NodeID nodeid` - L'identificativo che il modulo Identities ha assegnato all'identità.
@@ -62,7 +62,7 @@ una istanza della classe *IdentityData*. Dentro questa classe il programma manti
 *   `my_fp` - Il fingerprint e le anzianità a livello 0.
 *   `string network_stack` - Il nome del relativo network namespace.
 
-Per valorizzare la prima istanza di IdentityData, nel dizionario con indice 0 e associata alla
+Per valorizzare la prima istanza di IdentityData, nel dizionario *local_identities* con indice 0 e associata alla
 prima identità del nodo, il programma chiama il metodo *get_main_id* di IdentityManager per
 recuperare il NodeID che il modulo Identities ha assegnato alla prima identità. Questa prima
 identità gestisce il network namespace default, quindi `network_stack = ""`.
@@ -84,6 +84,10 @@ sulla riga di comando di una shell del sistema e specifica nei primi due argomen
 Per comodità, il programma **qspnclient** assume che la topologia di rete usata sia la stessa per tutti i
 nodi che prendono parte alla simulazione. Questo significa che quando l'utente richiederà l'ingresso di un nodo
 in una diversa rete (vedremo il comando `prepare_enter_net_phase_1`) la topologia non dovrà essere di nuovo specificata.
+
+In questo momento, quando abbiamo inizializzato il modulo Qspn per la prima identità principale del sistema,
+i dati di questa istanza di IdentityData `local_identities[0]` vengono mostrati a video
+con il relativo indice. In seguito l'utente può rivederli con il comando `show_local_identities`.
 
 * * *
 
@@ -152,6 +156,26 @@ In questo stesso momento tutti questi dati sono mostrati a video con il relativo
 l'utente può rivederli con il comando `show_identityarcs`.
 
 * * *
+
+Vediamo quali passaggi portano due sistemi, *𝛼* e *𝛽*, a rilevare un arco tra di loro e uno dei due, *𝛽*,
+a fare ingresso nella rete dell'altro.
+
+*   Nel sistema *𝛼* l'utente dà il comando `qspnclient init 4.2.2.2 1.0.0.1 -i eth1`. Nella shell in cui
+    è stato dato il comando il controllo non ritorna all'utente. Chiamiamo questa shell *console di qspnclient*.
+    Viene usata dal programma per mostrare all'utente alcune segnalazioni.
+*   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
+    `handlednic #0: eth1 00:16:3E:EC:A3:E1 169.254.96.141`
+*   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
+    `local_identity #0: namespace default, fp0: 56724331, net_fp: 56724331, 1.0.0.1`
+
+*   Nel sistema *𝛽* l'utente dà il comando `qspnclient init 4.2.2.2 3.1.0.1 -i eth1`.
+*   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
+    `handlednic #0: eth1 00:16:3E:5B:78:D5 169.254.94.223`
+*   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
+    `local_identity #0: namespace default, fp0: 75809993, net_fp: 75809993, 3.1.0.1`
+
+*   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
+    ``
 
 Supponiamo ora che due nodi A e B hanno costituito un arco-identità. Il relativo indice di *identityarcs*
 è mostrato a video, in questo esempio sia 0 nel nodo A e 0 nel nodo B. Supponiamo che il nodo A vuole entrare
