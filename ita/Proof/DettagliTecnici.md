@@ -113,7 +113,7 @@ classe ProofOfConcept.Arc che ha questi membri:
 *   `INeighborhoodArc neighborhood_arc`.
 *   `ProofOfConcept.IdmgmtArc idmgmt_arc`.
 
-Mette questa istanza di ProofOfConcept.Arc in un altro dizionario, *nodearcs*, usando sempre come
+Mette questa istanza di ProofOfConcept.Arc in un altro dizionario, *real_arcs*, usando sempre come
 chiave la stringa composta dai due MAC address.
 
 Poi il programma, basandosi su questa istanza di ProofOfConcept.Arc, istanzia una classe
@@ -127,21 +127,10 @@ I dati che servono per implementare i metodi di IIdmgmtArc sono:
 *   *get_peer_mac()* – `arc.neighborhood_arc.neighbour_mac`.
 
 Questa istanza di ProofOfConcept.IdmgmtArc viene anche salvata nel membro *idmgmt_arc* della stessa
-istanza di ProofOfConcept.Arc. Così il programma in seguito partendo dall'indice di *nodearcs* potrà recuperarla.
+istanza di ProofOfConcept.Arc. Così il programma in seguito partendo dalla chiave di *real_arcs* potrà recuperarla.
 
-In questo stesso momento tutti questi dati sono mostrati a video con il relativo indice. In seguito
-l'utente può rivederli con il comando interattivo *show_nodearcs*.
-
-Successivamente l'utente potrà modificare il costo associato ad un arco che era stato in precedenza
-accettato. Lo fa con il comando interattivo `change_nodearc` specificando il nuovo costo e individuando
-l'arco tramite il suo *nodearc_index*.
-
-In questo momento il programma *qspnclient* guarda quali delle sue identità hanno una
-istanza di QspnArc (di cui parliamo sotto) associata a questo arco. Per ognuna di esse il
-programma notifica questa variazione di costo alla relativa istanza di QspnManager.
-
-L'utente potrà anche rimuovere un arco che era stato in precedenza accettato. Lo fa con il comando
-interattivo `remove_nodearc` individuando l'arco tramite il suo *nodearc_index*.
+In questo stesso momento tutti questi dati sono mostrati a video. In seguito
+l'utente può rivederli con il comando `show_real_arcs`.
 
 * * *
 
@@ -160,7 +149,7 @@ Associa questa istanza di ProofOfConcept.IdentityArc al prossimo valore dell'ind
 *identityarc_nextindex*, nel dizionario *identityarcs*.
 
 In questo stesso momento tutti questi dati sono mostrati a video con il relativo indice. In seguito
-l'utente può rivederli con il comando interattivo *show_identityarcs*.
+l'utente può rivederli con il comando `show_identityarcs`.
 
 * * *
 
@@ -579,17 +568,17 @@ notifica questa rimozione ai sistemi vicini.
 *   **show_handlednics**
 *   **show_nodeids**
 *   **show_neighborhood_arcs**
-*   **add_nodearc**
+*   **add_real_arc**
     *   `string key`  
         La chiave è composta dal MAC della mia interfaccia e il MAC dell'interfaccia del
         vicino, separati da un trattino. Come compare a video con il comando `show_neighborhood_arcs`.
     *   `int cost`
-*   **show_nodearcs**
-*   **change_nodearc**
-    *   `int nodearc_index`
+*   **change_real_arc**
+    *   `string key`
     *   `int cost`
-*   **remove_nodearc**
-    *   `int nodearc_index`
+*   **remove_real_arc**
+    *   `string key`
+*   **show_real_arcs**
 *   **show_identityarcs**
 *   **show_ntkaddress**
     *   `int nodeid_index`
