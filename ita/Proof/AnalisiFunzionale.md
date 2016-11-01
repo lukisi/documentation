@@ -4,7 +4,6 @@
 1.  [Operazioni del qspnclient](#Operazioni_del_qspnclient)
     1.  [Interazione programma-utente](#Interazione_programma_utente)
     1.  [Avvio del programma](#Avvio_programma)
-    1.  [Primo segnale `bootstrap_complete`](#Primo_bootstrap_complete)
     1.  [Archi con i sistemi vicini](#Archi_vicini)
     1.  [Ingresso in una rete - Caso 1](#Ingresso_rete_1)
     1.  [Un nuovo vicino nella stessa rete viene rilevato](#Nuovo_vicino_stessa_rete)

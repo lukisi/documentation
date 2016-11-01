@@ -3,43 +3,38 @@
 1.  **TODO**
 1.  **TOC**
 
-Per evitare conflitti di nomi, il programma *qspnclient* definisce le proprie classi e funzioni
-nel namespace *ProofOfConcept* mentre usa i diversi namespace _Netsukuku.*_ per accedere alle
-classi dei vari moduli. Nel namespace *Netsukuku* sono definite le classi fornite dalle
+Per evitare conflitti di nomi, il programma **qspnclient** definisce le proprie classi e funzioni
+nel namespace `ProofOfConcept` mentre usa i diversi namespace `Netsukuku.*` per accedere alle
+classi dei vari moduli. Nel namespace `Netsukuku` sono definite le classi fornite dalle
 librerie *ntkd-common* e *ntkdrpc*.
 
 * * *
 
-Il programma *qspnclient* riceve all'avvio dall'utente, con una serie di flag *-i*, l'elenco
+Il programma **qspnclient** riceve all'avvio dall'utente, con una serie di flag *-i*, l'elenco
 delle interfacce di rete da gestire.
 
-Questo elenco di nomi di interfacce viene immediatamente passato al modulo Neighborhood (con il
-metodo *start_monitor* di NeighborhoodManager) nello stesso ordine in cui è stato proposto dall'utente.
-Il programma tiene anche in memoria questo elenco di nomi di interfacce nella lista *real_nics*.
+Questo elenco di nomi di interfacce viene immediatamente comunicato al modulo Neighborhood tramite una serie
+di chiamate al metodo *start_monitor* di NeighborhoodManager, nello stesso ordine in cui è stato proposto dall'utente.
 
-Il modulo Neighborhood, in base all'ordine in cui gli sono passati, produce una serie di chiamate
-al metodo *add_address* di INeighborhoodIPRouteManager. Poi emette il segnale *nic_address_set*. Quando
-riceve questo segnale il programma crea una istanza di ProofOfConcept.HandledNic che contiene:
+Durante l'esecuzione del metodo *start_monitor* il modulo Neighborhood, dopo aver chiamato
+il metodo *add_address* di INeighborhoodIPRouteManager, emette il segnale *nic_address_set*. Quando
+riceve questo segnale il programma **qspnclient** crea una istanza di ProofOfConcept.HandledNic che contiene:
 
 *   `string dev`.
 *   `string mac`.
 *   `string linklocal`.
 
-Poi associa tale istanza al prossimo valore dell'indice autoincrementante *linklocal_nextindex*, nel dizionario *linklocals*.
+Poi aggiunge tale istanza alla lista *handlednics*.
 
 In questo stesso momento i dati di questa istanza di ProofOfConcept.HandledNic vengono mostrati a video
-con il relativo indice. In seguito l'utente può rivederli con il comando interattivo *show_linklocals*.
+con il relativo indice. In seguito l'utente può rivederli con il comando interattivo *show_handlednics*.
 
-* * *
+Poi il programma inizializza il modulo Identities (col costruttore di IdentityManager) passando l'elenco delle
+interfacce di rete gestite (che sono in *handlednics*), ognuna col relativo MAC e indirizzo link-local.
 
-Nel momento in cui fa le chiamate al metodo *start_monitor* del NeighborhoodManager, il programma
-*qspnclient* rileva il segnale *nic_address_set* quando viene assegnato un link-local a queste interfacce,
-quindi in seguito avrà un elenco di ProofOfConcept.HandledNic in *linklocals*.
-
-Poi il programma inizializza il modulo Identities (col costruttore di IdentityManager) passando l'elenco
-delle interfacce di rete gestite, ognuna col relativo MAC e indirizzo link-local. Se in seguito rileva
-ancora il segnale *nic_address_set* di INeighborhoodIPRouteManager, mentre cioè l'istanza di IdentityManager
-è stata già costruita, dovrà chiamare il suo metodo *add_handled_nic*.
+Non prevediamo la possibilità che in seguito vengano ad aggiungersi (o rimuoversi) altre interfacce di
+rete da gestire. Quindi non dovrebbe rilevarsi in seguito il segnale *nic_address_set* di INeighborhoodIPRouteManager,
+che comunque viene ignorato dal programma.
 
 Dopo aver costruito IdentityManager il programma si mette in ascolto dei suoi segnali *identity_arc_added*,
 *changed* e *removed*.
@@ -51,18 +46,12 @@ una istanza della classe *IdentityData*. Dentro questa classe il programma manti
 *   `NodeID nodeid` - L'identificativo che il modulo Identities ha assegnato all'identità.
 *   `my_addr` - L'indirizzo Netsukuku.
 *   `my_fp` - Il fingerprint e le anzianità a livello 0.
-*   `NetworkStack network_stack` - Una classe, che dettaglieremo dopo, con la quale si intende gestire gli
-    aspetti delle routing policy di un dato network namespace.
+*   `string network_stack` - Il nome del relativo network namespace.
 
 Per valorizzare la prima istanza di IdentityData, nel dizionario con indice 0 e associata alla
 prima identità del nodo, il programma chiama il metodo *get_main_id* di IdentityManager per
-recuperare il NodeID che il modulo Identities ha assegnato alla prima identità.
-
-In questo stesso momento il NodeID viene mostrato a video con il relativo indice. In seguito l'utente può
-rivederli con il comando interattivo *show_nodeids*.
-
-Inoltre in questa prima istanza di IdentityData viene memorizzata la prima istanza di *NetworkStack* che
-gestisce il network namespace default.
+recuperare il NodeID che il modulo Identities ha assegnato alla prima identità. Questa prima
+identità gestisce il network namespace default, quindi `network_stack = ""`.
 
 * * *
 
@@ -584,7 +573,7 @@ notifica questa rimozione ai sistemi vicini.
 
 ## Elenco comandi interattivi
 
-*   **show_linklocals**
+*   **show_handlednics**
 *   **show_nodeids**
 *   **show_neighborhood_arcs**
 *   **add_nodearc**
