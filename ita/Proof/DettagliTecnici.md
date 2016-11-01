@@ -120,6 +120,9 @@ classe ProofOfConcept.Arc che ha questi membri:
 Mette questa istanza di ProofOfConcept.Arc in un altro dizionario, *real_arcs*, usando sempre come
 chiave la stringa composta dai due MAC address.
 
+In questo stesso momento tutti questi dati sono mostrati a video. In seguito
+l'utente può rivederli con il comando `show_real_arcs`.
+
 Poi il programma, basandosi su questa istanza di ProofOfConcept.Arc, istanzia una classe
 ProofOfConcept.IdmgmtArc che implementa IIdmgmtArc che andrà passata al modulo Identities nel
 metodo *add_arc*. Al suo interno mantiene (in un riferimento weak per evitare il loop) l'istanza di ProofOfConcept.Arc.
@@ -132,9 +135,6 @@ I dati che servono per implementare i metodi di IIdmgmtArc sono:
 
 Questa istanza di ProofOfConcept.IdmgmtArc viene anche salvata nel membro *idmgmt_arc* della stessa
 istanza di ProofOfConcept.Arc. Così il programma in seguito partendo dalla chiave di *real_arcs* potrà recuperarla.
-
-In questo stesso momento tutti questi dati sono mostrati a video. In seguito
-l'utente può rivederli con il comando `show_real_arcs`.
 
 * * *
 
@@ -150,10 +150,10 @@ ProofOfConcept.IdentityArc che ha questi membri:
 *   `string peer_linklocal`. Analogo per il contenuto di `id_arc.get_peer_linklocal()`.
 
 Associa questa istanza di ProofOfConcept.IdentityArc al prossimo valore dell'indice autoincrementante
-*identityarc_nextindex*, nel dizionario *identityarcs*.
+*identity_arc_nextindex*, nel dizionario *identity_arcs*.
 
 In questo stesso momento tutti questi dati sono mostrati a video con il relativo indice. In seguito
-l'utente può rivederli con il comando `show_identityarcs`.
+l'utente può rivederli con il comando `show_identity_arcs`.
 
 * * *
 
@@ -174,8 +174,25 @@ a fare ingresso nella rete dell'altro.
 *   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
     `local_identity #0: namespace default, fp0: 75809993, net_fp: 75809993, 3.1.0.1`
 
+*   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
+    `neighborhood_arc 00:16:3E:EC:A3:E1-00:16:3E:5B:78:D5 : linklocal 169.254.94.223, cost 934us`
 *   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
-    ``
+    `neighborhood_arc 00:16:3E:5B:78:D5-00:16:3E:EC:A3:E1 : linklocal 169.254.96.141, cost 581us`
+
+*   Nel sistema *𝛼* l'utente dà il comando `qspnclient add_real_arc 00:16:3E:EC:A3:E1 00:16:3E:5B:78:D5 10000`.
+*   Rapidamente, nel sistema *𝛽* l'utente dà il comando `qspnclient add_real_arc 00:16:3E:5B:78:D5 00:16:3E:EC:A3:E1 11000`.
+
+*   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
+    `real_arc 00:16:3E:EC:A3:E1-00:16:3E:5B:78:D5 : peer_linklocal 169.254.94.223, cost 10000us`
+*   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
+    `real_arc 00:16:3E:5B:78:D5-00:16:3E:EC:A3:E1 : peer_linklocal 169.254.96.141, cost 11000us`
+*   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
+    `identity_arc #0: real_arc: 00:16:3E:EC:A3:E1-00:16:3E:5B:78:D5, local_identity: 0`  
+    `peer_mac: 00:16:3E:5B:78:D5, peer_linklocal: 169.254.94.223`
+*   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
+    `identity_arc #0: real_arc: 00:16:3E:5B:78:D5-00:16:3E:EC:A3:E1, local_identity: 0`  
+    `peer_mac: 00:16:3E:EC:A3:E1, peer_linklocal: 169.254.96.141`
+
 
 Supponiamo ora che due nodi A e B hanno costituito un arco-identità. Il relativo indice di *identityarcs*
 è mostrato a video, in questo esempio sia 0 nel nodo A e 0 nel nodo B. Supponiamo che il nodo A vuole entrare
@@ -603,7 +620,7 @@ notifica questa rimozione ai sistemi vicini.
 *   **remove_real_arc**
     *   `string key`
 *   **show_real_arcs**
-*   **show_identityarcs**
+*   **show_identity_arcs**
 *   **show_ntkaddress**
     *   `int nodeid_index`
 *   **prepare_add_identity**
