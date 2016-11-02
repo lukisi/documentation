@@ -194,10 +194,10 @@ Rilevamento arco, sua accettazione, formazione arco-identità.
     `real_arc 00:16:3E:5B:78:D5-00:16:3E:EC:A3:E1 : peer_linklocal 169.254.96.141, cost 11000us`
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
     `identity_arc #0: real_arc: 00:16:3E:EC:A3:E1-00:16:3E:5B:78:D5, local_identity: 0`  
-    `.                peer_mac: 00:16:3E:5B:78:D5, peer_linklocal: 169.254.94.223`
+    `                 peer_mac: 00:16:3E:5B:78:D5, peer_linklocal: 169.254.94.223`
 *   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
     `identity_arc #0: real_arc: 00:16:3E:5B:78:D5-00:16:3E:EC:A3:E1, local_identity: 0`  
-    `.                peer_mac: 00:16:3E:EC:A3:E1, peer_linklocal: 169.254.96.141`
+    `                 peer_mac: 00:16:3E:EC:A3:E1, peer_linklocal: 169.254.96.141`
 
 Ingresso.
 
@@ -226,22 +226,23 @@ Ingresso.
     arco-identità #0 (o meglio il duplicato di esso per *𝛼<sub>1</sub>*) sarà un suo nuovo arco-qspn
     nella rete. Dal punto di vista del sistema *𝛽*, l'arco-identità che sarà un suo nuovo arco-qspn
     è quello che avrà peer_MAC 00:16:3E:EC:A3:E1.
-*   Nel sistema *𝛼* l'utente dà il comando:  
-    `qspnclient prepare_enter_net_phase_1`  
-    `.          0` = identità interessata  
-    `.          0` = livello del g-nodo entrante  
-    `.          1` = livello del g-nodo ospitante  
-    `.          3.1.0` = indirizzo del g-nodo ospitante  
-    `.          ??` = anzianità/fingerprint del g-nodo ospitante  
-    `.          2` = posizione virtuale temporanea nel g-nodo ospitante  
-    `.          1` = anzianità della posizione virtuale temporanea nel g-nodo ospitante  
-    `.          0` = posizione reale nel g-nodo ospitante  
-    `.          2` = anzianità della posizione reale nel g-nodo ospitante  
-    `.          2` = posizione virtuale come g-nodo di connettività  
-    `.          1` = anzianità della posizione virtuale come g-nodo di connettività  
-    `.          [0]` = elenco identificativi degli archi-identità che saranno archi-qspn  
-    `.          13140402` = identificativo dell'operazione di ingresso  
-    `.          null` = identificativo dell'operazione di migrazione previa
+*   Nel sistema *𝛼* l'utente dà il comando `prepare_enter_net_phase_1` con questi dati:
+    *   identità interessata = `0`
+    *   livello del g-nodo entrante = `0`
+    *   livello del g-nodo ospitante = `1`
+    *   indirizzo del g-nodo ospitante = `3.1.0`
+    *   anzianità/fingerprint del g-nodo ospitante = `??`
+    *   posizione virtuale temporanea nel g-nodo ospitante = `2`
+    *   anzianità della posizione virtuale temporanea nel g-nodo ospitante = `1`
+    *   posizione reale nel g-nodo ospitante = `0`
+    *   anzianità della posizione reale nel g-nodo ospitante = `2`
+    *   posizione virtuale come g-nodo di connettività = `2`
+    *   anzianità della posizione virtuale come g-nodo di connettività = `1`
+    *   elenco identificativi degli archi-identità che saranno archi-qspn = `[0]`
+    *   identificativo dell'operazione di ingresso = `13140402`
+    *   identificativo dell'operazione di migrazione previa = `null`
+*   Cioè, nel sistema *𝛼* l'utente dà il comando:  
+    `qspnclient prepare_enter_net_phase_1 0 0 1 3.1.0 ?? 2 1 0 2 2 1 [0] 13140402 null`
 *   Appena terminato il comando precedente, nel sistema *𝛼* l'utente dà il comando:  
     `qspnclient enter_net_phase_1 0 13140402`  
 *   Dopo un attesa di un secondo circa, nel sistema *𝛽* l'utente dà il comando:  
