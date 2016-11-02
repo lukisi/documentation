@@ -160,39 +160,94 @@ l'utente può rivederli con il comando `show_identity_arcs`.
 Vediamo quali passaggi portano due sistemi, *𝛼* e *𝛽*, a rilevare un arco tra di loro e uno dei due, *𝛽*,
 a fare ingresso nella rete dell'altro.
 
+Inizializzazione del sistema *𝛼*.
+
 *   Nel sistema *𝛼* l'utente dà il comando `qspnclient init 4.2.2.2 1.0.0.1 -i eth1`. Nella shell in cui
     è stato dato il comando il controllo non ritorna all'utente. Chiamiamo questa shell *console di qspnclient*.
     Viene usata dal programma per mostrare all'utente alcune segnalazioni.
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
     `handlednic #0: eth1 00:16:3E:EC:A3:E1 169.254.96.141`
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
-    `local_identity #0: namespace default, fp0: 56724331, net_fp: 56724331, 1.0.0.1`
+    `local_identity #0: indirizzo 1.0.0.1, anzianità 0.0.0.0, namespace default`  
+    `                   fp0: 56724331, net_fp: 56724331`
+
+Inizializzazione del sistema *𝛽*.
 
 *   Nel sistema *𝛽* l'utente dà il comando `qspnclient init 4.2.2.2 3.1.0.1 -i eth1`.
 *   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
     `handlednic #0: eth1 00:16:3E:5B:78:D5 169.254.94.223`
 *   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
-    `local_identity #0: namespace default, fp0: 75809993, net_fp: 75809993, 3.1.0.1`
+    `local_identity #0: indirizzo 3.1.0.1, anzianità 0.0.0.0, namespace default`  
+    `                   fp0: 75809993, net_fp: 75809993`
+
+Rilevamento arco, sua accettazione, formazione arco-identità.
 
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
     `neighborhood_arc 00:16:3E:EC:A3:E1-00:16:3E:5B:78:D5 : linklocal 169.254.94.223, cost 934us`
 *   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
     `neighborhood_arc 00:16:3E:5B:78:D5-00:16:3E:EC:A3:E1 : linklocal 169.254.96.141, cost 581us`
-
 *   Nel sistema *𝛼* l'utente dà il comando `qspnclient add_real_arc 00:16:3E:EC:A3:E1 00:16:3E:5B:78:D5 10000`.
 *   Rapidamente, nel sistema *𝛽* l'utente dà il comando `qspnclient add_real_arc 00:16:3E:5B:78:D5 00:16:3E:EC:A3:E1 11000`.
-
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
     `real_arc 00:16:3E:EC:A3:E1-00:16:3E:5B:78:D5 : peer_linklocal 169.254.94.223, cost 10000us`
 *   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
     `real_arc 00:16:3E:5B:78:D5-00:16:3E:EC:A3:E1 : peer_linklocal 169.254.96.141, cost 11000us`
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
     `identity_arc #0: real_arc: 00:16:3E:EC:A3:E1-00:16:3E:5B:78:D5, local_identity: 0`  
-    `peer_mac: 00:16:3E:5B:78:D5, peer_linklocal: 169.254.94.223`
+    `                 peer_mac: 00:16:3E:5B:78:D5, peer_linklocal: 169.254.94.223`
 *   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
     `identity_arc #0: real_arc: 00:16:3E:5B:78:D5-00:16:3E:EC:A3:E1, local_identity: 0`  
-    `peer_mac: 00:16:3E:EC:A3:E1, peer_linklocal: 169.254.96.141`
+    `                 peer_mac: 00:16:3E:EC:A3:E1, peer_linklocal: 169.254.96.141`
 
+Ingresso.
+
+*   L'utente decide che grazie a questo nuovo arco-identità il nodo 1·0·0·1 entrerà nella rete con cui
+    si è incontrato.  
+    Quando si fa un ingresso, a fare ingresso è sempre un g-nodo (in questo caso di livello 0)
+    il cui indirizzo Netsukuku è completamente *reale*. Quando si tratta di un singolo
+    nodo, quindi, è sempre la sua identità principale.  
+    Quindi, in questo caso abbiamo che l'identità principale *𝛼<sub>0</sub>* diventa una identità
+    di connettività, mentre la duplicata nuova identità *𝛼<sub>1</sub>* (quale unico componente
+    del nuovo g-nodo che fa il suo ingresso nell'altra rete) diventa l'identità principale di *𝛼*.  
+    Quindi l'utente decide che *𝛼<sub>1</sub>* entra nella rete del sistema *𝛽* (la rete che
+    indichiamo con net_fp: 75809993).  
+*   Più precisamente l'utente decide che *𝛼<sub>1</sub>*, essendo un g-nodo di livello 0,
+    entra nel g-nodo di livello 1 di cui fa parte *𝛽<sub>0</sub>*, che ha un posto libero. Decide
+    inoltre che *𝛼<sub>1</sub>*, dentro il g-nodo con indirizzo Netsukuku 3·1·0·, prenderà dapprima
+    la posizione virtuale 2 con anzianità 1. Poi prenderà la posizione reale 0 con anzianità 2.  
+    L'utente decide inoltre che l'identità di connettività *𝛼<sub>1</sub>*, dentro il g-nodo della
+    vecchia rete con indirizzo Netsukuku 1·0·0·, prenderà ora la posizione virtuale 2 con anzianità 1.
+*   L'utente valuta che non serve nessuna migration path. Prende a caso un identificativo per
+    l'operazione di ingresso, assumiamo sia 13140402.
+*   Oltre agli archi-identità interni al g-nodo che fa ingresso (in questo caso nessuno, essendo il
+    g-nodo di livello 0) l'utente guarda quali altri archi-identità diverranno archi-qspn per le
+    identità che faranno parte del nuovo g-nodo. In questo caso la sola identità che farà parte del
+    nuovo g-nodo è *𝛼<sub>1</sub>*, che diventa l'identità principale nel sistema *𝛼*. Il suo
+    arco-identità #0 (o meglio il duplicato di esso per *𝛼<sub>1</sub>*) sarà un suo nuovo arco-qspn
+    nella rete. Dal punto di vista del sistema *𝛽*, l'arco-identità che sarà un suo nuovo arco-qspn
+    è quello che avrà peer_MAC 00:16:3E:EC:A3:E1.
+*   Nel sistema *𝛼* l'utente dà il comando:  
+    `qspnclient prepare_enter_net_phase_1`  
+    `           0` = identità interssata  
+    `           0` = livello del g-nodo entrante  
+    `           1` = livello del g-nodo ospitante  
+    `           3.1.0` = indirizzo del g-nodo ospitante  
+    `           ??` = anzianità/fingerprint del g-nodo ospitante  
+    `           2` = posizione virtuale temporanea nel g-nodo ospitante  
+    `           1` = anzianità della posizione virtuale temporanea nel g-nodo ospitante  
+    `           0` = posizione reale nel g-nodo ospitante  
+    `           2` = anzianità della posizione reale nel g-nodo ospitante  
+    `           2` = posizione virtuale come g-nodo di connettività  
+    `           1` = anzianità della posizione virtuale come g-nodo di connettività  
+    `           [0]` = elenco identificativi degli archi-identità che saranno archi-qspn  
+    `           13140402` = identificativo dell'operazione di ingresso  
+    `           null` = identificativo dell'operazione di migrazione previa
+*   Appena terminato il comando precedente, nel sistema *𝛼* l'utente dà il comando:  
+    `qspnclient enter_net_phase_1 0 13140402`  
+*   Dopo un attesa di un secondo circa, nel sistema *𝛽* l'utente dà il comando:  
+    `qspnclient add_qspn_arc 0 00:16:3E:EC:A3:E1`  
+
+### Vecchio
 
 Supponiamo ora che due nodi A e B hanno costituito un arco-identità. Il relativo indice di *identityarcs*
 è mostrato a video, in questo esempio sia 0 nel nodo A e 0 nel nodo B. Supponiamo che il nodo A vuole entrare
