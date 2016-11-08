@@ -166,10 +166,14 @@ Inizializzazione del sistema *𝛼*.
     è stato dato il comando il controllo non ritorna all'utente. Chiamiamo questa shell *console di qspnclient*.
     Viene usata dal programma per mostrare all'utente alcune segnalazioni.
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
-    `handlednic #0: eth1 00:16:3E:EC:A3:E1 169.254.96.141`
+```
+handlednic #0: eth1 00:16:3E:EC:A3:E1 169.254.96.141
+```
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
-    `local_identity #0: indirizzo 1.0.0.1, anzianità 0.0.0.0, namespace default`  
-    `                   fp0: 56724331, net_fp: 56724331`
+```
+local_identity #0: indirizzo 1.0.0.1, anzianità 0.0.0.0, namespace default
+                   fp0: 56724331, net_fp: 56724331
+```
 
 Inizializzazione del sistema *𝛽*.
 
