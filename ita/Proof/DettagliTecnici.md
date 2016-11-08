@@ -166,14 +166,10 @@ Inizializzazione del sistema *𝛼*.
     è stato dato il comando il controllo non ritorna all'utente. Chiamiamo questa shell *console di qspnclient*.
     Viene usata dal programma per mostrare all'utente alcune segnalazioni.
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
-```
-handlednic #0: eth1 00:16:3E:EC:A3:E1 169.254.96.141
-```
+    `handlednic #0: eth1 00:16:3E:EC:A3:E1 169.254.96.141`
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
-```
-local_identity #0: indirizzo 1.0.0.1, anzianità 0.0.0.0, namespace default
-                   fp0: 56724331, net_fp: 56724331
-```
+    `local_identity #0: indirizzo 1.0.0.1, anzianità 0.0.0.0, namespace default`  
+    `                   fp0: 56724331, net_fp: 56724331`
 
 Inizializzazione del sistema *𝛽*.
 
@@ -667,18 +663,19 @@ notifica questa rimozione ai sistemi vicini.
 ## Elenco comandi interattivi
 
 *   **show_handlednics**
-*   **show_nodeids**
+*   **show_local_identities**
 *   **show_neighborhood_arcs**
 *   **add_real_arc**
-    *   `string key`  
-        La chiave è composta dal MAC della mia interfaccia e il MAC dell'interfaccia del
-        vicino, separati da un trattino. Come compare a video con il comando `show_neighborhood_arcs`.
+    *   `string my_mac`
+    *   `string peer_mac`
     *   `int cost`
 *   **change_real_arc**
-    *   `string key`
+    *   `string my_mac`
+    *   `string peer_mac`
     *   `int cost`
 *   **remove_real_arc**
-    *   `string key`
+    *   `string my_mac`
+    *   `string peer_mac`
 *   **show_real_arcs**
 *   **show_identity_arcs**
 *   **show_ntkaddress**
