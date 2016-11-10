@@ -60,12 +60,12 @@ una istanza della classe *IdentityData*. Dentro questa classe il programma manti
 *   `NodeID nodeid` - L'identificativo che il modulo Identities ha assegnato all'identità.
 *   `my_addr` - L'indirizzo Netsukuku.
 *   `my_fp` - Il fingerprint e le anzianità a livello 0.
-*   `string network_stack` - Il nome del relativo network namespace.
+*   `string network_namespace` - Il nome del relativo network namespace.
 
 Per valorizzare la prima istanza di IdentityData, nel dizionario *local_identities* con indice 0 e associata alla
 prima identità del nodo, il programma chiama il metodo *get_main_id* di IdentityManager per
 recuperare il NodeID che il modulo Identities ha assegnato alla prima identità. Questa prima
-identità gestisce il network namespace default, quindi `network_stack = ""`.
+identità gestisce il network namespace default, quindi `network_namespace = ""`.
 
 * * *
 
