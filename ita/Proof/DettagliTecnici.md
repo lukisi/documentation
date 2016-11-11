@@ -48,9 +48,6 @@ Non prevediamo la possibilità che in seguito vengano ad aggiungersi (o rimuover
 rete da gestire. Quindi non dovrebbe rilevarsi in seguito il segnale *nic_address_set* di INeighborhoodIPRouteManager,
 che comunque viene ignorato dal programma.
 
-Dopo aver costruito IdentityManager il programma si mette in ascolto dei suoi segnali *identity_arc_added*,
-*changed* e *removed*.
-
 * * *
 
 Il programma *qspnclient* vuole tenere traccia delle identità che sono nel nodo. Lo fa tramite il
@@ -88,6 +85,12 @@ in una diversa rete (vedremo il comando `prepare_enter_net_phase_1`) la topologi
 In questo momento, quando abbiamo inizializzato il modulo Qspn per la prima identità principale del sistema,
 i dati di questa istanza di IdentityData `local_identities[0]` vengono mostrati a video
 con il relativo indice. In seguito l'utente può rivederli con il comando `show_local_identities`.
+
+* * *
+
+Dopo aver costruito IdentityManager il programma si mette in ascolto dei suoi segnali *identity_arc_added*,
+*changed*, *removing* e *removed*. Tramite questi segnali verrà messo al corrente degli archi-identità che
+in ogni momento le sue identità hanno a disposizione.
 
 * * *
 
