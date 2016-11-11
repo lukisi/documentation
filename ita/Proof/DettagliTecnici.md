@@ -64,6 +64,9 @@ prima identità del nodo, il programma chiama il metodo *get_main_id* di Identit
 recuperare il NodeID che il modulo Identities ha assegnato alla prima identità. Questa prima
 identità gestisce il network namespace default, quindi `network_namespace = ""`.
 
+In questo stesso momento i dati di questa istanza di ProofOfConcept.IdentityData vengono mostrati a video
+con il relativo indice. In seguito l'utente può rivederli con il comando `show_local_identities`.
+
 * * *
 
 Dopo aver recuperaro il NodeID della sua prima identità, il programma **qspnclient** crea la prima istanza di
