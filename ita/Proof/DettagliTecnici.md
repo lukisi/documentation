@@ -98,7 +98,7 @@ in ogni momento le sue identità hanno a disposizione.
 * * *
 
 Quando il programma riceve dal modulo Neighborhood la notifica che un arco fisico è stato realizzato, esso mostra
-le informazioni (link-local e MAC dei due estremi) dell'arco a video. Inoltre mette la relativa istanza di
+le informazioni (MAC dei due estremi, peer-linklocal e costo) dell'arco a video. Inoltre mette la relativa istanza di
 INeighborhoodArc nel dizionario *neighborhood_arcs* con una chiave stringa composta dai due MAC address.
 
 In seguito l'utente può rivederli con il comando `show_neighborhood_arcs`.
@@ -126,7 +126,8 @@ classe ProofOfConcept.Arc che ha questi membri:
 Mette questa istanza di ProofOfConcept.Arc in un altro dizionario, *real_arcs*, usando sempre come
 chiave la stringa composta dai due MAC address.
 
-In questo stesso momento tutti questi dati sono mostrati a video. In seguito
+In questo stesso momento i dati relativi all'arco accettato dall'utente (MAC dei due estremi,
+peer-linklocal e costo simulato) sono mostrati a video. In seguito
 l'utente può rivederli con il comando `show_real_arcs`.
 
 Poi il programma, basandosi su questa istanza di ProofOfConcept.Arc, istanzia una classe
@@ -189,15 +190,15 @@ Inizializzazione del sistema *𝛽*.
 Rilevamento arco, sua accettazione, formazione arco-identità.
 
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
-    `neighborhood_arc 00:16:3E:EC:A3:E1-00:16:3E:5B:78:D5 : linklocal 169.254.94.223, cost 934us`
+    `neighborhood_arc '00:16:3E:EC:A3:E1-00:16:3E:5B:78:D5': peer_linklocal 169.254.94.223, cost 934us`
 *   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
-    `neighborhood_arc 00:16:3E:5B:78:D5-00:16:3E:EC:A3:E1 : linklocal 169.254.96.141, cost 581us`
+    `neighborhood_arc '00:16:3E:5B:78:D5-00:16:3E:EC:A3:E1': peer_linklocal 169.254.96.141, cost 581us`
 *   Nel sistema *𝛼* l'utente dà il comando `qspnclient add_real_arc 00:16:3E:EC:A3:E1 00:16:3E:5B:78:D5 10000`.
 *   Rapidamente, nel sistema *𝛽* l'utente dà il comando `qspnclient add_real_arc 00:16:3E:5B:78:D5 00:16:3E:EC:A3:E1 11000`.
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
-    `real_arc 00:16:3E:EC:A3:E1-00:16:3E:5B:78:D5 : peer_linklocal 169.254.94.223, cost 10000us`
+    `real_arc '00:16:3E:EC:A3:E1-00:16:3E:5B:78:D5': peer_linklocal 169.254.94.223, cost 10000us`
 *   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
-    `real_arc 00:16:3E:5B:78:D5-00:16:3E:EC:A3:E1 : peer_linklocal 169.254.96.141, cost 11000us`
+    `real_arc '00:16:3E:5B:78:D5-00:16:3E:EC:A3:E1': peer_linklocal 169.254.96.141, cost 11000us`
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
     `identity_arc #0: real_arc: 00:16:3E:EC:A3:E1-00:16:3E:5B:78:D5, local_identity: 0`  
     `                 peer_mac: 00:16:3E:5B:78:D5, peer_linklocal: 169.254.94.223`
