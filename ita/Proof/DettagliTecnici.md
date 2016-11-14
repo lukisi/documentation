@@ -255,6 +255,53 @@ Ingresso.
 *   Dopo un attesa di un secondo circa, nel sistema *𝛽* l'utente dà il comando:  
     `qspnclient add_qspn_arc 0 00:16:3E:EC:A3:E1`  
 
+### Gestione pseudonimi delle tabelle di routing
+
+Ogni istanza di IdentityData (ogni identità) ha in memoria per ogni suo arco-qspn l'identificativo
+(un intero) della tabella `ntk_from` relativa. Ovviamente ha anche modo di recuperare dall'arco-qspn
+il relativo peer-mac.
+
+A livello globale il programma **qspnclient** ha una lista di tutti gli interi che sono riservati e non ancora
+usati a tale scopo: `free_tid`. Ha inoltre un dizionario che associa un MAC ad un identificativo usato: `mac_tid`.
+
+Il programma **qspnclient** quando viene avviato assume che il file `/etc/iproute2/rt_tables` (il file degli pseudonimi)
+contenga con una precisa sintassi la prenotazione dei valori da 251 a 200. L'identificativo 251 è sempre usato per `ntk`.
+
+Devono cioè esserci queste righe:
+```
+251 ntk
+250 reserved_ntk_from_250
+249 reserved_ntk_from_249
+...
+200 reserved_ntk_from_200
+```
+
+Inizialmente il programma valorizza:  
+`free_tid = [250, 249, 248, ..., 200]`  
+e  
+`mac_tid = {}`
+
+Quando ad una identità viene aggiunto un arco-qspn (nel costruttore o in seguito) il programma vede
+se per il relativo peer-mac (ad esempio '00:16:3E:1A:C4:45') era già stato assegnato un `tid` oppure
+se ne può prendere uno libero.
+
+Nella struttura IdentityData di quella identità, in un apposito campo associato a quel particolare
+arco-qspn, viene memorizzato il `tid`, ad esempio 250.
+
+Ora il programma avrà in memoria:  
+`free_tid = [249, 248, ..., 200]`  
+e  
+`mac_tid = {'00:16:3E:1A:C4:45': 250}`
+
+Inoltre il programma sostituirà nel file degli pseudonimi la riga  
+`250 reserved_ntk_from_250`  
+con la riga  
+`250 ntk_from_00:16:3E:1A:C4:45`
+
+Quando invece viene rimosso un arco-qspn (ad esempio con `tid=250`) da una identità, il programma
+vede se qualche altra identità ha un arco-qspn con `tid=250`. Altrimenti dovrà vedere il peer-mac
+e apportare la modifica inversa alla sua memoria e al file degli pseudonimi.
+
 ### Vecchio
 
 Supponiamo ora che due nodi A e B hanno costituito un arco-identità. Il relativo indice di *identityarcs*
