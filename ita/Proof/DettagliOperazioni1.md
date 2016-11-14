@@ -20,7 +20,7 @@ Inoltre l'utente specifica alcune informazioni temporanee:
 #### Parte 1
 
 All'avvio il programma computa l'indirizzo IP sinonimo di localhost per la topologia di rete
-specificata. Il modo di calcolare questo indirizzo è spiegato [qui](AnalisiFunzione.md#Mappatura_indirizzi_ip).
+specificata. Il modo di calcolare questo indirizzo è spiegato [qui](AnalisiFunzionale.md#Mappatura_indirizzi_ip).
 Sia `$ntklocalhost` questo indirizzo IP, ad esempio `10.0.0.32`.
 
 Il programma **qspnclient** esegue queste operazioni:
@@ -49,10 +49,6 @@ done
 
 Il programma **qspnclient** informa il modulo Neighborhood di ogni interfaccia di rete che
 deve gestire, tramite il metodo `start_monitor`. Il modulo Neighborhood produrrà per questo alcuni comandi al sistema operativo.
-
-Il programma si avvede dell'indirizzo scelto perché il NeighborhoodManager lo notifica con il segnale
-*nic_address_set*. Il programma associa questo proprio indirizzo link-local all'indice
-autoincrementante *linklocal_nextindex*, che parte da 0.
 
 #### Parte 4
 
