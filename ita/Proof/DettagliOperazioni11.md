@@ -57,62 +57,51 @@ Alla fine vanno aggiunte queste operazioni:
 *   Indichiamo con *l* il numero di livelli nella topologia.
 *   Indichiamo con *n* l'indirizzo Netsukuku del sistema.
 *   Indichiamo con *pos_n(i)* l'identificativo al livello *i* dell'indirizzo Netsukuku *n*.
+*   Indichiamo con *subnetlevel* il livello del g-nodo rappresentato dalla sottorete autonoma.
 *   Se `$subnetlevel` > 0:
+    *   Sia *range1* l'indirizzo IP con suffisso CIDR che contiene tutti e solo gli indirizzi IP
+        di tipo interno di livello *subnetlevel*; in altre parole, che rappresenta la sottorete
+        autonoma dentro il suo g-nodo di livello *subnetlevel*.  
+        Nell'esempio di *𝜆*: `10.0.0.40/31`.
     *   Per *i* che sale da `$subnetlevel` a *l* - 1:
-        *   Se *pos_n(i)* ≥ *gsize(i)*, cioè se la posizione è *virtuale* al livello *i* (questa condizione
-            è sempre falsa nel caso delle operazioni iniziali del sistema):
-            *   Esci dal ciclo *i*.
         *   Se *i* < *l* - 1:
-            *   Per i pacchetti IP che passano per questo sistema e sono destinati ad
-                un indirizzo IP interno al g-nodo di livello *i* + 1 che identifica un nodo
-                interno alla mia sottorete autonoma (di livello `$subnetlevel`) e che quindi
-                necessariamente provengono dall'esterno della sottorete, esegui la rimappatura
-                dell'IP di destinazione affinché risulti nel range degli indirizzi IP
-                interni al g-nodo di livello `$subnetlevel`.
-            *   Per i pacchetti IP che passano per questo sistema, che hanno per IP di mittente
-                un indirizzo IP interno al g-nodo di livello `$subnetlevel` (che cioè
-                provengono dall'interno della sottorete autonoma) e che sono destinati ad
-                un indirizzo IP interno al g-nodo di livello *i* + 1, esegui la rimappatura
-                dell'IP di mittente affinché risulti nel range degli indirizzi IP
-                interni al g-nodo di livello *i* e identifichi un nodo
-                interno alla mia sottorete autonoma.
+            *   Sia *range2* l'indirizzo IP con suffisso CIDR che rappresenta la sottorete
+                autonoma dentro il suo g-nodo di livello *i* + 1. Si basa sulle posizioni di *n*
+                da *subnetlevel* a *i*.  
+                Nell'esempio `10.0.0.50/31` per *i* = 1.  
+                E `10.0.0.62/31` per *i* = 2.
+            *   Sia *g* il g-nodo di livello *i* + 1 di cui fa parte *n*.  
+                Sia *range3* l'indirizzo IP con suffisso CIDR che comprende l'insieme di tutti
+                i nodi in *g* rappresentati con un indirizzo IP interno al g-nodo *g*. Si basa sulla posizione di *n*
+                al livello *i*.  
+                Nell'esempio `10.0.0.48/30` per *i* = 1.  
+                E `10.0.0.56/29` per *i* = 2.
+            *   Il programma **qspnclient** esegue:  
+                `iptables -t nat -A PREROUTING -d $range2 -j NETMAP --to $range1`  
+                `iptables -t nat -A POSTROUTING -d $range3 -s $range1 -j NETMAP --to $range2`
         *   Altrimenti (cioè per *i* = *l* - 1):
-            *   Per i pacchetti IP che passano per questo sistema e sono destinati ad
-                un indirizzo IP globale che identifica un nodo
-                interno alla mia sottorete autonoma (di livello `$subnetlevel`) e che quindi
-                necessariamente provengono dall'esterno della sottorete, esegui la rimappatura
-                dell'IP di destinazione affinché risulti nel range degli indirizzi IP
-                interni al g-nodo di livello `$subnetlevel`.
-            *   Per i pacchetti IP che passano per questo sistema, che hanno per IP di mittente
-                un indirizzo IP interno al g-nodo di livello `$subnetlevel` (che cioè
-                provengono dall'interno della sottorete autonoma) e che sono destinati ad
-                un indirizzo IP globale, esegui la rimappatura
-                dell'IP di mittente affinché risulti nel range degli indirizzi IP
-                globali e identifichi un nodo
-                interno alla mia sottorete autonoma.
-            *   Se si vuole che ogni sistema nella sottorete autonoma ammetta di essere contattato in forma anonima:
-                *   Per i pacchetti IP che passano per questo sistema e sono destinati ad
-                    un indirizzo IP anonimizzante che identifica un nodo
-                    interno alla mia sottorete autonoma (di livello `$subnetlevel`) e che quindi
-                    necessariamente provengono dall'esterno della sottorete, esegui la rimappatura
-                    dell'IP di destinazione affinché risulti nel range degli indirizzi IP
-                    interni al g-nodo di livello `$subnetlevel`.  
-                    Non è possibile ammettere che qualche nodo sia contattabile in forma anonima
-                    senza di fatto renderlo possibile a tutti; in quanto l'indirizzo anonimizzante di
-                    destinazione viene rimappato all'indirizzo interno esattamente come viene
-                    rimappato l'indirizzo globale.
-            *   Naturalmente, il gateway permette ai sistemi interni di contattare un sistema esterno in forma anonima. Quindi:
-                *   Per i pacchetti IP che passano per questo sistema, che hanno per IP di mittente
-                    un indirizzo IP interno al g-nodo di livello `$subnetlevel` (che cioè
-                    provengono dall'interno della sottorete autonoma) e che sono destinati ad
-                    un indirizzo IP anonimizzante, esegui la rimappatura
-                    dell'IP di mittente affinché risulti nel range degli indirizzi IP
-                    globali e identifichi un nodo
-                    interno alla mia sottorete autonoma.
-
-Le rimappature sono fatte con l'operazione "NETMAP" fornita da `iptables`.  
-L'operazione "NETMAP" nella catena PREROUTING modifica l'IP di destinazione del pacchetto. La
-stessa operazione nella catena POSTROUTING modifica l'IP di mittente del pacchetto.
+            *   Sia *range2* l'indirizzo IP con suffisso CIDR che rappresenta la sottorete
+                autonoma dentro tutta la rete Netsukuku. Si basa sulle posizioni di *n*
+                da *subnetlevel* a *l* - 1.  
+                Nell'esempio `10.0.0.22/31`.
+            *   Sia *range3* l'indirizzo IP con suffisso CIDR che comprende l'insieme di tutti
+                i nodi nella rete Netsukuku rappresentati con indirizzo IP globale.  
+                Nell'esempio `10.0.0.0/27`.
+            *   Il programma **qspnclient** esegue:  
+                `iptables -t nat -A PREROUTING -d $range2 -j NETMAP --to $range1`  
+                `iptables -t nat -A POSTROUTING -d $range3 -s $range1 -j NETMAP --to $range2`
+            *   Se ogni sistema nella sottorete autonoma accetta di essere contattato in forma anonima:
+                *   Sia *range4* l'indirizzo IP con suffisso CIDR che rappresenta la sottorete
+                    autonoma dentro tutta la rete Netsukuku con indirizzo IP anonimizzante. Si basa sulle posizioni di *n*
+                    da *subnetlevel* a *l* - 1.  
+                    Nell'esempio `10.0.0.86/31`.
+                *   Il programma **qspnclient** esegue:  
+                    `iptables -t nat -A PREROUTING -d $range4 -j NETMAP --to $range1`  
+            *   Sia *range5* l'indirizzo IP con suffisso CIDR che comprende l'insieme di tutti
+                i nodi nella rete Netsukuku rappresentati con indirizzo IP anonimizzante.  
+                Nell'esempio `10.0.0.64/27`.
+            *   Il programma **qspnclient** esegue:  
+                `iptables -t nat -A POSTROUTING -d $range5 -s $range1 -j NETMAP --to $range2`
 
 **sistema 𝜆**
 ```
