@@ -56,7 +56,6 @@ Alla fine vanno aggiunte queste operazioni:
 
 *   Indichiamo con *l* il numero di livelli nella topologia.
 *   Indichiamo con *n* l'indirizzo Netsukuku del sistema.
-*   Indichiamo con *pos_n(i)* l'identificativo al livello *i* dell'indirizzo Netsukuku *n*.
 *   Indichiamo con *subnetlevel* il livello del g-nodo rappresentato dalla sottorete autonoma.
 *   Se `$subnetlevel` > 0:
     *   Sia *range1* l'indirizzo IP con suffisso CIDR che contiene tutti e solo gli indirizzi IP
