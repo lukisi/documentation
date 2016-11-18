@@ -67,12 +67,11 @@ Alla fine vanno aggiunte queste operazioni:
             *   Sia *range2* l'indirizzo IP con suffisso CIDR che rappresenta la sottorete
                 autonoma dentro il suo g-nodo di livello *i* + 1. Si basa sulle posizioni di *n*
                 da *subnetlevel* a *i*.  
-                Nell'esempio `10.0.0.50/31` per *i* = 1.  
-                E `10.0.0.62/31` per *i* = 2.
+                Nell'esempio `10.0.0.48/31` per *i* = 1.  
+                E `10.0.0.60/31` per *i* = 2.
             *   Sia *g* il g-nodo di livello *i* + 1 di cui fa parte *n*.  
                 Sia *range3* l'indirizzo IP con suffisso CIDR che comprende l'insieme di tutti
-                i nodi in *g* rappresentati con un indirizzo IP interno al g-nodo *g*. Si basa sulla posizione di *n*
-                al livello *i*.  
+                i nodi in *g* rappresentati con un indirizzo IP interno al g-nodo *g*.  
                 Nell'esempio `10.0.0.48/30` per *i* = 1.  
                 E `10.0.0.56/29` per *i* = 2.
             *   Il programma **qspnclient** esegue:  
@@ -82,7 +81,7 @@ Alla fine vanno aggiunte queste operazioni:
             *   Sia *range2* l'indirizzo IP con suffisso CIDR che rappresenta la sottorete
                 autonoma dentro tutta la rete Netsukuku. Si basa sulle posizioni di *n*
                 da *subnetlevel* a *l* - 1.  
-                Nell'esempio `10.0.0.22/31`.
+                Nell'esempio `10.0.0.12/31`.
             *   Sia *range3* l'indirizzo IP con suffisso CIDR che comprende l'insieme di tutti
                 i nodi nella rete Netsukuku rappresentati con indirizzo IP globale.  
                 Nell'esempio `10.0.0.0/27`.
@@ -93,7 +92,7 @@ Alla fine vanno aggiunte queste operazioni:
                 *   Sia *range4* l'indirizzo IP con suffisso CIDR che rappresenta la sottorete
                     autonoma dentro tutta la rete Netsukuku con indirizzo IP anonimizzante. Si basa sulle posizioni di *n*
                     da *subnetlevel* a *l* - 1.  
-                    Nell'esempio `10.0.0.86/31`.
+                    Nell'esempio `10.0.0.76/31`.
                 *   Il programma **qspnclient** esegue:  
                     `iptables -t nat -A PREROUTING -d $range4 -j NETMAP --to $range1`  
             *   Sia *range5* l'indirizzo IP con suffisso CIDR che comprende l'insieme di tutti
