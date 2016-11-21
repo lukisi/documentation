@@ -131,8 +131,8 @@ Ad esempio, assumiamo che il sistema *𝜆* sia collegato al sistema
 
 **sistema 𝜆**
 ```
-ip address add 10.0.111.222 dev eth2
-ip route add 169.254.110.188 dev eth1 src 169.254.111.222
+ip address add 169.254.111.222 dev eth2
+ip route add 169.254.110.188 dev eth2 src 169.254.111.222
 ip address add 10.0.0.40 dev eth2
 ip route add 10.0.0.41/32 via 169.254.110.188 dev eth2 src 10.0.0.40
 ```
@@ -146,10 +146,10 @@ sysctl net.ipv4.ip_forward=1
 ip address add 10.0.0.32 dev lo
 ip link set dev eth1 up
 ip address add 169.254.110.188 dev eth1
-ip route add 169.254.109.22 dev eth1 src 169.254.110.188
+ip route add 169.254.111.222 dev eth1 src 169.254.110.188
 ip address add 10.0.0.41 dev eth1
-ip route add 10.0.0.40/32 via 169.254.109.22 dev eth1 src 10.0.0.41
-ip route add 10.0.0.0/25 via 169.254.109.22 dev eth1 src 10.0.0.41
+ip route add 10.0.0.40/32 via 169.254.111.222 dev eth1 src 10.0.0.41
+ip route add 10.0.0.0/25 via 169.254.111.222 dev eth1 src 10.0.0.41
 ```
 
 #### Formazione arco-fisico *𝜆*-*𝜀*
