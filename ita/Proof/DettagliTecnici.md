@@ -222,7 +222,7 @@ Ingresso.
     entra nel g-nodo di livello 1 di cui fa parte *𝛽<sub>0</sub>*, che ha un posto libero. Decide
     inoltre che *𝛼<sub>1</sub>*, dentro il g-nodo con indirizzo Netsukuku 3·1·0·, prenderà dapprima
     la posizione virtuale 2 con anzianità 1. Poi prenderà la posizione reale 0 con anzianità 2.  
-    L'utente decide inoltre che l'identità di connettività *𝛼<sub>1</sub>*, dentro il g-nodo della
+    L'utente decide inoltre che l'identità di connettività *𝛼<sub>0</sub>*, dentro il g-nodo della
     vecchia rete con indirizzo Netsukuku 1·0·0·, prenderà ora la posizione virtuale 2 con anzianità 1.
 *   L'utente valuta che non serve nessuna migration path. Prende a caso un identificativo per
     l'operazione di ingresso, assumiamo sia 13140402.
