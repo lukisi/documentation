@@ -173,7 +173,7 @@ Inizializzazione del sistema *𝛼*.
     è stato dato il comando il controllo non ritorna all'utente. Chiamiamo questa shell *console di qspnclient*.
     Viene usata dal programma per mostrare all'utente alcune segnalazioni.
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
-    `handlednic #0: eth1 00:16:3E:EC:A3:E1 169.254.96.141`
+    `handlednic #0: eth1 00:16:3E:FD:E2:AA 169.254.96.141`
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
     `local_identity #0: indirizzo 1.0.0.1, anzianità 0.0.0.0, namespace default`  
     `                   fp0: 56724331, net_fp: 56724331`
@@ -182,7 +182,7 @@ Inizializzazione del sistema *𝛽*.
 
 *   Nel sistema *𝛽* l'utente dà il comando `qspnclient init 4.2.2.2 3.1.0.1 -i eth1`.
 *   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
-    `handlednic #0: eth1 00:16:3E:5B:78:D5 169.254.94.223`
+    `handlednic #0: eth1 00:16:3E:EC:A3:E1 169.254.94.223`
 *   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
     `local_identity #0: indirizzo 3.1.0.1, anzianità 0.0.0.0, namespace default`  
     `                   fp0: 75809993, net_fp: 75809993`
@@ -190,21 +190,21 @@ Inizializzazione del sistema *𝛽*.
 Rilevamento arco, sua accettazione, formazione arco-identità.
 
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
-    `neighborhood_arc '00:16:3E:EC:A3:E1-00:16:3E:5B:78:D5': peer_linklocal 169.254.94.223, cost 934us`
+    `neighborhood_arc '00:16:3E:FD:E2:AA-00:16:3E:EC:A3:E1': peer_linklocal 169.254.94.223, cost 934us`
 *   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
-    `neighborhood_arc '00:16:3E:5B:78:D5-00:16:3E:EC:A3:E1': peer_linklocal 169.254.96.141, cost 581us`
-*   Nel sistema *𝛼* l'utente dà il comando `qspnclient add_real_arc 00:16:3E:EC:A3:E1 00:16:3E:5B:78:D5 10000`.
-*   Rapidamente, nel sistema *𝛽* l'utente dà il comando `qspnclient add_real_arc 00:16:3E:5B:78:D5 00:16:3E:EC:A3:E1 11000`.
+    `neighborhood_arc '00:16:3E:EC:A3:E1-00:16:3E:FD:E2:AA': peer_linklocal 169.254.96.141, cost 581us`
+*   Nel sistema *𝛼* l'utente dà il comando `qspnclient add_real_arc 00:16:3E:FD:E2:AA 00:16:3E:EC:A3:E1 10000`.
+*   Rapidamente, nel sistema *𝛽* l'utente dà il comando `qspnclient add_real_arc 00:16:3E:EC:A3:E1 00:16:3E:FD:E2:AA 11000`.
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
-    `real_arc '00:16:3E:EC:A3:E1-00:16:3E:5B:78:D5': peer_linklocal 169.254.94.223, cost 10000us`
+    `real_arc '00:16:3E:FD:E2:AA-00:16:3E:EC:A3:E1': peer_linklocal 169.254.94.223, cost 10000us`
 *   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
-    `real_arc '00:16:3E:5B:78:D5-00:16:3E:EC:A3:E1': peer_linklocal 169.254.96.141, cost 11000us`
+    `real_arc '00:16:3E:EC:A3:E1-00:16:3E:FD:E2:AA': peer_linklocal 169.254.96.141, cost 11000us`
 *   Nella console di qspnclient del sistema *𝛼* viene data questa segnalazione:  
-    `identity_arc #0: real_arc: 00:16:3E:EC:A3:E1-00:16:3E:5B:78:D5, local_identity: 0`  
-    `                 peer_mac: 00:16:3E:5B:78:D5, peer_linklocal: 169.254.94.223`
+    `identity_arc #0: real_arc: 00:16:3E:FD:E2:AA-00:16:3E:EC:A3:E1, local_identity: 0`  
+    `                 peer_mac: 00:16:3E:EC:A3:E1, peer_linklocal: 169.254.94.223`
 *   Nella console di qspnclient del sistema *𝛽* viene data questa segnalazione:  
-    `identity_arc #0: real_arc: 00:16:3E:5B:78:D5-00:16:3E:EC:A3:E1, local_identity: 0`  
-    `                 peer_mac: 00:16:3E:EC:A3:E1, peer_linklocal: 169.254.96.141`
+    `identity_arc #0: real_arc: 00:16:3E:EC:A3:E1-00:16:3E:FD:E2:AA, local_identity: 0`  
+    `                 peer_mac: 00:16:3E:FD:E2:AA, peer_linklocal: 169.254.96.141`
 
 Ingresso.
 
@@ -232,7 +232,7 @@ Ingresso.
     nuovo g-nodo è *𝛼<sub>1</sub>*, che diventa l'identità principale nel sistema *𝛼*. Il suo
     arco-identità #0 (o meglio il duplicato di esso per *𝛼<sub>1</sub>*) sarà un suo nuovo arco-qspn
     nella rete. Dal punto di vista del sistema *𝛽*, l'arco-identità che sarà un suo nuovo arco-qspn
-    è quello che avrà peer_MAC 00:16:3E:EC:A3:E1.
+    è quello che avrà peer_MAC 00:16:3E:FD:E2:AA.
 *   Nel sistema *𝛼* l'utente dà il comando `prepare_enter_net_phase_1` con questi dati:
     *   identità interessata = `0`
     *   livello del g-nodo entrante = `0`
@@ -253,7 +253,7 @@ Ingresso.
 *   Appena terminato il comando precedente, nel sistema *𝛼* l'utente dà il comando:  
     `qspnclient enter_net_phase_1 0 13140402`  
 *   Dopo un attesa di un secondo circa, nel sistema *𝛽* l'utente dà il comando:  
-    `qspnclient add_qspn_arc 0 00:16:3E:EC:A3:E1`  
+    `qspnclient add_qspn_arc 0 00:16:3E:FD:E2:AA`  
 
 ### Gestione pseudonimi delle tabelle di routing
 
