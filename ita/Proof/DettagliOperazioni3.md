@@ -60,4 +60,15 @@ rende noto al programma:
 Il programma **qspnclient** associa ad ogni arco-identità un indice
 autoincrementante *identityarc_nextindex*, che parte da 0, e lo mostra all'utente.
 
+Alla rimozione di un arco (intesa come detto sopra) il programma **qspnclient** comunica tale rimozione al
+modulo Identities. Esso poi segnala la rimozione dei vari archi-identità. Sul segnale prodotto dal modulo
+Identities di rimozione di un arco-identità, il programma **qspnclient** rimuove il relativo arco-qspn
+dall'istanza di QspnManager di quell'identità.
+
+Al cambio di costo di un arco (inteso come detto sopra) il programma **qspnclient** non comunica questo
+evento al modulo Identities: infatti il modulo Identities non si occupa del costo di un arco. Invece,
+il programma chiede al modulo Identities l'elenco degli archi-identità che poggiano su quell'arco
+fisico e si occupa immediatamente di comunicare alle varie istanze di QspnManager il cambio di costo
+dei relativi archi-qspn.
+
 [Operazione seguente](DettagliOperazioni4.md)
