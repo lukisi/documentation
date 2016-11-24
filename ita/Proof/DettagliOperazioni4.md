@@ -123,18 +123,37 @@ di rete reali e pseudo (`eth1`, `entr02_eth1`) i relativi indirizzi di scheda (`
 e gli indirizzi link-local dei diretti vicini (`169.254.94.223`) sono tutti gestiti in
 autonomia dal modulo Identities.
 
-Prima di avviare il metodo `add_identity` il programma **qspnclient** conosce il nome del vecchio
-network namespace, perché esso è associato all'identità vecchia.
+Dall'esecuzione del metodo `add_identity` sul modulo Identities è necessario reperire l'identificativo
+della nuova identità.
 
-Dall'esecuzione del metodo `add_identity` sul modulo Identities è necessario reperire:
+Il programma **qspnclient** può in ogni momento avvalersi del modulo Identities
+per sapere il nome del network namespace su cui opera l'identità con un dato identificativo. Quindi,
+dopo l'esecuzione del metodo `add_identity` il nome del vecchio network namespace si recupera
+partendo dalla nuova identità, mentre il nome del nuovo network namespace si recupera
+partendo dalla vecchia identità.
 
-*   identificativo della nuova identità.
-*   nome del nuovo network namespace che nasce per la vecchia identità.
-*   associazione tra ogni arco-identità della vecchia identità quando era nel vecchio namespace
-    e il corrispettivo arco-identità della vecchia identità nel nuovo namespace.
+Dopo l'esecuzione del metodo `add_identity` sul modulo Identities (che duplica *a<sub>j</sub>*
+in *a<sub>i</sub>*) è necessario che il programma **qspnclient** reperisca
+l'associazione tra ogni arco-identità della vecchia identità e il corrispettivo arco-identità
+della nuova identità.
 
-Il nome del vecchio network namespace viene ora associato alla nuova identità, mentre quello del
-nuovo network namespace viene associato alla vecchia identità.
+Consideriamo gli archi-identità di *a<sub>j</sub>*. Per ognuno Il modulo Identities ha creato una istanza di IIdmgmtIdentityArc
+dalla quale si può recuperare il valore corrente (mutabile) di *peer_mac* e *peer_linklocal*. E anche il valore
+di *peer_nodeid*. Inoltre il programma **qspnclient** ha creato una istanza di IdentityArc che ha memorizzato il valore
+iniziale (o meglio precedente all'operazione `add_identity`) di *peer_mac* e *peer_linklocal*.
+
+Dopo l'operazione di `add_identity` il programma **qspnclient** cicla tra gli archi-identità di *a<sub>j</sub>*.
+Indichiamo un IdentityArc con *w<sub>0</sub>*. Il relativo IIdmgmtIdentityArc è *w<sub>0</sub>.id_arc*.
+Per ogni *w<sub>0</sub>*, il programma cicla tra gli archi-identità di *a<sub>i</sub>* alla ricerca del
+corrispettivo arco-identità *w<sub>1</sub>*. Questo deve avere:
+
+*   *w<sub>1</sub>.arc* == *w<sub>0</sub>.arc*.
+*   Se *w<sub>0</sub>.peer_mac* == *w<sub>0</sub>.id_arc.get_peer_mac()*:
+    *   *w<sub>1</sub>.peer_nodeid* == *w<sub>0</sub>.peer_nodeid*.
+*   Altrimenti:
+    *   *w<sub>1</sub>.peer_mac* == *w<sub>0</sub>.id_arc.get_peer_mac()*.
+
+* * *
 
 Nel sistema *𝛽* il modulo Identities in autonomia (a fronte del comando `enter_net_phase_1` dato nel sistema
 *𝛼*) produce queste operazioni:
