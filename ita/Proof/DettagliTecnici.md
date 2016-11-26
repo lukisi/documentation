@@ -238,7 +238,7 @@ Ingresso.
     *   livello del g-nodo entrante = `0`
     *   livello del g-nodo ospitante = `1`
     *   indirizzo del g-nodo ospitante = `3.1.0`
-    *   anzianità/fingerprint del g-nodo ospitante = `??`
+    *   anzianità del g-nodo ospitante = `0.0.0`
     *   posizione virtuale temporanea nel g-nodo ospitante = `2`
     *   anzianità della posizione virtuale temporanea nel g-nodo ospitante = `1`
     *   posizione reale nel g-nodo ospitante = `0`
@@ -249,7 +249,7 @@ Ingresso.
     *   identificativo dell'operazione di ingresso = `13140402`
     *   identificativo dell'operazione di migrazione previa = `null`
 *   Cioè, nel sistema *𝛼* l'utente dà il comando:  
-    `qspnclient prepare_enter_net_phase_1 0 0 1 3.1.0 ?? 2 1 0 2 2 1 [0] 13140402 null`
+    `qspnclient prepare_enter_net_phase_1 0 0 1 3.1.0 0.0.0 2 1 0 2 2 1 [0] 13140402 null`
 *   Appena terminato il comando precedente, nel sistema *𝛼* l'utente dà il comando:  
     `qspnclient enter_net_phase_1 0 13140402`  
 *   Dopo un attesa di un secondo circa, nel sistema *𝛽* l'utente dà il comando:  
