@@ -14,8 +14,7 @@
 1.  [Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IPv4](#Mappatura_indirizzi_ip)
 1.  [Identità](#Identita)
     1.  [Assegnazione indirizzi IP](#Indirizzi_ip_propri)
-    1.  [Assegnazione rotte - Identità principale](#Rotte_Identita_principale)
-    1.  [Assegnazione rotte - Identità di connettività](#Rotte_Identita_di_connettivita)
+    1.  [Assegnazione rotte](#Assegnazione_rotte)
 1.  [Indirizzi IP di ogni identità nel sistema](#Indirizzi_del_sistema)
 1.  [Rotte nelle tabelle di routing](#Rotte_nelle_tabelle_di_routing)
     1.  [Source NATting](#Source_natting)
@@ -334,224 +333,71 @@ cui la componente di *n* è virtuale. Diciamo che *i* vale *l* se *n* è del tut
     *   Altrimenti:
         *   Il sistema si assegna l'indirizzo IP interno al livello *j* di *n*.
 
-### <a name="Rotte_Identita_principale"></a> Assegnazione rotte - Identità principale
+### <a name="Assegnazione_rotte"></a> Assegnazione rotte
 
-Sia *n* l'indirizzo Netsukuku dell'identità principale. Se *n* è *reale*, nel network namespace default:
+Ogni identità nel sistema ha un suo indirizzo Netsukuku e gestisce un network namespace. Per ognuna
+il programma computa, in base al suo indirizzo Netsukuku, tutti i possibili indirizzi IP di
+destinazione, ognuno con suffisso CIDR, secondo l'algoritmo riportato
+[qui](DettagliOperazioni2.md#computo_indirizzi_ip_destinazioni).
 
-*   Per ogni livello *j* da 0 a *l* - 1:
-    *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
-        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto a *n*. Indipendentemente dal
-            fatto che *d* esista o meno nella rete.
-        *   Il sistema computa questi indirizzi IP:
-            *   *d<sub>g</sub>* - Indirizzo IP globale del g-nodo *d*.  
-                Si tenga presente che se un processo locale vuole inviare un pacchetto a questo
-                indirizzo IP, allora come *src* preferito dovrà usare l'indirizzo IP globale di *n*.
-            *   *d<sub>a</sub>* - Indirizzo IP globale anonimizzante del g-nodo *d*.  
-                Si tenga presente che se un processo locale vuole inviare un pacchetto a questo
-                indirizzo IP, allora come *src* preferito dovrà usare l'indirizzo IP globale di *n*.
-            *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
-                *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
-                    In questo caso è garantito che tutte le componenti dell'indirizzo di *n*
-                    dal livello *j* + 1 al livello *t* - 1 sono *reali*, cosa necessaria affinché
-                    l'indirizzo IP interno al livello *t* del g-nodo *d* abbia significato.  
-                    Si tenga presente che se un processo locale vuole inviare un pacchetto a questo
-                    indirizzo IP, allora come *src* preferito dovrà usare l'indirizzo IP
-                    di *n* interno al livello *t*.
-        *   Esaminiamo ognuno di questi indirizzi IP. Indichiamo con *d<sub>x</sub>*
-            questo indirizzo riferito a *d* e con *n<sub>x</sub>* l'indirizzo IP che
-            il sistema *n* intende usare come *src* preferito.
-            *   Il sistema imposta una rotta in *partenza* verso *d<sub>x</sub>*. In essa specifica
-                l'indirizzo *n<sub>x</sub>* come *src* preferito.  
-                Ricordiamo che nelle tabelle di routing del kernel si riporta come informazione solo
-                il primo gateway di una rotta, sebbene l'identità sia a conoscenza di altre informazioni.  
-                Viene impostata la rotta identificata dal miglior percorso noto all'identità per quella
-                destinazione. La destinazione *d<sub>x</sub>* è "non raggiungibile"
-                se non esiste nella rete la destinazione *d*.
-            *   Per ogni MAC address *m* di diretto vicino che l'identità conosce:
-                *   Il sistema imposta una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
-                    provenienti da *m*.  
-                    Viene impostata la rotta identificata dal miglior percorso noto per quella
-                    destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
-                    La destinazione *d<sub>x</sub>* è "non raggiungibile" per i pacchetti
-                    in *inoltro* provenienti da *m* se non esiste nella rete la destinazione *d*, oppure se
-                    l'identità non conosce nessun percorso verso *d* che non passi per il
-                    massimo distinto g-nodo di *m* per *n*.
-            *   Il sistema dovrebbe impostare una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
-                provenienti da un MAC address che non è fra quelli che l'identità conosce.  
-                In realtà, per come funziona lo stack TCP/IP di Linux, tale rotta è superflua. Infatti
-                essa sarebbe identica a quella che è stata impostata per i pacchetti in *partenza* verso
-                *d<sub>x</sub>* e lo stack TCP/IP prende in considerazione questa anche per i pacchetti
-                in *inoltro*. Perciò il programma *qspnclient* non imposta una ulteriore rotta.
+Per ogni identità nel sistema, per ciascuna nel suo network namespace, il programma assegna le
+rotte verso i possibili indirizzi IP di destinazione.
 
-Se *n* è *virtuale*, significa che ha una o più componenti virtuali. Sia *i* il livello
-più basso in cui la componente è virtuale. Sia *k* il livello più alto in cui la componente è virtuale.
-
-In questo caso, nel network namespace default:
-
-*   Per ogni livello *j* da 0 a *i* - 1:
-    *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
-        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto a *n*. Indipendentemente dal
-            fatto che *d* esista o meno nella rete.
-        *   Il sistema computa questi indirizzi IP:
-            *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
-                *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
-                    Questo indirizzo IP va calcolato solo se tutte le componenti dell'indirizzo di *n*
-                    dal livello *j* + 1 al livello *t* - 1 sono *reali*, cosa necessaria affinché
-                    l'indirizzo IP interno al livello *t* del g-nodo *d* abbia significato.  
-                    Quindi in questo caso, il ciclo di *t* potrebbe fermarsi a *i*.  
-                    Si tenga presente che se un processo locale vuole inviare un pacchetto a questo
-                    indirizzo IP, allora come *src* preferito dovrà usare l'indirizzo IP
-                    di *n* interno al livello *t*.
-        *   Esaminiamo ognuno di questi indirizzi IP. Indichiamo con *d<sub>x</sub>*
-            questo indirizzo riferito a *d* e con *n<sub>x</sub>* l'indirizzo IP che
-            il sistema *n* intende usare come *src* preferito.
-            *   Il sistema imposta una rotta in *partenza* verso *d<sub>x</sub>*. In essa specifica
-                l'indirizzo *n<sub>x</sub>* come *src* preferito.  
+*   Indichiamo con *l* il numero di livelli nella topologia.
+*   Indichiamo con *n* l'indirizzo Netsukuku del sistema.
+*   Indichiamo con *pos_n(i)* l'identificativo al livello *i* dell'indirizzo Netsukuku *n*.
+*   Per *i* che scende da *l* - 1 a `$subnetlevel`, per *j* da 0 a *gsize(i)* - 1, se *pos_n(i)* ≠ *j*:
+    *   Sia *d* il g-nodo di coordinate (*i*, *j*) rispetto a *n*. Indipendentemente dal
+        fatto che *d* sia presente o meno nella rete.
+    *   Se esiste l'indirizzo IP globale di *d* (cioè se è stato possibile computarlo):
+        *   Di conseguenza esiste anche il suo indirizzo IP anonimizzante.
+        *   Il sistema imposta una rotta per i pacchetti IP in *partenza* verso l'indirizzo IP globale di *d*.  
+            La tabella usata per i pacchetti IP in *partenza* sarà chiamata `ntk` e sarà presente
+            solo nel network namespace default.  
+            Nelle tabelle di routing del kernel per ogni indirizzo IP (con suffisso CIDR) si
+            può dichiarare che la destinazione è *non raggiungibile* oppure si riporta come informazione
+            il gateway da usare per raggiungere la destinazione.  
+            Se l'identità è a conoscenza di percorsi per quella destinazione, allora il programma
+            imposta nella tabella il primo gateway del miglior percorso (sebbene l'identità sia
+            a conoscenza in effetti anche di altre informazioni sul percorso). Altrimenti il programma
+            dichiara nella tabella che la destinazione è *non raggiungibile*.
+        *   Analogamente il sistema imposta una rotta per i pacchetti IP in *partenza* verso l'indirizzo IP
+            anonimizzante di *d*.
+        *   In realtà, la tabella `ntk` nel network namespace default gestito dall'identità principale
+            del sistema verrà usata anche per i pacchetti IP in *inoltro* da un MAC address che l'identità
+            non conosce. Questo va bene, perché la ricezione di tali pacchetti IP da inoltrare si dovrebbe
+            poter verificare solo sul network namespace default e solo se il sistema viene usato consapevolmente
+            come gateway: ad esempio se questo sistema è un gateway per una sottorete a gestione autonoma, oppure
+            se questo sistema viene usato come NAT per una rete privata.
+        *   Per ogni MAC address *m* di diretto vicino che l'identità conosce:
+            *   Il sistema imposta una rotta per i pacchetti IP provenienti da *m* in *inoltro* verso
+                l'indirizzo IP globale di *d*.  
+                La tabella usata per i pacchetti IP in *inoltro* da *m* sarà chiamata `ntk_from_$m` e sarà
+                presente in qualsiasi network namespace.  
                 Viene impostata la rotta identificata dal miglior percorso noto per quella
-                destinazione. La destinazione *d<sub>x</sub>* è "non raggiungibile"
-                se non esiste nella rete la destinazione *d*.
+                destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
+                La destinazione è *non raggiungibile* per i pacchetti IP
+                in *inoltro* provenienti da *m* se non esiste nella rete la destinazione *d*, oppure se
+                l'identità non conosce nessun percorso verso *d* che non passi per il
+                massimo distinto g-nodo di *m* per *n*.
+            *   Analogamente il sistema imposta una rotta in *inoltro* da *m* verso l'indirizzo IP
+                anonimizzante di *d*.
+        *   Si tenga presente che solo per l'identità principale nel network namespace default
+            e solo per la tabella `ntk` va indicato nella rotta l'indirizzo *src* preferito,
+            che serve se un processo locale vuole inviare un pacchetto IP. Sia per la rotta che
+            punta all'indirizzo IP globale di *d*, sia per la rotta che punta all'indirizzo
+            IP anonimizzante, come *src* preferito dovrà essere indicato l'indirizzo IP globale di *n*.
+    *   Per *k* che scende da *l* - 1 a *i* + 1:
+        *   Se esiste l'indirizzo IP interno al livello *k* di *d*:
+            *   Il sistema imposta una rotta per i pacchetti IP in *partenza* verso l'indirizzo IP di *d*
+                interno al livello *k*.
             *   Per ogni MAC address *m* di diretto vicino che l'identità conosce:
-                *   Il sistema imposta una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
-                    provenienti da *m*.  
-                    Viene impostata la rotta identificata dal miglior percorso noto per quella
-                    destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
-                    La destinazione *d<sub>x</sub>* è "non raggiungibile" per i pacchetti
-                    in *inoltro* provenienti da *m* se non esiste nella rete la destinazione *d*, oppure se
-                    l'identità non conosce nessun percorso verso *d* che non passi per il
-                    massimo distinto g-nodo di *m* per *n*.
-            *   Il sistema dovrebbe impostare una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
-                provenienti da un MAC address che non è fra quelli che l'identità conosce. Ma come detto
-                sopra lo stack TCP/IP di Linux si avvale della rotta che è stata impostata per i pacchetti
-                in *partenza* verso *d<sub>x</sub>*. Perciò il programma *qspnclient* non imposta una ulteriore rotta.
-*   Per ogni livello *j* da *i* a *k* - 1:
-    *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
-        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto a *n*. Indipendentemente dal
-            fatto che *d* esista o meno nella rete.
-        *   Il sistema computa questi indirizzi IP:
-            *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
-                *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
-                    Questo indirizzo IP va calcolato solo se tutte le componenti dell'indirizzo di *n*
-                    dal livello *j* + 1 al livello *t* - 1 sono *reali*.  
-                    Quindi in questo caso, il ciclo di *t* potrebbe fermarsi a *k*.  
-                    In questo caso è impossibile per un processo locale inviare un pacchetto a questo
-                    indirizzo IP, non potendo usare un indirizzo IP
-                    di *n* interno al livello *t*.
-        *   Esaminiamo ognuno di questi indirizzi IP. Indichiamo con *d<sub>x</sub>*
-            questo indirizzo riferito a *d*.
-            *   Il sistema NON ha una rotta in *partenza* verso *d<sub>x</sub>*.
-            *   Per ogni MAC address *m* di diretto vicino che l'identità conosce:
-                *   Il sistema imposta una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
-                    provenienti da *m*.  
-                    Viene impostata la rotta identificata dal miglior percorso noto per quella
-                    destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
-                    La destinazione *d<sub>x</sub>* è "non raggiungibile" per i pacchetti
-                    in *inoltro* provenienti da *m* se non esiste nella rete la destinazione *d*, oppure se
-                    l'identità non conosce nessun percorso verso *d* che non passi per il
-                    massimo distinto g-nodo di *m* per *n*.
-            *   Il sistema imposta una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
-                provenienti da un MAC address che non è fra quelli che l'identità conosce.  
-                Viene impostata la rotta identificata dal miglior percorso noto per quella
-                destinazione. La destinazione *d<sub>x</sub>* è "non raggiungibile"
-                se non esiste nella rete la destinazione *d*.
-*   Per ogni livello *j* da *k* a *l* - 1:
-    *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
-        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto a *n*. Indipendentemente dal
-            fatto che *d* esista o meno nella rete.
-        *   Il sistema computa questi indirizzi IP:
-            *   *d<sub>g</sub>* - Indirizzo IP globale del g-nodo *d*.  
-                In questo caso è impossibile per un processo locale inviare un pacchetto a questo
-                indirizzo IP, non potendo usare l'indirizzo IP globale di *n*.
-            *   *d<sub>a</sub>* - Indirizzo IP globale anonimizzante del g-nodo *d*.  
-                In questo caso è impossibile per un processo locale inviare un pacchetto a questo
-                indirizzo IP, non potendo usare l'indirizzo IP globale di *n*.
-            *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
-                *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
-                    In questo caso è garantito che tutte le componenti dell'indirizzo di *n*
-                    dal livello *j* + 1 al livello *t* - 1 sono *reali*.  
-                    In questo caso è impossibile per un processo locale inviare un pacchetto a questo
-                    indirizzo IP, non potendo usare un indirizzo IP
-                    di *n* interno al livello *t*.
-        *   Esaminiamo ognuno di questi indirizzi IP. Indichiamo con *d<sub>x</sub>*
-            questo indirizzo riferito a *d*.
-            *   Il sistema NON ha una rotta in *partenza* verso *d<sub>x</sub>*.
-            *   Per ogni MAC address *m* di diretto vicino che l'identità conosce:
-                *   Il sistema imposta una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
-                    provenienti da *m*.  
-                    Viene impostata la rotta identificata dal miglior percorso noto per quella
-                    destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
-                    La destinazione *d<sub>x</sub>* è "non raggiungibile" per i pacchetti
-                    in *inoltro* provenienti da *m* se non esiste nella rete la destinazione *d*, oppure se
-                    l'identità non conosce nessun percorso verso *d* che non passi per il
-                    massimo distinto g-nodo di *m* per *n*.
-            *   Il sistema imposta una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
-                provenienti da un MAC address che non è fra quelli che l'identità conosce.  
-                Viene impostata la rotta identificata dal miglior percorso noto per quella
-                destinazione. La destinazione *d<sub>x</sub>* è "non raggiungibile"
-                se non esiste nella rete la destinazione *d*.
-
-### <a name="Rotte_Identita_di_connettivita"></a> Assegnazione rotte - Identità di connettività
-
-Sia *n* l'indirizzo Netsukuku di un'identità di connettività. 
-Sicuramente *n* ha una o più componenti virtuali. Sia *i* il livello più basso in cui
-la componente è virtuale. Sia *k* il livello più alto in cui la componente è virtuale.
-
-Nel network namespace gestito da questa identità:
-
-*   Per ogni livello *j* da 0 a *k* - 1:
-    *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
-        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto a *n*. Indipendentemente dal
-            fatto che *d* esista o meno nella rete.
-        *   Il sistema computa questi indirizzi IP:
-            *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
-                *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
-                    Questo indirizzo IP va calcolato solo se tutte le componenti dell'indirizzo di *n*
-                    dal livello *j* + 1 al livello *t* - 1 sono *reali*.  
-                    Quindi in questo caso, il ciclo di *t* potrebbe fermarsi a *k*.  
-                    In questo caso è impossibile che un processo locale voglia inviare un pacchetto a questo
-                    indirizzo IP, poiché questa identità non è nel network namespace default.
-        *   Esaminiamo ognuno di questi indirizzi IP. Indichiamo con *d<sub>x</sub>*
-            questo indirizzo riferito a *d*.
-            *   Il sistema NON ha una rotta in *partenza* verso *d<sub>x</sub>*.
-            *   Per ogni MAC address *m* di diretto vicino che l'identità conosce:
-                *   Il sistema imposta una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
-                    provenienti da *m*.  
-                    Viene impostata la rotta identificata dal miglior percorso noto per quella
-                    destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
-                    La destinazione *d<sub>x</sub>* è "non raggiungibile" per i pacchetti
-                    in *inoltro* provenienti da *m* se non esiste nella rete la destinazione *d*, oppure se
-                    l'identità non conosce nessun percorso verso *d* che non passi per il
-                    massimo distinto g-nodo di *m* per *n*.
-            *   Nel network namespace gestito da questa identità di connettività, al sistema non serve
-                impostare una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
-                provenienti da un MAC address che non è fra quelli che l'identità conosce.
-*   Per ogni livello *j* da *k* a *l* - 1:
-    *   Per ogni componente *reale* a livello *j*, cioè per *p* da 0 a *gsize(j)* - 1:
-        *   Sia *d* il g-nodo di coordinate (*j*, *p*) rispetto a *n*. Indipendentemente dal
-            fatto che *d* esista o meno nella rete.
-        *   Il sistema computa questi indirizzi IP:
-            *   *d<sub>g</sub>* - Indirizzo IP globale del g-nodo *d*.  
-                Di nuovo, è impossibile che un processo locale voglia inviare un pacchetto a questi
-                indirizzi IP, poiché questa identità non è nel network namespace default.
-            *   *d<sub>a</sub>* - Indirizzo IP globale anonimizzante del g-nodo *d*.  
-            *   Per ogni valore *t* da *j* + 1 a *l* - 1 inclusi:
-                *   *d<sub>i[t]</sub>* - Indirizzo IP interno al livello *t* del g-nodo *d*.  
-                    In questo caso è garantito che tutte le componenti dell'indirizzo di *n*
-                    dal livello *j* + 1 al livello *t* - 1 sono *reali*.
-        *   Esaminiamo ognuno di questi indirizzi IP. Indichiamo con *d<sub>x</sub>*
-            questo indirizzo riferito a *d*.
-            *   Il sistema NON ha una rotta in *partenza* verso *d<sub>x</sub>*.
-            *   Per ogni MAC address *m* di diretto vicino che l'identità conosce:
-                *   Il sistema imposta una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
-                    provenienti da *m*.  
-                    Viene impostata la rotta identificata dal miglior percorso noto per quella
-                    destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
-                    La destinazione *d<sub>x</sub>* è "non raggiungibile" per i pacchetti
-                    in *inoltro* provenienti da *m* se non esiste nella rete la destinazione *d*, oppure se
-                    l'identità non conosce nessun percorso verso *d* che non passi per il
-                    massimo distinto g-nodo di *m* per *n*.
-            *   Nel network namespace gestito da questa identità di connettività, al sistema non serve
-                impostare una rotta in *inoltro* verso *d<sub>x</sub>* per i pacchetti
-                provenienti da un MAC address che non è fra quelli che l'identità conosce.
+                *   Il sistema imposta una rotta per i pacchetti IP provenienti da *m* in *inoltro* verso
+                    l'indirizzo IP di *d* interno al livello *k* per i pacchetti IP.
+            *   Di nuovo solo per l'identità principale nel network namespace default
+                e solo per la tabella `ntk`, per la rotta che punta all'indirizzo IP interno
+                al livello *k* di *d* come *src* preferito dovrà essere indicato l'indirizzo
+                IP di *n* interno al livello *k*.
 
 ## <a name="Indirizzi_del_sistema"></a> Indirizzi IP dell'identità principale del sistema
 

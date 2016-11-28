@@ -6,11 +6,11 @@
 
 #### Parte 6
 
-<a name="computo_indirizzi_ip_destinazioni"></a>
 Il programma **qspnclient** computa gli indirizzi IP di tutte le possibili destinazioni relative
 all'indirizzo Netsukuku che inizialmente va assegnato al sistema. Per ognuno assegna una rotta
 nella tabella `ntk` come `unreachable`.
 
+<a name="computo_indirizzi_ip_destinazioni"></a>
 I possibili indirizzi IP di destinazione, ognuno con suffisso CIDR, sono calcolati in questo modo:
 
 *   Indichiamo con *l* il numero di livelli nella topologia.
