@@ -859,6 +859,10 @@ Ogni istanza del modulo QSPN creata per gestire una precisa identità del nodo:
     *   Rilevamento di un g-nodo splittato.
 *   Fornisce metodi per:
     *   Chiedere se il nodo ha completato il bootstrap nella rete. Restituisce un booleano.
+    *   Dato un arco, chiedere l'indirizzo Netsukuku del vicino collegato. La risposta è *null* se
+        ancora nessun ETP è stato ricevuto da tale arco e processato: infatti in questo caso il
+        modulo non conosce ancora l'indirizzo Netsukuku del vicino collegato. Questo significa che
+        lo stesso metodo può essere usato per sapere se almeno un ETP è stato ricevuto da tale arco e processato.
     *   Dato un livello *i*, ottenere l'elenco dei g-nodi *reali* di livello *i* presenti nella mappa
         (quindi nel mio g-nodo di livello *i* + 1). Restituisce una lista di HCoord. Se il nodo è nella fase
         di bootstrap a livello *i* o inferiore, lancia eccezione QspnBootstrapInProgressError.

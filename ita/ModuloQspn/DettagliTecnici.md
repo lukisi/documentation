@@ -116,7 +116,7 @@ Quindi il demone *ntkd* nel sistema istanzia il QspnManager di *n* passando al c
 La lista di istanze di IQspnArc del nodo viene inizializzata vuota dal costruttore.
 
 Una istanza di QspnManager costruita in questo modo esce immediatamente dalla fase di bootstrap. Quando una
-istanza di QspnManager esce dalla fase di bootstrap lo notifica con il segnale *bootstrap_complete*.
+istanza di QspnManager esce dalla fase di bootstrap lo notifica con il segnale *qspn_bootstrap_complete*.
 
 Abbiamo detto che la rete è composta dal solo nodo del grafo *n*. Se in seguito il nodo *n* decidesse di
 entrare in una diversa rete, allora il demone *ntkd* farebbe come vedremo sotto una nuova istanza di QspnManager.
@@ -293,7 +293,7 @@ In seguito alcuni nodi di *w’* riceveranno degli ETP completi dai loro diretti
 a *g*. Poi propagheranno le nuove conoscenze (cioè percorsi verso g-nodi esterni a *w’*) trasmettendo degli ETP
 ai nodi del grafo interni a *w’*. Alla fine ogni nuovo nodo in *w’* riceve queste nuove
 conoscenze e può uscire dalla fase di bootstrap. Quando una istanza di QspnManager esce dalla fase di bootstrap
-lo notifica con il segnale *bootstrap_complete*.
+lo notifica con il segnale *qspn_bootstrap_complete*.
 
 Anche ad una istanza di QspnManager costruita in questo modo, il demone *ntkd* segnala le eventuali variazioni sugli archi con i metodi:
 
@@ -440,7 +440,7 @@ In seguito alcuni nodi di *w’* riceveranno degli ETP completi dai loro diretti
 a *g*. Poi propagheranno le nuove conoscenze (cioè percorsi verso g-nodi esterni a *w’*) trasmettendo degli ETP
 ai nodi del grafo interni a *w’*. Alla fine ogni nuovo nodo in *w’* riceve queste nuove
 conoscenze e può uscire dalla fase di bootstrap. Quando una istanza di QspnManager esce dalla fase di bootstrap
-lo notifica con il segnale *bootstrap_complete*.
+lo notifica con il segnale *qspn_bootstrap_complete*.
 
 Dopo che è uscita dalla fase di bootstrap, una istanza di QspnManager trasmette i suoi primi ETP ai diretti vicini. Dopo
 averli trasmessi, aspetta un certo tempo per accertarsi che i vicini abbiano avuto modo di processarli e poi emette il
@@ -593,6 +593,12 @@ Il modulo notifica il rilevamento di uno split in un g-nodo di sua conoscenza at
 * * *
 
 Il modulo permette di vedere se ha completato il suo bootstrap con il metodo *is_bootstrap_complete* di QspnManager.
+
+* * *
+
+Il modulo permette di vedere l'indirizzo Netsukuku del vicino collegato ad un dato arco con il metodo
+*get_naddr_for_arc* di QspnManager. Questo è noto al modulo solo se da quell'arco è stato ricevuto e processato
+almeno un ETP.
 
 * * *
 
