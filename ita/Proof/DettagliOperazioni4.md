@@ -445,18 +445,25 @@ ip route change unreachable 10.0.0.40/32 table ntk
 
 #### Processazione di un ETP
 
-Quando in una identità del sistema il QspnManager ha terminato di processare un ETP, esso
-deve segnalarlo al programma. Inoltre il QspnManager deve indicare, con un metodo, per un
-dato arco-qspn se ha già ricevuto tramite di esso almeno un ETP.
+In questa trattazione mettiamo le modifiche alle rotte tutte insieme e le consideriamo come
+scaturite da un unico evento: il QspnManager ha terminato di processare un ETP e lo segnala
+al programma. In realtà il QspnManager non ha bisogno di emettere questo segnale, in quanto
+già segnala ogni singola variazione della mappa.
+
+Ricordiamo anche che il QspnManager fornisce al programma un metodo che restituisce l'indirizzo
+Netsukuku del vicino collegato ad un dato arco-qspn, se ha già ricevuto tramite di esso almeno un ETP.
+Al programma serve sapere se il modulo conosce già l'indirizzo Netsukuku del vicino, perché solo
+in questo caso ha senso usare la relativa tabella di inoltro.
 
 Il programma **qspnclient** per ogni arco-qspn tiene traccia se ha già aggiunto la regola
 per la relativa tabella di inoltro nel relativo network namespace.
 
 Questa sequenza di operazioni è eseguita dal programma **qspnclient** quando un suo
-QspnManager ha terminato di processare un ETP. In essa, relativamente al network namespace
+QspnManager ha terminato di processare un ETP (o in generale sugli aggiornamenti
+alla sua mappa). In essa, relativamente al network namespace
 associato all'identità a cui il QspnManager appartiene, vengono aggiornate tutte le rotte di
 tutte le tabelle presenti, ma per quelle di inoltro solo se abbiamo ricevuto almeno un
-ETP da quell'arco; in seguito viene aggiunta la regola per le tabelle di inoltro il cui arco ha ricevuto
+ETP da quell'arco; inoltre viene aggiunta la regola per le tabelle di inoltro il cui arco ha ricevuto
 proprio adesso il primo ETP.
 
 **sistema 𝛼**
