@@ -42,6 +42,7 @@ for dev in $devlist; do
  sysctl net.ipv4.conf.$dev.rp_filter=0
  sysctl net.ipv4.conf.$dev.arp_ignore=1
  sysctl net.ipv4.conf.$dev.arp_announce=2
+ ip link set dev $dev up
 done
 ```
 
@@ -49,6 +50,10 @@ done
 
 Il programma **qspnclient** informa il modulo Neighborhood di ogni interfaccia di rete che
 deve gestire, tramite il metodo `start_monitor`. Il modulo Neighborhood produrrà per questo alcuni comandi al sistema operativo.
+
+```
+ip address add 169.254.69.30 dev $dev
+```
 
 #### Parte 4
 

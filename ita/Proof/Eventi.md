@@ -29,6 +29,7 @@ di rete, la quale viene passata dall'utente come argomento del comando di avvio.
 sysctl net.ipv4.conf.eth1.rp_filter=0
 sysctl net.ipv4.conf.eth1.arp_ignore=1
 sysctl net.ipv4.conf.eth1.arp_announce=2
+ip link set dev eth1 up
 ```
 
 Questa sequenza di operazioni avviene all'avvio del programma **qspnclient**. Viene fatta per ogni
@@ -38,7 +39,6 @@ interfaccia di rete (nell'esempio `eth1`) le quali sono passate dall'utente come
 
 **sistema 𝛼**
 ```
-ip link set dev eth1 up
 ip address add 169.254.69.30 dev eth1
 ```
 
