@@ -255,7 +255,7 @@ Ingresso.
 *   Dopo un attesa di un secondo circa, nel sistema *𝛽* l'utente dà il comando:  
     `qspnclient add_qspn_arc 0 00:16:3E:FD:E2:AA`  
 
-### Gestione pseudonimi delle tabelle di routing
+### <a name="Gestione_pseudonimi_tabelle"></a>Gestione pseudonimi delle tabelle di routing
 
 Ogni istanza di IdentityData (ogni identità) ha in memoria per ogni suo arco-qspn l'identificativo
 (un intero) della tabella `ntk_from` relativa. Ovviamente ha anche modo di recuperare dall'arco-qspn

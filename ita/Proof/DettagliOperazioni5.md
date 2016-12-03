@@ -24,16 +24,16 @@ Supponiamo che il programma **qspnclient** riceve dall'utente istruzioni di rimu
 verso un diretto vicino. Sarebbe la stessa cosa anche se il programma riceve il segnale `arc_removing`
 dal modulo Neighborhood che significa che un arco fisico non è più funzionante.
 
-**TODO: verificare nel modulo Identities** Il programma istruisce il modulo Identities che questo arco fisico sta per essere rimosso:
+Il programma istruisce il modulo Identities che questo arco fisico sta per essere rimosso:
 cioè gli dice che sta per essere rimosso dalla tabella `main` del kernel nel network namespace `default` la rotta diretta *principale*,
 cioè quella che collega l'identità principale di questo sistema all'identità principale del sistema vicino.
 
 Il modulo Identities per ogni arco-identità che fa riferimento a questo arco fisico (anche per quello principale)
-emette il **suo** segnale `arc_removing`. Poi, non per l'arco-identità principale ma solo per gli altri,
+emette il **suo** segnale `identity_arc_removing`. Poi, non per l'arco-identità principale ma solo per gli altri,
 rimuove dalla tabella `main` del kernel nel network namespace interessato la rotta diretta. Infine, per tutti gli
 archi-identità, emette il suo segnale `arc_removed`.
 
-Quando riceve il segnale `arc_removing` dal modulo Identities, il programma **qspnclient**, poiché quel
+Quando riceve il segnale `identity_arc_removing` dal modulo Identities, il programma **qspnclient**, poiché quel
 particolare arco-identità era associato ad un arco-qspn, esegue queste azioni sulla relativa tabella di
 inoltro:
 
@@ -41,10 +41,8 @@ inoltro:
     *   Rimuove la regola.
 *   Svuota la tabella.
 *   Rimuove la marcatura dei pacchetti.
-*   Rimuove l'associazione tra questa identità e questa tabella. **TODO: spostare questa informazione:** Esiste
-    quindi una associazione tra una identità e un elenco di tabelle (ad esempio una lista di identificativi
-    numerici, i quali sono nel file `rt_tables`; inoltre esiste una mappa globale dell'applicazione che associa
-    il numero alla stringa del MAC).
+*   Rimuove l'associazione tra questa identità e questa tabella. Vedi
+    [Gestione_pseudonimi_tabelle](DettagliTecnici.md#Gestione_pseudonimi_tabelle).
 *   Se nessuna identità ha una associazione con questa tabella:
     *   Rimuove lo pseudonimo della tabella nel file `rt_tables`, liberando il numero identificativo.
 
