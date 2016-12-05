@@ -851,6 +851,7 @@ Ogni istanza del modulo QSPN creata per gestire una precisa identità del nodo:
 *   Emette un segnale per:
     *   Il modulo ha completato il *bootstrap* per questa identità, cioè è uscito dalla fase di bootstrap. La
         definizione di tale fase è spiegata nel documento [esplorazione](EsplorazioneRete.md).
+    *   I vicini sono stati notificati (tramite ETP) della presenza di questa identità.
     *   Rimosso un arco, perché non funzionava.
     *   Nuovo g-nodo nella mappa, rimosso g-nodo dalla mappa.
     *   Nuovo percorso, percorso cambiato o percorso rimosso per un certo g-nodo.
@@ -868,7 +869,7 @@ Ogni istanza del modulo QSPN creata per gestire una precisa identità del nodo:
         di bootstrap a livello *i* o inferiore, lancia eccezione QspnBootstrapInProgressError.
     *   Relativamente ad un g-nodo a cui il nodo non appartiene, vale a dire dato un HCoord *dst*, ottenere
         tutti i percorsi a disposizione per raggiungerlo, ordinati per costo crescente e per primi quelli
-        disgiunti. Metodo List<IQspnNodePath> *get_paths_to*. Restituisce una lista di IQspnNodePath. Se il
+        disgiunti. Metodo `List<IQspnNodePath> get_paths_to`. Restituisce una lista di IQspnNodePath. Se il
         nodo è nella fase di bootstrap a livello *dst.lvl* o inferiore, lancia eccezione QspnBootstrapInProgressError.
     *   Relativamente ad uno dei g-nodi a cui appartiene il nodo, vale a dire dato un livello *i*
         da 0 a *l* compresi, ottenere:
