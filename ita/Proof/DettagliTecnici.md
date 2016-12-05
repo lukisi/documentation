@@ -50,22 +50,21 @@ che comunque viene ignorato dal programma.
 
 * * *
 
-Il programma *qspnclient* vuole tenere traccia delle identità che sono nel nodo. Lo fa tramite il
+Il programma **qspnclient** tiene traccia delle identità presenti nel sistema tramite il
 dizionario *local_identities*, in cui la chiave è l'indice autoincrementante *local_identity_nextindex* e il valore è
 una istanza della classe *IdentityData*. Dentro questa classe il programma mantiene alcune informazioni, tra le quali:
 
 *   `NodeID nodeid` - L'identificativo che il modulo Identities ha assegnato all'identità.
-*   `my_addr` - L'indirizzo Netsukuku.
+*   `my_naddr` - L'indirizzo Netsukuku.
 *   `my_fp` - Il fingerprint e le anzianità a livello 0.
-*   `string network_namespace` - Il nome del relativo network namespace.
 
 Per valorizzare la prima istanza di IdentityData, nel dizionario *local_identities* con indice 0 e associata alla
 prima identità del nodo, il programma chiama il metodo *get_main_id* di IdentityManager per
-recuperare il NodeID che il modulo Identities ha assegnato alla prima identità. Questa prima
-identità gestisce il network namespace default, quindi `network_namespace = ""`.
+recuperare il NodeID che il modulo Identities ha assegnato alla prima identità.
 
-In questo stesso momento i dati di questa istanza di ProofOfConcept.IdentityData vengono mostrati a video
-con il relativo indice. In seguito l'utente può rivederli con il comando `show_local_identities`.
+L'indirizzo Netsukuku della prima identità nel sistema è specificato dall'utente all'avvio del programma con
+il comando `qspnclient init`. Il fingerprint a livello 0 è generato a caso, con le anzianità tutte a zero (cioè
+rappresenta il primo nodo nella rete).
 
 * * *
 
@@ -88,6 +87,9 @@ in una diversa rete (vedremo il comando `prepare_enter_net_phase_1`) la topologi
 In questo momento, quando abbiamo inizializzato il modulo Qspn per la prima identità principale del sistema,
 i dati di questa istanza di IdentityData `local_identities[0]` vengono mostrati a video
 con il relativo indice. In seguito l'utente può rivederli con il comando `show_local_identities`.
+
+Tra le informazioni mostrate da questo comando ci sono anche, per ogni g-nodo a cui l'identità
+appartiene, il relativo fingerprint e il numero di nodi (approssimato) al suo interno.
 
 * * *
 
