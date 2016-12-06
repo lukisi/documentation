@@ -41,15 +41,15 @@ La sequenza di istruzioni che l'utente darà ai singoli nodi *𝛼* e *𝛽* sar
         ingresso insieme al suo g-nodo di livello *k*. Chiamiamo questo g-nodo *𝜑* e il nuovo g-nodo isomorfo *𝜑'*.
         In questo esempio *𝜑* è costituito dal solo *𝛼<sub>0</sub>* e *𝜑'* è costituito dal solo *𝛼<sub>1</sub>*.
     *   g-nodo ospitante. Le informazioni riguardanti il g-nodo *𝜒*, il quale può ospitare *𝜑'* nella
-        nuova rete. Consistono nell'indirizzo Netsukuku di *𝜒* e il suo fingerprint.  
+        nuova rete. Consistono nell'indirizzo Netsukuku di *𝜒* e le sue anzianità.  
         Sicuramente *𝜒* è di livello maggiore del livello di *𝜑'*, forse anche di più livelli.
     *   nuova posizione 1. Le informazioni riguardanti la posizione da assumere dentro *𝜒*. Consistono
         nella posizione e l'anzianità del g-nodo di livello direttamente inferiore a *𝜒* che potrà
         immediatamente assumere *𝜑'* nella nuova rete. Questa posizione è temporanea e *virtuale*.
     *   nuova posizione 2. Sarà in seguito resa disponibile dentro *𝜒* questa posizione *reale*.
     *   posizione di connettività. Le informazioni riguardanti la posizione di connettività nella
-        vecchia rete che dovrà assumere *𝜑*. Consistono nella posizione *virtuale* e l'anzianità del g-nodo di
-        livello direttamente superiore a *𝜑*.
+        vecchia rete che dovrà assumere *𝜑*. Consistono nella posizione *virtuale* e l'anzianità di
+        *𝜑* all'interno del suo g-nodo di livello direttamente superiore.
     *   nuovi archi-qspn. Cioè quali archi-identità fra quelli di *𝛼<sub>0</sub>* (l'identità entrante)
         saranno archi nella nuova rete. Oltre a quelli che sono già noti in quanto interni al g-nodo entrante *𝜑*.
         In realtà gli archi-identità che diverranno archi-qspn sono quelli duplicati per l'identità

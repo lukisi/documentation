@@ -41,7 +41,7 @@ La sequenza di istruzioni che l'utente darà ai sistemi *𝛿* e *𝜇* sarà qu
     *   g-nodo ospitante *𝜒*:
         *   Livello: 2.
         *   Indirizzo Netsukuku: 2·1·.
-        *   Fingerprint a livello 2. **TODO verificare**
+        *   Anzianità: 0·0·.
     *   nuova posizione virtuale:
         *   Identificativo: 2.
         *   Anzianità: 1.
@@ -63,7 +63,7 @@ La sequenza di istruzioni che l'utente darà ai sistemi *𝛿* e *𝜇* sarà qu
     *   g-nodo ospitante *𝜒*:
         *   Livello: 2.
         *   Indirizzo Netsukuku: 2·1·.
-        *   Fingerprint a livello 2. **TODO verificare**
+        *   Anzianità: 0·0·.
     *   nuova posizione virtuale:
         *   Identificativo: 2.
         *   Anzianità: 1.
