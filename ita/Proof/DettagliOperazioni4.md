@@ -137,7 +137,7 @@ in *𝛼<sub>1</sub>*) è necessario che il programma **qspnclient** reperisca
 l'associazione tra ogni arco-identità della vecchia identità e il corrispettivo arco-identità
 della nuova identità.
 
-Consideriamo gli archi-identità di *𝛼<sub>0</sub>*. Per ognuno Il modulo Identities ha creato una istanza di IIdmgmtIdentityArc
+Consideriamo gli archi-identità di *𝛼<sub>0</sub>*. Per ognuno il modulo Identities ha creato una istanza di IIdmgmtIdentityArc
 dalla quale si può recuperare il valore corrente (mutabile) di *peer_mac* e *peer_linklocal*. E anche il valore
 di *peer_nodeid*. Inoltre il programma **qspnclient** ha creato una istanza di IdentityArc che ha memorizzato il valore
 iniziale (o meglio precedente all'operazione `add_identity`) di *peer_mac* e *peer_linklocal*.

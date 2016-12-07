@@ -292,8 +292,10 @@ Questo ci assicura che i livelli da *l* - 1 a *i* sono tutti *reali*.
 
 Prendiamo di nuovo in considerazione tutti i possibili indirizzi IP di destinazione relativi all'indirizzo
 della vecchia identità nel nuovo namespace. In tutte le tabelle di inoltro che vanno usate nel nuovo
-network namespace, ma soltanto nelle tabelle di inoltro che hanno come nodo vicino un altro
-nodo che partecipa alla migrazione/ingresso, il programma aggiorna lo stato delle rotte sulla
+network namespace  
+**TODO** Non ricordo se serve questa parte. Se serve, modificare il codice e specificare come mai:
+*ma soltanto nelle tabelle di inoltro che hanno come nodo vicino un altro nodo che partecipa alla migrazione/ingresso*  
+il programma aggiorna lo stato delle rotte sulla
 base delle conoscenze che l'identità aveva da prima e aggiunge la regola.
 
 **sistema 𝛿**
