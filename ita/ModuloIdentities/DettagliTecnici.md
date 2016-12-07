@@ -304,6 +304,8 @@ collegati. Quindi non ha senso proseguire le operazioni su altri eventuali archi
             *   Il manager nel sistema *a* cambia i dati dell'arco assegnato ad *id<sub>j</sub>* relativamente all'interfaccia remota:
                 *   *w<sub>0</sub>.peer_mac = peer_old_id_new_mac*.
                 *   *w<sub>0</sub>.peer_linklocal = peer_old_id_new_linklocal*.
+            *   Segnala al suo utilizzatore che c'è stato un cambio sui dati dell' arco-identità dovuto alla
+                migrazione sia di *id<sub>j</sub>* sia del suo vicino.
             *   Il manager nel sistema *a* cambia i dati dell'arco assegnato ad *id<sub>i</sub>* relativamente alla *identità* remota:
                 *   *w<sub>1</sub>.peer_nodeid* = Il NodeID di *b<sub>k</sub>*.
         *   Il manager nel sistema *a* tramite il netns-manager aggiunge alle tabelle nel network namespace
@@ -321,8 +323,9 @@ collegati. Quindi non ha senso proseguire le operazioni su altri eventuali archi
         *   Altrimenti:
             *   Il manager nel sistema *b*, in autonomia come accennato sopra, forma un nuovo arco-identità
                 *b<sub>j</sub>*-*id<sub>i</sub>* e lo segnala al suo utilizzatore.
-            *   Cambia i dati dell' arco-identità *b<sub>j</sub>*-*id<sub>j</sub>*, cioè MAC e linklocal, e lo
-                segnala al suo utilizzatore.
+            *   Cambia i dati dell' arco-identità *b<sub>j</sub>*-*id<sub>j</sub>*, cioè MAC e linklocal.  
+                Segnala al suo utilizzatore che c'è stato un cambio sui dati dell' arco-identità dovuto alla
+                migrazione del solo vicino.
             *   Aggiunge una rotta nelle tabelle di un suo namespace (quello gestito da *b<sub>j</sub>*) per
                 l'arco *b<sub>j</sub>*-*id<sub>j</sub>*.
     *   Se *arc_is_broken*:
