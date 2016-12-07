@@ -132,19 +132,19 @@ dopo l'esecuzione del metodo `add_identity` il nome del vecchio network namespac
 partendo dalla nuova identità, mentre il nome del nuovo network namespace si recupera
 partendo dalla vecchia identità.
 
-Dopo l'esecuzione del metodo `add_identity` sul modulo Identities (che duplica *a<sub>j</sub>*
-in *a<sub>i</sub>*) è necessario che il programma **qspnclient** reperisca
+Dopo l'esecuzione del metodo `add_identity` sul modulo Identities (che duplica *𝛼<sub>0</sub>*
+in *𝛼<sub>1</sub>*) è necessario che il programma **qspnclient** reperisca
 l'associazione tra ogni arco-identità della vecchia identità e il corrispettivo arco-identità
 della nuova identità.
 
-Consideriamo gli archi-identità di *a<sub>j</sub>*. Per ognuno Il modulo Identities ha creato una istanza di IIdmgmtIdentityArc
+Consideriamo gli archi-identità di *𝛼<sub>0</sub>*. Per ognuno Il modulo Identities ha creato una istanza di IIdmgmtIdentityArc
 dalla quale si può recuperare il valore corrente (mutabile) di *peer_mac* e *peer_linklocal*. E anche il valore
 di *peer_nodeid*. Inoltre il programma **qspnclient** ha creato una istanza di IdentityArc che ha memorizzato il valore
 iniziale (o meglio precedente all'operazione `add_identity`) di *peer_mac* e *peer_linklocal*.
 
-Dopo l'operazione di `add_identity` il programma **qspnclient** cicla tra gli archi-identità di *a<sub>j</sub>*.
+Dopo l'operazione di `add_identity` il programma **qspnclient** cicla tra gli archi-identità di *𝛼<sub>0</sub>*.
 Indichiamo un IdentityArc con *w<sub>0</sub>*. Il relativo IIdmgmtIdentityArc è *w<sub>0</sub>.id_arc*.
-Per ogni *w<sub>0</sub>*, il programma cicla tra gli archi-identità di *a<sub>i</sub>* alla ricerca del
+Per ogni *w<sub>0</sub>*, il programma cicla tra gli archi-identità di *𝛼<sub>1</sub>* alla ricerca del
 corrispettivo arco-identità *w<sub>1</sub>*. Questo deve avere:
 
 *   *w<sub>1</sub>.arc* == *w<sub>0</sub>.arc*.
