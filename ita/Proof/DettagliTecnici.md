@@ -145,26 +145,127 @@ I dati che servono per implementare i metodi di IIdmgmtArc sono:
 Questa istanza di ProofOfConcept.IdmgmtArc viene anche salvata nel membro *idmgmt_arc* della stessa
 istanza di ProofOfConcept.Arc. Così il programma in seguito partendo dalla chiave di *real_arcs* potrà recuperarla.
 
-* * *
+### <a name="Gestione_archi_identità"></a>Archi-identità
 
-Quando riceve il segnale *identity_arc_added* di IdentityManager, il programma crea una istanza di
-ProofOfConcept.IdentityArc che ha questi membri:
+#### Nuovo arco-identità
 
-*   `IIdmgmtArc arc`. Si tratta di una istanza di ProofOfConcept.IdmgmtArc che ci permette di risalire
-    al ProofOfConcept.Arc.
-*   `NodeID id`. Si tratta di uno dei propri NodeID.
-*   `IIdmgmtIdentityArc id_arc`.
-*   `string peer_mac`. Memorizza l'attuale contenuto di `id_arc.get_peer_mac()`. Sarà utile quando
-    in futuro questa istanza di IIdmgmtIdentityArc notificherà una variazione.
-*   `string peer_linklocal`. Analogo per il contenuto di `id_arc.get_peer_linklocal()`.
+Quando riceve il segnale `identity_arc_added` di IdentityManager, il programma crea una istanza di
+ProofOfConcept.IdentityArc. Questa ha alcuni membri che costituiscono una chiave, con la quale l'istanza
+di ProofOfConcept.IdentityArc è biunivocamente associata ad un arco-identità generato e gestito dal modulo
+Identities:
 
-Associa questa istanza di ProofOfConcept.IdentityArc al prossimo valore dell'indice autoincrementante
-*identity_arc_nextindex*, nel dizionario *identity_arcs*.
+*   `IIdmgmtArc arc`. L'arco fisico su cui poggia. Si tratta di una istanza di ProofOfConcept.IdmgmtArc che
+    ci permette di risalire al ProofOfConcept.Arc.
+*   `NodeID id`. Si tratta di uno dei propri NodeID. Cioè identifica una identità nel sistema locale.
+*   `IIdmgmtIdentityArc id_arc`. L'arco-identità vero e proprio. Da questo oggetto si può ottenere il
+    NodeID dell'identità nel vicino.  
+    Si può anche ottenere l'attuale indirizzo MAC e indirizzo linklocal dell'identità nel vicino. Va notato
+    che tali proprietà possono mutare, come vedremo poco sotto.
 
-In questo stesso momento tutti questi dati sono mostrati a video con il relativo indice. In seguito
-l'utente può rivederli con il comando `show_identity_arcs`.
+L'istanza di ProofOfConcept.IdentityArc ha anche altri membri, nei quali il programma **qspnclient** memorizza
+altre informazioni che possono servirgli:
 
-* * *
+*   `string peer_mac`. Il programma copia in questo membro il valore corrente di `id_arc.get_peer_mac()` nel
+    momento in cui crea l'istanza.
+*   `string peer_linklocal`. Il programma copia in questo membro il valore corrente di `id_arc.get_peer_linklocal()` nel
+    momento in cui crea l'istanza.
+*   `QspnArc? qspn_arc`. Contiene il relativo arco-qspn, oppure `null` se l'arco-identità collega due
+    identità che non sono nella stessa rete.  
+    Il programma lo inizializza a `null` nel momento in cui crea l'istanza.
+*   `string? tablename`. Contiene il nome della tabella di inoltro per i pacchetti IP provenienti da questo arco-qspn,
+    oppure `null` se l'arco-identità collega due identità che non sono nella stessa rete.  
+    Il programma lo inizializza a `null` nel momento in cui crea l'istanza.
+*   `int? tid`. Contiene l'identificativo numerico della tabella di inoltro per i pacchetti IP provenienti da questo arco-qspn,
+    oppure `null` se l'arco-identità collega due identità che non sono nella stessa rete.  
+    Il programma lo inizializza a `null` nel momento in cui crea l'istanza.
+*   `bool? rule_added`. Contiene un booleano che dice se la regola per l'uso della tabella di inoltro è stata aggiunta,
+    oppure `null` se l'arco-identità collega due identità che non sono nella stessa rete.  
+    Il programma lo inizializza a `null` nel momento in cui crea l'istanza.
+*   `string? prev_peer_mac`. Inizialmente a `null`. Spieghiamo sotto come viene usato.
+*   `string? prev_peer_linklocal`. Inizialmente a `null`. Spieghiamo sotto come viene usato.
+*   `string? prev_tablename`. Inizialmente a `null`. Spieghiamo sotto come viene usato.
+*   `int? prev_tid`. Inizialmente a `null`. Spieghiamo sotto come viene usato.
+*   `bool? prev_rule_added`. Inizialmente a `null`. Spieghiamo sotto come viene usato.
+
+L'istanza di ProofOfConcept.IdentityArc creata dal programma nell'handler del segnale `identity_arc_added`
+viene memorizzata nel dizionario *identity_arcs* membro della classe IdentityData. La relativa chiave
+sarà il prossimo valore dell'indice autoincrementante *identity_arc_nextindex* membro della stessa classe.
+
+In questo stesso momento tutti i dati sono mostrati a video, con i relativi indici di identità e di arco-identità.
+In seguito l'utente può rivederli con il comando `show_identity_arcs` indicando l'identità di cui vuole esaminare
+gli archi.
+
+#### Variazione di un arco-identità
+
+Un arco-identità è associato in modo permanente ad un arco fisico del sistema verso un vicino, ad una
+precisa identità nel sistema e ad una precisa identità nel sistema vicino. Queste proprietà non cambiano,
+nemmeno in presenza di migrazioni e ingressi in altre reti. Le proprietà di un arco-identità che possono
+invece mutare nel tempo sono il MAC address e il relativo indirizzo IP linklocal dell'identità del vicino
+collegata. Questo può avvenire in due casi:
+
+*   Quando è richiesta la duplicazione di una identità nel sistema, cioè quando viene chiamato il
+    metodo `add_identity` del modulo Identities. Questo avviene ad esempio durante l'esecuzione del
+    codice che implementa il comando `enter_net_phase_1`.  
+    Il metodo `add_identity` produce la creazione di una nuova identità, con la creazione di
+    nuovi archi-identità per essa. Oltre a ciò, se alcuni diretti vicini migrano con noi, il
+    suddetto metodo produce la modifica dei relativi archi-identità della vecchia identità.  
+    Le proprietà modificate di questi archi-identità sono appunto il MAC address e il relativo indirizzo
+    IP linklocal dell'identità del vicino. Queste si possono reperire coi metodi `get_peer_mac()` e
+    `get_peer_linklocal()` dell'oggetto generato dal modulo Identities, quindi partendo dall'istanza di
+    ProofOfConcept.IdentityArc con `id_arc.get_peer_mac()` e `id_arc.get_peer_linklocal()`.  
+    L'evento di modifica delle proprietà di un arco-identità viene segnalato puntualmente dal modulo
+    Identities (col segnale `identity_arc_changed`), ma le operazioni che il programma **qspnclient** deve
+    fare a seguito del comando che duplica una identità (ad esempio il comando `enter_net_phase_1`) vanno
+    espletate nel codice del comando, e non nel codice di handler del segnale del modulo Identities.
+*   Quando una identità in un sistema diretto vicino diventa di connettività a seguito di una migrazione
+    (o ingresso in altra rete) a cui la nostra identità non prende parte.  
+    Questo evento viene segnalato puntualmente dal modulo Identities col segnale `identity_arc_changed`,
+    come abbiamo già detto. Aggiungiamo però che in tale scenario il segnale suddetto include un flag `only_neighbour_migrated`
+    che avverte il programma del fatto che è la sola identità nel vicino (e non quella locale) che partecipa
+    alla migrazione. Per questo, direttamente nel codice di handler di tale segnale, il programma **qspnclient**
+    espleta le dovute operazioni.
+
+Quando viene modificato il MAC address dell'identità del vicino collegato a un arco-identità, cioè nell'handler
+del segnale `identity_arc_changed` del modulo Identities, il programma esegue:
+
+*   `prev_peer_mac` = `peer_mac`.
+*   `prev_peer_linklocal` = `peer_linklocal`.
+*   `prev_tablename` = `tablename`.
+*   `prev_tid` = `tid`.
+*   `prev_rule_added` = `rule_added`.
+*   `peer_mac` = `id_arc.get_peer_mac()`.
+*   `peer_linklocal` = `id_arc.get_peer_linklocal()`.
+*   `prev_tablename` = `null`.
+*   `prev_tid` = `null`.
+*   `prev_rule_added` = `null`.
+
+Poi, solo se esiste un QspnArc:
+
+*   `tablename` + `tid` = `get_table(peer_mac)`
+
+##### Variazione in entrambe le identità
+
+Se il cambio avviene a seguito di una migrazione a cui prende parte anche la nostra identità, vale a dire
+se avviene durante l'esecuzione del metodo `add_identity` che è stato chiamato dal codice che implementa
+ad esempio il comando `enter_net_phase_1`, il programma se ne avvede (passando in rassegna le istanze di
+ProofOfConcept.IdentityArc associate alla vecchia identità) dal fatto che `prev_peer_mac` != `null`.
+
+Poi, a seconda dell'operazione che ha portato al cambio nell'arco-identità, il programma **qspnclient** nel
+sistema locale dovrà espletare altre operazioni. Ad ogni momento durante queste operazioni il programma
+potrà accedere alle informazioni corrette relativamente all'arco-identità, sia in relazione
+al MAC address precedente sia in relazione al MAC address nuovo.
+
+Alla fine delle operazioni i membri `prev_*` verranno riportati tutti a `null`.
+
+##### Variazione nella sola identità del vicino
+
+Se il cambio avviene a seguito di una migrazione a cui non prendeva parte la nostra identità, la cosa
+viene specificata come detto prima all'handler del segnale del modulo Identities. In questo caso,
+il programma **qspnclient** dovrà espletare alcune operazioni nello stesso handler. Avrà a disposizione
+le informazioni corrette relativamente all'arco-identità, sia in relazione al MAC address precedente sia
+in relazione al MAC address nuovo. Dovrà al termine riportare a `null` tutti i membri `prev_*`.
+
+### Ingresso di un singolo nodo in una nuova rete
 
 Vediamo quali passaggi portano due sistemi, *𝛼* e *𝛽*, a rilevare un arco tra di loro e uno dei due, *𝛽*,
 a fare ingresso nella rete dell'altro.
