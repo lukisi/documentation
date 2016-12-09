@@ -235,9 +235,9 @@ del segnale `identity_arc_changed` del modulo Identities, il programma esegue:
 *   `prev_rule_added` = `rule_added`.
 *   `peer_mac` = `id_arc.get_peer_mac()`.
 *   `peer_linklocal` = `id_arc.get_peer_linklocal()`.
-*   `prev_tablename` = `null`.
-*   `prev_tid` = `null`.
-*   `prev_rule_added` = `null`.
+*   `tablename` = `null`.
+*   `tid` = `null`.
+*   `rule_added` = `null`.
 
 Poi, solo se esiste un QspnArc:
 
