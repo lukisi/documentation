@@ -242,6 +242,7 @@ del segnale `identity_arc_changed` del modulo Identities, il programma esegue:
 Poi, solo se esiste un QspnArc:
 
 *   `tablename` + `tid` = `get_table(peer_mac)`
+*   `rule_added` = `false`
 
 ##### Variazione in entrambe le identità
 
