@@ -466,6 +466,10 @@ Per la chiamata di tale metodo, solo se *n’* ha già completato la sua fase di
 trasmissione di un ETP a tutti i vicini di *n’* esterni a *w’*. In esso la lista dei percorsi è vuota, perché va segnalato
 soltanto il nuovo percorso verso il nuovo identificativo *reale* di *w’* al livello *i* - 1.
 
+Siccome a cambiare indirizzo Netsukuku sono tutti i membri del g-nodo *w’*, tutti i vicini di *n’* interni a *w’* hanno
+cambiato il proprio. Poiché il modulo permette di vedere l'indirizzo Netsukuku del vicino collegato ad un dato arco
+(con il metodo *get_naddr_for_arc*) questa informazione va aggiornata nella memoria del modulo.
+
 #### <a name="Modifica_precedente"></a>Modifica della precedente identità in g in una identità di connettività
 
 Con i dati suddetti relativi alla migrazione il demone *ntkd* sull'istanza di QspnManager *n* chiama il metodo
@@ -473,9 +477,13 @@ Con i dati suddetti relativi alla migrazione il demone *ntkd* sull'istanza di Qs
 
 *   Il livello *i* della migrazione.
 *   Il livello *j* della migrazione.
-*   Il nuovo indirizzo Netsukuku. In realtà l'unica cosa che cambia in esso è il nuovo identificativo *virtuale* al
+*   Una callback per modificare il proprio indirizzo Netsukuku e quelli dei vicini interni a *w*.  
+    Cambia l'indirizzo Netsukuku di *n*. In realtà l'unica cosa che cambia in esso è il nuovo identificativo *virtuale* al
     livello *i* - 1, cioè dentro *g*. Ma questo dato nella classe dell'indirizzo non è accessibile in scrittura al modulo
-    QSPN, quindi viene passata una istanza di IQspnMyNaddr che il modulo considera nuova.
+    QSPN, quindi con questa callback viene generata una istanza di IQspnMyNaddr che il modulo considera nuova.  
+    Cambiano analogamente gli indirizzi Netsukuku dei vicini che erano interni a *w*. Poiché il modulo permette di vedere
+    l'indirizzo Netsukuku del vicino collegato ad un dato arco (con il metodo *get_naddr_for_arc*)
+    anche questa informazione va aggiornata nella memoria del modulo.
 *   Il nuovo fingerprint a livello 0. In realtà l'unica cosa che cambia in esso è la nuova anzianità al livello *i* - 1,
     cioè dentro *g*. Ma questo dato nella classe del fingerprint non è accessibile al modulo QSPN, quindi viene passata
     una istanza di IQspnFingerprint che il modulo considera nuova.
