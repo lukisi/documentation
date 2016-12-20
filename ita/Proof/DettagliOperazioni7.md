@@ -44,7 +44,7 @@ La sequenza di istruzioni che l'utente darà ai sistemi sarà questa:
     *   g-nodo ospitante *𝜑*:
         *   Livello: 1.
         *   Indirizzo Netsukuku: 2·1·1·.
-        *   Fingerprint a livello 1.
+        *   Anzianità: 0·0·0·.
     *   nuova posizione virtuale:
         *   Identificativo: 2.
         *   Anzianità: 3.
@@ -73,7 +73,7 @@ La sequenza di istruzioni che l'utente darà ai sistemi sarà questa:
     *   g-nodo ospitante *𝜓*:
         *   Livello: 1.
         *   Indirizzo Netsukuku: 2·0·1·.
-        *   Fingerprint a livello 1.
+        *   Anzianità: 0·2·0·.
     *   nuova posizione virtuale:
         *   Identificativo: 2.
         *   Anzianità: 3.
