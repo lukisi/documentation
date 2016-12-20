@@ -459,12 +459,18 @@ Il programma **qspnclient** per ogni arco-qspn tiene traccia se ha già aggiunto
 per la relativa tabella di inoltro nel relativo network namespace.
 
 Questa sequenza di operazioni è eseguita dal programma **qspnclient** quando un suo
-QspnManager ha terminato di processare un ETP (o in generale sugli aggiornamenti
-alla sua mappa). In essa, relativamente al network namespace
-associato all'identità a cui il QspnManager appartiene, vengono aggiornate tutte le rotte di
-tutte le tabelle presenti, ma per quelle di inoltro solo se abbiamo ricevuto almeno un
-ETP da quell'arco; inoltre viene aggiunta la regola per le tabelle di inoltro il cui arco ha ricevuto
-proprio adesso il primo ETP.
+QspnManager segnala un aggiornamento alla sua mappa. In essa, relativamente al network namespace
+associato all'identità a cui il QspnManager appartiene, per tutte le tabelle presenti (quella di
+uscita nel network namespace default e quelle di inoltro, ma per quelle di inoltro solo se abbiamo
+ricevuto almeno un ETP da quell'arco) vengono aggiornate le rotte verso la destinazione che
+ha subito un aggiornamento. Poi, se ci sono tabelle di inoltro dal cui arco abbiamo ricevuto
+proprio adesso il primo ETP, per esse dobbiamo avere un trattamento particolare: vanno aggiornate
+per esse le rotte di tutte le destinazioni possibili e in seguito va aggiunta per esse la
+regola di lookup.
+
+Aggiungiamo che anche in assenza di aggiornamenti segnalati dal modulo Qspn, il programma **qspnclient**
+periodicamente, per ridondanza, per ogni identità, aggiorna su tutte le tabelle le rotte
+di tutte le destinazioni possibili.
 
 **sistema 𝛼**
 ```
