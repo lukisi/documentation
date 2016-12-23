@@ -298,15 +298,17 @@ ip route change unreachable 10.0.0.40/32 table ntk
 #### Migrazione: Rimozione archi esterni
 
 A questo punto delle operazioni svolte a fronte del comando `migrate_phase_1`, il programma **qspnclient**
-avvia una nuova tasklet che attenda la produzione del primo ETP da parte della nuova identità.
+termina le operazioni. Quello che resta da fare verrà avviato a fronte del segnale `presence_notified`
+emesso dal modulo Qspn in relazione alla nuova identità. Questo segnale indica che la nuova identità
+ha prodotto il suo primo ETP e che è passato un lasso di tempo sufficiente ad assumere che
+i vicini abbiano il tempo di processarlo.
 
 Nel frattempo avremo che la processazione di ETP provenienti dai vicini fa aggiornare le rotte nelle varie
 tabelle di routing e le regole per le tabelle di inoltro. Secondo le modalità che abbiamo visto in precedenza
 e quindi con altri comandi che non riporteremo qui nuovamente.
 
-Dopo che la nuova identità *𝛽<sub>2</sub>* ha prodotto e trasmesso il suo primo ETP, dopo aver atteso
-qualche istante affinché i vicini abbiano il tempo di processarlo, il programma **qspnclient** (nella tasklet
-di cui abbiamo detto sopra) rimuove dalla vecchia identità *𝛽<sub>1</sub>* gli archi esterni al g-nodo *di connettività*.
+Quando viene emesso il segnale `presence_notified` dalla nuova identità,  il programma **qspnclient**
+rimuove dalla vecchia identità *𝛽<sub>1</sub>* gli archi esterni al g-nodo *di connettività*.
 
 Questa operazione viene fatta attraverso l'istanza di QspnManager associata a *𝛽<sub>1</sub>*. Se questa operazione
 effettivamente rimuove alcuni archi-qspn, allora il programma **qspnclient** rimuoverà anche i relativi archi-identità
@@ -343,8 +345,8 @@ ip netns exec migr01 ip route del 169.254.69.30 dev migr01_eth1 src 169.254.27.2
 
 #### Migrazione: Controllo di persistenza dell'identità di connettività
 
-A questo punto delle operazioni svolte a fronte del comando `migrate_phase_1`, il programma **qspnclient**,
-sempre nella tasklet di cui abbiamo detto sopra, avvierà un controllo periodico per vedere quando
+A questo punto delle operazioni svolte a fronte del segnale `presence_notified`, il programma **qspnclient**,
+avvia una nuova tasklet per fare un controllo periodico per vedere quando
 l'identità di connettività possa essere rimossa.
 
 Allo scadere di ogni periodo, il programma vede se la sua identità in esame è al momento il
