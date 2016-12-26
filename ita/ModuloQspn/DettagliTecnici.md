@@ -128,7 +128,7 @@ mio sistema segnala le variazioni sugli archi all'istanza di QspnManager di *n* 
 *   `arc_is_changed (IQspnArc changed_arc)`.
 *   `arc_remove (IQspnArc removed_arc)`.
 
-Quando il QspnManager memorizza i suoi archi, per ognuno genera un identificativo di arco, cioè un intero random
+Quando il QspnManager memorizza i suoi archi, per ognuno genera un *identificativo di arco*, cioè un intero random
 in uno spazio grande. Memorizza in una lista gli archi, accertandosi che non ci siano archi ripetuti. Memorizza e
 gestisce inoltre un dizionario (HashMap) che associa identificativi e archi.
 
@@ -252,9 +252,8 @@ Riguardo questi archi-identità, il demone deve saper distinguere questi casi:
 *   Archi-identità che collegavano *n* ad un nodo *m* in *w*. Quindi il duplicato collega *n’* ad un
     nuovo nodo *m’* in *w’*. Per questi archi-identità il demone *ntkd* costruisce un IQspnArc da passare al nuovo modulo
     QSPN. Inoltre recupera (dal vecchio modulo QSPN) l'indirizzo Netsukuku del vicino *m* che migra
-    con noi e da questo costruisce il nuovo indirizzo Netsukuku di *m’*. Infine prepara una
-    associazione (in forma di una callback) tra l'arco IQspnArc che era di *n* e quello nuovo costruito
-    per *n’*.
+    con noi e da questo costruisce il nuovo indirizzo Netsukuku di *m’*. Inoltre tiene pronto all'uso
+    anche il vecchio arco IQspnArc che era di *n*.
 *   Archi-identità che collegavano *n* ad un nodo *p* in *G*. Quindi il duplicato collega *n’* a
     *p*. Per questi archi-identità il demone *ntkd* costruisce un IQspnArc da passare al nuovo modulo
     QSPN; mentre non esisteva per essi un IQspnArc di *n*.
@@ -271,13 +270,14 @@ Il demone *ntkd* costruisce una istanza di QspnManager fornendo:
 *   `QspnManager.enter_net` - Tipo di costruttore: ingresso nella rete.
 *   `IQspnNaddr my_naddr` - Il proprio indirizzo Netsukuku.
 *   `List<IQspnArc> internal_arc_set` - Gli archi tra il nodo *n’* e i suoi vicini in *w’*.
+*   `List<IQspnArc> internal_arc_prev_arc_set` - Per gli archi di cui sopra, i corrispettivi archi tra
+    il nodo *n* e i suoi vicini in *w*. Questa lista deve avere la stessa lunghezza della precedente.  
+    Questi archi saranno usati nel costruttore di QspnManager (insieme all'istanza `previous_identity`)
+    per copiare i relativi *identificativi di arco*. Servono anche per copiare correttamente i percorsi
+    noti verso destinazioni in *w’*.
 *   `List<IQspnNaddr> internal_arc_peer_naddr_set` - Per gli archi di cui sopra, gli indirizzi Netsukuku
     del vicino in *w’*. Questa lista deve avere la stessa lunghezza della precedente.
 *   `List<IQspnArc> external_arc_set` - Gli archi tra il nodo *n’* e i suoi vicini in *G* ma non in *w’*.
-*   `PreviousArcToNewArcDelegate old_arc_to_new_arc` - Una callback con firma `IQspnArc? (*) (IQspnArc old)`
-    che associa i vecchi archi di *n* in *w* ai nuovi archi di *n’* in *w’*.  
-    Questa callback sarà usata solo nel costruttore di QspnManager, poi potrà essere dismessa. Serve
-    a copiare correttamente i percorsi noti verso destinazioni in *w’*.
 *   `IQspnFingerprint my_fingerprint` - Il suo fingerprint come nodo.
 *   `IQspnStubFactory stub_factory` - La stub factory per le comunicazioni con i vicini.
 *   `int hooking_gnode_level` - Il livello *k* del g-nodo *w* che sta facendo il suo ingresso in *G*, 0 se era il singolo nodo *n*.
@@ -404,9 +404,8 @@ Riguardo questi archi-identità, il demone deve saper distinguere questi casi:
 *   Archi-identità che collegavano *n* ad un nodo *m* in *w*. Quindi il duplicato collega *n’* ad un
     nuovo nodo *m’* in *w’*. Per questi archi-identità il demone *ntkd* costruisce un IQspnArc da passare al nuovo modulo
     QSPN. Inoltre recupera (dal vecchio modulo QSPN) l'indirizzo Netsukuku del vicino *m* che migra
-    con noi e da questo costruisce il nuovo indirizzo Netsukuku di *m’*. Infine prepara una
-    associazione (in forma di una callback) tra l'arco IQspnArc che era di *n* e quello nuovo costruito
-    per *n’*.
+    con noi e da questo costruisce il nuovo indirizzo Netsukuku di *m’*. Inoltre tiene pronto all'uso
+    anche il vecchio arco IQspnArc che era di *n*.
 *   Archi-identità che collegavano *n* ad un nodo *q* nella rete ma non in *w*. Quindi il duplicato collega *n’* a
     *q*. Per questi archi-identità il demone *ntkd* costruisce un IQspnArc da passare al nuovo modulo
     QSPN.
@@ -420,11 +419,14 @@ Costruisce una istanza di QspnManager fornendo:
 *   `QspnManager.migration` - Tipo di costruttore: per migrazione.
 *   `IQspnNaddr my_naddr` - Il proprio indirizzo Netsukuku.
 *   `List<IQspnArc> internal_arc_set` - Gli archi tra il nodo *n’* e i suoi vicini in *w’*.
+*   `List<IQspnArc> internal_arc_prev_arc_set` - Per gli archi di cui sopra, i corrispettivi archi tra
+    il nodo *n* e i suoi vicini in *w*. Questa lista deve avere la stessa lunghezza della precedente.  
+    Questi archi saranno usati nel costruttore di QspnManager (insieme all'istanza `previous_identity`)
+    per copiare i relativi *identificativi di arco*. Servono anche per copiare correttamente i percorsi
+    noti verso destinazioni in *w’*.
 *   `List<IQspnNaddr> internal_arc_peer_naddr_set` - Per gli archi di cui sopra, gli indirizzi Netsukuku
     del vicino in *w’*. Questa lista deve avere la stessa lunghezza della precedente.
 *   `List<IQspnArc> external_arc_set` - Gli archi tra il nodo *n’* e i suoi vicini nella rete che non sono in *w’*.
-*   `PreviousArcToNewArcDelegate old_arc_to_new_arc` - Una callback con firma `IQspnArc? (*) (IQspnArc old)`
-    che associa i vecchi archi di *n* in *w* ai nuovi archi di *n’* in *w’*.
 *   `IQspnFingerprint my_fingerprint` - Il suo fingerprint come nodo.
 *   `IQspnStubFactory stub_factory` - La stub factory per le comunicazioni con i vicini.
 *   `int hooking_gnode_level` - Il livello *k* del g-nodo *w* che sta facendo la migrazione, 0 se era il singolo nodo *n*.
