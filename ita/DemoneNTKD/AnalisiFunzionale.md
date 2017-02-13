@@ -317,7 +317,7 @@ aver interrogato il back-end.
 
 La parte client può essere interpretata da diversi moduli software, i quali si interfacciano con le applicazioni in
 diversi modi a seconda dei meccanismi messi a disposizione dal sistema operativo. I moduli client forniti dalla suite
-Netsukuku (`lilbnss_andna`, `dns-to-andna`, `ntk-resolv`) sono descritti in dettaglio in un altro documento.
+Netsukuku (`libnss_andna`, `dns-to-andna`, `ntk-resolv`) sono descritti in dettaglio in un altro documento.
 
 ## <a name="Architettura_modulare_ntkd"></a>Architettura modulare di NTKD
 
