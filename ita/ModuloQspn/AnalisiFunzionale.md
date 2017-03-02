@@ -382,8 +382,8 @@ percorso è sicuramente interno a *g*. Cioè la connessione aperta rimarrebbe va
 
 Questo accorgimento mitiga molto il disagio dovuto al cambio di indirizzo di un intero g-nodo di grandi dimensioni.
 
-Un esempio dell'uso di indirizzi IP *interni* è illustrato in questo [documento](RoutingIndirizziInterni.md) insieme ad
-alcune considerazioni sul routing di pacchetti con tali indirizzi.
+Un esempio dell'uso di indirizzi IP *interni* è illustrato in questo [documento](RoutingIndirizziInterni.md) (insieme ad
+alcune considerazioni sul routing che saranno chiare dopo aver esaminato il prossimo paragrafo sui *nodi virtuali*).
 
 ### <a name="Nodi_virtuali"></a>Nodi virtuali
 
