@@ -1,2 +1,213 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.2" baseProfile="tiny" viewport-fill="#fff"><defs/><ellipse cx="128" cy="88" rx="32" ry="80" fill="#fff" fill-opacity="0" stroke="#000"/><ellipse cx="40" cy="88" rx="32" ry="80" fill="#fff" fill-opacity="0" stroke="#000"/><circle cx="40" cy="40" r="8" stroke="#000"/><circle cx="40" cy="88" r="8" fill-opacity="0" stroke="#000" stroke-width="4"/><circle cx="128" cy="40" r="8" stroke="#000"/><circle cx="128" cy="88" r="8" stroke="#000"/><circle cx="40" cy="136" r="8" stroke="#000"/><circle cx="128" cy="136" r="8" stroke="#000"/><line x1="40" y1="136" x2="40" y2="96" fill="none" stroke="#000"/><line x1="40" y1="79" x2="40" y2="40" fill="none" stroke="#000"/><line x1="128" y1="88" x2="128" y2="40" fill="none" stroke="#000"/><line x1="128" y1="88" x2="128" y2="136" fill="none" stroke="#000"/><text x="48.796875" y="83" rotate="0" font-family="Verdana" font-size="12">e</text><text x="47" y="127" rotate="0" font-family="Verdana" font-size="12">c</text><text x="137.79688" y="81" rotate="0" font-family="Verdana" font-size="12">e</text><text x="45" y="57" rotate="0" font-family="Verdana" font-size="12">a</text><text x="134.79688" y="129" rotate="0" font-family="Verdana" font-size="12">f</text><text x="137" y="49" rotate="0" font-family="Verdana" font-size="12">d</text><text x="64" y="24" rotate="0" font-family="Verdana" font-size="12">g1</text><text x="159" y="30" rotate="0" font-family="Verdana" font-size="12">g2</text><line x1="41" y1="41" x2="129" y2="89" fill="none" stroke="#000"/><line x1="129" y1="89" x2="43" y2="135" fill="none" stroke="#000"/><text x="56.910645" y="85" rotate="0" font-family="Verdana" font-size="10">i(1)</text></svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.2"
+   viewport-fill="#fff"
+   id="svg3458"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="grafo2.svg"
+   width="165.55078"
+   height="161"
+   inkscape:export-filename="/home/luca/github/documentation/ita/ModuloQspn/img/RoutingIndirizziInterni/grafo2.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <metadata
+     id="metadata3510">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1839"
+     inkscape:window-height="1056"
+     id="namedview3508"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:zoom="9.03"
+     inkscape:cx="98.240275"
+     inkscape:cy="118.5"
+     inkscape:window-x="81"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg3458" />
+  <defs
+     id="defs3460" />
+  <ellipse
+     cx="120.5"
+     cy="80.5"
+     rx="32"
+     ry="80"
+     id="ellipse3462"
+     style="fill:#ffffff;fill-opacity:0;stroke:#000000" />
+  <ellipse
+     cx="32.5"
+     cy="80.5"
+     rx="32"
+     ry="80"
+     id="ellipse3464"
+     style="fill:#ffffff;fill-opacity:0;stroke:#000000" />
+  <circle
+     cx="32.5"
+     cy="32.5"
+     r="8"
+     id="circle3466"
+     style="stroke:#000000" />
+  <circle
+     cx="32.5"
+     cy="80.5"
+     r="8"
+     id="circle3468"
+     style="fill-opacity:0;stroke:#000000;stroke-width:4" />
+  <circle
+     cx="120.5"
+     cy="32.5"
+     r="8"
+     id="circle3470"
+     style="stroke:#000000" />
+  <circle
+     cx="120.5"
+     cy="80.5"
+     r="8"
+     id="circle3472"
+     style="stroke:#000000" />
+  <circle
+     cx="32.5"
+     cy="128.5"
+     r="8"
+     id="circle3474"
+     style="stroke:#000000" />
+  <circle
+     cx="120.5"
+     cy="128.5"
+     r="8"
+     id="circle3476"
+     style="stroke:#000000" />
+  <line
+     x1="32.5"
+     y1="128.5"
+     x2="32.5"
+     y2="88.5"
+     id="line3478"
+     style="fill:none;stroke:#000000" />
+  <line
+     x1="32.5"
+     y1="71.5"
+     x2="32.5"
+     y2="32.5"
+     id="line3480"
+     style="fill:none;stroke:#000000" />
+  <line
+     x1="120.5"
+     y1="80.5"
+     x2="120.5"
+     y2="32.5"
+     id="line3482"
+     style="fill:none;stroke:#000000" />
+  <line
+     x1="120.5"
+     y1="80.5"
+     x2="120.5"
+     y2="128.5"
+     id="line3484"
+     style="fill:none;stroke:#000000" />
+  <text
+     x="41.296875"
+     y="75.5"
+     rotate="0"
+     font-size="12"
+     id="text3486"
+     style="font-size:12px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;">e</text>
+  <text
+     x="39.5"
+     y="119.5"
+     rotate="0"
+     font-size="12"
+     id="text3488"
+     style="font-size:12px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;">c</text>
+  <text
+     x="130.29688"
+     y="73.5"
+     rotate="0"
+     font-size="12"
+     id="text3490"
+     style="font-size:12px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;">e</text>
+  <text
+     x="37.5"
+     y="49.5"
+     rotate="0"
+     font-size="12"
+     id="text3492"
+     style="font-size:12px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;">a</text>
+  <text
+     x="127.29688"
+     y="121.5"
+     rotate="0"
+     font-size="12"
+     id="text3494"
+     style="font-size:12px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;">f</text>
+  <text
+     x="129.5"
+     y="41.5"
+     rotate="0"
+     font-size="12"
+     id="text3496"
+     style="font-size:12px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;">d</text>
+  <text
+     x="56.5"
+     y="16.5"
+     rotate="0"
+     font-size="12"
+     id="text3498"
+     style="font-size:12px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;">g1</text>
+  <text
+     x="151.5"
+     y="22.5"
+     rotate="0"
+     font-size="12"
+     id="text3500"
+     style="font-size:12px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;">g2</text>
+  <line
+     x1="33.5"
+     y1="33.5"
+     x2="121.5"
+     y2="81.5"
+     id="line3502"
+     style="fill:none;stroke:#000000" />
+  <line
+     x1="121.5"
+     y1="81.5"
+     x2="35.5"
+     y2="127.5"
+     id="line3504"
+     style="fill:none;stroke:#000000" />
+  <text
+     x="49.410645"
+     y="77.5"
+     rotate="0"
+     font-size="10"
+     id="text3506"
+     style="font-size:10px;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;">i(1)</text>
+</svg>
