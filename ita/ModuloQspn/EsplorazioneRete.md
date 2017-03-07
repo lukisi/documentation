@@ -564,23 +564,10 @@ La nuova istanza del modulo QSPN riceve queste informazioni:
 *   L'indirizzo Netsukuku di *n* in *G* e il suo fingerprint a livello 0.
 *   Il livello *i* del g-nodo *w* che sta facendo il suo ingresso in *G*.
 *   Il livello *j* del g-nodo *g* in cui *w* sta facendo ingresso.
-*   I percorsi noti verso i g-nodi di livello inferiore a *i* che sono in *w*.
-*   Gli archi di *n* interni a *w*. Per questi archi il modulo QSPN riceve dal suo utilizzatore
-    anche l'indirizzo Netsukuku del vicino. `List<IQspnArc> internal_arc_set` e
-    `List<IQspnNaddr> internal_arc_peer_naddr_set` di uguali dimensioni.  
-    In particolare per quanto riguarda l'indirizzo Netsukuku del vicino, possiamo affermare
-    che l'utilizzatore del modulo è in grado di reperire questa informazione per
-    gli archi di *n* interni a *w*: infatti l'arco collega ad un vicino che ha migrato con noi, quindi sappiamo
-    quale era l'indirizzo Netsukuku di quel vicino in *w’* e come calcolare il suo indirizzo Netsukuku in *w*.
-*   Gli archi di *n* esterni a *w*. Per questi archi il modulo QSPN non riceve l'indirizzo Netsukuku del vicino.
-    `List<IQspnArc> external_arc_set`.
-*   Una callback con la quale il costruttore del modulo QSPN può ottenere, partendo da una istanza di arco
-    di *n’* interno a *w’*, l'istanza del relativo arco duplicato di *n* interno a *w*.
-    `IQspnArc? old_arc_to_new_arc(IQspnArc old)`.
-
-Per gli archi che collegano *n* ad altri nodi interni a *w*, proprio per il fatto che il modulo
-di *n* copia dal modulo di *n’* i percorsi noti verso i g-nodi di livello inferiore a *i* che
-sono in *w’*, il modulo deve conoscere le ulteriori informazioni riportate qui sopra.
+*   Gli archi di *n* esterni a *w*.
+*   Un riferimento al modulo di *n’*, gli archi di *n* interni a *w*, e altre informazioni necessarie
+    affinché il modulo di *n* possa copiare dal modulo di *n’* i percorsi noti verso i g-nodi di livello
+    inferiore a *i* che sono in *w’*.
 
 La nuova istanza del modulo QSPN si considera in fase di *bootstrap* ai livelli da *i* a *j* - 1, nel senso che:
 
@@ -622,7 +609,7 @@ Mentre è in corso la fase di bootstrap:
     Non esegue altre azioni.
 *   Se *n* riceve la richiesta di produrre un ETP la rifiuta "perché in fase di bootstrap".
 
-Un nodo *n* in *w*, se non ha alcun arco verso l'esterno di *w* ma interno a *g* (cioè se
+Un nodo *n* in *w*, se non ha alcun arco verso nodi vicini esterni a *w* ma interni a *g* (cioè se
 la lista *queued_arcs* è vuota oppure se tentando di ottenere qualche ETP è costretto a scartare tutti
 gli archi perché sono esterni a *g*) aspetta di ricevere dagli altri nodi in *w* un ETP
 con i percorsi verso l'esterno di *w*.
@@ -635,7 +622,7 @@ bootstrap ai livelli da *i* a *j* - 1, aggiornare la sua mappa e produrre ETP 
 globalmente. Quindi trasmette tali ETP agli altri nodi in *w*. In questo caso l'ingresso di *w* è riuscito e tutti i
 nodi ne verranno gradualmente a conoscenza.
 
-Un nodo *m* in *w* che non ha archi verso l'esterno di *w* ma interno a *g* (o che ha ricevuto tutti rifiuti "perché
+Un nodo *m* in *w* che non ha archi verso nodi vicini esterni a *w* ma interni a *g* (o che ha ricevuto tutti rifiuti "perché
 in fase di bootstrap") aspetta per un certo tempo *X* di ricevere un ETP dagli altri nodi in *w*, come abbiamo
 detto sopra, e quindi uscire dalla fase di bootstrap.
 

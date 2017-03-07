@@ -30,7 +30,7 @@ quelli in esso indicati ([Esplorazione della rete](EsplorazioneRete.md) e [Perco
 Diamo un significato ad alcuni termini che useremo frequentemente nel resto del documento.
 
 Invece di dire "l'utilizzatore del modulo QSPN" in ottica di uso generico, nel resto del documento ci riferiremo
-direttamente al "demone *ntkd*" per brevità.
+direttamente al "demone *ntkd"* per brevità.
 
 Sappiamo che il demone *ntkd* è in esecuzione su un *sistema*. In tale sistema possono esistere
 diverse *identità*, ognuna delle quali costituisce una singola entità della rete Netsukuku, detta anche *nodo del grafo*
@@ -268,7 +268,6 @@ Infine il demone *ntkd* prepara una istanza di IQspnStubFactory.
 Il demone *ntkd* costruisce una istanza di QspnManager fornendo:
 
 *   `QspnManager.enter_net` - Tipo di costruttore: ingresso nella rete.
-*   `IQspnNaddr my_naddr` - Il proprio indirizzo Netsukuku.
 *   `List<IQspnArc> internal_arc_set` - Gli archi tra il nodo *n’* e i suoi vicini in *w’*.
 *   `List<IQspnArc> internal_arc_prev_arc_set` - Per gli archi di cui sopra, i corrispettivi archi tra
     il nodo *n* e i suoi vicini in *w*. Questa lista deve avere la stessa lunghezza della precedente.  
@@ -278,7 +277,11 @@ Il demone *ntkd* costruisce una istanza di QspnManager fornendo:
 *   `List<IQspnNaddr> internal_arc_peer_naddr_set` - Per gli archi di cui sopra, gli indirizzi Netsukuku
     del vicino in *w’*. Questa lista deve avere la stessa lunghezza della precedente.
 *   `List<IQspnArc> external_arc_set` - Gli archi tra il nodo *n’* e i suoi vicini in *G* ma non in *w’*.
-*   `IQspnFingerprint my_fingerprint` - Il suo fingerprint come nodo.
+*   `IQspnNaddr my_naddr` - L'indirizzo Netsukuku del nodo *n’*.
+*   `IQspnFingerprint my_fingerprint` - Il fingerprint a livello 0 del nodo *n’*.
+*   `ChangeFingerprintDelegate update_internal_fingerprints` - Una funzione callback per aggiornare i fingerprint dei
+    g-nodi interni a *w’* che sono destinazioni subito note a *n’* in quanto copiate dalle destinazioni
+    interne a *w* conosciute da *n*. Vedere sotto la spiegazione per l'argomento `previous_identity`.
 *   `IQspnStubFactory stub_factory` - La stub factory per le comunicazioni con i vicini.
 *   `int hooking_gnode_level` - Il livello *k* del g-nodo *w* che sta facendo il suo ingresso in *G*, 0 se era il singolo nodo *n*.
 *   `int into_gnode_level` - Il livello *i* del g-nodo *g* in cui *w* sta facendo ingresso.
@@ -417,7 +420,6 @@ Infine il demone *ntkd* prepara una istanza di IQspnStubFactory.
 Costruisce una istanza di QspnManager fornendo:
 
 *   `QspnManager.migration` - Tipo di costruttore: per migrazione.
-*   `IQspnNaddr my_naddr` - Il proprio indirizzo Netsukuku.
 *   `List<IQspnArc> internal_arc_set` - Gli archi tra il nodo *n’* e i suoi vicini in *w’*.
 *   `List<IQspnArc> internal_arc_prev_arc_set` - Per gli archi di cui sopra, i corrispettivi archi tra
     il nodo *n* e i suoi vicini in *w*. Questa lista deve avere la stessa lunghezza della precedente.  
@@ -427,7 +429,11 @@ Costruisce una istanza di QspnManager fornendo:
 *   `List<IQspnNaddr> internal_arc_peer_naddr_set` - Per gli archi di cui sopra, gli indirizzi Netsukuku
     del vicino in *w’*. Questa lista deve avere la stessa lunghezza della precedente.
 *   `List<IQspnArc> external_arc_set` - Gli archi tra il nodo *n’* e i suoi vicini nella rete che non sono in *w’*.
-*   `IQspnFingerprint my_fingerprint` - Il suo fingerprint come nodo.
+*   `IQspnNaddr my_naddr` - L'indirizzo Netsukuku del nodo *n’*.
+*   `IQspnFingerprint my_fingerprint` - Il fingerprint a livello 0 del nodo *n’*.
+*   `ChangeFingerprintDelegate update_internal_fingerprints` - Una funzione callback per aggiornare i fingerprint dei
+    g-nodi interni a *w’* che sono destinazioni subito note a *n’* in quanto copiate dalle destinazioni
+    interne a *w* conosciute da *n*. Vedere sotto la spiegazione per l'argomento `previous_identity`.
 *   `IQspnStubFactory stub_factory` - La stub factory per le comunicazioni con i vicini.
 *   `int hooking_gnode_level` - Il livello *k* del g-nodo *w* che sta facendo la migrazione, 0 se era il singolo nodo *n*.
 *   `int into_gnode_level` - Il livello *i* del g-nodo *g* in cui *w* sta facendo ingresso.
