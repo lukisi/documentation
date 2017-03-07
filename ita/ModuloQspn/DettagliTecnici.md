@@ -492,9 +492,10 @@ Con i dati suddetti relativi alla migrazione il demone *ntkd* sull'istanza di Qs
     Cambiano analogamente gli indirizzi Netsukuku dei vicini che erano interni a *w*. Poiché il modulo permette di vedere
     l'indirizzo Netsukuku del vicino collegato ad un dato arco (con il metodo *get_naddr_for_arc*)
     anche questa informazione va aggiornata nella memoria del modulo.
-*   Il nuovo fingerprint a livello 0. In realtà l'unica cosa che cambia in esso è la nuova anzianità al livello *i* - 1,
-    cioè dentro *g*. Ma questo dato nella classe del fingerprint non è accessibile al modulo QSPN, quindi viene passata
-    una istanza di IQspnFingerprint che il modulo considera nuova.
+*   Una callback per modificare il proprio fingerprint di nodo (a livello 0) e i fingerprint dei g-nodi destinazione che
+    conosce interni a *w*.  
+    Cambia, infatti, per tutti i nodi all'interno di *w*, l'anzianità del proprio g-nodo di livello *i* - 1, cioè l'anzianità
+    di *w* dentro *g*.
 
 Verrà avviata tra pochi istanti la trasmissione di un ETP a tutti i vicini di *n* esterni a *w*. In esso va segnalata
 soltanto la rimozione del percorso verso il vecchio identificativo *reale* di *w* al livello *i* - 1.
