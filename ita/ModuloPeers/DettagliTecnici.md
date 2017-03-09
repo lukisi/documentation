@@ -579,56 +579,92 @@ Sia *v* un nodo che riceve un messaggio di partecipazione ad un servizio *p*.
 
 ## <a name="Mantenimento_database_distribuito"></a>Mantenimento di un database distribuito
 
-Se un obiettivo essenziale di un certo servizio è quello di mantenere un database distribuito "robusto" occorre che tale servizio tenga in considerazione alcuni aspetti che ora esamineremo. Con il termine "robusto" intendiamo un database che:
+Se un obiettivo essenziale di un certo servizio è quello di mantenere un database distribuito
+"robusto" occorre che tale servizio tenga in considerazione alcuni aspetti che ora esamineremo.
+Con il termine "robusto" intendiamo un database che:
 
 *   Offra un certo grado di affidabilità quanto alla *persistenza dei dati*.  
-    La struttura fondamentale dell'hashtable distribuito è tale che ogni dato viene memorizzato su un determinato nodo. Va considerato che il nodo che memorizza un certo dato può in qualsiasi momento morire o venire scollegato dal resto della rete. Per migliorare l'affidabilità del database si implementa quindi un meccanismo di repliche.  
-    Il grado di affidabilità della persistenza non potrà mai essere assoluto. Ad esempio, se tutti i nodi partecipanti al servizio muoiono, i dati memorizzati andranno persi. Inoltre si consideri che, per i limiti di memoria a disposizione dei singoli nodi oltre che per praticità e questioni di performance della rete, nessun dato potrà essere replicato un numero molto elevato di volte. Quindi basta che tutti i nodi che hanno una replica di quel dato muoiano (o siano scollegati dal resto della rete) improvvisamente, che il dato andrà perso.
+    La struttura fondamentale dell'hashtable distribuito è tale che ogni dato viene memorizzato su
+    un determinato nodo. Va considerato che il nodo che memorizza un certo dato può in qualsiasi momento
+    morire o venire scollegato dal resto della rete. Per migliorare l'affidabilità del database si implementa
+    quindi un meccanismo di repliche.  
+    Il grado di affidabilità della persistenza non potrà mai essere assoluto. Ad esempio, se tutti i nodi
+    partecipanti al servizio muoiono, i dati memorizzati andranno persi. Inoltre si consideri che, per i
+    limiti di memoria a disposizione dei singoli nodi oltre che per praticità e questioni di performance
+    della rete, nessun dato potrà essere replicato un numero molto elevato di volte. Quindi basta che tutti
+    i nodi che hanno una replica di quel dato muoiano (o siano scollegati dal resto della rete) improvvisamente,
+    che il dato andrà perso.
 *   Garantisca la *coerenza dei dati*.  
-    Supponiamo che la persistenza dei dati venga adeguatamente garantita. La flessibilità della rete fa si che nuovi partecipanti al servizio possono entrare nella rete in ogni momento. Le operazioni di tali nodi devono essere concertate, di modo che modifiche alla base dati vengano validate e rese visibili a tutti i nodi. Facciamo un esempio:
+    Supponiamo che la persistenza dei dati venga adeguatamente garantita. La flessibilità della rete fa si che
+    nuovi partecipanti al servizio possono entrare nella rete in ogni momento. Le operazioni di tali nodi devono
+    essere concertate, di modo che modifiche alla base dati vengano validate e rese visibili a tutti i nodi.
+    Facciamo un esempio:
     *   Siano *a* e *b* due nodi che usano un servizio *p* che offre un database distribuito.
     *   Sia presente in questo database un record che assegna alla chiave *k* il valore *w*.
     *   Il nodo *a* cerca di scrivere su questo database il valore *v* per la chiave *k*.
     *   Il nodo *a* vede accettata la richiesta al tempo *t*.
-    *   Se al tempo *t* + 1 il nodo *b* cerca di leggere il valore associato alla chiave *k*, deve ritrovare *v*, non più *w*.
+    *   Se al tempo *t* + 1 il nodo *b* cerca di leggere il valore associato alla chiave *k*, deve
+        ritrovare *v*, non più *w*.
 
-Come vedremo in seguito, il modulo fornisce dei metodi helper (inclusi nel modulo per evitare duplicazione di codice) che potranno essere usati dai vari servizi registrati che si occupano di mantenere un database distribuito.
+Come vedremo in seguito, il modulo fornisce dei metodi helper (inclusi nel modulo per evitare duplicazione
+di codice) che potranno essere usati dai vari servizi registrati che si occupano di mantenere un database distribuito.
 
-Gli algoritmi con cui questi metodi affrontano le problematiche che intendono risolvere, dipendono da quali sono le caratteristiche dello specifico servizio. Vedremo in seguito che al momento sono state individuate due classi di servizi: i *database temporali* e i *database a chiavi fisse*.
+Gli algoritmi con cui questi metodi affrontano le problematiche che intendono risolvere, dipendono da quali
+sono le caratteristiche dello specifico servizio. Vedremo in seguito che al momento sono state individuate due
+classi di servizi: i *database temporali* e i *database a chiavi fisse*.
 
 Il modulo fornisce la classe DatabaseHandler e l'interfaccia IDatabaseDescriptor.
 
-La classe DatabaseHandler è esposta dal modulo, ma il suo contenuto è del tutto oscuro all'esterno del modulo. I suoi membri, accessibili solo dal modulo, permettono di mantenere per uno specifico servizio le strutture dati necessarie al modulo per gestire le operazioni di mantenimento di questi due tipi di database.
+La classe DatabaseHandler è esposta dal modulo, ma il suo contenuto è del tutto oscuro all'esterno del modulo.
+I suoi membri, accessibili solo dal modulo, permettono di mantenere per uno specifico servizio le strutture dati
+necessarie al modulo per gestire le operazioni di mantenimento di questi due tipi di database.
 
-L'interfaccia IDatabaseDescriptor espone dei metodi che il modulo utilizza nello svolgere le operazioni di cui stiamo parlando. Questi sono usati in entrambi questi due tipi di database. Poi l'interfaccia viene estesa da due interfacce, la ITemporalDatabaseDescriptor e la IFixedKeysDatabaseDescriptor, che espongono in aggiunta i metodi che il modulo utilizza nei rispettivi tipi di database.
+L'interfaccia IDatabaseDescriptor espone dei metodi che il modulo utilizza nello svolgere le operazioni di cui
+stiamo parlando. Questi sono usati in entrambi questi due tipi di database. Poi l'interfaccia viene estesa da
+due interfacce, la ITemporalDatabaseDescriptor e la IFixedKeysDatabaseDescriptor, che espongono in aggiunta i
+metodi che il modulo utilizza nei rispettivi tipi di database.
 
 Tali metodi dovranno essere implementati dalla classe di uno specifico servizio.
 
-Un primo servizio dell'interfaccia IDatabaseDescriptor sarà quello di mantenere come proprietà *dh* l'istanza di DatabaseHandler associata al servizio. Questa proprietà verrà valorizzata dal modulo nel primo metodo del modulo che il servizio richiamerà con l'interfaccia a parametro (di norma il metodo `*_on_startup`).
+Un primo servizio dell'interfaccia IDatabaseDescriptor sarà quello di mantenere come proprietà *dh* l'istanza
+di DatabaseHandler associata al servizio. Questa proprietà verrà valorizzata dal modulo nel primo metodo del
+modulo che il servizio richiamerà con l'interfaccia a parametro (di norma il metodo `*_on_startup`).
 
 Alcune strutture dati memorizzate nella classe DatabaseHandler sono:
 
 *   `int p_id`: Identificativo del servizio.
-*   `bool ready`: La classe è pronta a rispondere. Di norma questo booleano viene messo inizialmente a *False* solo nei servizi opzionali. Verrà reimpostato a *True* quando le mappe di partecipazione ai servizi opzionali saranno state recuperate con successo dal nodo che ha fatto ingresso in una rete esistente.
+*   `bool ready`: La classe è pronta a rispondere. Di norma questo booleano viene messo inizialmente a *False*
+    solo nei servizi opzionali. Verrà reimpostato a *True* quando le mappe di partecipazione ai servizi opzionali
+    saranno state recuperate con successo dal nodo che ha fatto ingresso in una rete esistente.
 
 ### <a name="Mantenimento_database_distribuito_Repliche"></a>Repliche
 
 Le repliche dei dati aumentano l'affidabilità del database quanto alla *persistenza dei dati*.
 
-Quando un nodo *v* riceve la richiesta di memorizzare (o aggiornare, o rinfrescare) un record con chiave *k* e valore *val* nella sua porzione del database distribuito del servizio *p*, il nodo v si occupa di replicare questo dato su un numero *q*  di nodi replica. L'obiettivo è fare sì che se il nodo muore o si  sconnette dalla rete, alla prossima richiesta di lettura del dato venga  comunque data la risposta corretta. Quindi v deve scegliere i nodi che  saranno contattati per la chiave k quando lui non parteciperà più.
+Quando un nodo *v* riceve la richiesta di memorizzare (o aggiornare, o rinfrescare) un record con chiave *k* e
+valore *val* nella sua porzione del database distribuito del servizio *p*, il nodo v si occupa di replicare
+questo dato su un numero *q*  di nodi replica. L'obiettivo è fare sì che se il nodo muore o si  sconnette dalla
+rete, alla prossima richiesta di lettura del dato venga  comunque data la risposta corretta. Quindi v deve
+scegliere i nodi che  saranno contattati per la chiave k quando lui non parteciperà più.
 
-Grazie  all'introduzione del meccanismo di fault tolerance descritto sopra,  scegliere e contattare tali nodi diventa un esercizio banale.
+Grazie  all'introduzione del meccanismo di fault tolerance descritto sopra,  scegliere e contattare tali nodi
+diventa un esercizio banale.
 
 #### <a name="Mantenimento_database_distribuito_Algoritmi"></a>Modifiche agli algoritmi
 
-Quando un nodo avvia l'algoritmo per contattare l'hash-node, gli può passare tra gli argomenti una lista di PeerTupleGNode da usare come `exclude_tuple_list`. Se non la passa allora l'algoritmo ne istanzia una nuova, come faceva prima. Se invece la passa si ottengono 2 risultati:
+Quando un nodo avvia l'algoritmo per contattare l'hash-node, gli può passare tra gli argomenti una lista di
+PeerTupleGNode da usare come `exclude_tuple_list`. Se non la passa allora l'algoritmo ne istanzia una nuova,
+come faceva prima. Se invece la passa si ottengono 2 risultati:
 
 *   Si può specificare inizialmente un set di g-nodi da escludere;
 *   Si può vedere, a risposta ottenuta, quali tuple sono state escluse, per riutilizzarle in una futura chiamata.
 
-Inoltre l'algoritmo va modificato affinché, all'inizio, se nella lista di tuple da escludere vi sono g-nodi che sono visibili nella topologia del nodo corrente questi vengano inclusi anche in `exclude_gnode_list` come istanze HCoord.
+Inoltre l'algoritmo va modificato affinché, all'inizio, se nella lista di tuple da escludere vi sono g-nodi
+che sono visibili nella topologia del nodo corrente questi vengano inclusi anche in `exclude_gnode_list` come
+istanze HCoord.
 
-Infine l'algoritmo va modificato affinché, a risposta ottenuta, la tupla globale nel g-nodo di ricerca che rappresenta il nodo che ha risposto venga restituita come argomento di out.
+Infine l'algoritmo va modificato affinché, a risposta ottenuta, la tupla globale nel g-nodo di ricerca che
+rappresenta il nodo che ha risposto venga restituita come argomento di out.
 
 La lista completa degli argomenti di `contact_peer` diventa ora:
 
@@ -640,7 +676,8 @@ La lista completa degli argomenti di `contact_peer` diventa ora:
 *   `out PeerTupleNode respondant`,
 *   `PeerTupleGNodeContainer? exclude_tuple_list=null`
 
-Una volta apportate queste modifiche, il nodo *v* che vuole contattare *q* nodi che saranno prossimi alla chiave *k* quando lui non sarà più partecipante procederà così:
+Una volta apportate queste modifiche, il nodo *v* che vuole contattare *q* nodi che saranno prossimi alla
+chiave *k* quando lui non sarà più partecipante procederà così:
 
 *   Prepara, tramite la classe PeerClient, questi dati:
     *   `p_id`, l'id di p;
@@ -657,35 +694,54 @@ Una volta apportate queste modifiche, il nodo *v* che vuole contattare *q* nodi 
         *   break.
     *   Se si riceve l'eccezione PeersDatabaseError:
         *   break.
-    *   Lo specifico servizio può implementare comportamenti particolari, ma di norma se non si è ricevuta una eccezione l'esito scontato è che la replica è avvenuta nel nodo 'respondant'.
+    *   Lo specifico servizio può implementare comportamenti particolari, ma di norma se non si è ricevuta
+        una eccezione l'esito scontato è che la replica è avvenuta nel nodo 'respondant'.
     *   Aggiungi respondant a `lista_repliche`.
     *   Aggiungi respondant a `exclude_tuple_list`.
 
 ### <a name="Mantenimento_database_distribuito_Ingresso_nuovo_nodo"></a>Ingresso nella rete di un nodo partecipante
 
-Un primo evento che introduce criticità riguardo la *coerenza dei dati* è l'ingresso nella rete di un nuovo nodo che partecipa al servizio.
+Un primo evento che introduce criticità riguardo la *coerenza dei dati* è l'ingresso nella rete di un
+nuovo nodo che partecipa al servizio.
 
-Per ogni servizio *p* quando un nodo *n* entra nella rete (oppure quando inizia a partecipare al servizio) può  venirgli assegnato un indirizzo prossimo a qualche chiave *k* che in precedenza era stata salvata nel database distribuito con il valore *w*. Ma il nodo *n* non ha informazioni sulla chiave *k*, né sul valore *w*.
+Per ogni servizio *p* quando un nodo *n* entra nella rete (oppure quando inizia a partecipare al servizio)
+può  venirgli assegnato un indirizzo prossimo a qualche chiave *k* che in precedenza era stata salvata nel
+database distribuito con il valore *w*. Ma il nodo *n* non ha informazioni sulla chiave *k*, né sul valore *w*.
 
-Se un nodo *q* cercasse ora di accedere in lettura alla chiave *k* contatterebbe il nodo *n*. Questi non ha il record nella sua memoria, ma se rispondesse che il record non esiste questo sarebbe contrario al requisito di coerenza dei dati. Occorre quindi introdurre il concetto di *esaustività* del nodo rispetto a una chiave *k*.
+Se un nodo *q* cercasse ora di accedere in lettura alla chiave *k* contatterebbe il nodo *n*. Questi non ha
+il record nella sua memoria, ma se rispondesse che il record non esiste questo sarebbe contrario al requisito
+di coerenza dei dati. Occorre quindi introdurre il concetto di *esaustività* del nodo rispetto a una chiave *k*.
 
-Descriviamo qui gli aspetti fondamentali di questo concetto, ma diciamo subito che alla fine rimanderemo i dettagli ad altri documenti perché essi sono dipendenti dalle caratteristiche proprie di ogni singolo servizio.
+Descriviamo qui gli aspetti fondamentali di questo concetto, ma diciamo subito che alla fine rimanderemo i
+dettagli ad altri documenti perché essi sono dipendenti dalle caratteristiche proprie di ogni singolo servizio.
 
-Un nodo *n* servente, che cioè partecipa attivamente al servizio *p*, se riceve una richiesta di qualche tipo riferita alla chiave *k*, si deve chiedere se *può* o *non può* asserire di conoscere l'attuale valore del record per la chiave *k*, o di sapere che tale record non esiste nel database.
+Un nodo *n* servente, che cioè partecipa attivamente al servizio *p*, se riceve una richiesta di qualche tipo
+riferita alla chiave *k*, si deve chiedere se *può* o *non può* asserire di conoscere l'attuale valore del
+record per la chiave *k*, o di sapere che tale record non esiste nel database.
 
 Ci riferiamo a questo quando diciamo che il nodo *n* è *esaustivo* o *non esaustivo* per la chiave *k*.
 
-Se un nodo viene interrogato su una chiave *k* e per tale chiave si considera *esaustivo*, allora può asserire di conoscere l'attuale valore del record per la chiave *k* e può elaborare la richiesta.
+Se un nodo viene interrogato su una chiave *k* e per tale chiave si considera *esaustivo*, allora può asserire
+di conoscere l'attuale valore del record per la chiave *k* e può elaborare la richiesta.
 
-Se un nodo viene interrogato su una chiave *k* e per tale chiave si considera *non esaustivo*, allora **non** può asserire di conoscere l'attuale valore del record per la chiave *k* e **non** può elaborare la richiesta. Dovrà fare in modo, con diverse strategie a seconda del tipo di servizio come vedremo sotto, di sopperire a questa mancanza oppure di indirizzare il client a contattare un altro nodo servente.
+Se un nodo viene interrogato su una chiave *k* e per tale chiave si considera *non esaustivo*, allora **non**
+può asserire di conoscere l'attuale valore del record per la chiave *k* e **non** può elaborare la richiesta.
+Dovrà fare in modo, con diverse strategie a seconda del tipo di servizio come vedremo sotto, di sopperire a
+questa mancanza oppure di indirizzare il client a contattare un altro nodo servente.
 
 ### <a name="Mantenimento_database_distribuito_Recupero_record"></a>Procedimento di recupero di un record
 
-Un nodo servente che si considera *non esaustivo* per una chiave *k*, può decidere di avviare un procedimento di recupero del record. Se e quando lo fa, dipende dallo specifico servizio. Ad esempio un certo servizio potrebbe avere un numero esiguo di chiavi e allora si potrebbe stabilire di ricercare subito i record per tutte le chiavi. Un altro servizio potrebbe avere molte possibili chiavi e allora si potrebbe stabilire di ricercare una chiave solo dopo che qualcuno ne ha fatto richiesta.
+Un nodo servente che si considera *non esaustivo* per una chiave *k*, può decidere di avviare un procedimento
+di recupero del record. Se e quando lo fa, dipende dallo specifico servizio. Ad esempio un certo servizio
+potrebbe avere un numero esiguo di chiavi e allora si potrebbe stabilire di ricercare subito i record per
+tutte le chiavi. Un altro servizio potrebbe avere molte possibili chiavi e allora si potrebbe stabilire di
+ricercare una chiave solo dopo che qualcuno ne ha fatto richiesta.
 
-Se il nodo decide di avviare il procedimento di recupero di un record, questo introduce una seconda criticità riguardo la *coerenza dei dati*.
+Se il nodo decide di avviare il procedimento di recupero di un record, questo introduce una seconda criticità
+riguardo la *coerenza dei dati*.
 
-Quando abbiamo spiegato cosa si intende per coerenza dei dati abbiamo fatto un esempio. Riprendiamolo e vediamo quale problema può sorgere con un database distribuito:
+Quando abbiamo spiegato cosa si intende per coerenza dei dati abbiamo fatto un esempio. Riprendiamolo e vediamo
+quale problema può sorgere con un database distribuito:
 
 *   Sia *n0* il nodo al momento detentore della chiave *k*.
 *   I nodi *a* e *b* sanno dell'esistenza di *n0*.
@@ -698,7 +754,8 @@ Quando abbiamo spiegato cosa si intende per coerenza dei dati abbiamo fatto un e
 *   __Il nodo *n1* si ritiene in grado di rispondere a richieste di lettura e scrittura per la chiave *k*.__
 *   Il nodo *a* per scrivere sul database contatta *n0* e gli chiede di associare a *k* il valore *v*.
 *   Il nodo *n0* memorizza l'associazione *k* = *v* e risponde "OK".
-*   Solo dopo aver ricevuto la risposta "OK", cioè dopo aver visto la sua richiesta accettata, il nodo *a* viene a conoscenza dell'esistenza di *n1*.
+*   Solo dopo aver ricevuto la risposta "OK", cioè dopo aver visto la sua richiesta accettata, il nodo *a* viene a
+    conoscenza dell'esistenza di *n1*.
 *   Il nodo *b* viene a conoscenza dell'esistenza di *n1*.
 *   Il nodo *b* per leggere dal database contatta *n1* e gli chiede il valore di *k*.
 *   Il nodo *n1* risponde: "k=w".
@@ -722,18 +779,33 @@ Vediamo anche un altro scenario problematico:
 *   Il nodo *n0* risponde: "k=w".
 *   Solo dopo aver ricevuto la risposta "k=w", il nodo *b* viene a conoscenza dell'esistenza di *n1*.
 
-Per rimediare a questi possibili scenari si modificano le operazioni che sono state evidenziate nei due precedenti listati. Quando *n1* vuole recuperare il record per la chiave *k* quale suo nuovo detentore, procede così:
+Per rimediare a questi possibili scenari si modificano le operazioni che sono state evidenziate nei due
+precedenti listati. Quando *n1* vuole recuperare il record per la chiave *k* quale suo nuovo detentore, procede così:
 
-*   Il nodo *n1* per recuperare il valore associato a *k* contatta *n0* e gli chiede: attendi un tempo *𝛿*, poi dammi il valore di *k*.
-*   Il tempo *𝛿* è sufficiente a che tutti i nodi si avvedano della presenza di *n1* e eventuali messaggi instradati al vecchio detentore *n0* giungano a destinazione. Chiamiamo questo tempo *tempo critico di coerenza*.  
-    Tale tempo dipende quindi dalla dimensione del minimo comune g-nodo tra *n1* e *n0*. Siccome *n0* quando riceve la richiesta conosce l'indirizzo di *n1*, il tempo *𝛿* può essere stimato direttamente dal nodo *n0*.
-*   Per il nodo *n0* questa è una richiesta di sola lettura un po' particolare. Quando la riceve il nodo *n0* è esaustivo (per definizione, in quanto si accinge a rispondere): cioè esso ha il record oppure può asserire che in record non esiste. In entrambi i casi, il nodo *n0* attende il tempo *𝛿*. Scaduto il tempo *𝛿* deve di nuovo verificare di essere esaustivo.
+*   Il nodo *n1* per recuperare il valore associato a *k* contatta *n0* e gli chiede: attendi un tempo *𝛿*,
+    poi dammi il valore di *k*.
+*   Il tempo *𝛿* è sufficiente a che tutti i nodi si avvedano della presenza di *n1* e eventuali messaggi
+    instradati al vecchio detentore *n0* giungano a destinazione. Chiamiamo questo tempo *tempo critico di coerenza*.  
+    Tale tempo dipende quindi dalla dimensione del minimo comune g-nodo tra *n1* e *n0*. Siccome *n0*
+    quando riceve la richiesta conosce l'indirizzo di *n1*, il tempo *𝛿* può essere stimato direttamente dal nodo *n0*.
+*   Per il nodo *n0* questa è una richiesta di sola lettura un po' particolare. Quando la riceve il nodo
+    *n0* è esaustivo (per definizione, in quanto si accinge a rispondere): cioè esso ha il record oppure può asserire
+    che in record non esiste. In entrambi i casi, il nodo *n0* attende il tempo *𝛿*. Scaduto il tempo *𝛿* deve di
+    nuovo verificare di essere esaustivo.
     *   Se è ancora esaustivo risponde con il record oppure con un `NOT_FOUND`.
     *   Altrimenti rifiuta l'elaborazione e istruisce il client a riavviare da capo il calcolo di H<sub>t</sub>.
-*   Durante questo tempo di attesa, se il nodo *n1* riceve richieste di lettura per la chiave *k* le rifiuta come non esaustivo. Il richiedente si vedrà dirottato, attraverso i meccanismi del calcolo distribuito di H<sub>t</sub>, verso il nodo *n0*.
-*   Durante questo tempo di attesa, inoltre, se il nodo *n1* riceve richieste di scrittura per la chiave *k* non le rifiuta subito, ma le tiene in sospeso fino a che non riceve il valore corrente o al massimo fino un po' meno del tempo limite di esecuzione stabilito per la richiesta. Poi non le elabora, in quanto dopo questa attesa potrebbe non essere più il nodo con indirizzo più prossimo all'hash-node, ma istruisce il client di riavviare da capo il calcolo distribuito di H<sub>t</sub>.
-*   Al termine di questa attesa, il nodo *n0*, o comunque un nodo attualmente esaustivo per *k*, risponde con il record corrente per *k* oppure con un `NOT_FOUND`. Il nodo *n1* memorizza l'associazione.
-*   Il nodo *n1*, come detto, se qualche richiesta di scrittura per la chiave *k* era in attesa, istruisce il client di tali richieste di riavviare da capo il calcolo distribuito di H<sub>t</sub>.
+*   Durante questo tempo di attesa, se il nodo *n1* riceve richieste di lettura per la chiave *k* le rifiuta come
+    non esaustivo. Il richiedente si vedrà dirottato, attraverso i meccanismi del calcolo distribuito di H<sub>t</sub>,
+    verso il nodo *n0*.
+*   Durante questo tempo di attesa, inoltre, se il nodo *n1* riceve richieste di scrittura per la chiave *k* non
+    le rifiuta subito, ma le tiene in sospeso fino a che non riceve il valore corrente o al massimo fino un po'
+    meno del tempo limite di esecuzione stabilito per la richiesta. Poi non le elabora, in quanto dopo questa attesa
+    potrebbe non essere più il nodo con indirizzo più prossimo all'hash-node, ma istruisce il client di riavviare
+    da capo il calcolo distribuito di H<sub>t</sub>.
+*   Al termine di questa attesa, il nodo *n0*, o comunque un nodo attualmente esaustivo per *k*, risponde con il
+    record corrente per *k* oppure con un `NOT_FOUND`. Il nodo *n1* memorizza l'associazione.
+*   Il nodo *n1*, come detto, se qualche richiesta di scrittura per la chiave *k* era in attesa, istruisce il
+    client di tali richieste di riavviare da capo il calcolo distribuito di H<sub>t</sub>.
 *   Il nodo *n1* in seguito si ritiene *esaustivo* per la chiave *k*.
 
 Vediamo nei due esempi precedenti come questo comportamento risolve il problema.
@@ -748,7 +820,8 @@ Esempio 1:
 *   __Il nodo *n1* per recuperare il valore associato a *k* contatta *n0* e gli chiede: attendi un tempo *𝛿*, poi dammi il valore di *k*.__
 *   Il nodo *a* per scrivere sul database contatta *n0* e gli chiede di associare a *k* il valore *v*.
 *   Il nodo *n0* memorizza l'associazione *k* = *v* e risponde "OK".
-*   Solo dopo aver ricevuto la risposta "OK", cioè dopo aver visto la sua richiesta accettata, il nodo *a* viene a conoscenza dell'esistenza di *n1*.
+*   Solo dopo aver ricevuto la risposta "OK", cioè dopo aver visto la sua richiesta accettata, il nodo
+    *a* viene a conoscenza dell'esistenza di *n1*.
 *   Il nodo *b* viene a conoscenza dell'esistenza di *n1*.
 *   Il nodo *b* per leggere dal database contatta *n1* e gli chiede il valore di *k*.
 *   Il nodo *n1* rifiuta perché non esaustivo. La ricerca di *b* procede e trova *n0*.
@@ -774,68 +847,135 @@ Esempio 2:
 *   __Il nodo *n1* memorizza l'associazione *k* = *w*.__
 *   __Il nodo *n1* istruisce il client (nodo *a*) di riavviare (per sicurezza) il calcolo distribuito di H<sub>t</sub>.__
 *   __Il nodo *n1* si ritiene in grado di rispondere a future richieste di lettura e scrittura per la chiave *k*.__
-*   Supponiamo che ancora, dal nodo *a*, venga individuato il nodo *n1* come hash-node. Il nodo *n1* elabora la richiesta di *a*: memorizza l'associazione *k* = *v* e risponde "OK".
-*   Il nodo *a* vede la sua richiesta accettata. Questa volta la lettura "k=w" da parte del nodo *b* avviene prima che la variazione da parte del nodo *a* venga accettata, quindi questa risposta è accettabile.
+*   Supponiamo che ancora, dal nodo *a*, venga individuato il nodo *n1* come hash-node. Il nodo *n1*
+    elabora la richiesta di *a*: memorizza l'associazione *k* = *v* e risponde "OK".
+*   Il nodo *a* vede la sua richiesta accettata. Questa volta la lettura "k=w" da parte del nodo *b* avviene prima
+    che la variazione da parte del nodo *a* venga accettata, quindi questa risposta è accettabile.
 
-Affinché un servente *n1* sia in grado di effettuare il recupero di un record per la chiave *k* dal servente *n0* tramite gli algortmi forniti dal modulo, ci sono alcune regole che la classe del servizio deve rispettare:
+Affinché un servente *n1* sia in grado di effettuare il recupero di un record per la chiave *k* dal servente *n0*
+tramite gli algortmi forniti dal modulo, ci sono alcune regole che la classe del servizio deve rispettare:
 
-*   Deve essere possibile rappresentare la chiave di un record con una istanza di una classe derivata da *Object* che sia serializzabile.
-*   Deve essere possibile rappresentare il contenuto di un record con una istanza di una classe derivata da *Object* che sia serializzabile. Tale classe non deve necessariamente contenere anche la chiave.
+*   Deve essere possibile rappresentare la chiave di un record con una istanza di una classe derivata da *Object*
+    che sia serializzabile.
+*   Deve essere possibile rappresentare il contenuto di un record con una istanza di una classe derivata da *Object*
+    che sia serializzabile. Tale classe non deve necessariamente contenere anche la chiave.
 *   La classe del servizio deve fornire queste ulteriori operazioni:
     *   `bool is_valid_key(Object k)`: Dire se una istanza di Object è una valida chiave.
-    *   `List<int> evaluate_hash_node(Object k)`: Calcolare la tupla *h<sub>p</sub>(k)* di questo servizio per la chiave *k*, avendo come requisito (cioè il chiamante deve averlo già verificato) che tale chiave è valida.  
-        **Nota**: il calcolo di questa tupla viene di norma svolto dal metodo `perfect_tuple` della classe client. Abbiamo detto che tale metodo è virtuale nella classe base PeerClient: la classe di uno specifico servizio la può reimplementare, in particolare se vuole dare ad alcune chiavi un effetto di visibilità locale del dato, cioè circoscrivere la ricerca dell'hash-node.
-    *   `bool key_equal_data(Object k1, Object k2)` e `uint key_hash_data(Object k)`: Metodi le cui firme sono adatte per i delegati `Gee.EqualDataFunc<Object>` e `Gee.HashDataFunc<Object>`, per costruire una HashMap o una lista "con funzionalità di ricerca" di chiavi del servizio, avendo come requisito (cioè il chiamante deve averlo già verificato) che *k*, *k1*, *k2* sono valide chiavi.
+    *   `List<int> evaluate_hash_node(Object k)`: Calcolare la tupla *h<sub>p</sub>(k)* di questo servizio per la
+        chiave *k*, avendo come requisito (cioè il chiamante deve averlo già verificato) che tale chiave è valida.  
+        **Nota**: il calcolo di questa tupla viene di norma svolto dal metodo `perfect_tuple` della classe client.
+        Abbiamo detto che tale metodo è virtuale nella classe base PeerClient: la classe di uno specifico servizio
+        la può reimplementare, in particolare se vuole dare ad alcune chiavi un effetto di visibilità locale del dato,
+        cioè circoscrivere la ricerca dell'hash-node.
+    *   `bool key_equal_data(Object k1, Object k2)` e `uint key_hash_data(Object k)`: Metodi le cui firme sono
+        adatte per i delegati `Gee.EqualDataFunc<Object>` e `Gee.HashDataFunc<Object>`, per costruire una HashMap o
+        una lista "con funzionalità di ricerca" di chiavi del servizio, avendo come requisito (cioè il chiamante deve
+        averlo già verificato) che *k*, *k1*, *k2* sono valide chiavi.
     *   `bool is_valid_record(Object k, Object rec)`: Dire se una istanza di Object è un valido record.
-    *   `bool my_records_contains(Object k)`: Dire se il record per la chiave *k* per questo servizio è attualmente memorizzato dal nodo. Questa funzione deve garantire di essere atomica, cioè di non schedulare altre tasklet.
-    *   `Object get_record_for_key(Object k)`: Restituire il record per la chiave *k*, avendo come requisito (cioè il chiamante deve averlo già verificato) che tale chiave è presente nella memoria. Questa funzione deve garantire di essere atomica.
-    *   `void set_record_for_key(Object k, Object rec)`: Mettere in memoria il record *rec* per la chiave *k*, avendo come requisito (cioè il chiamante deve averlo già verificato) che la memoria non sia ancora esaurita. Questa funzione deve garantire di essere atomica.
+    *   `bool my_records_contains(Object k)`: Dire se il record per la chiave *k* per questo servizio è attualmente
+        memorizzato dal nodo. Questa funzione deve garantire di essere atomica, cioè di non schedulare altre tasklet.
+    *   `Object get_record_for_key(Object k)`: Restituire il record per la chiave *k*, avendo come requisito (cioè
+        il chiamante deve averlo già verificato) che tale chiave è presente nella memoria. Questa funzione deve
+        garantire di essere atomica.
+    *   `void set_record_for_key(Object k, Object rec)`: Mettere in memoria il record *rec* per la chiave *k*, avendo
+        come requisito (cioè il chiamante deve averlo già verificato) che la memoria non sia ancora esaurita. Questa
+        funzione deve garantire di essere atomica.
 
-Il modulo usa la classe RequestWaitThenSendRecord. Si tratta di una classe serializzabile, che deriva da Object, e contiene una istanza di Object serializzabile *k*. Implementa l'interfaccia (vuota) IPeersRequest. È la richiesta di aspettare un tempo *𝛿* (valutato direttamente dal nodo che riceve la richiesta) e poi inviare il record relativo alla chiave *k*. Tale classe non viene esposta dal modulo.
+Il modulo usa la classe RequestWaitThenSendRecord. Si tratta di una classe serializzabile, che deriva da Object, e
+contiene una istanza di Object serializzabile *k*. Implementa l'interfaccia (vuota) IPeersRequest. È la richiesta
+di aspettare un tempo *𝛿* (valutato direttamente dal nodo che riceve la richiesta) e poi inviare il record relativo
+alla chiave *k*. Tale classe non viene esposta dal modulo.
 
-Siccome la richiesta implicitamente dice al nodo servente di attendere un tempo che lui stesso dovrà valutare, il nodo client non può fare altro che accettare una attesa che può arrivare al massimo valore che si può ottenere dalla valutazione del tempo critico di coerenza. Questo valore non dipende dal servizio specifico. Viene quindi memorizzato in un membro statico `timeout_exec` della classe *RequestWaitThenSendRecord*.
+Siccome la richiesta implicitamente dice al nodo servente di attendere un tempo che lui stesso dovrà valutare,
+il nodo client non può fare altro che accettare una attesa che può arrivare al massimo valore che si può ottenere
+dalla valutazione del tempo critico di coerenza. Questo valore non dipende dal servizio specifico. Viene quindi
+memorizzato in un membro statico `timeout_exec` della classe *RequestWaitThenSendRecord*.
 
-Il modulo usa la classe RequestWaitThenSendRecordResponse. Si tratta di una classe serializzabile, che deriva da Object, e contiene una istanza di Object serializzabile *record*. Implementa l'interfaccia (vuota) IPeersResponse. È la risposta alla richiesta sopra descritta. Tale classe non viene esposta dal modulo.
+Il modulo usa la classe RequestWaitThenSendRecordResponse. Si tratta di una classe serializzabile, che deriva da
+Object, e contiene una istanza di Object serializzabile *record*. Implementa l'interfaccia (vuota) IPeersResponse.
+È la risposta alla richiesta sopra descritta. Tale classe non viene esposta dal modulo.
 
-Il modulo usa la classe RequestWaitThenSendRecordNotFound. Si tratta di una classe serializzabile, che deriva da Object, e non ha alcun dato al suo interno. Implementa l'interfaccia (vuota) IPeersResponse. È la risposta come eccezione `NOT_FOUND` alla richiesta sopra descritta. Tale classe non viene esposta dal modulo.
+Il modulo usa la classe RequestWaitThenSendRecordNotFound. Si tratta di una classe serializzabile, che deriva da
+Object, e non ha alcun dato al suo interno. Implementa l'interfaccia (vuota) IPeersResponse. È la risposta come
+eccezione `NOT_FOUND` alla richiesta sopra descritta. Tale classe non viene esposta dal modulo.
 
-L'interfaccia IDatabaseDescriptor espone i metodi sopra descritti: `is_valid_key`, `evaluate_hash_node`, `key_equal_data`, `key_hash_data`, `is_valid_record`, `my_records_contains`, `get_record_for_key` e `set_record_for_key`.
+L'interfaccia IDatabaseDescriptor espone i metodi sopra descritti: `is_valid_key`, `evaluate_hash_node`,
+`key_equal_data`, `key_hash_data`, `is_valid_record`, `my_records_contains`, `get_record_for_key` e `set_record_for_key`.
 
-Per gestire il tempo in cui il nodo *n1* attende la risposta da parte del nodo *n0* relativa al recupero di un record, in altre parole per ricordarsi di quali chiavi è stato avviato un procedimento di recupero ancora in corso, il nodo *n1* fa uso di alcune strutture dati memorizzate nella classe DatabaseHandler:
+Per gestire il tempo in cui il nodo *n1* attende la risposta da parte del nodo *n0* relativa al recupero di un
+record, in altre parole per ricordarsi di quali chiavi è stato avviato un procedimento di recupero ancora in
+corso, il nodo *n1* fa uso di alcune strutture dati memorizzate nella classe DatabaseHandler:
 
-*   Elenco di chiavi `HashMap<Object,INtkdChannel> retrieving_keys` e per ogni chiave dell'elenco un canale di comunicazione tra tasklet.  
-    Se il nodo riceve una richiesta relativa alla chiave *k* che è nell'elenco `retrieving_keys` sa che è ancora in corso il procedimento di recupero per tale chiave. Se vuole, può mettersi in attesa di una comunicazione sul canale relativo, ma sempre indicando un tempo massimo di attesa tale da non superare il tempo limite di esecuzione della richiesta.
+*   Elenco di chiavi `HashMap<Object,INtkdChannel> retrieving_keys` e per ogni chiave dell'elenco un canale di
+    comunicazione tra tasklet.  
+    Se il nodo riceve una richiesta relativa alla chiave *k* che è nell'elenco `retrieving_keys` sa che è ancora
+    in corso il procedimento di recupero per tale chiave. Se vuole, può mettersi in attesa di una comunicazione
+    sul canale relativo, ma sempre indicando un tempo massimo di attesa tale da non superare il tempo limite di
+    esecuzione della richiesta.
 
 ### <a name="Mantenimento_database_distribuito_Requisiti_comuni"></a>Requisiti comuni
 
-Le classi dei servizi che implementano un database distribuito devono tenere precisi comportamenti quando ricevono una richiesta. Possono farlo usando alcuni algoritmi forniti dal modulo, diversi a seconda del tipo di servizio.
+Le classi dei servizi che implementano un database distribuito devono tenere precisi comportamenti quando ricevono
+una richiesta. Possono farlo usando alcuni algoritmi forniti dal modulo, diversi a seconda del tipo di servizio.
 
-Questi algoritmi pongono alcune regole che la classe del servizio deve rispettare. Esaminiamo qui alcuni requisiti che sono comuni ai diversi tipi di servizio che in seguito analizzeremo separatamente.
+Questi algoritmi pongono alcune regole che la classe del servizio deve rispettare. Esaminiamo qui alcuni requisiti
+che sono comuni ai diversi tipi di servizio che in seguito analizzeremo separatamente.
 
-*   Non viene imposto nessun obbligo riguardo il formato delle classi che rappresentano le richieste e le risposte del servizio.
-*   La classe del servizio deve essere in grado di effettuare alcune operazioni partendo dalla istanza che rappresenta la richiesta:
-    *   `Object get_key_from_request(IPeersRequest r)`: Costruire una istanza della chiave interessata da questa richiesta, avendo come requisito (cioè il chiamante deve averlo già verificato) che dalla richiesta *r* si è in grado di reperire una valida chiave; cioè, se non si è in grado di produrre tale chiave questa operazione può abortire il programma.
-    *   `int get_timeout_exec(IPeersRequest r)`: Determinare il tempo limite di esecuzione che il client del servizio si aspetta, avendo come requisito (cioè il chiamante deve averlo già verificato) che la richiesta *r* è di tipo *insert* o *update*; cioè, siccome il modulo dovrebbe farne uso solo in questi casi, in tutti gli altri casi questa operazione può abortire il programma.
+*   Non viene imposto nessun obbligo riguardo il formato delle classi che rappresentano le richieste e le
+    risposte del servizio.
+*   La classe del servizio deve essere in grado di effettuare alcune operazioni partendo dalla istanza che
+    rappresenta la richiesta:
+    *   `Object get_key_from_request(IPeersRequest r)`: Costruire una istanza della chiave interessata da
+        questa richiesta, avendo come requisito (cioè il chiamante deve averlo già verificato) che dalla
+        richiesta *r* si è in grado di reperire una valida chiave; cioè, se non si è in grado di produrre tale
+        chiave questa operazione può abortire il programma.
+    *   `int get_timeout_exec(IPeersRequest r)`: Determinare il tempo limite di esecuzione che il client del
+        servizio si aspetta, avendo come requisito (cioè il chiamante deve averlo già verificato) che la
+        richiesta *r* è di tipo *insert* o *update*; cioè, siccome il modulo dovrebbe farne uso solo in questi
+        casi, in tutti gli altri casi questa operazione può abortire il programma.
     *   `bool is_insert_request(IPeersRequest r)`: Stabilire se la richiesta è di inserimento.  
-        Significa che la richiesta è quella di inserire un record nuovo nella memoria del nodo. Quindi la richiesta per essere soddisfatta necessita che il nodo abbia spazio nella sua memoria e sia esaustivo riguardo la non esistenza del record.  
-        Se questa operazione restituisce True significa che ha già verificato di poter ottenere la chiave *k* relativa e che tale chiave è valida.
+        Significa che la richiesta è quella di inserire un record nuovo nella memoria del nodo. Quindi la richiesta
+        per essere soddisfatta necessita che il nodo abbia spazio nella sua memoria e sia esaustivo riguardo la
+        non esistenza del record.  
+        Se questa operazione restituisce True significa che ha già verificato di poter ottenere la chiave *k*
+        relativa e che tale chiave è valida.
     *   `bool is_read_only_request(IPeersRequest r)`: Stabilire se la richiesta è di sola lettura.  
-        Significa che la richiesta per essere soddisfatta necessita che il nodo abbia nella sua memoria il record richiesto. Oppure che il nodo sia esaustivo riguardo la non esistenza del record.  
-        Se questa operazione restituisce True significa che ha già verificato di poter ottenere la chiave *k* relativa e che tale chiave è valida.
+        Significa che la richiesta per essere soddisfatta necessita che il nodo abbia nella sua memoria il
+        record richiesto. Oppure che il nodo sia esaustivo riguardo la non esistenza del record.  
+        Se questa operazione restituisce True significa che ha già verificato di poter ottenere la chiave *k*
+        relativa e che tale chiave è valida.
     *   `bool is_update_request(IPeersRequest r)`: Stabilire se la richiesta è di aggiornamento.  
-        Può essere di modifica, di rimozione, o di solo refresh del TTL. Anche qui la richiesta per essere soddisfatta necessita che il nodo abbia nella sua memoria il record richiesto. Oppure che il nodo sia esaustivo riguardo la non esistenza del record.  
-        Se questa operazione restituisce True significa che ha già verificato di poter ottenere la chiave *k* relativa e che tale chiave è valida.
-    *   `bool is_replica_value_request(IPeersRequest r)`: Stabilire se la richiesta è di replica di valorizzazione di un record.  
-        Questa viene accettata se il nodo ha nella sua memoria il record richiesto oppure se ha spazio nella sua memoria. Se invece non lo aveva in memoria e non può memorizzare un altro record, comunque fa in modo di non essere esaustivo riguardo la sua non esistenza, e ovviamente demanda ad altri la elaborazione della richiesta.  
-        Se questa operazione restituisce True significa che ha già verificato di poter ottenere la chiave *k* relativa e che tale chiave è valida.
-    *   `bool is_replica_delete_request(IPeersRequest r)`: Stabilire se la richiesta è di replica di cancellazione di un record.  
-        Questa viene accettata sempre: se il nodo ha nella sua memoria il record esso viene rimosso; in ogni caso il nodo diventa esaustivo riguardo la non esistenza del record.  
-        Se questa operazione restituisce True significa che ha già verificato di poter ottenere la chiave *k* relativa e che tale chiave è valida.
-    *   **Nota**: una richiesta valida per il servizio potrebbe non essere di nessuno di questi 5 tipi (insert, read only, update, replica valore, replica cancellazione).  
-        Oltre alle richieste "interne" al modulo (come la RequestWaitThenSendRecord) anche richieste specifiche del servizio possono non essere di questi 5 tipi. Ad esempio: una richiesta si basa su una chiave *k* e la sua risposta non dipende dall'esistenza di un record. Quindi la richiesta può essere soddisfatta da un nodo indipendentemente dallo spazio nella sua memoria e dal fatto che sia esaustivo per la chiave *k*.
-    *   `IPeersResponse prepare_response_not_found(IPeersRequest r)`: Costruire una risposta che indica l'eccezione `NOT_FOUND` per la chiave interessata.
-    *   `IPeersResponse prepare_response_not_free(IPeersRequest r, Object rec)`: Costruire una risposta che indica l'eccezione `NOT_FREE` per la chiave interessata, opzionalmente con (alcuni) dati del record che adesso vi è associato.
-    *   `IPeersResponse execute(IPeersRequest r)`: Elaborare la richiesta e restituire la risposta. Questa operazione viene chiamata se:
+        Può essere di modifica, di rimozione, o di solo refresh del TTL. Anche qui la richiesta per essere
+        soddisfatta necessita che il nodo abbia nella sua memoria il record richiesto. Oppure che il nodo sia
+        esaustivo riguardo la non esistenza del record.  
+        Se questa operazione restituisce True significa che ha già verificato di poter ottenere la chiave *k*
+        relativa e che tale chiave è valida.
+    *   `bool is_replica_value_request(IPeersRequest r)`: Stabilire se la richiesta è di replica di
+        valorizzazione di un record.  
+        Questa viene accettata se il nodo ha nella sua memoria il record richiesto oppure se ha spazio nella sua
+        memoria. Se invece non lo aveva in memoria e non può memorizzare un altro record, comunque fa in modo di non
+        essere esaustivo riguardo la sua non esistenza, e ovviamente demanda ad altri la elaborazione della richiesta.  
+        Se questa operazione restituisce True significa che ha già verificato di poter ottenere la chiave *k* relativa
+        e che tale chiave è valida.
+    *   `bool is_replica_delete_request(IPeersRequest r)`: Stabilire se la richiesta è di replica di
+        cancellazione di un record.  
+        Questa viene accettata sempre: se il nodo ha nella sua memoria il record esso viene rimosso; in ogni caso
+        il nodo diventa esaustivo riguardo la non esistenza del record.  
+        Se questa operazione restituisce True significa che ha già verificato di poter ottenere la chiave *k*
+        relativa e che tale chiave è valida.
+    *   **Nota**: una richiesta valida per il servizio potrebbe non essere di nessuno di questi 5 tipi (insert,
+        read only, update, replica valore, replica cancellazione).  
+        Oltre alle richieste "interne" al modulo (come la RequestWaitThenSendRecord) anche richieste specifiche
+        del servizio possono non essere di questi 5 tipi. Ad esempio: una richiesta si basa su una chiave *k* e
+        la sua risposta non dipende dall'esistenza di un record. Quindi la richiesta può essere soddisfatta da
+        un nodo indipendentemente dallo spazio nella sua memoria e dal fatto che sia esaustivo per la chiave *k*.
+    *   `IPeersResponse prepare_response_not_found(IPeersRequest r)`: Costruire una risposta che indica
+        l'eccezione `NOT_FOUND` per la chiave interessata.
+    *   `IPeersResponse prepare_response_not_free(IPeersRequest r, Object rec)`: Costruire una risposta che
+        indica l'eccezione `NOT_FREE` per la chiave interessata, opzionalmente con (alcuni) dati del record che
+        adesso vi è associato.
+    *   `IPeersResponse execute(IPeersRequest r)`: Elaborare la richiesta e restituire la risposta. Questa
+        operazione viene chiamata se:
 
         *   la richiesta è di inserimento e il nodo la può elaborare;
         *   la richiesta è di sola lettura e il nodo la può elaborare;
@@ -844,25 +984,36 @@ Questi algoritmi pongono alcune regole che la classe del servizio deve rispettar
         *   la richiesta è di replica di cancellazione e il nodo la può elaborare;
         *   la richiesta non è di nessuno dei 5 casi suddetti.  
 
-        Nell'ultimo caso la classe deve fare tutti i controlli necessari: non è detto che una chiave possa essere recuperata, né che la chiave, se c'è, sia valida.  
-        L'operazione `execute` può rilanciare le eccezioni PeersRefuseExecutionError e PeersRedoFromStartError, come il metodo `exec` della classe PeerService. Di norma non dovrebbe farlo nei primi 5 casi sopra elencati; anche nell'ultimo caso, di norma se l'operazione non può considerarsi completata con successo va restituita una risposta che rappresenti una eccezione prevista dallo specifico servizio. Tuttavia viene lasciata questa possibilità.
+        Nell'ultimo caso la classe deve fare tutti i controlli necessari: non è detto che una chiave possa
+        essere recuperata, né che la chiave, se c'è, sia valida.  
+        L'operazione `execute` può rilanciare le eccezioni PeersRefuseExecutionError e PeersRedoFromStartError,
+        come il metodo `exec` della classe PeerService. Di norma non dovrebbe farlo nei primi 5 casi sopra elencati;
+        anche nell'ultimo caso, di norma se l'operazione non può considerarsi completata con successo va restituita
+        una risposta che rappresenti una eccezione prevista dallo specifico servizio. Tuttavia viene lasciata
+        questa possibilità.
 
-L'interfaccia IDatabaseDescriptor espone anche i metodi sopra descritti: `get_key_from_request`, `get_timeout_exec`, `is_insert_request`, `is_read_only_request`, `is_update_request`, `prepare_response_not_found`, `prepare_response_not_free` e `execute`.
+L'interfaccia IDatabaseDescriptor espone anche i metodi sopra descritti: `get_key_from_request`, `get_timeout_exec`,
+`is_insert_request`, `is_read_only_request`, `is_update_request`, `prepare_response_not_found`,
+`prepare_response_not_free` e `execute`.
 
 ### <a name="Mantenimento_database_distribuito_Requisiti_specifici"></a>Requisiti specifici
 
-Abbiamo identificato alcune tipologie di servizi (al momento due) che usano distinti approcci all'uso del concetto di esaustività; per ogni classe rimanderemo ad un documento di dettaglio.
+Abbiamo identificato alcune tipologie di servizi (al momento due) che usano distinti approcci all'uso del concetto
+di esaustività; per ogni classe rimanderemo ad un documento di dettaglio.
 
 #### <a name="Mantenimento_database_distribuito_TTL"></a>Database con record che hanno un TTL
 
 Consideriamo un servizio che vuole mantenere un database che abbia queste caratteristiche:
 
-*   Ogni record in esso ha un Time To Live, cioè una scadenza. Se prima della scadenza non viene aggiornato, il record viene rimosso dal database.
+*   Ogni record in esso ha un Time To Live, cioè una scadenza. Se prima della scadenza non viene aggiornato, il
+    record viene rimosso dal database.
 *   Le chiavi sono in un set che può essere molto grande. E' impraticabile scorrere tutto il set delle possibili chiavi.
 *   Per una chiave, nel database può esserci un record o nessuno.
-*   Ogni nodo partecipante al servizio ha un limite di memoria, oltre il quale il nodo rifiuterà di immagazzinare altri record.
+*   Ogni nodo partecipante al servizio ha un limite di memoria, oltre il quale il nodo rifiuterà di immagazzinare
+    altri record.
 
-Per facilitare l'implementazione di un servizio con queste caratteristiche, il modulo fornisce alcuni algoritmi. Questi algoritmi usano i requisiti descritti sopra e altri descritti nell'interfaccia ITemporalDatabaseDescriptor.
+Per facilitare l'implementazione di un servizio con queste caratteristiche, il modulo fornisce alcuni algoritmi.
+Questi algoritmi usano i requisiti descritti sopra e altri descritti nell'interfaccia ITemporalDatabaseDescriptor.
 
 Esaminiamo nel dettaglio questi algoritmi nel documento [Database TTL](DatabaseTTL.md).
 
@@ -872,10 +1023,12 @@ Consideriamo un servizio che vuole mantenere un database che abbia queste caratt
 
 *   I record non hanno una scadenza.
 *   Le chiavi sono in un dominio ben definito e non molto grande.
-*   Ad una chiave è associato sempre un valore, a partire da un valore di default. Non può essere rimosso il record associato ad una chiave, ma solo cambiato.
+*   Ad una chiave è associato sempre un valore, a partire da un valore di default. Non può essere rimosso il record
+    associato ad una chiave, ma solo cambiato.
 *   Ogni nodo è in grado di memorizzare i record anche di tutte le chiavi. Non esiste il caso `OUT_OF_MEMORY`.
 
-Per facilitare l'implementazione di un servizio con queste caratteristiche, il modulo fornisce alcuni algoritmi. Questi algoritmi usano i requisiti descritti sopra e altri descritti nell'interfaccia IFixedKeysDatabaseDescriptor.
+Per facilitare l'implementazione di un servizio con queste caratteristiche, il modulo fornisce alcuni algoritmi.
+Questi algoritmi usano i requisiti descritti sopra e altri descritti nell'interfaccia IFixedKeysDatabaseDescriptor.
 
 Esaminiamo nel dettaglio questi algoritmi nel documento [Database a chiavi fisse](DatabaseFixedKeys.md).
 
