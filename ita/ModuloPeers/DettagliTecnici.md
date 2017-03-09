@@ -23,52 +23,82 @@
 
 ## <a name="Requisiti"></a>Requisiti
 
-L'utilizzatore del modulo PeerServices per prima cosa inizializza il modulo richiamando il metodo statico `init` di PeersManager. In tale metodo viene anche passata l'istanza di INtkdTasklet per fornire l'implementazione del sistema di tasklet.
+L'utilizzatore del modulo PeerServices per prima cosa inizializza il modulo richiamando il metodo statico
+`init` di PeersManager. In tale metodo viene anche passata l'istanza di INtkdTasklet per fornire
+l'implementazione del sistema di tasklet.
 
-Quando il nodo ha completato la sua fase di bootstrap come descritto nel [modulo QSPN](../ModuloQspn/AnalisiFunzionale.md), il nodo istanzia il suo PeersManager passando al costruttore:
+Quando il nodo ha completato la sua fase di bootstrap come descritto
+nel [modulo QSPN](../ModuloQspn/AnalisiFunzionale.md), il nodo istanzia il suo
+PeersManager passando al costruttore:
 
 *   La mappa dei percorsi noti (istanza di IPeersMapPaths `map_paths`).
 *   Il livello del g-nodo che questo nodo ha costituito (int `level_new_gnode`).
-*   La stub factory per le comunicazioni via percorso interno al nodo che ha avviato una richiesta (istanza di IPeersBackStubFactory `back_stub_factory`).
+*   La stub factory per le comunicazioni via percorso interno al nodo che ha avviato una
+    richiesta (istanza di IPeersBackStubFactory `back_stub_factory`).
 *   La stub factory per le comunicazioni ai vicini (istanza di IPeersNeighborsFactory `neighbors_factory`).
 
 ## <a name="Deliverables"></a>Deliverables
 
-Quando viene costruito il PeersManager gli viene passato il livello del g-nodo che il nodo ha formato. Se non si tratta di un nodo che ha costituito una intera rete ma piuttosto di un nodo entrato in un g-nodo *g* esistente, allora il modulo dialoga con un suo vicino appartenente a *g*, per reperire le mappe dei partecipanti ai servizi opzionali. Lo stub per parlare con il vicino è ottenuto con il metodo `i_peers_fellow` di `map_paths`. Il metodo remoto usato è `get_participant_set`.
+Quando viene costruito il PeersManager gli viene passato il livello del g-nodo che il nodo ha formato.
+Se non si tratta di un nodo che ha costituito una intera rete ma piuttosto di un nodo entrato in un g-nodo
+*g* esistente, allora il modulo dialoga con un suo vicino appartenente a *g*, per reperire le mappe dei
+partecipanti ai servizi opzionali. Lo stub per parlare con il vicino è ottenuto con il metodo `i_peers_fellow`
+di `map_paths`. Il metodo remoto usato è `get_participant_set`.
 
 * * *
 
-Il modulo segnala quando l'operazione di recupero delle mappe dei partecipanti ai servizi opzionali è completata con successo, attraverso il segnale `participant_maps_ready` di PeersManager.
+Il modulo segnala quando l'operazione di recupero delle mappe dei partecipanti ai servizi opzionali è
+completata con successo, attraverso il segnale `participant_maps_ready` di PeersManager.
 
 * * *
 
-Il modulo segnala quando l'operazione di recupero delle mappe dei partecipanti ai servizi opzionali fallisce, attraverso il segnale `participant_maps_failure` di PeersManager.
+Il modulo segnala quando l'operazione di recupero delle mappe dei partecipanti ai servizi opzionali fallisce,
+attraverso il segnale `participant_maps_failure` di PeersManager.
 
 * * *
 
-Il modulo fornisce su richiesta il livello del g-nodo che il nodo ha formato (informazione che gli è stata passata nel costruttore di PeersManager) e lo stato dell'operazione di recupero delle mappe dei partecipanti ai servizi opzionali, con le proprietà `level_new_gnode`, `participant_maps_retrieved`, `participant_maps_failed` di PeersManager.
+Il modulo fornisce su richiesta il livello del g-nodo che il nodo ha formato (informazione che gli è stata
+passata nel costruttore di PeersManager) e lo stato dell'operazione di recupero delle mappe dei partecipanti
+ai servizi opzionali, con le proprietà `level_new_gnode`, `participant_maps_retrieved`, `participant_maps_failed`
+di PeersManager.
 
 * * *
 
-Il modulo fornisce la classe base astratta `PeerService`. Se un nodo vuole fornire un servizio, deve implementare una classe derivata da PeerService. Una istanza di tale classe va registrata con il metodo `register` di PeersManager.
+Il modulo fornisce la classe base astratta `PeerService`. Se un nodo vuole fornire un servizio, deve
+implementare una classe derivata da PeerService. Una istanza di tale classe va registrata con il metodo
+`register` di PeersManager.
 
-La classe che implementa il servizio può fare in modo che il nodo non venga contattato per elaborare richieste. Questo può essere utile (o anche rendersi necessario) per vari motivi a seconda dello specifico servizio. Questo la classe lo può fare ridefinendo il suo metodo `is_ready()` definito dalla classe base.
+La classe che implementa il servizio può fare in modo che il nodo non venga contattato per elaborare richieste.
+Questo può essere utile (o anche rendersi necessario) per vari motivi a seconda dello specifico servizio.
+Questo la classe lo può fare ridefinendo il suo metodo `is_ready()` definito dalla classe base.
 
 * * *
 
-Il modulo aiuta le classi che implementano un servizio nel contattare i nodi da eleggere come replica, con i metodi `begin_replica` e `next_replica` di PeersManager.
+Il modulo aiuta le classi che implementano un servizio nel contattare i nodi da eleggere come replica, con
+i metodi `begin_replica` e `next_replica` di PeersManager.
 
 * * *
 
 Il modulo fornisce la classe base `PeerClient` per implementare uno stub per fare richieste ad un servizio.
 
-Tale classe, usando il metodo `contact_peer` di PeersManager, permette di avviare il calcolo distribuito di H<sub>t</sub>, ricevere le segnalazioni dei nodi nel tragitto e infine consegnare la richiesta e ricevere la risposta.
+Tale classe, usando il metodo `contact_peer` di PeersManager, permette di avviare il calcolo distribuito di
+H<sub>t</sub>, ricevere le segnalazioni dei nodi nel tragitto e infine consegnare la richiesta e ricevere la
+risposta.
 
 ## <a name="Instradamento_dei_messaggi"></a>Instradamento dei messaggi
 
-Il calcolo della funzione H<sub>t</sub> deve essere realizzato con una implementazione distribuita perché nella topologia gerarchica di Netsukuku la conoscenza di ogni nodo è parziale. Con questa funzione viene individuato e contattato un nodo esistente nella rete e partecipante al servizio a partire da un indirizzo obiettivo (il risultato di h<sub>p</sub>(*k*)) del quale non sappiamo se è detenuto da un nodo né se il nodo che eventualmente lo detiene partecipa al servizio.
+Il calcolo della funzione H<sub>t</sub> deve essere realizzato con una implementazione distribuita perché nella
+topologia gerarchica di Netsukuku la conoscenza di ogni nodo è parziale. Con questa funzione viene individuato
+e contattato un nodo esistente nella rete e partecipante al servizio a partire da un indirizzo obiettivo (il
+risultato di h<sub>p</sub>(*k*)) del quale non sappiamo se è detenuto da un nodo né se il nodo che eventualmente
+lo detiene partecipa al servizio.
 
-Definiamo la funzione H<sub>t</sub>(x̄) = x, dove *x* è l'indirizzo associato ad un nodo esistente (x ∈ dom(𝛼<sub>t</sub>)) che minimizza la distanza x̄ - x, in modo più rigoroso minarg<sub>x∈dom(𝛼t)</sub>dist(x̄,x). La funzione `dist` rappresenta in modo intuitivo la distanza tra due indirizzi, ma è definita in modo che la funzione H<sub>t</sub>  *cerchi* il primo indirizzo valido *incrementando* l'identificativo fino a *gsize-1* per poi ripartire da *0*. Questo comportamento ci ritornerà utile in  seguito. Precisamente la funzione `dist(x̄,x)` si calcola così:
+Definiamo la funzione H<sub>t</sub>(x̄) = x, dove *x* è l'indirizzo associato ad un nodo esistente
+(x ∈ dom(𝛼<sub>t</sub>)) che minimizza la distanza x̄ - x, in modo più rigoroso minarg<sub>x∈dom(𝛼t)</sub>dist(x̄,x).
+La funzione `dist` rappresenta in modo intuitivo la distanza tra due indirizzi, ma è definita in modo che la
+funzione H<sub>t</sub>  *cerchi* il primo indirizzo valido *incrementando* l'identificativo fino a *gsize-1* per
+poi ripartire da *0*. Questo comportamento ci ritornerà utile in  seguito. Precisamente la funzione `dist(x̄,x)`
+si calcola così:
 
 *   x̄ è formato da x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>l-1</sub>.
 *   x è formato da x<sub>0</sub>·x<sub>1</sub>·...·x<sub>l-1</sub>.
@@ -85,7 +115,9 @@ Definiamo la funzione H<sub>t</sub>(x̄) = x, dove *x* è l'indirizzo associat
 
 ### <a name="Implementazione_distribuita"></a>Implementazione distribuita
 
-Sia *n* un nodo che vuole inviare un messaggio *m* all'hash-node della chiave *k* per il servizio *p*. Il nodo n ha indirizzo n<sub>0</sub>·n<sub>1</sub>·...·n<sub>l-1</sub>. Ha inoltre una conoscenza parziale del dominio di 𝛼<sub>t</sub>, conoscenza che indichiamo con dom<sub>n</sub>(𝛼<sub>t</sub>), che comprende:
+Sia *n* un nodo che vuole inviare un messaggio *m* all'hash-node della chiave *k* per il servizio *p*. Il nodo n
+ha indirizzo n<sub>0</sub>·n<sub>1</sub>·...·n<sub>l-1</sub>. Ha inoltre una conoscenza parziale del dominio di
+𝛼<sub>t</sub>, conoscenza che indichiamo con dom<sub>n</sub>(𝛼<sub>t</sub>), che comprende:
 
 *   tutti i nodi appartenenti a n<sub>1</sub>,
 *   tutti i g-nodi di livello 1 appartenenti a n<sub>2</sub>,
@@ -93,47 +125,78 @@ Sia *n* un nodo che vuole inviare un messaggio *m* all'hash-node della chiave *k
 *   tutti i g-nodi di livello l-2 appartenenti a n<sub>l-1</sub>,
 *   tutti i g-nodi di livello l-1.
 
-Il nodo *n* usa la funzione *h<sub>p</sub>* definita da *p* per calcolare dalla chiave *k* l'indirizzo *x̄* formato da x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>l-1</sub>. A questo punto dovrebbe calcolare *x*=H<sub>t</sub>(x̄). Procede così:
+Il nodo *n* usa la funzione *h<sub>p</sub>* definita da *p* per calcolare dalla chiave *k* l'indirizzo *x̄* formato
+da x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>l-1</sub>. A questo punto dovrebbe calcolare *x*=H<sub>t</sub>(x̄). Procede così:
 
-*   Il nodo n calcola H<sub>t</sub>(x̄) secondo le sue conoscenze, cioè trova un livello *j* e un identificativo *x<sub>j</sub>* tali che:
+*   Il nodo n calcola H<sub>t</sub>(x̄) secondo le sue conoscenze, cioè trova un livello *j* e un identificativo
+    *x<sub>j</sub>* tali che:
     *   x<sub>j</sub> ∈ n<sub>j+1</sub>, oppure j = l-1.
     *   Il gnodo x<sub>j</sub> è quello, fra le conoscenze di n, che minimizza la funzione dist(x̄, x<sub>j</sub>).
     *   x<sub>j</sub> ≠ n<sub>j</sub>, oppure lo stesso nodo n è il risultato.
     *   x<sub>j</sub> partecipa al servizio (cioè almeno un nodo all'interno di x<sub>j</sub> partecipa).
-*   Le  conoscenze del nodo n riguardo la partecipazione al servizio possono  essere non aggiornate rispetto agli altri nodi, ma a questo come vedremo  in seguito l'algoritmo pone rimedio. Si noti invece che il nodo n sa  con certezza se esso stesso partecipa al servizio, quindi il calcolo di   H<sub>t</sub>(x̄) può dare come risultato lo stesso nodo n solo se questo partecipa.
+*   Le  conoscenze del nodo n riguardo la partecipazione al servizio possono  essere non aggiornate rispetto agli
+    altri nodi, ma a questo come vedremo  in seguito l'algoritmo pone rimedio. Si noti invece che il nodo n sa
+    con certezza se esso stesso partecipa al servizio, quindi il calcolo di   H<sub>t</sub>(x̄) può dare come risultato
+    lo stesso nodo n solo se questo partecipa.
 *   Se il risultato è lo stesso nodo n l'algoritmo termina e si passa subito all'esecuzione del messaggio m.
 *   Se j = 0 allora n ha trovato con le sue sole conoscenze x<sub>0</sub> = H<sub>t</sub>(x̄).
-*   Se j > 0 allora il nodo n non conosce l'interno del gnodo x<sub>j</sub>.    Ma la sua esistenza e partecipazione implica che nella rete esistono uno o più nodi al  suo   interno partecipanti e tra questi senz'altro quello che ha l'indirizzo x che    minimizza la funzione dist(x̄,x).
-*   Il nodo n e il nodo x (il destinatario del messaggio m) hanno in comune il g-nodo n<sub>j+1</sub>.  Tutto il percorso che il messaggio deve fare è all'interno di questo  g-nodo; quindi ogni singolo nodo intermedio che riceve il messaggio non  necessita, per inoltrarlo, di identificativi a livelli maggiori di j.
+*   Se j > 0 allora il nodo n non conosce l'interno del gnodo x<sub>j</sub>.    Ma la sua esistenza e partecipazione
+    implica che nella rete esistono uno o più nodi al  suo   interno partecipanti e tra questi senz'altro quello che
+    ha l'indirizzo x che    minimizza la funzione dist(x̄,x).
+*   Il nodo n e il nodo x (il destinatario del messaggio m) hanno in comune il g-nodo n<sub>j+1</sub>. Tutto il
+    percorso che il messaggio deve fare è all'interno di questo  g-nodo; quindi ogni singolo nodo intermedio che
+    riceve il messaggio non  necessita, per inoltrarlo, di identificativi a livelli maggiori di j.
 *   Il nodo n prepara un messaggio *m’* da inoltrare al gnodo x<sub>j</sub>. Questo messaggio contiene:
-    *   `n`: la tupla n<sub>0</sub>·n<sub>1</sub>·...·n<sub>j</sub>. **Nota**: Il  fatto che la tupla contiene solo gli identificativi inferiori al g-nodo  j+1 fa in modo che questo instradamento funzioni anche all'interno di un g-nodo G mentre G sta gradualmente migrando.
+    *   `n`: la tupla n<sub>0</sub>·n<sub>1</sub>·...·n<sub>j</sub>. **Nota**: Il  fatto che la tupla contiene solo
+        gli identificativi inferiori al g-nodo  j+1 fa in modo che questo instradamento funzioni anche all'interno di
+        un g-nodo *g* mentre *g* sta gradualmente migrando.
     *   `x̄`: la tupla x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>j-1</sub>.
     *   `lvl, pos`: le coordinate del g-nodo che miriamo a raggiungere, cioè j e  x<sub>j</sub>.
     *   `p_id`: l'identificativo del servizio p.
     *   `msg_id`: un identificativo generato a caso per questo messaggio.
-*   Il nodo *n* invia il messaggio m’ al suo miglior gateway verso il gnodo x<sub>j</sub>.  Questo invio viene fatto con protocollo reliable (TCP) senza ricevere  una risposta e senza attendere la sua processazione: d'ora in poi intenderemo tutto questo quando diremo che un nodo instrada un messaggio ad un suo gateway. Se la comunicazione  con il gateway fallisce, *n* cerca un diverso gateway con percorsi verso x<sub>j</sub> e riprova; se giunge a non avere più rotte verso x<sub>j</sub> attende qualche istante che si aggiornino le sue conoscenze e riparte dal calcolo di H<sub>t</sub>(x̄).
-*   Il  nodo n  tiene a mente per un certo periodo l'id del messaggio in attesa  di una  risposta. Se passa un certo tempo (basato in qualche modo sulla  dimensione stimata del g-nodo n<sub>j+1</sub>) il nodo n  considera fallito questo tentativo. Più sotto viene descritto come proseguirà n in questo caso.
+*   Il nodo *n* invia il messaggio m’ al suo miglior gateway verso il gnodo x<sub>j</sub>.  Questo invio viene fatto
+    con protocollo reliable (TCP) senza ricevere  una risposta e senza attendere la sua processazione: d'ora in poi
+    intenderemo tutto questo quando diremo che un nodo instrada un messaggio ad un suo gateway. Se la comunicazione
+    con il gateway fallisce, *n* cerca un diverso gateway con percorsi verso x<sub>j</sub> e riprova; se giunge a
+    non avere più rotte verso x<sub>j</sub> attende qualche istante che si aggiornino le sue conoscenze e riparte
+    dal calcolo di H<sub>t</sub>(x̄).
+*   Il  nodo n  tiene a mente per un certo periodo l'id del messaggio in attesa  di una  risposta. Se passa un
+    certo tempo (basato in qualche modo sulla  dimensione stimata del g-nodo n<sub>j+1</sub>) il nodo n  considera
+    fallito questo tentativo. Più sotto viene descritto come proseguirà n in questo caso.
 
 Il messaggio m’ viene così inoltrato:
 
 *   Il nodo *v* riceve un messaggio m’.
-*   Il  nodo v confronta il proprio indirizzo con le coordinate presenti in m’.  Se `v.pos[m’.lvl] = m’.pos` allora il messaggio è giunto al g-nodo che  mirava a raggiungere (vedi sotto il proseguimento dell'algoritmo).
-*   Altrimenti  il nodo *v* instrada m’ al suo miglior gateway verso il g-nodo (m’.lvl,  m’.pos). Nella scelta del gateway  si esclude sempre il nodo da cui il messaggio è arrivato. Se la  comunicazione con il gateway fallisce, *v* cerca un diverso gateway (sempre  escluso il nodo di provenienza) con percorsi verso il g-nodo (m’.lvl,  m’.pos) e riprova; se giunge a non avere più rotte verso quel g-nodo  rinuncia.
+*   Il  nodo v confronta il proprio indirizzo con le coordinate presenti in m’.  Se `v.pos[m’.lvl] = m’.pos` allora
+    il messaggio è giunto al g-nodo che  mirava a raggiungere (vedi sotto il proseguimento dell'algoritmo).
+*   Altrimenti  il nodo *v* instrada m’ al suo miglior gateway verso il g-nodo (m’.lvl,  m’.pos). Nella scelta del
+    gateway  si esclude sempre il nodo da cui il messaggio è arrivato. Se la  comunicazione con il gateway
+    fallisce, *v* cerca un diverso gateway (sempre  escluso il nodo di provenienza) con percorsi verso il g-nodo
+    (m’.lvl,  m’.pos) e riprova; se giunge a non avere più rotte verso quel g-nodo  rinuncia.
 
 Il messaggio m’ raggiunge un nodo dentro il gnodo che mirava a raggiungere.
 
-*   Se  m’.lvl = 0 allora il messaggio è giunto alla destinazione finale (vedi  sotto il proseguimento dell'algoritmo). Altrimenti si prosegue.
-*   Il nodo v calcola H<sub>t</sub>(m’.x̄) secondo le sue conoscenze relative al suo g-nodo di livello m’.lvl, cioè trova un livello *k* e un identificativo *x<sub>k</sub>*. Sicuramente k﹤m’.lvl.
-*   Se il nodo v trova che esso stesso è H<sub>t</sub>(m’.x̄)  allora il messaggio è giunto alla destinazione finale (vedi sotto il  proseguimento dell'algoritmo). Altrimenti si prosegue.
+*   Se  m’.lvl = 0 allora il messaggio è giunto alla destinazione finale (vedi  sotto il proseguimento
+    dell'algoritmo). Altrimenti si prosegue.
+*   Il nodo v calcola H<sub>t</sub>(m’.x̄) secondo le sue conoscenze relative al suo g-nodo di livello m’.lvl,
+    cioè trova un livello *k* e un identificativo *x<sub>k</sub>*. Sicuramente k﹤m’.lvl.
+*   Se il nodo v trova che esso stesso è H<sub>t</sub>(m’.x̄)  allora il messaggio è giunto alla destinazione
+    finale (vedi sotto il  proseguimento dell'algoritmo). Altrimenti si prosegue.
 *   Il nodo v duplica il messaggio m’ in m’’ e poi modifica i seguenti membri del messaggio m’’:
     *   lvl diventa k.
     *   pos diventa *x<sub>k</sub>*.
     *   x̄ diventa x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>k-1</sub>.
-*   Il  nodo *v* instrada  m’’ al suo miglior gateway verso il g-nodo (m’’.lvl,  m’’.pos). Nella scelta del gateway  si esclude sempre il nodo da cui il messaggio è arrivato. L'algoritmo  prosegue come detto prima con il prossimo nodo che riceve m’’. Se la  comunicazione con il gateway fallisce, *v* cerca un diverso gateway   (sempre escluso il nodo di provenienza) con percorsi verso  il g-nodo  (m’’.lvl, m’’.pos) e riprova; se giunge a non avere più rotte verso quel  g-nodo attende qualche istante che si aggiornino le sue conoscenze e  riparte dal calcolo di H<sub>t</sub>(m’.x̄).
+*   Il  nodo *v* instrada  m’’ al suo miglior gateway verso il g-nodo (m’’.lvl,  m’’.pos). Nella scelta del
+    gateway  si esclude sempre il nodo da cui il messaggio è arrivato. L'algoritmo  prosegue come detto prima
+    con il prossimo nodo che riceve m’’. Se la  comunicazione con il gateway fallisce, *v* cerca un diverso
+    gateway (sempre escluso il nodo di provenienza) con percorsi verso  il g-nodo  (m’’.lvl, m’’.pos) e riprova;
+    se giunge a non avere più rotte verso quel  g-nodo attende qualche istante che si aggiornino le sue conoscenze
+    e riparte dal calcolo di H<sub>t</sub>(m’.x̄).
 
 Il messaggio m’ raggiunge la destinazione finale:
 
-*   Il  nodo v prepara uno stub TCP per connettersi al nodo originante tramite  percorso interno attraverso la tupla `m’.n`.
+*   Il nodo v prepara uno stub TCP per connettersi al nodo originante tramite percorso interno attraverso la
+    tupla `m’.n`.
 *   Una volta realizzata la connessione TCP tra n e v il dialogo consiste in:
     *   v comunica a n `m’.msg_id`;
     *   Se n aveva rinunciato ad attendere la risposta a questo messaggio lo comunica a v e qui si interrompe.
@@ -143,46 +206,93 @@ Il messaggio m’ raggiunge la destinazione finale:
 
 ## <a name="Gestione_errori"></a>Gestione degli errori e della non partecipazione
 
-Siano *n* ed *m* due nodi che conoscono una certa chiave *k* per un servizio *p*. Entrambi sono in grado di calcolare *x* = H<sub>t</sub>(h<sub>p</sub>(k)) e di contattare x. Sia *jn* il livello del g-nodo comune a n ed x: cioè x ∈ n<sub>jn</sub>, x ∉ n<sub>jn-1</sub>. Sia *jm* il livello del g-nodo comune a m ed x: cioè x ∈ m<sub>jm</sub>, x ∉ m<sub>jm-1</sub>. Sia *j* il minore tra jn e jm. Ne consegue che x ∉ n<sub>j-1</sub>, x ∉ m<sub>j-1.</sub> Cioè l'interno del g-nodo x<sub>j-1</sub>  di livello j-1 a cui appartiene il nodo x è sconosciuto per n e per m.  Supponiamo ora che per qualche motivo i messaggi instradati dal modulo PeerServices si perdano all'interno del g-nodo x<sub>𝜀</sub> (con 𝜀 piccolo a piacere), 𝜀﹤j-1. Oppure se il servizio p è  opzionale può verificarsi che nessun nodo ora partecipa all'interno di x<sub>𝜀</sub> ma che questa informazione non si era ancora divulgata al suo esterno.
+Siano *n* ed *m* due nodi che conoscono una certa chiave *k* per un servizio *p*. Entrambi sono in grado di
+calcolare *x* = H<sub>t</sub>(h<sub>p</sub>(k)) e di contattare x. Sia *jn* il livello del g-nodo comune a n
+ed x: cioè x ∈ n<sub>jn</sub>, x ∉ n<sub>jn-1</sub>. Sia *jm* il livello del g-nodo comune a m ed x: cioè
+x ∈ m<sub>jm</sub>, x ∉ m<sub>jm-1</sub>. Sia *j* il minore tra jn e jm. Ne consegue che
+x ∉ n<sub>j-1</sub>, x ∉ m<sub>j-1.</sub> Cioè l'interno del g-nodo x<sub>j-1</sub>  di livello j-1 a cui
+appartiene il nodo x è sconosciuto per n e per m.  Supponiamo ora che per qualche motivo i messaggi instradati
+dal modulo PeerServices si perdano all'interno del g-nodo x<sub>𝜀</sub> (con 𝜀 piccolo a piacere), 𝜀﹤j-1. Oppure
+se il servizio p è  opzionale può verificarsi che nessun nodo ora partecipa all'interno di x<sub>𝜀</sub> ma che
+questa informazione non si era ancora divulgata al suo esterno.
 
-Pur  essendo questa anomalia circoscritta ad un g-nodo piccolo a piacere,  questo impedirebbe ai nodi n ed m di scrivere e leggere dati con chiave k  nel servizio p.
+Pur essendo questa anomalia circoscritta ad un g-nodo piccolo a piacere, questo impedirebbe ai nodi n ed m di
+scrivere e leggere dati con chiave k  nel servizio p.
 
-Dopo  che n vede fallire il suo tentativo di contattare x per salvare un  record con chiave k, n deve cercare di isolare il g-nodo malfunzionante.  Se lo facesse basandosi solo sulle sue conoscenze potrebbe solo  calcolare *x’* = *H<sub>t</sub>(h<sub>p</sub>(k), exclude_list=[x<sub>jn-1</sub>]  )*. Indichiamo con questa dicitura che *x<sub>jn-1</sub>* viene considerato non valido come risultato. Ora il nodo m cerca di contattare x per leggere il record con chiave  k, vede che il suo tentativo di contattare x fallisce e quindi prova ad  isolare il g-nodo malfunzionante. Basandosi solo sulle sue conoscenze  calcolerebbe  *x’’* = *Ht(hp(k), exclude_list=[x<sub>jm-1</sub>])*. La conseguenza è che se jm ≠ jn allora n ed m contattano nodi diversi.
+Dopo  che n vede fallire il suo tentativo di contattare x per salvare un  record con chiave k, n deve cercare di
+isolare il g-nodo malfunzionante.  Se lo facesse basandosi solo sulle sue conoscenze potrebbe solo  calcolare
+*x’* = *H<sub>t</sub>(h<sub>p</sub>(k), exclude_list=[x<sub>jn-1</sub>]  )*. Indichiamo con questa dicitura
+che *x<sub>jn-1</sub>* viene considerato non valido come risultato. Ora il nodo m cerca di contattare x per
+leggere il record con chiave  k, vede che il suo tentativo di contattare x fallisce e quindi prova ad  isolare
+il g-nodo malfunzionante. Basandosi solo sulle sue conoscenze calcolerebbe
+*x’’* = *Ht(hp(k), exclude_list=[x<sub>jm-1</sub>])*. La conseguenza è che se jm ≠ jn allora n ed m
+contattano nodi diversi.
 
-Questo significa che un meccanismo robusto deve prevedere che il nodo n che cerca di contattare il nodo x ∈ n<sub>jn</sub> e non vi riesce deve rilevare tutti gli identificativi del g-nodo x<sub>𝜀</sub> (dal livello 𝜀 al livello jn-1) in cui il messaggio si è perso.
+Questo significa che un meccanismo robusto deve prevedere che il nodo n che cerca di contattare il nodo
+x ∈ n<sub>jn</sub> e non vi riesce deve rilevare tutti gli identificativi del g-nodo x<sub>𝜀</sub> (dal
+livello 𝜀 al livello jn-1) in cui il messaggio si è perso.
 
 ### <a name="Gestione_errori_Modifiche_algoritmi"></a>Modifiche agli algoritmi
 
-Modifichiamo  l'algoritmo di instradamento considerando che si deve comunicare al  nodo originante del messaggio m’ quali g-nodi sono stati raggiunti  correttamente e quali invece sono stati identificati come non affidabili o non usabili nella presente operazione.
+Modifichiamo l'algoritmo di instradamento considerando che si deve comunicare al nodo originante del messaggio
+m’ quali g-nodi sono stati raggiunti correttamente e quali invece sono stati identificati come non affidabili o
+non usabili nella presente operazione.
 
-Modifichiamo inoltre l'algoritmo di calcolo distribuito di H<sub>t</sub>  considerando che deve essere possibile escludere un set di determinati  g-nodi.
+Modifichiamo inoltre l'algoritmo di calcolo distribuito di H<sub>t</sub>  considerando che deve essere possibile
+escludere un set di determinati  g-nodi.
 
-Gli elementi di questo set sono g-nodi che appartengono ad un unico g-nodo *g* di livello *w*, ma ognuno di questi g-nodi *h* può avere un diverso livello *𝜀*, con  *𝜀* < *w*. Menzioniamo il g-nodo *g* di livello *w* perché in alcuni casi il nodo che inizia la ricerca di un hash-node ha interesse a circoscrivere<sup>1</sup> la sua ricerca all'interno di un suo g-nodo di livello *w*. Lo fa passando alla funzione H<sub>t</sub> una tupla che ha un numero di *w* elementi. Come caso particolare possiamo avere *w* = *l*, cioè l'intera rete è il g-nodo contenente i singoli g-nodi di questo set.
+Gli elementi di questo set sono g-nodi che appartengono ad un unico g-nodo *g* di livello *w*, ma ognuno di
+questi g-nodi *h* può avere un diverso livello *𝜀*, con  *𝜀* < *w*. Menzioniamo il g-nodo *g* di livello *w*
+perché in alcuni casi il nodo che inizia la ricerca di un hash-node ha interesse a circoscrivere<sup>1</sup> la
+sua ricerca all'interno di un suo g-nodo di livello *w*. Lo fa passando alla funzione H<sub>t</sub> una tupla
+che ha un numero di *w* elementi. Come caso particolare possiamo avere *w* = *l*, cioè l'intera rete è il g-nodo
+contenente i singoli g-nodi di questo set.
 
-Ogni elemento del suddetto set ha come dati il livello del g-nodo *g* contenitore (*w*) e inoltre la tupla di posizioni del g-nodo *h*, da *𝜀* a *w* - 1. Chiamiamo queste tuple *tuple globali nel g-nodo di ricerca*.
+Ogni elemento del suddetto set ha come dati il livello del g-nodo *g* contenitore (*w*) e inoltre la tupla di
+posizioni del g-nodo *h*, da *𝜀* a *w* - 1. Chiamiamo queste tuple *tuple globali nel g-nodo di ricerca*.
 
-Rendiamo cioè possibile l'esclusione di un g-nodo, di qualsiasi livello, anche se non visibile nella mappa del nodo richiedente, nel mezzo dell'esecuzione del calcolo distribuito di H<sub>t</sub>.
+Rendiamo cioè possibile l'esclusione di un g-nodo, di qualsiasi livello, anche se non visibile nella mappa del
+nodo richiedente, nel mezzo dell'esecuzione del calcolo distribuito di H<sub>t</sub>.
 
-Dal momento che rendiamo possibile l'esclusione *in itinere* anche di un singolo nodo, possiamo anche dare al nodo che riceve il messaggio (quindi dopo che lo ha ricevuto e letto) la possibilità di rifiutarsi di elaborarlo e far proseguire da qui il calcolo distribuito di H<sub>t</sub>. Questo ci consentirà di gestire i casi in cui un nodo voglia demandare al successivo per "mancanza di memoria", come descritto nell'analisi funzionale.
+Dal momento che rendiamo possibile l'esclusione *in itinere* anche di un singolo nodo, possiamo anche dare al
+nodo che riceve il messaggio (quindi dopo che lo ha ricevuto e letto) la possibilità di rifiutarsi di elaborarlo
+e far proseguire da qui il calcolo distribuito di H<sub>t</sub>. Questo ci consentirà di gestire i casi in cui
+un nodo voglia demandare al successivo per "mancanza di memoria", come descritto nell'analisi funzionale.
 
-Inoltre introduciamo la possibilità da parte del nodo che riceve il messaggio di rifiutarsi di elaborarlo e dare istruzione al chiamante di riavviare da capo il calcolo distribuito di H<sub>t</sub>. Questo ci servirà nelle situazioni in cui, come vedremo in seguito, un servente sia costretto a fare lunghe operazioni di recupero dati e nel contempo si voglia garantire la coerenza degli stessi in un database distribuito.
+Inoltre introduciamo la possibilità da parte del nodo che riceve il messaggio di rifiutarsi di elaborarlo e
+dare istruzione al chiamante di riavviare da capo il calcolo distribuito di H<sub>t</sub>. Questo ci servirà
+nelle situazioni in cui, come vedremo in seguito, un servente sia costretto a fare lunghe operazioni di recupero
+dati e nel contempo si voglia garantire la coerenza degli stessi in un database distribuito.
 
 Iniziamo.
 
-Il nodo *n* vuole contattare l'hash-node per la chiave *k* per fare una richiesta *r* al servizio *p*. Il nodo deve avere una istanza della classe PeerClient del servizio p. Questa conosce il `p_id`, come calcolare *x̄* = *h<sub>p</sub>(k)*, il tempo massimo di attesa dell'esecuzione `timeout_exec`, come produrre la richiesta *r* di tipo IPeersRequest e come interpretare la risposta di tipo IPeersResponse. Sempre l'istanza della classe PeerClient, avvia il seguente algoritmo, che in seguito chiamiamo `contact_peer`, che ha come argomenti (`p_id, x̄, r, timeout_exec, exclude_myself`) e restituisce come risultato una istanza di IPeersResponse.
+Il nodo *n* vuole contattare l'hash-node per la chiave *k* per fare una richiesta *r* al servizio *p*. Il nodo
+deve avere una istanza della classe PeerClient del servizio p. Questa conosce il `p_id`, come calcolare
+*x̄* = *h<sub>p</sub>(k)*, il tempo massimo di attesa dell'esecuzione `timeout_exec`, come produrre la richiesta
+*r* di tipo IPeersRequest e come interpretare la risposta di tipo IPeersResponse. Sempre l'istanza della classe
+PeerClient, avvia il seguente algoritmo, che in seguito chiamiamo `contact_peer`, che ha come argomenti
+(`p_id, x̄, r, timeout_exec, exclude_myself`) e restituisce come risultato una istanza di IPeersResponse.
 
 *   Metti `refuse_messages` = "".
-*   Prepara una lista vuota `exclude_gnode_list` di istanze HCoord. Qui finiranno i g-nodi visibili nella mappa di n che andranno esclusi dal calcolo di H<sub>t</sub>.
+*   Prepara una lista vuota `exclude_gnode_list` di istanze HCoord. Qui finiranno i g-nodi visibili nella mappa
+    di n che andranno esclusi dal calcolo di H<sub>t</sub>.
 *   Se il servizio `p_id` è opzionale:
-    *   Mette in `exclude_gnode_list` tutti i g-nodi che stando alle sue conoscenze attuali non partecipano a `p_id`.
+    *   Mette in `exclude_gnode_list` tutti i g-nodi che stando alle sue conoscenze attuali non partecipano
+        a `p_id`.
 *   Se `exclude_myself`, cioè n non intende partecipare (potrebbe volersi escludere anche se p non è opzionale):
     *   Mette se stesso (0, pos\[0]) in `exclude_gnode_list`.
-*   Prepara una lista vuota `exclude_tuple_list`  di tuple globali nel g-nodo di ricerca. Qui finiranno i g-nodi non visibili nella mappa di n  che andranno esclusi in eventuali successivi tentativi di raggiungere  l'hash-node.
-*   Questa lista è implementata in modo tale che quando vi si inserisce una tupla che rappresenta un g-nodo *g* vengono anche rimosse le tuple che rappresentano un g-nodo *g*’ ∈ *g*.
+*   Prepara una lista vuota `exclude_tuple_list`  di tuple globali nel g-nodo di ricerca. Qui finiranno i
+    g-nodi non visibili nella mappa di n  che andranno esclusi in eventuali successivi tentativi di raggiungere
+    l'hash-node.  
+    Questa lista è implementata in modo tale che quando vi si inserisce una tupla che rappresenta un g-nodo
+    *g* vengono anche rimosse le tuple che rappresentano un g-nodo *g*’ ∈ *g*.
 *   Fino a che non completa (ciclo 1):
     *   Calcola x = H<sub>t</sub>(`x̄, exclude_list=exclude_gnode_list`). Trova x<sub>j</sub>.
     *   In alternativa il calcolo di H<sub>t</sub> può restituire lo stesso nodo n.
-        *   In questo caso come detto prima l'algoritmo prova ad eseguire il metodo, ma è prevista la possibilità che il modulo del servizio specifico, analizzando la richiesta, si rifiuti di elaborarla (PeersRefuseExecutionError). Oppure che dia istruzione di riavviare da capo il calcolo di H<sub>t</sub> (PeersRedoFromStartError).
+        *   In questo caso come detto prima l'algoritmo prova ad eseguire il metodo, ma è prevista la possibilità
+            che il modulo del servizio specifico, analizzando la richiesta, si rifiuti di elaborarla
+            (PeersRefuseExecutionError). Oppure che dia istruzione di riavviare da capo il calcolo di H<sub>t</sub>
+            (PeersRedoFromStartError).
         *   Se si riceve l'eccezione PeersRedoFromStartError:
             *   Rilancia dall'inizio l'algoritmo `contact_peer`.
             *   L'algoritmo termina.
@@ -198,9 +308,16 @@ Il nodo *n* vuole contattare l'hash-node per la chiave *k* per fare una richiest
             *   Viene rilanciata una eccezione PeersDatabaseError.
         *   Altrimenti:
             *   Viene rilanciata una eccezione PeersNoParticipantsInNetworkError.
-    *   Prepara il messaggio m’ (generando qui il suo `msg_id`) da instradare verso x<sub>j</sub> come avevamo visto prima. Inoltre nel messaggio m’ aggiunge la lista `m’.exclude_tuple_list`  di tuple interne ad un g-nodo. Il livello del g-nodo per tutte le tuple  in questa lista è j. Infatti in questa lista il nodo n mette tutte le  tuple che trova nella sua lista `exclude_tuple_list` che sono riferite a  g-nodi interni a x<sub>j</sub>.
-    *   Come visto in precedenza instrada al miglior gateway verso x<sub>j</sub>  il messaggio m’. Come visto in precedenza questo include il fatto di  rimuovere i gateway che eventualmente falliscono fino alla possibilità  di ripartire dal calcolo di H<sub>t</sub>.
-    *   Come visto in precedenza si mette in attesa di risposte per un tempo basato sulla dimensione stimata del g-nodo n<sub>j+1</sub> (ciclo 2). Si possono verificare questi casi:
+    *   Prepara il messaggio m’ (generando qui il suo `msg_id`) da instradare verso x<sub>j</sub> come avevamo
+        visto prima. Inoltre nel messaggio m’ aggiunge la lista `m’.exclude_tuple_list` di tuple interne ad un
+        g-nodo. Il livello del g-nodo per tutte le tuple  in questa lista è j. Infatti in questa lista il nodo
+        n mette tutte le  tuple che trova nella sua lista `exclude_tuple_list` che sono riferite a  g-nodi
+        interni a x<sub>j</sub>.
+    *   Come visto in precedenza instrada al miglior gateway verso x<sub>j</sub>  il messaggio m’. Come visto
+        in precedenza questo include il fatto di  rimuovere i gateway che eventualmente falliscono fino alla
+        possibilità  di ripartire dal calcolo di H<sub>t</sub>.
+    *   Come visto in precedenza si mette in attesa di risposte per un tempo basato sulla dimensione stimata
+        del g-nodo n<sub>j+1</sub> (ciclo 2). Si possono verificare questi casi:
         1.  Riceve un messaggio che gli segnala come prossima destinazione di m’ il g-nodo x<sub>k</sub> con k < j.
             *   Tiene a mente quale sia la destinazione con il valore di k più piccolo ricevuta (all'inizio era j).
             *   Continua ad aspettare, sempre per un tempo basato sulla dimensione stimata del g-nodo n<sub>j+1</sub>.
@@ -211,7 +328,8 @@ Il nodo *n* vuole contattare l'hash-node per la chiave *k* per fare una richiest
                 *   Inserisce il g-nodo in `exclude_gnode_list` come istanza di HCoord.
             *   Inserisce il g-nodo in `exclude_tuple_list` come tupla globale nel g-nodo di ricerca.
             *   Non aspetta altri messaggi, esce dal ciclo 2.
-        1.  Riceve un messaggio che gli segnala che il g-nodo  x<sub>k</sub>, con k ≤ j, non sa, viste le esclusioni, a chi inoltrare.
+        1.  Riceve un messaggio che gli segnala che il g-nodo  x<sub>k</sub>, con k ≤ j, non sa, viste le esclusioni,
+            a chi inoltrare.
             *   Se  x<sub>k</sub> è visibile nella mappa di n, cioè se k = j:
                 *   Inserisce il g-nodo in `exclude_gnode_list` come istanza di HCoord.
             *   Inserisce il g-nodo in `exclude_tuple_list` come tupla globale nel g-nodo di ricerca.
@@ -219,20 +337,24 @@ Il nodo *n* vuole contattare l'hash-node per la chiave *k* per fare una richiest
         1.  Viene contattato dal nodo destinatario  x<sub>0</sub>, che gli chiede il messaggio.
             *   Invia il messaggio.
             *   Considera 0 come il valore di k più piccolo ricevuto.
-            *   Aspetta altri messaggi, ora per il tempo `timeout_exec`. Accetta da adesso solo il messaggio di risposta, gli altri li ignora e torna ad attendere.
+            *   Aspetta altri messaggi, ora per il tempo `timeout_exec`. Accetta da adesso solo il messaggio di
+                risposta, gli altri li ignora e torna ad attendere.
         1.  Viene contattato da x<sub>0</sub>, che gli invia la risposta.
-            *   Accetta questo messaggio solo se aveva comunicato la richiesta a x<sub>0</sub> altrimenti lo ignora e torna ad attendere.
+            *   Accetta questo messaggio solo se aveva comunicato la richiesta a x<sub>0</sub> altrimenti lo ignora
+                e torna ad attendere.
             *   Riceve la risposta.
             *   Non aspetta altri messaggi, esce dal ciclo 2 e poi uscirà dal ciclo 1.
         1.  Viene contattato da x<sub>0</sub>, che rifiuta di elaborare la richiesta.
-            *   Accetta questo messaggio solo se aveva comunicato la richiesta a x<sub>0</sub> altrimenti lo ignora e torna ad attendere.
+            *   Accetta questo messaggio solo se aveva comunicato la richiesta a x<sub>0</sub> altrimenti lo ignora
+                e torna ad attendere.
             *   Se  x<sub>0</sub> è visibile nella mappa di n, cioè se 0 = j:
                 *   Inserisce il g-nodo in `exclude_gnode_list` come istanza di HCoord.
             *   Inserisce il g-nodo in `exclude_tuple_list` come tupla globale nel g-nodo di ricerca.
             *   Aggiungi a `refuse_messages` il messaggio di questo rifiuto.
             *   Non aspetta altri messaggi, esce dal ciclo 2.
         1.  Viene contattato da x<sub>0</sub>, che lo istruisce di ricominciare da capo il calcolo distribuito di H<sub>t</sub>.
-            *   Accetta questo messaggio solo se aveva comunicato la richiesta a x<sub>0</sub> altrimenti lo ignora e torna ad attendere.
+            *   Accetta questo messaggio solo se aveva comunicato la richiesta a x<sub>0</sub> altrimenti lo ignora
+                e torna ad attendere.
             *   Rilancia dall'inizio l'algoritmo `contact_peer`.
         1.  Il tempo scade.
             *   Considera il più piccolo k ricevuto.
@@ -247,79 +369,161 @@ Durante l'istradamento del messaggio m’ il nodo *v* riceve il messaggio.
 
 *   Il nodo v confronta il proprio indirizzo con le coordinate presenti in m’.
 *   Se `v.pos[m’.lvl]` ≠ m’.pos:
-    *   v  instrada m’ verso (m’.lvl, m’.pos) e questo avviene come detto in  precedenza, con la possibilità di escludere i gateway che falliscono.
+    *   v  instrada m’ verso (m’.lvl, m’.pos) e questo avviene come detto in  precedenza, con la possibilità di
+        escludere i gateway che falliscono.
 *   Altrimenti:
     *   Recupera il servizio p da `m’.p_id`.
     *   Se il servizio p è opzionale e stando alle sue conoscenze il suo g-nodo di livello m’.lvl non partecipa a p:
-        *   Il  nodo v si connette via TCP ad  n attraverso la tupla m’.n e gli  comunica (senza necessitare alcuna risposta) che il suo g-nodo di  livello m’.lvl non partecipa a p. Indica in questo messaggio  l'identificativo `m’.msg_id` e la tupla che identifica all'interno di n<sub>j+1</sub> il g-nodo di v, cioè la tupla da m’.lvl a j dove *j* è il livello del g-nodo primo obiettivo. j+1 = `m’.n.tuple.size`.
+        *   Il  nodo v si connette via TCP ad  n attraverso la tupla m’.n e gli  comunica (senza necessitare alcuna
+            risposta) che il suo g-nodo di  livello m’.lvl non partecipa a p. Indica in questo messaggio
+            l'identificativo `m’.msg_id` e la tupla che identifica all'interno di n<sub>j+1</sub> il g-nodo di
+            v, cioè la tupla da m’.lvl a j dove *j* è il livello del g-nodo primo obiettivo. j+1 = `m’.n.tuple.size`.
     *   Altrimenti:
         *   Prepara una lista vuota `exclude_gnode_list` di istanze HCoord.
         *   Se il servizio p è opzionale:
-            *   Mette  in `exclude_gnode_list` tutti i g-nodi di livello inferiore a m’.lvl che  stando alle sue conoscenze attuali non partecipano a p.
+            *   Mette  in `exclude_gnode_list` tutti i g-nodi di livello inferiore a m’.lvl che  stando alle sue
+                conoscenze attuali non partecipano a p.
         *   Se n non intende partecipare (potrebbe volersi escludere anche se p non è opzionale):
             *   Mette se stesso (0, pos\[0]) in `exclude_gnode_list`.
-        *   Esamina la lista `m’.exclude_tuple_list` di tuple interne. Se vi sono delle tuple che identificano dei g-nodi visibili nella mappa di v li inserisce in `exclude_gnode_list` come istanza di HCoord.
-        *   Calcola x = H<sub>t</sub>(`m’.x̄,  exclude_list=exclude_gnode_list`); come conseguenza del fatto che la  tupla m’.x̄ ha solo m’.lvl elementi la ricerca è ristretta al g-nodo di  livello m’.lvl. Il risultato di questo calcolo può essere di 3 tipi:
+        *   Esamina la lista `m’.exclude_tuple_list` di tuple interne. Se vi sono delle tuple che identificano
+            dei g-nodi visibili nella mappa di v li inserisce in `exclude_gnode_list` come istanza di HCoord.
+        *   Calcola x = H<sub>t</sub>(`m’.x̄,  exclude_list=exclude_gnode_list`); come conseguenza del fatto che la
+            tupla m’.x̄ ha solo m’.lvl elementi la ricerca è ristretta al g-nodo di  livello m’.lvl. Il risultato di
+            questo calcolo può essere di 3 tipi:
             1.  Trova x<sub>k</sub> con k < j.
-                *   Il nodo v duplica il messaggio m’ in m’’, come descritto in precedenza. Inoltre nel messaggio m’’ aggiunge la lista `m’’.exclude_tuple_list`  di tuple interne ad un g-nodo. Il livello del g-nodo per tutte le tuple  in questa lista è k. Infatti in questa lista il nodo v mette tutte le  tuple che trova nella lista `m’.exclude_tuple_list` che sono riferite a  g-nodi interni a x<sub>k</sub>.
+                *   Il nodo v duplica il messaggio m’ in m’’, come descritto in precedenza. Inoltre nel messaggio
+                    m’’ aggiunge la lista `m’’.exclude_tuple_list`  di tuple interne ad un g-nodo. Il livello del
+                    g-nodo per tutte le tuple  in questa lista è k. Infatti in questa lista il nodo v mette tutte
+                    le tuple che trova nella lista `m’.exclude_tuple_list` che sono riferite a g-nodi interni
+                    a x<sub>k</sub>.
                 *   Il nodo v instrada m’’ verso il nuovo obiettivo come detto in precedenza.
-                *   Inoltre il nodo v si connette via TCP ad  n attraverso la tupla m’.n e gli comunica (senza necessitare alcuna risposta) che x<sub>k</sub>  è il nuovo obiettivo del messaggio. Indica in questo messaggio  l'identificativo `m’.msg_id` e la tupla che identifica all'interno di n<sub>j+1</sub> il g-nodo di x<sub>k</sub>, cioè la tupla da k a j dove *j* è il livello del g-nodo primo obiettivo.
+                *   Inoltre il nodo v si connette via TCP ad  n attraverso la tupla m’.n e gli comunica (senza
+                    necessitare alcuna risposta) che x<sub>k</sub>  è il nuovo obiettivo del messaggio. Indica in
+                    questo messaggio  l'identificativo `m’.msg_id` e la tupla che identifica all'interno di
+                    n<sub>j+1</sub> il g-nodo di x<sub>k</sub>, cioè la tupla da k a j dove *j* è il livello del
+                    g-nodo primo obiettivo.
             1.  Trova lo stesso nodo v.
-                *   Il nodo v si connette via TCP ad  n attraverso la tupla m’.n e questi gli passa la richiesta, come descritto prima. Il nodo v, però, ora ha la possibilità di elaborarla **oppure** di rifiutare l'elaborazione per mancanza di memoria o perché non esaustivo **oppure** di istruire il client di riavviare il calcolo distribuito di H<sub>t</sub>. Il nodo v comunica a n il risultato o il rifiuto.
+                *   Il nodo v si connette via TCP ad  n attraverso la tupla m’.n e questi gli passa la richiesta,
+                    come descritto prima. Il nodo v, però, ora ha la possibilità di elaborarla **oppure** di
+                    rifiutare l'elaborazione per mancanza di memoria o perché non esaustivo **oppure** di istruire
+                    il client di riavviare il calcolo distribuito di H<sub>t</sub>. Il nodo v comunica a n il risultato o il rifiuto.
             1.  Restituisce l'eccezione nessun nodo.
-                *   Il  nodo v si connette via TCP ad  n attraverso la tupla m’.n e gli  comunica (senza necessitare alcuna risposta) che il suo g-nodo di  livello m’.lvl non ha trovato una destinazione a motivo delle esclusioni  imposte. Indica in questo messaggio l'identificativo `m’.msg_id` e la  tupla che identifica all'interno di n<sub>j+1</sub> il g-nodo di v cioè la tupla da m’.lvl a j dove *j* è il livello del g-nodo primo obiettivo.
+                *   Il  nodo v si connette via TCP ad  n attraverso la tupla m’.n e gli  comunica (senza
+                    necessitare alcuna risposta) che il suo g-nodo di  livello m’.lvl non ha trovato una
+                    destinazione a motivo delle esclusioni  imposte. Indica in questo messaggio l'identificativo
+                    `m’.msg_id` e la  tupla che identifica all'interno di n<sub>j+1</sub> il g-nodo di v cioè la
+                    tupla da m’.lvl a j dove *j* è il livello del g-nodo primo obiettivo.
 
 * * *
 
 Note:
 
-**Nota 1**. Quando la tupla passata alla funzione H<sub>t</sub> ha un numero di *w* elementi la ricerca è circoscritta al g-nodo di livello *w*. Soddisfare questo requisito è banale: basta escludere dalla ricerca iniziale fatta dal nodo *n* tutti i g-nodi esterni al g-nodo n<sub>w</sub>.
+**Nota 1**. Quando la tupla passata alla funzione H<sub>t</sub> ha un numero di *w* elementi la ricerca è circoscritta
+al g-nodo di livello *w*. Soddisfare questo requisito è banale: basta escludere dalla ricerca iniziale fatta dal nodo
+*n* tutti i g-nodi esterni al g-nodo n<sub>w</sub>.
 
 ## <a name="Servizi_opzionali_Mappa_partecipanti"></a>Mappa dei partecipanti ai servizi opzionali
 
-Di default un nodo non partecipa ad un servizio  opzionale. Si ricordi che un nodo non ha bisogno di partecipare ad un  servizio opzionale per poter chiedere i servizi, ma solo se vuole  fornirli.
+Di default un nodo non partecipa ad un servizio  opzionale. Si ricordi che un nodo non ha bisogno di partecipare ad un
+servizio opzionale per poter chiedere i servizi, ma solo se vuole  fornirli.
 
-Quando un nodo *v*  vuole entrare in un servizio opzionale come partecipante deve  comunicarlo ai suoi vicini perché l'informazione si propaghi per tutta  la rete.
+Quando un nodo *v*  vuole entrare in un servizio opzionale come partecipante deve  comunicarlo ai suoi vicini perché
+l'informazione si propaghi per tutta  la rete.
 
-Quando  v volesse uscire da un servizio non è necessario che lo comunichi  subito. Grazie al meccanismo di fault tolerance introdotto dal modulo PeerServices, nel momento in cui una richiesta arrivi da un nodo *n* al nodo v, questo comunicherà a n che non partecipa al servizio.
+Quando  v volesse uscire da un servizio non è necessario che lo comunichi  subito. Grazie al meccanismo di fault tolerance
+introdotto dal modulo PeerServices, nel momento in cui una richiesta arrivi da un nodo *n* al nodo v, questo comunicherà
+a n che non partecipa al servizio.
 
-Come  regola generale, si consideri che divulgare l'informazione che un nodo o  un g-nodo partecipano al servizio non è mai dannoso. Supponiamo che si  sparge la voce che il g-nodo *u<sub>j</sub>* partecipa al servizio *p*. Ad un certo momento il nodo n, n ∉ u<sub>j</sub>, vuole salvare un record in p con chiave *k* e il messaggio viene inoltrato fino a u<sub>j</sub> che risulta il più vicino partecipante a *h<sub>p</sub>(k)*.
+Come  regola generale, si consideri che divulgare l'informazione che un nodo o  un g-nodo partecipano al servizio non è
+mai dannoso. Supponiamo che si  sparge la voce che il g-nodo *u<sub>j</sub>* partecipa al servizio *p*. Ad un certo
+momento il nodo n, n ∉ u<sub>j</sub>, vuole salvare un record in p con chiave *k* e il messaggio viene inoltrato fino
+a u<sub>j</sub> che risulta il più vicino partecipante a *h<sub>p</sub>(k)*.
 
-Sia *w* il border nodo di u<sub>j</sub> che riveve il messaggio, w ∈ u<sub>j</sub>. Supponiamo che w ritiene che u<sub>j</sub> partecipa al servizio in quanto ritiene che u<sub>k</sub> (con j > k ≥ 0) che è nella sua mappa (vale a dire w ∈ u<sub>k+1</sub>, w ∉ u<sub>k</sub>) partecipa. Allora w inoltra il messaggio verso u<sub>k</sub>.
+Sia *w* il border nodo di u<sub>j</sub> che riveve il messaggio, w ∈ u<sub>j</sub>. Supponiamo che w ritiene che
+u<sub>j</sub> partecipa al servizio in quanto ritiene che u<sub>k</sub> (con j > k ≥ 0) che è nella sua mappa (vale
+a dire w ∈ u<sub>k+1</sub>, w ∉ u<sub>k</sub>) partecipa. Allora w inoltra il messaggio verso u<sub>k</sub>.
 
-Sia *w̄* il border nodo di u<sub>k</sub> che riceve il messaggio. Supponiamo che w̄ sa che u<sub>k</sub>  non partecipa al servizio. Allora  w̄ contatta il nodo n e gli dice,  con la tupla dal livello k fino al livello comune con n, che u<sub>k</sub>  non partecipa al servizio. A questo punto n può memorizzare questa  conoscenza. Inoltre n ritenterà indicando nel messaggio che u<sub>k</sub> va escluso in quanto non partecipante. Quando il messaggio giunge a w, il border nodo di u<sub>j</sub>, questo scopre che u<sub>k</sub> non partecipa al servizio e da questo conclude che nemmeno u<sub>j</sub>, in quanto l'unico che pensava partecipante era u<sub>k</sub>. Allora w contatta il nodo n e gli dice, con la tupla dal livello j fino al livello comune con n, che u<sub>j</sub>  non partecipa al servizio. A questo punto n può memorizzare questa  conoscenza. Infine n ritenterà con le sue nuove conoscenze, quindi  contatterà un nodo veramente partecipante e memorizzerà in esso il  record.
+Sia *w̄* il border nodo di u<sub>k</sub> che riceve il messaggio. Supponiamo che w̄ sa che u<sub>k</sub>  non partecipa
+al servizio. Allora  w̄ contatta il nodo n e gli dice,  con la tupla dal livello k fino al livello comune con n, che
+u<sub>k</sub>  non partecipa al servizio. A questo punto n può memorizzare questa  conoscenza. Inoltre n ritenterà
+indicando nel messaggio che u<sub>k</sub> va escluso in quanto non partecipante. Quando il messaggio giunge a w, il
+border nodo di u<sub>j</sub>, questo scopre che u<sub>k</sub> non partecipa al servizio e da questo conclude che
+nemmeno u<sub>j</sub>, in quanto l'unico che pensava partecipante era u<sub>k</sub>. Allora w contatta il nodo n e
+gli dice, con la tupla dal livello j fino al livello comune con n, che u<sub>j</sub>  non partecipa al servizio.
+A questo punto n può memorizzare questa  conoscenza. Infine n ritenterà con le sue nuove conoscenze, quindi
+contatterà un nodo veramente partecipante e memorizzerà in esso il record.
 
-Supponiamo  ora che un nodo x vuole leggere il record con chiave k. Analogamente a  quanto visto sopra, sebbene x possa inizialmente ritenere erroneamente  che un g-nodo (ad esempio u<sub>j</sub>) partecipi al  servizio, x cercherà di contattarlo e alla fine avrà aggiornate le sue  conoscenze e contatterà il vero partecipante e leggerà il record.  Quindi, nessun danno deriva dal supporre che un g-nodo partecipi.
+Supponiamo  ora che un nodo x vuole leggere il record con chiave k. Analogamente a  quanto visto sopra, sebbene
+x possa inizialmente ritenere erroneamente  che un g-nodo (ad esempio u<sub>j</sub>) partecipi al  servizio, x
+cercherà di contattarlo e alla fine avrà aggiornate le sue  conoscenze e contatterà il vero partecipante e leggerà
+il record.  Quindi, nessun danno deriva dal supporre che un g-nodo partecipi.
 
-Diversamente,  supporre che un g-nodo non partecipa, mentre questo partecipa e qualcun  altro lo sa, produce malfunzionamenti nel servizio. Sia u<sub>j</sub>  partecipante al servizio p. Sia n un nodo che lo sa, mentre x lo  ritiene non partecipante. Supponiamo che l'indirizzo più vicino a *h<sub>p</sub>(k)* sia proprio u<sub>j</sub>. Allora se n vuole salvare un record con chiave k in p lo salverà in u<sub>j</sub>, ma se x lo vorrà leggere non lo cercherà in u<sub>j</sub>, bensì altrove.
+Diversamente,  supporre che un g-nodo non partecipa, mentre questo partecipa e qualcun  altro lo sa, produce
+malfunzionamenti nel servizio. Sia u<sub>j</sub>  partecipante al servizio p. Sia n un nodo che lo sa, mentre
+x lo  ritiene non partecipante. Supponiamo che l'indirizzo più vicino a *h<sub>p</sub>(k)* sia proprio u<sub>j</sub>.
+Allora se n vuole salvare un record con chiave k in p lo salverà in u<sub>j</sub>, ma se x lo vorrà leggere non
+lo cercherà in u<sub>j</sub>, bensì altrove.
 
-Il  meccanismo più robusto potrebbe essere quindi quello di considerare  sempre ogni nodo o g-nodo esistente nella rete come partecipante a tutti  i servizi, fino a prova contraria data nel momento in cui si fa una  richiesta. Anche in seguito, a richiesta soddisfatta, si dovrebbe subito  supporre che i g-nodi esclusi potrebbero essere nuovamente entrati nel  servizio.
+Il  meccanismo più robusto potrebbe essere quindi quello di considerare  sempre ogni nodo o g-nodo esistente
+nella rete come partecipante a tutti  i servizi, fino a prova contraria data nel momento in cui si fa una
+richiesta. Anche in seguito, a richiesta soddisfatta, si dovrebbe subito  supporre che i g-nodi esclusi potrebbero
+essere nuovamente entrati nel servizio.
 
-Questo  meccanismo sarebbe robusto ma introdurrebbe pesantezza e notevoli  ritardi soprattutto in servizi in cui partecipano pochissimi nodi.
+Questo  meccanismo sarebbe robusto ma introdurrebbe pesantezza e notevoli  ritardi soprattutto in servizi in
+cui partecipano pochissimi nodi.
 
 ### <a name="Servizi_opzionali_Descrizione_meccanismo"></a>Descrizione del meccanismo individuato
 
-Sia *n* un nodo appena entrato in un g-nodo *g* di livello *l*. Esso chiede ad un vicino che è anche membro del g-nodo *g* le mappe dei partecipanti ai servizi opzionali dal livello *l* in su, con il metodo remoto `get_participant_set`.
+Sia *n* un nodo appena entrato in un g-nodo *g* di livello *l*. Esso chiede ad un vicino che è anche membro
+del g-nodo *g* le mappe dei partecipanti ai servizi opzionali dal livello *l* in su, con il metodo remoto
+`get_participant_set`.
 
-Il nodo n considera un generico g-nodo *g*, in assenza di comunicazioni a riguardo di g, non partecipante  ad un servizio opzionale. Può venire a conoscenza della partecipazione  solo quando riceve un messaggio del flood che viene illustrato sotto. A  quel punto lo considera partecipante.
+Il nodo n considera un generico g-nodo *g*, in assenza di comunicazioni a riguardo di g, non partecipante
+ad un servizio opzionale. Può venire a conoscenza della partecipazione solo quando riceve un messaggio del
+flood che viene illustrato sotto. A quel punto lo considera partecipante.
 
 Per scoprire che un g-nodo è non partecipante ci saranno due possibilità.
 
-Sia *n* un nodo che avvia per sé una richiesta *r* al servizio *p*. Il nodo *n* ritiene che *H<sub>t</sub>(h<sub>p</sub>(k))* sia il g-nodo *g* visibile nella sua mappa quindi invia il messaggio m’ verso *g*. Dopo qualche istante riceve la segnalazione che *g* non partecipa al servizio, quindi ora considera *g* non partecipante. Questa era la prima possibilità.
+Sia *n* un nodo che avvia per sé una richiesta *r* al servizio *p*. Il nodo *n* ritiene che
+*H<sub>t</sub>(h<sub>p</sub>(k))* sia il g-nodo *g* visibile nella sua mappa quindi invia il messaggio
+m’ verso *g*. Dopo qualche istante riceve la segnalazione che *g* non partecipa al servizio, quindi ora
+considera *g* non partecipante. Questa era la prima possibilità.
 
-Supponiamo invece che un tentativo da parte di *n* di contattare un hash-node fallisce perché viene segnalato che un certo g-nodo *h* ritenuto partecipante in realtà non partecipa. Può essere *h* visibile nella mappa di *n* oppure non visibile. Comunque il nodo *n* aggiunge al messaggio m’ per i prossimi tentativi una informazione che consente di identificare il g-nodo *h* all'interno della rete (oppure all'interno del g-nodo nel quale la ricerca dell'hash-node era eventualmente circoscritta).
+Supponiamo invece che un tentativo da parte di *n* di contattare un hash-node fallisce perché viene
+segnalato che un certo g-nodo *h* ritenuto partecipante in realtà non partecipa. Può essere *h* visibile
+nella mappa di *n* oppure non visibile. Comunque il nodo *n* aggiunge al messaggio m’ per i prossimi
+tentativi una informazione che consente di identificare il g-nodo *h* all'interno della rete (oppure
+all'interno del g-nodo nel quale la ricerca dell'hash-node era eventualmente circoscritta).
 
-Ora il nodo *n* invia il messaggio m’ per un nuovo tentativo di raggiungere l'hash-node. Sia *v* un generico nodo che instrada questo messaggio. Il nodo *v* esaminando il dato di cui sopra nel messaggio, individua il g-nodo *h* che potrebbe essere visibile nella sua mappa. Supponiamo che tale g-nodo era considerato da *v* partecipante al servizio *p*. Ora *v* ha una indicazione diversa. Allora per averne conferma avvierà da lì a breve una finta richiesta verso un nodo a caso in *h*. Se riceve la segnalazione che *h* non partecipa da ora lo considera non partecipante. Questa era la seconda possibilità.
+Ora il nodo *n* invia il messaggio m’ per un nuovo tentativo di raggiungere l'hash-node. Sia *v* un
+generico nodo che instrada questo messaggio. Il nodo *v* esaminando il dato di cui sopra nel messaggio,
+individua il g-nodo *h* che potrebbe essere visibile nella sua mappa. Supponiamo che tale g-nodo era
+considerato da *v* partecipante al servizio *p*. Ora *v* ha una indicazione diversa. Allora per averne
+conferma avvierà da lì a breve una finta richiesta verso un nodo a caso in *h*. Se riceve la segnalazione
+che *h* non partecipa da ora lo considera non partecipante. Questa era la seconda possibilità.
 
 ### <a name="Servizi_opzionali_Algoritmi_divulgazione_non_partecipazione"></a>Modifiche agli algoritmi per la divulgazione della non partecipazione
 
-Sia *n* un nodo che tenta di inviare un messaggio ad un certo hash-node in un servizio opzionale *p*. Supponiamo che n riceve l'informazione che un certo g-nodo *g*  non partecipa al servizio. Può essere g visibile nella mappa di n  oppure non visibile. In ogni caso il nodo n sta per inviare un nuovo  messaggio alla ricerca del suo hash-node. Ne approfittiamo per  aggiungere al messaggio l'informazione sulla non partecipazione di g,  che può essere di interesse per i nodi che instradano il messaggio.
+Sia *n* un nodo che tenta di inviare un messaggio ad un certo hash-node in un servizio opzionale *p*.
+Supponiamo che n riceve l'informazione che un certo g-nodo *g*  non partecipa al servizio. Può essere g
+visibile nella mappa di n  oppure non visibile. In ogni caso il nodo n sta per inviare un nuovo
+messaggio alla ricerca del suo hash-node. Ne approfittiamo per  aggiungere al messaggio l'informazione
+sulla non partecipazione di g,  che può essere di interesse per i nodi che instradano il messaggio.
 
-Il nodo n riceve questa informazione come tupla interna ad un g-nodo di livello *j*, con *j*﹤*w*. Salva questa tupla in una lista `non_participant_tuple_list`  di tuple globali nel g-nodo di ricerca di livello *w*. Come per la lista `exclude_tuple_list`, anche questa è  implementata in modo tale che quando vi si inserisce una tupla che  rappresenta un g-nodo *g* vengono anche rimosse le tuple che rappresentano un g-nodo *g*’ ∈ *g*. Anche questa lista inoltre viene istanziata all'inizio del tentativo di instradare un messaggio e rimane in vita solo fino a tentativo esaurito.
+Il nodo n riceve questa informazione come tupla interna ad un g-nodo di livello *j*, con *j*﹤*w*. Salva
+questa tupla in una lista `non_participant_tuple_list`  di tuple globali nel g-nodo di ricerca di
+livello *w*. Come per la lista `exclude_tuple_list`, anche questa è  implementata in modo tale che
+quando vi si inserisce una tupla che  rappresenta un g-nodo *g* vengono anche rimosse le tuple che
+rappresentano un g-nodo *g*’ ∈ *g*. Anche questa lista inoltre viene istanziata all'inizio del tentativo
+di instradare un messaggio e rimane in vita solo fino a tentativo esaurito.
 
-Supponiamo ora che il nodo n avvii un messaggio verso il g-nodo x<sub>j</sub> all'interno di n<sub>j+1</sub>. Allora aggiunge a m’ la lista `m’.non_participant_tuple_list` di tuple globali mettendovi quelle tuple *t* ∈ `non_participant_tuple_list` che rappresentano un g-nodo *g* tale che sia visibile in alcuni nodi dentro n<sub>j+1</sub>.
+Supponiamo ora che il nodo n avvii un messaggio verso il g-nodo x<sub>j</sub> all'interno di n<sub>j+1</sub>.
+Allora aggiunge a m’ la lista `m’.non_participant_tuple_list` di tuple globali mettendovi quelle tuple
+*t* ∈ `non_participant_tuple_list` che rappresentano un g-nodo *g* tale che sia visibile in alcuni nodi
+dentro n<sub>j+1</sub>.
 
-Per i g-nodi g con livello l ≥ j questi devono avere il loro g-nodo superiore, al livello l+1, in comune con n. Per i g-nodi g con livello l﹤j questi devono avere il loro g-nodo di livello j+1 in comune con n.
+Per i g-nodi g con livello l ≥ j questi devono avere il loro g-nodo superiore, al livello l+1, in comune
+con n. Per i g-nodi g con livello l﹤j questi devono avere il loro g-nodo di livello j+1 in comune con n.
 
 Quando un nodo *v* riceve m’:
 
@@ -327,7 +531,9 @@ Quando un nodo *v* riceve m’:
 *   Se v deve solo inoltrare m’:
     *   Inoltra m’ come in precedenza.
 *   Altrimenti, cioè deve duplicare m’ in m’’ e inviarlo verso x<sub>k</sub> con k﹤j:
-    *   Copia in `m’’.non_participant_tuple_list` solo quelle tuple *t* ∈ `m’.non_participant_tuple_list` che rappresentano un g-nodo *g* tale che sia visibile in alcuni nodi dentro v<sub>k+1</sub>. Cioè ... vedi sopra.
+    *   Copia in `m’’.non_participant_tuple_list` solo quelle tuple *t* ∈ `m’.non_participant_tuple_list`
+        che rappresentano un g-nodo *g* tale che sia visibile in alcuni nodi dentro v<sub>k+1</sub>.
+        Cioè ... vedi sopra.
     *   Invia m’’ come in precedenza.
 *   Se p è opzionale:
     *   Per ogni tupla *t* in `m’.non_participant_tuple_list`:
@@ -335,19 +541,23 @@ Quando un nodo *v* riceve m’:
         *   Se g è visibile nella mappa di v:
             *   Se secondo le conoscenze di v, g partecipa al servizio p:
                 *   In una tasklet:
-                    *   v  avvia una finta richiesta verso un nodo a caso in g. Se riceve la  segnalazione che g non partecipa da ora lo considera non partecipante.
+                    *   v  avvia una finta richiesta verso un nodo a caso in g. Se riceve la
+                        segnalazione che g non partecipa da ora lo considera non partecipante.
 
 ### <a name="Servizi_opzionali_Algoritmi_divulgazione_partecipazione"></a>Divulgazione della partecipazione
 
-Segue  un tentativo di definire un algoritmo distribuito che possa fornire una  notifica di partecipazione a tutta la rete con un buon livello di  affidabilità, che sia leggero in termini di traffico.
+Segue un tentativo di definire un algoritmo distribuito che possa fornire una notifica di partecipazione
+a tutta la rete con un buon livello di  affidabilità, che sia leggero in termini di traffico.
 
 Sia *n* un nodo che avvia la sua partecipazione ad un servizio *p*.
 
 *   Per 5 volte:
-    *   n segnala ai suoi vicini la sua tupla n<sub>0</sub>·n<sub>1</sub>·...·n<sub>l-1</sub> (con *l* = numero di livelli) e il servizio a cui partecipa.
+    *   n segnala ai suoi vicini la sua tupla n<sub>0</sub>·n<sub>1</sub>·...·n<sub>l-1</sub> (con
+        *l* = numero di livelli) e il servizio a cui partecipa.
     *   n aspetta 300 secondi.
 *   Per sempre:
-    *   n segnala ai suoi vicini la sua tupla n<sub>0</sub>·n<sub>1</sub>·...·n<sub>l-1</sub> (con *l* = numero di livelli) e il servizio a cui partecipa.
+    *   n segnala ai suoi vicini la sua tupla n<sub>0</sub>·n<sub>1</sub>·...·n<sub>l-1</sub> (con
+        *l* = numero di livelli) e il servizio a cui partecipa.
     *   n aspetta 1 giorno + random(1..24*60*60) secondi.
 
 Sia *v* un nodo che riceve un messaggio di partecipazione ad un servizio *p*.
