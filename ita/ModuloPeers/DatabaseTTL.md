@@ -10,19 +10,31 @@
     1.  [Recupero preventivo delle chiavi](#Recupero_preventivo)
 1.  [Algoritmi](#Algoritmi)
 
-Implementiamo un servizio che mantiene un database distribuito. Ogni record in esso ha un Time To Live. Le chiavi sono in un set che può essere molto grande.
+Implementiamo un servizio che mantiene un database distribuito. Ogni record in esso ha un Time To Live.
+Le chiavi sono in un set che può essere molto grande.
 
-Ogni nodo partecipante può avere un limite di memoria, oltre il quale il nodo rifiuterà di immagazzinare altri record.
+Ogni nodo partecipante può avere un limite di memoria, oltre il quale il nodo rifiuterà di immagazzinare
+altri record.
 
-In questo servizio ipotiziamo che non ci siano vincoli per il client, cioè qualsiasi operazione è permessa (nei limiti del dominio delle chiavi e dei valori) senza alcun tipo di autorizzazione. Comunque risulterà facile implementare in un servizio analogo qualsiasi tipo di vincolo da parte del server; basterà codificare nella classe del valore di ritorno le eccezioni previste dal servizio.
+In questo servizio ipotiziamo che non ci siano vincoli per il client, cioè qualsiasi operazione è permessa
+(nei limiti del dominio delle chiavi e dei valori) senza alcun tipo di autorizzazione. Comunque risulterà
+facile implementare in un servizio analogo qualsiasi tipo di vincolo da parte del server; basterà
+codificare nella classe del valore di ritorno le eccezioni previste dal servizio.
 
 Diamo per assunto che il lettore abbia già letto il documento [Dettagli Tecnici](DettagliTecnici.md).
 
 ## <a name="Visibilita_locale"></a>Effetto di visibilità locale del dato
 
-Opzionalmente, il servizio può stabilire di dare ad alcune chiavi un effetto di visibilità locale del dato. Con questo intendiamo che una chiave *k* può avere codificato al suo interno un livello *l*. Se un nodo *n* fa richiesta di memorizzare il valore *v* per la chiave *k*, tale valore sarà visibile ai soli nodi appartenenti allo stesso g-nodo di livello *l* a cui appartiene il nodo *n*. In altri g-nodi il valore associato alla chiave *k* può non esistere o essere diverso.
+Opzionalmente, il servizio può stabilire di dare ad alcune chiavi un effetto di visibilità locale del dato.
+Con questo intendiamo che una chiave *k* può avere codificato al suo interno un livello *l*. Se un nodo *n*
+fa richiesta di memorizzare il valore *v* per la chiave *k*, tale valore sarà visibile ai soli nodi
+appartenenti allo stesso g-nodo di livello *l* a cui appartiene il nodo *n*. In altri g-nodi il valore
+associato alla chiave *k* può non esistere o essere diverso.
 
-Per ottenere questo sarà sufficiente che la classe del servizio implementi il metodo `evaluate_hash_node` della sua istanza di IDatabaseDescriptor in modo da restituire, quando la chiave passata a parametro ha codificato il livello *l*, una tupla di soli *l* elementi. La stessa implementazione ovviamente dovrà essere usata dalla classe del client del servizio nel suo metodo `perfect_tuple`.
+Per ottenere questo sarà sufficiente che la classe del servizio implementi il metodo `evaluate_hash_node`
+della sua istanza di IDatabaseDescriptor in modo da restituire, quando la chiave passata a parametro ha
+codificato il livello *l*, una tupla di soli *l* elementi. La stessa implementazione ovviamente dovrà
+essere usata dalla classe del client del servizio nel suo metodo `perfect_tuple`.
 
 ## <a name="Operazione_inserimento"></a>Operazione di inserimento
 
@@ -30,10 +42,14 @@ Il nodo *q* vuole inserire un record *k=w* nel database distribuito.
 
 Ci sono 4 possibili esiti finali a questa richiesta:
 
-1.  Il nodo *q* viene informato che al momento nella rete non c'è nessun partecipante al servizio. Chiamiamolo esito "NO-PARTICIPANTS".
-1.  Il nodo *q* viene informato che la chiave *k* era libera e il record *k=w* è stato inserito. Chiamiamolo esito "OK".
-1.  Il nodo *q* viene informato che la chiave *k* è già valorizzata con il valore *v*. Chiamiamolo esito "NOT-FREE".
-1.  Il nodo *q* viene informato che la chiave *k* è libera ma la memoria nel database distribuito è esaurita. Chiamiamolo esito "OUT-OF-MEMORY".
+1.  Il nodo *q* viene informato che al momento nella rete non c'è nessun partecipante al servizio.
+    Chiamiamolo esito "NO-PARTICIPANTS".
+1.  Il nodo *q* viene informato che la chiave *k* era libera e il record *k=w* è stato inserito. Chiamiamolo
+    esito "OK".
+1.  Il nodo *q* viene informato che la chiave *k* è già valorizzata con il valore *v*. Chiamiamolo
+    esito "NOT-FREE".
+1.  Il nodo *q* viene informato che la chiave *k* è libera ma la memoria nel database distribuito è esaurita.
+    Chiamiamolo esito "OUT-OF-MEMORY".
 
 ## <a name="Operazione_sola_lettura"></a>Operazione di sola lettura
 
@@ -41,121 +57,218 @@ Il nodo *q* vuole leggere il valore del record per una chiave *k* nel database d
 
 Ci sono 3 possibili esiti finali a questa richiesta:
 
-1.  Il nodo *q* viene informato che al momento nella rete non c'è nessun partecipante al servizio. Chiamiamolo esito "NO-PARTICIPANTS".
-1.  Il nodo *q* viene informato che il record per la chiave *k* è stato trovato e il suo valore è *v*. Chiamiamolo esito "OK".
+1.  Il nodo *q* viene informato che al momento nella rete non c'è nessun partecipante al servizio. Chiamiamolo
+    esito "NO-PARTICIPANTS".
+1.  Il nodo *q* viene informato che il record per la chiave *k* è stato trovato e il suo valore è *v*.
+    Chiamiamolo esito "OK".
 1.  Il nodo *q* viene informato che la chiave *k* non è presente nel database. Chiamiamolo esito "NOT-FOUND".
 
-E' importante che l'operazione di sola lettura sia distinta dalle operazioni che **possono** diventare un aggiornamento. Diciamo *possono* dal punto di vista di un nodo *n’* che, contattato durante il cammino di ricerca dell'​*hash-node* per la chiave *k* e ricevuta la richiesta, si rifiuta di elaborarla in quanto *non esaustivo*; infatti l'esito finale della richiesta dipende dal nodo servente *n* che la elaborerà. Il nodo *n’*, se la richiesta che riceve può essere identificata come di "sola lettura", non necessiterà di resettare il tempo per cui si deve considerare *non esaustivo* per *k*.
+E' importante che l'operazione di sola lettura sia distinta dalle operazioni che **possono** diventare un
+aggiornamento. Diciamo *possono* dal punto di vista di un nodo *n’* che, contattato durante il cammino di
+ricerca dell'​*hash-node* per la chiave *k* e ricevuta la richiesta, si rifiuta di elaborarla in quanto
+*non esaustivo*; infatti l'esito finale della richiesta dipende dal nodo servente *n* che la elaborerà. Il nodo
+*n’*, se la richiesta che riceve può essere identificata come di "sola lettura", non necessiterà di resettare
+il tempo per cui si deve considerare *non esaustivo* per *k*.
 
 ## <a name="Operazione_modifica"></a>Operazione di modifica
 
-Il nodo *q* vuole modificare il valore o rinfrescare il TTL o rimuovere il record per una chiave *k* nel database distribuito.
+Il nodo *q* vuole modificare il valore o rinfrescare il TTL o rimuovere il record per una chiave *k* nel
+database distribuito.
 
 Ci sono 3 possibili esiti finali a questa richiesta:
 
-1.  Il nodo *q* viene informato che al momento nella rete non c'è nessun partecipante al servizio. Chiamiamolo esito "NO-PARTICIPANTS".
-1.  Il nodo *q* viene informato che il record per la chiave *k* è stato modificato/rinfrescato/rimosso. Chiamiamolo esito "OK".
+1.  Il nodo *q* viene informato che al momento nella rete non c'è nessun partecipante al servizio. Chiamiamolo
+    esito "NO-PARTICIPANTS".
+1.  Il nodo *q* viene informato che il record per la chiave *k* è stato modificato/rinfrescato/rimosso.
+    Chiamiamolo esito "OK".
 1.  Il nodo *q* viene informato che la chiave *k* non è presente nel database. Chiamiamolo esito "NOT-FOUND".
 
 ## <a name="Operazione_replica"></a>Operazione di replica
 
-Il nodo *n0* vuole replicare un record *k=w* che esso ha appena scritto nella sua memoria, oppure vuole replicare la cancellazione di un record con chiave *k*. La richiesta giunge ad un nodo che viene dopo *n0* nella ricerca dell'hash-node.
+Il nodo *n0* vuole replicare un record *k=w* che esso ha appena scritto nella sua memoria, oppure vuole
+replicare la cancellazione di un record con chiave *k*. La richiesta giunge ad un nodo che viene dopo
+*n0* nella ricerca dell'hash-node.
 
 Ci sono 2 possibili esiti finali a questa richiesta:
 
 1.  Il nodo *n0* viene informato che al momento nella rete non c'è nessun partecipante al servizio.  
     Oppure il nodo *n0* viene informato che la memoria nel database distribuito è esaurita.  
     Ai fini di questa operazione i due casi suddetti si equivalgono. Chiamiamo questo esito "OUT-OF-MEMORY".
-1.  Il nodo *n0* viene informato che il record *k=w* (o la cancellazione del record per *k*) è stato replicato. Chiamiamolo esito "OK".
+1.  Il nodo *n0* viene informato che il record *k=w* (o la cancellazione del record per *k*) è stato replicato.
+    Chiamiamolo esito "OK".
 
 ## <a name="Esaustivita_nodo_servente"></a>Esaustività del nodo servente
 
-Se un nodo *n* riceve una richiesta per la chiave *k* e ha nella sua memoria un record per tale chiave, allora si considera sempre *esaustivo*. Se invece non ha il record per tale chiave nella sua memoria, deve chiedersi se è esaustivo o no.
+Se un nodo *n* riceve una richiesta per la chiave *k* e ha nella sua memoria un record per tale chiave,
+allora si considera sempre *esaustivo*. Se invece non ha il record per tale chiave nella sua memoria, deve
+chiedersi se è esaustivo o no.
 
 Per gestire questo aspetto il nodo *n*  fa uso di alcune strutture dati memorizzate nella classe DatabaseHandler:
 
 *   Elenco di chiavi `HashMap<Object,Timer> not_exhaustive_keys` e per ogni chiave dell'elenco un relativo timer.  
-    Se il nodo riceve una richiesta relativa alla chiave *k* che non è nella sua memoria e la chiave *k* è nell'elenco `not_exhaustive_keys` e il suo timer non è scaduto, allora il nodo si ritiene *non esaustivo* per tale chiave. Se il relativo timer è scaduto tale chiave viene rimossa dall'elenco.
+    Se il nodo riceve una richiesta relativa alla chiave *k* che non è nella sua memoria e la chiave *k* è
+    nell'elenco `not_exhaustive_keys` e il suo timer non è scaduto, allora il nodo si ritiene *non esaustivo* per
+    tale chiave. Se il relativo timer è scaduto tale chiave viene rimossa dall'elenco.
 *   Elenco di chiavi `List<Object> not_found_keys`.  
-    Se il nodo riceve una richiesta relativa alla chiave *k* che non è nella sua memoria e la chiave *k* è nell'elenco `not_found_keys`, allora il nodo si ritiene *esaustivo* per tale chiave.  
-    In nessun momento una stessa chiave *k* può appartenere ad entrambi gli elenchi suddetti. Inoltre, se una chiave *k* è nella memoria del nodo non può appartenere a nessuno degli elenchi suddetti.
+    Se il nodo riceve una richiesta relativa alla chiave *k* che non è nella sua memoria e la chiave *k* è
+    nell'elenco `not_found_keys`, allora il nodo si ritiene *esaustivo* per tale chiave.  
+    In nessun momento una stessa chiave *k* può appartenere ad entrambi gli elenchi suddetti. Inoltre, se una
+    chiave *k* è nella memoria del nodo non può appartenere a nessuno degli elenchi suddetti.
 *   Stato di default e relativo timer.  
-    Si tratta di un flag che dice al nodo come considerarsi per una chiave *k* che non è nella sua memoria e nemmeno nell'elenco `not_exhaustive_keys` e nemmeno nell'elenco `not_found_keys`.  
-    Il timer si riferisce al tempo di validità dello stato di default *non esaustivo*. Cioè: quando per qualche determinato evento il nodo mette il suo stato di default a *non esaustivo*, allora imposta anche il timer al TTL dei record di questo servizio; quando il timer scade, automaticamente lo stato di default del nodo torna ad essere *esaustivo*.  
+    Si tratta di un flag che dice al nodo come considerarsi per una chiave *k* che non è nella sua memoria e
+    nemmeno nell'elenco `not_exhaustive_keys` e nemmeno nell'elenco `not_found_keys`.  
+    Il timer si riferisce al tempo di validità dello stato di default *non esaustivo*. Cioè: quando per qualche
+    determinato evento il nodo mette il suo stato di default a *non esaustivo*, allora imposta anche il timer al
+    TTL dei record di questo servizio; quando il timer scade, automaticamente lo stato di default del nodo torna
+    ad essere *esaustivo*.  
     Si usa una sola variabile: `Timer timer_default_not_exhaustive`.
 
-Il nodo *n* gestisce l'elenco `not_exhaustive_keys` in modo da memorizzare quando e per quanto tempo deve ritenersi *non esaustivo* per una data chiave *k*. Il nodo *n* è in grado di farlo perché le richieste per tale chiave giungono al nodo stesso e possono essere esaminate (ad esempio per vedere se sono di sola lettura o possono produrre un aggiornamento) prima che il nodo risponda rifiutando l'elaborazione. Se nessuna richiesta giunge per la chiave *k* entro il TTL dei record di questo servizio, allora il record se era presente nel database adesso non lo è più; per questo il singolo elemento della lista `not_exhaustive_keys` può essere rimosso dalla lista quando scade il suo timer.
+Il nodo *n* gestisce l'elenco `not_exhaustive_keys` in modo da memorizzare quando e per quanto tempo deve
+ritenersi *non esaustivo* per una data chiave *k*. Il nodo *n* è in grado di farlo perché le richieste per
+tale chiave giungono al nodo stesso e possono essere esaminate (ad esempio per vedere se sono di sola lettura
+o possono produrre un aggiornamento) prima che il nodo risponda rifiutando l'elaborazione. Se nessuna richiesta
+giunge per la chiave *k* entro il TTL dei record di questo servizio, allora il record se era presente nel
+database adesso non lo è più; per questo il singolo elemento della lista `not_exhaustive_keys` può essere
+rimosso dalla lista quando scade il suo timer.
 
-Questo elenco non può crescere senza limite; però non si può permettere che il nodo si consideri *esaustivo* quando non lo è. Per questo, se l'elenco `not_exhaustive_keys` diventa troppo grande il nodo *n* mette il suo stato di default a *non esaustivo* per il tempo TTL dei record e può svuotare del tutto l'elenco `not_exhaustive_keys`. In seguito tornerà ad inserire singole chiavi nell'elenco `not_exhaustive_keys` mentre il timer dello stato di default andrà scorrendo.
+Questo elenco non può crescere senza limite; però non si può permettere che il nodo si consideri *esaustivo*
+quando non lo è. Per questo, se l'elenco `not_exhaustive_keys` diventa troppo grande il nodo *n* mette il
+suo stato di default a *non esaustivo* per il tempo TTL dei record e può svuotare del tutto l'elenco
+`not_exhaustive_keys`. In seguito tornerà ad inserire singole chiavi nell'elenco `not_exhaustive_keys` mentre
+il timer dello stato di default andrà scorrendo.
 
-Il nodo *n* gestisce anche l'elenco `not_found_keys` in modo da memorizzare quando deve ritenersi *esaustivo* per una data chiave *k*. Inserisce una chiave in questo elenco quando elabora una richiesta di rimozione per la chiave *k* oppure quando la procedura di recupero del record per la chiave *k* si conclude con un "NOT-FOUND". Questo elenco è una sorta di cache: se una chiave si trova in esso allora il nodo può rispondere senza costringere il client a ulteriori trasmissioni e attese, ma se non vi si trova e il nodo è *non esaustivo* per *k* allora rifiuterà l'elaborazione e il client giungerà comunque alla risposta corretta. Non si vuole far crescere la lista senza limite, ma allo stesso tempo si vuole tenere chiavi utili, quindi si mettono in testa alla lista gli elementi appena aggiunti e si rimuovono gli elementi in coda quando serve.
+Il nodo *n* gestisce anche l'elenco `not_found_keys` in modo da memorizzare quando deve ritenersi *esaustivo*
+per una data chiave *k*. Inserisce una chiave in questo elenco quando elabora una richiesta di rimozione per
+la chiave *k* oppure quando la procedura di recupero del record per la chiave *k* si conclude con un "NOT-FOUND".
+Questo elenco è una sorta di cache: se una chiave si trova in esso allora il nodo può rispondere senza
+costringere il client a ulteriori trasmissioni e attese, ma se non vi si trova e il nodo è *non esaustivo*
+per *k* allora rifiuterà l'elaborazione e il client giungerà comunque alla risposta corretta. Non si vuole
+far crescere la lista senza limite, ma allo stesso tempo si vuole tenere chiavi utili, quindi si mettono in
+testa alla lista gli elementi appena aggiunti e si rimuovono gli elementi in coda quando serve.
 
-La gestione dell'elenco `not_found_keys` è indipendente dallo stato di default del nodo. Cioè, sebbene l'elenco abbia un effetto concreto solo quando lo stato di default è *non esaustivo*, comunque l'elenco non viene svuotato quando il nodo passa allo stato di default *esaustivo*.
+La gestione dell'elenco `not_found_keys` è indipendente dallo stato di default del nodo. Cioè, sebbene l'elenco
+abbia un effetto concreto solo quando lo stato di default è *non esaustivo*, comunque l'elenco non viene
+svuotato quando il nodo passa allo stato di default *esaustivo*.
 
 ## <a name="Fase_iniziale"></a>Fase iniziale
 
-Quando un nodo partecipante al servizio costituisce una nuova rete allora esso è da subito *esaustivo* poiché inizializza un database vuoto. Di seguito analiziamo cosa fa un nodo che, invece, entra in una rete esistente.
+Quando un nodo partecipante al servizio costituisce una nuova rete allora esso è da subito *esaustivo* poiché
+inizializza un database vuoto. Di seguito analiziamo cosa fa un nodo che, invece, entra in una rete esistente.
 
-Inizialmente, quando entra in una rete, il nodo *n* si mette nello stato di default *non esaustivo* per un tempo pari al TTL dei record che il servizio *p* memorizza.
+Inizialmente, quando entra in una rete, il nodo *n* si mette nello stato di default *non esaustivo* per un tempo
+pari al TTL dei record che il servizio *p* memorizza.
 
-Se un record collegato alla chiave *k* in *p* deve rimanere in vita, allora un nodo *q* farà una richiesta (di inserimento, lettura o aggiornamento) per la chiave *k* e questa giungerà al nodo *n*.
+Se un record collegato alla chiave *k* in *p* deve rimanere in vita, allora un nodo *q* farà una richiesta
+(di inserimento, lettura o aggiornamento) per la chiave *k* e questa giungerà al nodo *n*.
 
-Il nodo *n* risponderà rifiutando di elaborare la richiesta in quanto *non esaustivo*; ma al contempo verrà a conoscenza di una chiave *k*.
+Il nodo *n* risponderà rifiutando di elaborare la richiesta in quanto *non esaustivo*; ma al contempo verrà
+a conoscenza di una chiave *k*.
 
-Il nodo *q* proseguirà con la sua ricerca e passerà la richiesta ai successivi nodi più prossimi al hash-node fino a trovare un nodo in grado di rispondere. Questo nodo, chiamiamolo *current(k)*, la elaborerà e risponderà. Potrà trattarsi di una qualsiasi operazione: inserimento, lettura o aggiornamento.
+Il nodo *q* proseguirà con la sua ricerca e passerà la richiesta ai successivi nodi più prossimi al hash-node
+fino a trovare un nodo in grado di rispondere. Questo nodo, chiamiamolo *current(k)*, la elaborerà e risponderà.
+Potrà trattarsi di una qualsiasi operazione: inserimento, lettura o aggiornamento.
 
-In parallelo il nodo *n* contatta *current(k)* (per farlo sarà sufficiente avviare `contact_peer` per la chiave *k* escludendo se stesso) e avvia il [procedimento di recupero](DettagliTecnici.md#Procedimento_di_recupero_di_un_record) del record associato alla chiave *k* con attesa del tempo critico di coerenza *𝛿*.
+In parallelo il nodo *n* contatta *current(k)* (per farlo sarà sufficiente avviare `contact_peer` per la
+chiave *k* escludendo se stesso) e avvia il [procedimento di recupero](DettagliTecnici.md#Procedimento_di_recupero_di_un_record)
+del record associato alla chiave *k* con attesa del tempo critico di coerenza *𝛿*.
 
-Come detto, tale procedimento prevede che se il nodo *n* durante questo tempo riceve richieste per la chiave *k* che sono di scrittura (aggiornamento o inserimento), allora non le rifiuta subito, ma le mette in attesa. Siccome ora le richieste di scrittura per la chiave *k* passano prima per il nodo *n* che le fa attendere, di sicuro non giungeranno al *current(k)*.
+Come detto, tale procedimento prevede che se il nodo *n* durante questo tempo riceve richieste per la chiave *k*
+che sono di scrittura (aggiornamento o inserimento), allora non le rifiuta subito, ma le mette in attesa. Siccome
+ora le richieste di scrittura per la chiave *k* passano prima per il nodo *n* che le fa attendere, di sicuro non
+giungeranno al *current(k)*.
 
-Al termine di questa attesa *𝛿*, il nodo *n* riceve il valore corrente del record per la chiave *k* e lo mette nella sua memoria; oppure riceve "NOT-FOUND" e diventa *esaustivo* per la chiave *k*. Ma, essendo passato del tempo, non è detto che il suo indirizzo sia ancora il più prossimo all'​*hash-node* per la chiave *k*. Quindi risponderà a tutte le richieste che aveva eventualmente messo in attesa istruendo il client a ricominciare da capo il calcolo distribuito di H<sub>t</sub> ("REDO-FROM-START").
+Al termine di questa attesa *𝛿*, il nodo *n* riceve il valore corrente del record per la chiave *k* e lo mette
+nella sua memoria; oppure riceve "NOT-FOUND" e diventa *esaustivo* per la chiave *k*. Ma, essendo passato del
+tempo, non è detto che il suo indirizzo sia ancora il più prossimo all'​*hash-node* per la chiave *k*. Quindi
+risponderà a tutte le richieste che aveva eventualmente messo in attesa istruendo il client a ricominciare da
+capo il calcolo distribuito di H<sub>t</sub> ("REDO-FROM-START").
 
 In seguito il nodo *n* saprà rispondere in modo autonomo alle richieste di tutti i tipi per la chiave *k*.
 
 ### <a name="Recupero_preventivo"></a>Recupero preventivo delle chiavi
 
-Un passaggio ulteriore, sempre riferito ad un nodo che entra in una rete esistente e quindi si considera inizialmente *non esaustivo*, può essere questo: il nodo *n* richiama `contact_peer` prendendo come obiettivo `perfect_tuple` il suo stesso indirizzo ed escludendo se stesso; contatta un nodo (chiamiamolo *m*) e gli chiede tutte le chiavi (non i record) che conosce.
+Un passaggio ulteriore, sempre riferito ad un nodo che entra in una rete esistente e quindi si considera
+inizialmente *non esaustivo*, può essere questo: il nodo *n* richiama `contact_peer` prendendo come obiettivo
+`perfect_tuple` il suo stesso indirizzo ed escludendo se stesso; contatta un nodo (chiamiamolo *m*) e gli chiede
+tutte le chiavi (non i record) che conosce.
 
 Il modulo usa la classe RequestSendKeys e la classe RequestSendKeysResponse.
 
-La classe RequestSendKeys è una classe serializzabile, che deriva da Object, e contiene il numero massimo di chiavi da restituire `max_count`. Implementa l'interfaccia (vuota) IPeersRequest. È la richiesta di inviare tutte le chiavi memorizzate, fino ad un massimo indicato dal client. Tale classe non viene esposta dal modulo.
+La classe RequestSendKeys è una classe serializzabile, che deriva da Object, e contiene il numero massimo di
+chiavi da restituire `max_count`. Implementa l'interfaccia (vuota) IPeersRequest. È la richiesta di inviare
+tutte le chiavi memorizzate, fino ad un massimo indicato dal client. Tale classe non viene esposta dal modulo.
 
-La classe RequestSendKeysResponse è una classe serializzabile, che deriva da Object, e contiene una lista *lst* di istanze di Object serializzabili. Implementa l'interfaccia (vuota) IPeersResponse. È la risposta alla richiesta di inviare tutte le chiavi memorizzate. Tale classe non viene esposta dal modulo.
+La classe RequestSendKeysResponse è una classe serializzabile, che deriva da Object, e contiene una lista *lst*
+di istanze di Object serializzabili. Implementa l'interfaccia (vuota) IPeersResponse. È la risposta alla richiesta
+di inviare tutte le chiavi memorizzate. Tale classe non viene esposta dal modulo.
 
-Se riceve una eccezione PeersNoParticipantsInNetworkError su questa prima richiesta, il nodo *n* deduce che nessun nodo partecipava (probabilmente il servizio è opzionale) e quindi esso è da subito *esaustivo* poiché inizializza un database vuoto. Vediamo cosa fa il nodo se, invece, riceve una risposta.
+Se riceve una eccezione PeersNoParticipantsInNetworkError su questa prima richiesta, il nodo *n* deduce che
+nessun nodo partecipava (probabilmente il servizio è opzionale) e quindi esso è da subito *esaustivo* poiché
+inizializza un database vuoto. Vediamo cosa fa il nodo se, invece, riceve una risposta.
 
-Per ogni chiave *k* che ha ottenuto, il nodo *n* calcola (con il metodo `evaluate_hash_node` dell'istanza di IDatabaseDescriptor) la tupla dell'hash-node relativo alla chiave *k*. In questo modo il nodo *n* scopre anche se la ricerca andrà circoscritta ad un certo suo g-nodo di livello *l*; infatti in questo caso otterrà una tupla di *l* elementi. Se il nodo *m* dal quale siamo venuti a conoscenza della chiave *k* non rientra in tale g-nodo allora questa chiave va ignorata.
+Per ogni chiave *k* che ha ottenuto, il nodo *n* calcola (con il metodo `evaluate_hash_node` dell'istanza di
+IDatabaseDescriptor) la tupla dell'hash-node relativo alla chiave *k*. In questo modo il nodo *n* scopre anche
+se la ricerca andrà circoscritta ad un certo suo g-nodo di livello *l*; infatti in questo caso otterrà una
+tupla di *l* elementi. Se il nodo *m* dal quale siamo venuti a conoscenza della chiave *k* non rientra in tale
+g-nodo allora questa chiave va ignorata.
 
 Proseguendo, il nodo *n* valuta se la chiave *k* è tale che avrebbe dovuto essere chiesta a *n*: cioè se
 *dist(h<sub>p</sub>(k), n)﹤dist(h<sub>p</sub>(k), m).* In questo caso esegue le operazioni viste prima.
 In questo modo previene il momento in cui scopre una chiave *k* perché gli viene richiesta da qualcuno.
 
-Quando il recupero del record per ogni chiave *k* ottenuta da *m* è stato portato a termine, il nodo *n* può ripetere l'operazione iniziale (quella di chiamare `contact_peer` con il suo stesso indirizzo come obiettivo) quante volte vuole, escludendo oltre a se stesso i vari nodi *m* che ha precedentemente contattato.
+Quando il recupero del record per ogni chiave *k* ottenuta da *m* è stato portato a termine, il nodo *n* può
+ripetere l'operazione iniziale (quella di chiamare `contact_peer` con il suo stesso indirizzo come obiettivo)
+quante volte vuole, escludendo oltre a se stesso i vari nodi *m* che ha precedentemente contattato.
 
-Se riceve una eccezione PeersNoParticipantsInNetworkError su una richiesta successiva alla prima, il nodo termina queste operazioni e si considera *esaustivo* da subito.
+Se riceve una eccezione PeersNoParticipantsInNetworkError su una richiesta successiva alla prima, il nodo
+termina queste operazioni e si considera *esaustivo* da subito.
 
-Queste operazioni come detto possono proseguire fin quando si vuole. Però sono operazioni che appesantiscono la rete e non sono essenziali. Quindi conviene intervallarle (ad esempio una pausa di 2 secondi dopo ogni recupero di chiavi o di singoli record) e comunque non proseguire oltre un tempo che è una piccola porzione (ad esempio 1/10) del TTL di ogni record.
+Queste operazioni come detto possono proseguire fin quando si vuole. Però sono operazioni che appesantiscono
+la rete e non sono essenziali. Quindi conviene intervallarle (ad esempio una pausa di 2 secondi dopo ogni
+recupero di chiavi o di singoli record) e comunque non proseguire oltre un tempo che è una piccola porzione
+(ad esempio 1/10) del TTL di ogni record.
 
-Quando il nodo *n* decide di interrompere queste operazioni (pur non avendo ricevuto una eccezione PeersNoParticipantsInNetworkError) esso deve comunque considerarsi *non esaustivo* per il tempo detto sopra.
+Quando il nodo *n* decide di interrompere queste operazioni (pur non avendo ricevuto una eccezione
+PeersNoParticipantsInNetworkError) esso deve comunque considerarsi *non esaustivo* per il tempo detto sopra.
 
 ## <a name="Algoritmi"></a>Algoritmi
 
-La classe del servizio deve fornire le operazioni previste in tutti i servizi che implementano un [database distribuito](DettagliTecnici.md#Mantenimento_di_un_database_distribuito), e inoltre altre operazioni.
+La classe del servizio deve fornire le operazioni previste in tutti i servizi che implementano un
+[database distribuito](DettagliTecnici.md#Mantenimento_di_un_database_distribuito), e inoltre altre
+operazioni.
 
-Tra le operazioni comuni, in particolare, l'operazione di verifica della presenza di un record (il metodo `my_records_contains` dell'interfaccia IDatabaseDescriptor) deve tenere conto dei TTL dei record che ha in memoria. Deve cioè prima rimuovere tutti i record scaduti e solo dopo verificare la presenza del record richiesto. Invece l'operazione di recupero di un record (il metodo `get_records_for_key` dell'interfaccia IDatabaseDescriptor) avendo già come requisito che il chiamante abbia verificato la sua presenza, non dovrà controllare di nuovo il TTL del record che va a reperire.
+Tra le operazioni comuni, in particolare, l'operazione di verifica della presenza di un record (il metodo
+`my_records_contains` dell'interfaccia IDatabaseDescriptor) deve tenere conto dei TTL dei record che ha in
+memoria. Deve cioè prima rimuovere tutti i record scaduti e solo dopo verificare la presenza del record
+richiesto. Invece l'operazione di recupero di un record (il metodo `get_records_for_key` dell'interfaccia
+IDatabaseDescriptor) avendo già come requisito che il chiamante abbia verificato la sua presenza, non dovrà
+controllare di nuovo il TTL del record che va a reperire.
 
 Le ulteriori operazioni necessarie sono:
 
-*   `int ttl_db_max_records_getter()`: Restituire il numero massimo di record che il nodo è disposto a memorizzare nella sua memoria.
-*   `int ttl_db_my_records_size()`: Restituire il numero di record attualmente memorizzati nel nodo. I record sono memorizzati dalla classe del servizio.
-*   `int ttl_db_max_keys_getter()`: Restituire il numero massimo di chiavi (istanze di chiave senza relativa istanza di record) che il nodo permette di tenere in memoria. Queste chiavi non sono memorizzate dalla classe del servizio, ma direttamente dal modulo PeerServices negli elenchi `not_exhaustive_keys` e `not_found_keys`.
-*   `int ttl_db_msec_ttl_getter()`: Restituire il TTL in millisecondi che viene assegnato ai record appena memorizzati.
-*   `List<Object> ttl_db_get_all_keys()`: Restituire l'elenco delle chiavi dei record attualmente memorizzati nel nodo.
-*   `int ttl_db_timeout_exec_send_keys_getter()`: Restituire il tempo di attesa massimo che il client aspetta per l'esecuzione della richiesta di inviare tutti i record memorizzati dal nodo. Va scelto piuttosto alto in via cautelativa, perché il client non sa quale sia la quantità di memoria riservata a questo servizio dal server che sarà contattato.
+*   `int ttl_db_max_records_getter()`: Restituire il numero massimo di record che il nodo è disposto a
+    memorizzare nella sua memoria.
+*   `int ttl_db_my_records_size()`: Restituire il numero di record attualmente memorizzati nel nodo. I
+    record sono memorizzati dalla classe del servizio.
+*   `int ttl_db_max_keys_getter()`: Restituire il numero massimo di chiavi (istanze di chiave senza relativa
+    istanza di record) che il nodo permette di tenere in memoria. Queste chiavi non sono memorizzate dalla
+    classe del servizio, ma direttamente dal modulo PeerServices negli elenchi `not_exhaustive_keys` e `not_found_keys`.
+*   `int ttl_db_msec_ttl_getter()`: Restituire il TTL in millisecondi che viene assegnato ai record appena
+    memorizzati.
+*   `List<Object> ttl_db_get_all_keys()`: Restituire l'elenco delle chiavi dei record attualmente
+    memorizzati nel nodo.
+*   `int ttl_db_timeout_exec_send_keys_getter()`: Restituire il tempo di attesa massimo che il client
+    aspetta per l'esecuzione della richiesta di inviare tutti i record memorizzati dal nodo. Va scelto piuttosto
+    alto in via cautelativa, perché il client non sa quale sia la quantità di memoria riservata a questo
+    servizio dal server che sarà contattato.
 
-Il modulo fornisce l'interfaccia ITemporalDatabaseDescriptor. Essa estende l'interfaccia IDatabaseDescriptor ed espone anche i metodi sopra descritti: `ttl_db_max_records_getter`, `ttl_db_my_records_size`, `ttl_db_max_keys_getter`, `ttl_db_msec_ttl_getter`, `ttl_db_get_all_keys` e `ttl_db_timeout_exec_send_keys_getter`.
+Il modulo fornisce l'interfaccia ITemporalDatabaseDescriptor. Essa estende l'interfaccia IDatabaseDescriptor
+ed espone anche i metodi sopra descritti: `ttl_db_max_records_getter`, `ttl_db_my_records_size`,
+`ttl_db_max_keys_getter`, `ttl_db_msec_ttl_getter`, `ttl_db_get_all_keys` e `ttl_db_timeout_exec_send_keys_getter`.
 
-La classe che implementa il servizio nel suo costruttore crea una istanza di ITemporalDatabaseDescriptor che userà in tutte le chiamate a questi algoritmi, che sono metodi di PeersManager. Subito richiamerà il metodo `ttl_db_on_startup`. In seguito per ogni richiesta che riceve richiamerà il metodo `ttl_db_on_request`.
+La classe che implementa il servizio nel suo costruttore crea una istanza di ITemporalDatabaseDescriptor che
+userà in tutte le chiamate a questi algoritmi, che sono metodi di PeersManager. Subito richiamerà il metodo
+`ttl_db_on_startup`. In seguito per ogni richiesta che riceve richiamerà il metodo `ttl_db_on_request`.
 
 Algoritmo di valutazione *esaustivo* per *k*:
 
@@ -265,12 +378,14 @@ Algoritmo all'avvio:
         *   Return. # L'algoritmo termina.
     *   `timer_startup` = un nuovo timer che scade dopo `tdd.ttl_db_msec_ttl / 10` millisecondi.
     *   Try:
-        *   Il valore restituito `ret` dovrebbe essere un RequestSendKeysResponse, cioè una lista di Object. Altrimenti la risposta viene ignorata.
+        *   Il valore restituito `ret` dovrebbe essere un RequestSendKeysResponse, cioè una lista di Object.
+            Altrimenti la risposta viene ignorata.
         *   Se `ret` è una istanza di RequestSendKeysResponse:
             *   Per ogni chiave `k` in `ret`:
                 *   Se **not** `ttl_db_is_out_of_memory(tdd)`:
                     *   Se `tdd.is_valid_key(k)`:
-                        *   Se **not** `tdd.my_records_contains(k)` **e** **not** `ttl_db_is_exhaustive(tdd, k)` **e** **not** `tdd.dh.retrieving_keys.has_key(k)`:
+                        *   Se **not** `tdd.my_records_contains(k)` **e** **not** `ttl_db_is_exhaustive(tdd, k)`
+                            **e** **not** `tdd.dh.retrieving_keys.has_key(k)`:
                             *   # Non sa nulla di `k`.
                             *   `h_p_k` = `tdd.evaluate_hash_node(k)`.
                             *   `l` = `h_p_k.size`.
@@ -297,7 +412,8 @@ Algoritmo all'avvio:
             *   Se `ret` è una istanza di RequestSendKeysResponse:
                 *   Per ogni chiave `k` in `ret`:
                     *   Se `tdd.is_valid_key(k)`:
-                        *   Se **not** `tdd.my_records_contains(k)` **e** **not** `ttl_db_is_exhaustive(tdd, k)` **e** **not** `tdd.dh.retrieving_keys.has_key(k)`:
+                        *   Se **not** `tdd.my_records_contains(k)` **e** **not** `ttl_db_is_exhaustive(tdd, k)`
+                            **e** **not** `tdd.dh.retrieving_keys.has_key(k)`:
                             *   # Non sa nulla di `k`.
                             *   `h_p_k` = `tdd.evaluate_hash_node(k)`.
                             *   `l` = `h_p_k.size`.
@@ -313,7 +429,8 @@ Algoritmo all'avvio:
                                     *   Attendi 2 secondi.
                                     *   Se `timer_startup.is_expired()`: return.
                 *   Se `ttl_db_is_out_of_memory(tdd)`: Esci dal ciclo **while**.
-            *   Metti in `exclude_tuple_list` il nodo `respondant`, espresso come PeerTupleGNode di livello 0 nel g-nodo di livello *levels*.
+            *   Metti in `exclude_tuple_list` il nodo `respondant`, espresso come PeerTupleGNode di livello 0 nel
+                g-nodo di livello *levels*.
     *   Se riceve PeersNoParticipantsInNetworkError:
         *   `tdd.dh.timer_default_non_exhaustive` = un nuovo timer che scade dopo **0** millisecondi.
         *   Return. # L'algoritmo termina.
@@ -394,7 +511,8 @@ Algoritmo alla ricezione della richiesta:
     *   Se **not** `tdd.my_records_contains(k)` **e not** `ttl_db_is_exhaustive(tdd, k)`:
         *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE`.
         *   L'algoritmo termina.
-    *   Calcola *𝛿* il tempo critico di coerenza, basandosi sul numero approssimato di nodi nel minimo comune g-nodo tra il nodo corrente e quello del richiedente, cioè il proprio g-nodo di livello `common_lvl`.
+    *   Calcola *𝛿* il tempo critico di coerenza, basandosi sul numero approssimato di nodi nel minimo comune
+        g-nodo tra il nodo corrente e quello del richiedente, cioè il proprio g-nodo di livello `common_lvl`.
     *   Attende *𝛿* o al massimo `RequestWaitThenSendRecord.timeout_exec` - 1000.
     *   Se `tdd.my_records_contains(k)`:
         *   assert: `k` non è in `tdd.dh.not_exhaustive_keys`.
