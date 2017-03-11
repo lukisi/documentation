@@ -1036,8 +1036,8 @@ Esaminiamo nel dettaglio questi algoritmi nel documento [Database a chiavi fisse
 
 Gli algoritmi in dettaglio sono illutrati nei seguenti documenti:
 
-*   [Strutture dati](AppuntiStrutture.md)
-*   [Metodi helper](AppuntiMetodiHelper.md)
-*   [Algoritmi di instradamento](AppuntiAlgo1.md)
-*   [Algoritmi complementari](AppuntiAlgo2.md)
+*   [Strutture dati](Strutture.md)
+*   [Metodi helper](MetodiHelper.md)
+*   [Algoritmi di instradamento](Algoritmi1.md)
+*   [Algoritmi complementari](Algoritmi2.md)
 
