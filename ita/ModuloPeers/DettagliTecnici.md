@@ -1038,6 +1038,6 @@ Gli algoritmi in dettaglio sono illutrati nei seguenti documenti:
 
 *   [Strutture dati](Strutture.md)
 *   [Metodi helper](MetodiHelper.md)
-*   [Algoritmi di instradamento](Algoritmi1.md)
-*   [Algoritmi complementari](Algoritmi2.md)
+*   [Algoritmi di instradamento](AlgoritmiInstradamento.md)
+*   [Algoritmi complementari](AlgoritmiComplementari.md)
 
