@@ -676,8 +676,9 @@ Il modulo assume che i nodi collegati ai suoi archi appartengano alla sua stessa
 
 L'elaborazione degli ETP ricevuti dai miei vicini che appartengono alla mia stessa rete da come risultato l'aggiornamento
 della mia mappa; allo stesso tempo mi permette anche di capire quali informazioni saranno di interesse anche per gli altri
-miei vicini, quindi mi consente di costruire un messaggio che sia esaustivo e allo stesso tempo più piccolo possibile. Il
-dettaglio di come tale elaborazione avviene è descritto nel documento [esplorazione](EsplorazioneRete.md).
+miei vicini, quindi mi consente di costruire un messaggio che sia esaustivo e allo stesso tempo più piccolo possibile. Una
+spiegazione ad alto livello dei meccanismi di questa elaborazione è presentata nel documento [esplorazione](EsplorazioneRete.md),
+mentre qui di seguito sono dettagliati i relativi algoritmi.
 
 ### <a name="Metodi_remoti"></a>Metodi remoti
 
@@ -960,7 +961,7 @@ chiamiamo *Q*. Indichiamo con *M* l'insieme dei percorsi che già prima il nodo 
             *   Altrimenti:
                 *   Sia *p1* l'istanza in *O<sub>d</sub>* equivalente di *p*, che la sostituirà in *M<sub>d</sub>*.
                 *   Se *p* ∈ *V<sub>d</sub>* :
-                    *   *p2* = copia iniziale di *p*.
+                    *   *p2* = copia iniziale di *p1*.
                     *   Metti *p2* in *P*.
                     *   Se *d.lvl* = 0:
                         *   Prepara un segnale di *path_changed* e aggiungilo al set *S<sub>d</sub>*.
