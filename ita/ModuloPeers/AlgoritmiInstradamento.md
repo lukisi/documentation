@@ -50,7 +50,9 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
         *   Lancia eccezione `PeersNoParticipantsInNetworkError`. L'algoritmo termina.
     *   Se `x.lvl` = 0 **AND** `x.pos` = `pos[0]`:
         *   Try:
-            *   `response` = `services[p_id].exec(request, new ArrayList<int>())`. In questo caso va riprodotta la copiatura degli oggetti IPeersRequest e IPeersResponse, che avverrebbe in modo automatico al momento della trasmissione in rete nei metodi remoti `get_request` e `set_response`.
+            *   `response` = `services[p_id].exec(request, new ArrayList<int>())`. In questo caso va riprodotta la
+                copiatura degli oggetti IPeersRequest e IPeersResponse, che avverrebbe in modo automatico al momento
+                della trasmissione in rete nei metodi remoti `get_request` e `set_response`.
         *   Se riceve `PeersRedoFromStartError`:
             *   Return `contact_peer(...)`. Riavvia l'algoritmo.
         *   Se riceve `PeersRefuseExecutionError e`:
@@ -60,7 +62,8 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
                 *   `refuse_messages` = `refuse_messages.substr(refuse_messages.length-500)`.
             *   Mette `HCoord(0, pos[0])` in `exclude_gnode_list`.
             *   Continua con la prossima iterazione del ciclo 1.
-        *   Calcola `respondant` = istanza di PeerTupleNode che rappresenta `HCoord(0, pos[0])` con `top` = `target_levels`, cioè il nodo stesso.
+        *   Calcola `respondant` = istanza di PeerTupleNode che rappresenta `HCoord(0, pos[0])` con
+            `top` = `target_levels`, cioè il nodo stesso.
         *   Restituisce `response`. Termina l'algoritmo.
     *   `m’` = `new PeerMessageForwarder`.
     *   `m’.n` = la tupla n<sub>0</sub>·n<sub>1</sub>·...·n<sub>j</sub> dove j = `x.lvl`.
@@ -83,7 +86,8 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
         *   Se `visible_by_someone_inside_my_gnode(t, j+1)`:
             *   Aggiungi `t` a `m’.non_participant_tuple_list`.
     *   Calcola `timeout_instradamento` = *f* ( `map_paths.i_peers_get_nodes_in_my_group(x.lvl + 1)` ).
-    *   Prepara `waiting_answer` = `new WaitingAnswer`(`request=request`, `min_target=x` come PeerTupleGNode con `top` = `x.lvl+1`).
+    *   Prepara `waiting_answer` = `new WaitingAnswer`(`request=request`, `min_target=x` come PeerTupleGNode con
+        `top` = `x.lvl+1`).
     *   `waiting_answer_map[m’.msg_id]` = `waiting_answer`.
     *   `IPeersManagerStub gwstub`
     *   `IPeersManagerStub? failed` = null
@@ -110,7 +114,8 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
             *   Sta in attesa su `waiting_answer.ch` per max `tempo_attesa`.
             *   Se `waiting_answer.exclude_gnode` ≠ null:
                 *   # significa che abbiamo ricevuto notizia di un gnodo da escludere.
-                *   `waiting_answer.exclude_gnode` è un PeerTupleGNode che rappresenta un g-nodo `h` dentro il mio g-nodo di livello `top`.
+                *   `waiting_answer.exclude_gnode` è un PeerTupleGNode che rappresenta un g-nodo `h` dentro il mio
+                    g-nodo di livello `top`.
                 *   Crea `t`, una istanza di PeerTupleGNode con `top=target_levels` che rappresenta il g-nodo `h`.
                 *   Se è visibile nella mia mappa:
                     *   Crea `g`, una istanza di HCoord che rappresenta il g-nodo `h`.
@@ -120,7 +125,8 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
                 *   Esci dal ciclo 2.
             *   Altrimenti-Se `waiting_answer.non_participant_gnode` ≠ null:
                 *   # significa che abbiamo ricevuto notizia di un gnodo non partecipante.
-                *   `waiting_answer.non_participant_gnode` è un PeerTupleGNode che rappresenta un g-nodo `h` dentro il mio g-nodo di livello `top`.
+                *   `waiting_answer.non_participant_gnode` è un PeerTupleGNode che rappresenta un g-nodo `h` dentro il mio
+                    g-nodo di livello `top`.
                 *   Crea `t`, una istanza di PeerTupleGNode con `top=target_levels` che rappresenta il g-nodo `h`.
                 *   Se è visibile nella mia mappa:
                     *   Crea `g`, una istanza di HCoord che rappresenta il g-nodo `h`.
@@ -218,7 +224,8 @@ Firma: `void forward_peer_message(m’)`
             *   `x` = `approximate(m’.x̄, exclude_list=exclude_gnode_list)`. Restituisce un HCoord o null.
             *   Se `x` = null:
                 *   `nstub` = `back_stub_factory.i_peers_get_tcp_inside(m’.n.tuple)`.
-                *   Calcola `gn` istanza di PeerTupleGNode che rappresenta `HCoord(m’.lvl, m’.pos)` con `top` = `m’.n.tuple.size`.
+                *   Calcola `gn` istanza di PeerTupleGNode che rappresenta `HCoord(m’.lvl, m’.pos)` con
+                    `top` = `m’.n.tuple.size`.
                 *   Try:
                     *   Esegue `nstub.set_failure(m’.msg_id, gn)`.
                 *   Se riceve `StubError` o `DeserializeError`:
@@ -226,7 +233,8 @@ Firma: `void forward_peer_message(m’)`
                 *   Esci dal ciclo. Poi proseguirà con l'elaborazione delle informazioni di non partecipazione.
             *   Altrimenti-Se `x.lvl` = 0 **AND** `x.pos = pos[0]`:
                 *   `nstub` = `back_stub_factory.i_peers_get_tcp_inside(m’.n.tuple)`.
-                *   Calcola `tuple_respondant` istanza di PeerTupleNode che rappresenta `HCoord(0, pos[0])` con `top` = `m’.n.tuple.size`.
+                *   Calcola `tuple_respondant` istanza di PeerTupleNode che rappresenta `HCoord(0, pos[0])` con
+                    `top` = `m’.n.tuple.size`.
                 *   Try:
                     *   IPeersRequest `request` = `nstub.get_request(m’.msg_id, tuple_respondant)`.
                     *   Try:
@@ -276,7 +284,8 @@ Firma: `void forward_peer_message(m’)`
                         *   Esci dal ciclo. Ripeterà il calcolo di `approximate`.
                     *   Try:
                         *   Esegue `gwstub.forward_peer_message(m’’)`.
-                    *   Se riceve l'eccezione `StubError` (non può ricevere un `DeserializeError` perché lo stub non attende la processazione):
+                    *   Se riceve l'eccezione `StubError` (non può ricevere un `DeserializeError` perché lo stub non
+                        attende la processazione):
                         *   `failed` = `gwstub`.
                         *   Continua con la prossima iterazione del ciclo.
                     *   `consegnato` = True.
@@ -317,50 +326,53 @@ Firma: `void forward_peer_message(m’)`
 Firma: `HCoord? approximate(x̄, exclude_list)`
 
 *   Gli argomenti sono:
-    *   PeerTupleNode? x̄,
-    *   List di HCoord exclude_list.
-*   Se x̄ = null:
+    *   PeerTupleNode? `x̄`,
+    *   List di HCoord `exclude_list`.
+*   Se `x̄` = null:
     *   # la destinazione sono io o nessun altro.
-    *   `x` = new HCoord(0,pos[0]). Cioè x rappresenta me.
-    *   Se x not in exclude_list:
-        *   Return x.
+    *   `x` = `new HCoord(0,pos[0])`. Cioè `x` rappresenta me.
+    *   Se `x` ∉ `exclude_list`:
+        *   Return `x`.
     *   Altrimenti:
         *   Return null.
-*   `valid_levels` = x̄.tuple.size. Specificando una tupla con un numero di posizioni inferiore al numero totale dei livelli della rete si richiede a questa funzione (e di coseguenza al resto dell'algoritmo di instradamento verso l'hash_node) di restringere la ricerca all'interno di un certo g-nodo.
+*   `valid_levels` = `x̄.tuple.size`. Specificando una tupla con un numero di posizioni inferiore al numero totale dei
+    livelli della rete si richiede a questa funzione (e di coseguenza al resto dell'algoritmo di instradamento verso
+    l'hash-node) di restringere la ricerca all'interno di un certo g-nodo.
 *   HCoord? `ret` = null.
 *   `min_distance` = -1.
-*   Per `l` che va da 0 a `valid_levels-1`: Per `p` che va da 0 a `gsizes[l]-1`: Se `pos[l]` ≠ p: Se `map_paths.i_peers_exists(l, p)`:
-    *   `x` = new HCoord(l,p). Cioè x rappresenta un g-nodo a cui io non appartengo, visibile nella mia topologia, interno al g-nodo in cui la ricerca è eventualmente circoscritta, esistente nella rete.
-    *   Se x not in exclude_list:
-        *   PeerTupleNode tuple_x = make_tuple_node(x, valid_levels).
-        *   distance = dist(x̄, tuple_x).
-        *   Se min_distance = -1 OR distance < min_distance:
-            *   ret = x.
-            *   min_distance = distance.
-*   `x`` = new HCoord(0,pos[0]). Cioè x rappresenta me.
-*   Se x not in exclude_list:
-    *   PeerTupleNode tuple_x = make_tuple_node(x, valid_levels).
-    *   distance = dist(x̄, tuple_x).
-    *   Se min_distance = -1 OR distance < min_distance:
-        *   ret = x.
-        *   min_distance = distance.
-*   Return ret.
+*   Per `l` che va da 0 a `valid_levels-1`: Per `p` che va da 0 a `gsizes[l]-1`: Se `pos[l]` ≠ `p`: Se `map_paths.i_peers_exists(l, p)`:
+    *   `x` = `new HCoord(l,p)`. Cioè `x` rappresenta un g-nodo a cui io non appartengo, visibile nella mia topologia,
+        interno al g-nodo in cui la ricerca è eventualmente circoscritta, esistente nella rete.
+    *   Se `x` ∉ `exclude_list`:
+        *   PeerTupleNode `tuple_x` = `make_tuple_node(x, valid_levels)`.
+        *   `distance` = `dist(x̄, tuple_x)`.
+        *   Se `min_distance` = -1 OR `distance` < `min_distance`:
+            *   `ret` = `x`.
+            *   `min_distance` = `distance`.
+*   `x` = `new HCoord(0,pos[0])`. Cioè `x` rappresenta me.
+*   Se `x` ∉ `exclude_list`:
+    *   PeerTupleNode `tuple_x` = `make_tuple_node(x, valid_levels)`.
+    *   `distance` = `dist(x̄, tuple_x)`.
+    *   Se `min_distance` = -1 OR `distance` < `min_distance`:
+        *   `ret` = `x`.
+        *   `min_distance` = `distance`.
+*   Return `ret`.
 
 **dist**
 
 Firma: `int dist(x̄, x)`
 
 *   Gli argomenti sono:
-    *   PeerTupleNode x̄,
-    *   PeerTupleNode x.
-*   assert(x̄.tuple.size == x.tuple.size).
+    *   PeerTupleNode `x̄`,
+    *   PeerTupleNode `x`.
+*   `assert(x̄.tuple.size == x.tuple.size)`.
 *   `distance` = 0.
-*   Per j da x.tuple.size-1 a 0:
-    *   distance *= gsizes[j].
-    *   distance += x.tuple[j] - x̄.tuple[j].
-    *   Se x̄.tuple[j] > x.tuple[j]:
-        *   distance += gsizes[j].
-*   Return distance.
+*   Per `j` da `x.tuple.size-1` a 0:
+    *   `distance` *= `gsizes[j]`.
+    *   `distance` += `x.tuple[j]` - `x̄.tuple[j]`.
+    *   Se `x̄.tuple[j]` > `x.tuple[j]`:
+        *   `distance` += `gsizes[j]`.
+*   Return `distance`.
 
 ## <a name="Ritorno"></a>Messaggi di ritorno
 
@@ -412,7 +424,7 @@ Firma: `IPeersRequest get_request(int msg_id, IPeerTupleNode _respondant) throws
 *   Si segnala l'evento sul canale con `wa.ch.send_async(0)`.
 *   Se `wa.request` = null:
     *   # Si tratta di una finta richiesta, vedi `check_non_participation` richiamato dal `forward_peer_message`.
-    *   Lancia l'eccezione PeersUnknownMessageError.
+    *   Lancia l'eccezione `PeersUnknownMessageError`.
 *   Altrimenti:
     *   Return `wa.request`.
 
