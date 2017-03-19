@@ -25,7 +25,7 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
 *   Se `services.has_key(p_id)`:
     *   `opzionale` = `services[p_id].p_is_optional`.
     *   Se **NOT** `services[m’.p_id].is_ready()`:
-        *   exclude_myself = True.
+        *   `exclude_myself` = True.
 *   Altrimenti:
     *   `opzionale` = True.
 *   Mette in `exclude_gnode_list` tutti i g-nodi risultanti da `get_non_participant_gnodes(p_id)`.
@@ -185,106 +185,106 @@ Firma: `void forward_peer_message(m’)`
 *   Recupera `caller`, cioè le informazioni sul chiamante del metodo remoto.
 *   bool `opzionale` = False.
 *   bool `exclude_myself` = False.
-*   Se services.has_key(m’.p_id):
-    *   opzionale = services[m’.p_id].p_is_optional.
-    *   exclude_myself = NOT services[m’.p_id].is_ready().
+*   Se `services.has_key(m’.p_id)`:
+    *   `opzionale` = `services[m’.p_id].p_is_optional`.
+    *   `exclude_myself` = **NOT** `services[m’.p_id].is_ready()`.
 *   Altrimenti:
-    *   opzionale = True.
-*   Se pos[m’.lvl] = m’.pos:
-    *   Si veda sotto tra gli algoritmi helper.
-    *   Se NOT my_gnode_participates(m’.p_id, m’.lvl):
-        *   `nstub` = back_stub_factory.i_peers_get_tcp_inside(m’.n.tuple).
-        *   Calcola `gn` istanza di PeerTupleGNode che rappresenta HCoord(m’.lvl, m’.pos) con top = m’.n.tuple.size.
+    *   `opzionale` = True.
+*   Se `pos[m’.lvl] = m’.pos`:
+    *   Facciamo riferimento agli algoritmi [helper](MetodiHelper.md).
+    *   Se **NOT** `my_gnode_participates(m’.p_id, m’.lvl)`:
+        *   `nstub` = `back_stub_factory.i_peers_get_tcp_inside(m’.n.tuple)`.
+        *   Calcola `gn` istanza di PeerTupleGNode che rappresenta `HCoord(m’.lvl, m’.pos)` con `top` = `m’.n.tuple.size`.
         *   Try:
-            *   Esegue nstub.set_non_participant(m’.msg_id, gn).
-        *   Se riceve StubError o DeserializeError:
+            *   Esegue `nstub.set_non_participant(m’.msg_id, gn)`.
+        *   Se riceve `StubError` o `DeserializeError`:
             *   Ignora.
     *   Altrimenti:
         *   `exclude_gnode_list` = new ArrayList di HCoord.
-        *   Metti in exclude_gnode_list tutti i g-nodi risultanti da get_non_participant_gnodes(p_id).
-        *   Se exclude_myself:
-            *   Mette HCoord(0, pos[0]) in exclude_gnode_list.
-        *   Per ogni PeerTupleGNode `gn` in m’.exclude_tuple_list:
+        *   Metti in `exclude_gnode_list` tutti i g-nodi risultanti da `get_non_participant_gnodes(p_id)`.
+        *   Se `exclude_myself`:
+            *   Mette `HCoord(0, pos[0])` in `exclude_gnode_list`.
+        *   Per ogni PeerTupleGNode `gn` in `m’.exclude_tuple_list`:
             *   int `case`, HCoord `ret`.
-            *   Calcola convert_tuple_gnode(gn, out case, out ret).
-            *   Se case = 1:
-                *   Cioè gn rappresenta un mio g-nodo di livello ret.lvl:
-                *   Metti in exclude_gnode_list tutti i g-nodi risultanti da get_all_gnodes_up_to_level(ret.lvl).
-            *   Se case = 2:
-                *   Cioè gn rappresenta un g-nodo visibile nella mia topologia:
-                *   Metti in exclude_gnode_list ret.
+            *   Calcola `convert_tuple_gnode(gn, out case, out ret)`.
+            *   Se `case` = 1:
+                *   Cioè `gn` rappresenta un mio g-nodo di livello `ret.lvl`:
+                *   Metti in `exclude_gnode_list` tutti i g-nodi risultanti da `get_all_gnodes_up_to_level(ret.lvl)`.
+            *   Se `case` = 2:
+                *   Cioè `gn` rappresenta un g-nodo visibile nella mia topologia:
+                *   Metti `ret` in `exclude_gnode_list`.
         *   bool `consegnato` = False.
-        *   While not consegnato:
-            *   `x` = approximate(m’.x̄, exclude_list=exclude_gnode_list). Restituisce un HCoord o null.
-            *   Se x = null:
-                *   `nstub` = back_stub_factory.i_peers_get_tcp_inside(m’.n.tuple).
-                *   Calcola `gn` istanza di PeerTupleGNode che rappresenta HCoord(m’.lvl, m’.pos) con top = m’.n.tuple.size.
+        *   While **NOT** `consegnato`:
+            *   `x` = `approximate(m’.x̄, exclude_list=exclude_gnode_list)`. Restituisce un HCoord o null.
+            *   Se `x` = null:
+                *   `nstub` = `back_stub_factory.i_peers_get_tcp_inside(m’.n.tuple)`.
+                *   Calcola `gn` istanza di PeerTupleGNode che rappresenta `HCoord(m’.lvl, m’.pos)` con `top` = `m’.n.tuple.size`.
                 *   Try:
-                    *   Esegue nstub.set_failure(m’.msg_id, gn).
-                *   Se riceve StubError o DeserializeError:
+                    *   Esegue `nstub.set_failure(m’.msg_id, gn)`.
+                *   Se riceve `StubError` o `DeserializeError`:
                     *   Ignora.
                 *   Esci dal ciclo. Poi proseguirà con l'elaborazione delle informazioni di non partecipazione.
-            *   Altrimenti-Se x.lvl = 0 AND x.pos = pos[0]:
-                *   `nstub` = back_stub_factory.i_peers_get_tcp_inside(m’.n.tuple).
-                *   Calcola `tuple_respondant` istanza di PeerTupleNode che rappresenta HCoord(0, pos[0]) con top = m’.n.tuple.size.
+            *   Altrimenti-Se `x.lvl` = 0 **AND** `x.pos = pos[0]`:
+                *   `nstub` = `back_stub_factory.i_peers_get_tcp_inside(m’.n.tuple)`.
+                *   Calcola `tuple_respondant` istanza di PeerTupleNode che rappresenta `HCoord(0, pos[0])` con `top` = `m’.n.tuple.size`.
                 *   Try:
-                    *   IPeersRequest `request` = nstub.get_request(m’.msg_id, tuple_respondant).
+                    *   IPeersRequest `request` = `nstub.get_request(m’.msg_id, tuple_respondant)`.
                     *   Try:
-                        *   IPeersResponse `resp` = services[m’.p_id].exec(request, m’.n.tuple).
-                        *   nstub.set_response(m’.msg_id, resp, tuple_respondant).
-                    *   Se riceve PeersRedoFromStartError `e`:
+                        *   IPeersResponse `resp` = `services[m’.p_id].exec(request, m’.n.tuple)`.
+                        *   Esegue `nstub.set_response(m’.msg_id, resp, tuple_respondant)`.
+                    *   Se riceve `PeersRedoFromStartError` `e`:
                         *   Try:
-                            *   Esegue nstub.set_redo_from_start(m’.msg_id, tuple_respondant).
-                        *   Se riceve StubError o DeserializeError:
+                            *   Esegue `nstub.set_redo_from_start(m’.msg_id, tuple_respondant)`.
+                        *   Se riceve `StubError` o `DeserializeError`:
                             *   Ignora.
-                    *   Se riceve PeersRefuseExecutionError `e`:
+                    *   Se riceve `PeersRefuseExecutionError` `e`:
                         *   Try:
                             *   `err_msg` = `e.message`.
-                            *   Esegue nstub.set_refuse_message(m’.msg_id, err_msg, tuple_respondant).
-                        *   Se riceve StubError o DeserializeError:
+                            *   Esegue `nstub.set_refuse_message(m’.msg_id, err_msg, tuple_respondant)`.
+                        *   Se riceve `StubError` o `DeserializeError`:
                             *   Ignora.
-                *   Se riceve PeersUnknownMessageError o PeersInvalidRequest:
+                *   Se riceve `PeersUnknownMessageError` o `PeersInvalidRequest`:
                     *   Ignora.
-                *   Se riceve StubError o DeserializeError:
+                *   Se riceve `StubError` o `DeserializeError`:
                     *   Ignora.
                 *   Esci dal ciclo. Poi proseguirà con l'elaborazione delle informazioni di non partecipazione.
             *   Altrimenti:
-                *   m’’ = copia di m’.
-                *   m’’.lvl = x.lvl.
-                *   m’’.pos = x.pos.
-                *   m’’.x̄ = la tupla x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>k-1</sub> dove k = x.lvl. E' null se k = 0.
-                *   Per ogni PeerTupleGNode `t` in m’.exclude_tuple_list:
+                *   `m’’` = copia di `m’`.
+                *   `m’’.lvl` = `x.lvl`.
+                *   `m’’.pos` = `x.pos`.
+                *   `m’’.x̄` = la tupla *x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>k-1</sub>* dove *k* = `x.lvl`. E' null se *k* = 0.
+                *   Per ogni PeerTupleGNode `t` in `m’.exclude_tuple_list`:
                     *   # Scopriamo se t è interno a x:
                     *   int `case`, HCoord `ret`.
-                    *   Calcola convert_tuple_gnode(t, out case, out ret).
-                    *   Se case = 3:
-                        *   Cioè t rappresenta un g-nodo non visibile nella mia topologia interno a ret.
-                        *   Se ret.equals(x):
-                            *   𝜀 = t.top - t.tuple.size
-                            *   `t’` = new PeerTupleGNode(t.tuple.slice(0, k-𝜀), k).
-                            *   m’’.exclude_tuple_list.add(t’).
-                *   Per ogni PeerTupleGNode `t` in m’.non_participant_tuple_list:
-                    *   Se visible_by_someone_inside_my_gnode(t, k+1):
-                        *   `m’’.non_participant_tuple_list`.add(t).
+                    *   Calcola `convert_tuple_gnode(t, out case, out ret)`.
+                    *   Se `case` = 3:
+                        *   Cioè `t` rappresenta un g-nodo non visibile nella mia topologia interno a `ret`.
+                        *   Se `ret.equals(x)`:
+                            *   `𝜀` = `t.top` - `t.tuple.size`.
+                            *   `t’` = `new PeerTupleGNode(t.tuple.slice(0, k-𝜀), k)`.
+                            *   Aggiunge `t’` a `m’’.exclude_tuple_list`.
+                *   Per ogni PeerTupleGNode `t` in `m’.non_participant_tuple_list`:
+                    *   Se `visible_by_someone_inside_my_gnode(t, k+1)`:
+                        *   Aggiunge `t` a `m’’.non_participant_tuple_list`.
                 *   IPeersManagerStub `gwstub`
                 *   IPeersManagerStub? `failed` = null
                 *   While True:
                     *   Try:
-                        *   Calcola gwstub = map_paths.i_peers_gateway(m’’.lvl, m’’.pos, caller, failed)
-                    *   Se riceve l'eccezione PeersNonexistentDestinationError:
+                        *   Calcola `gwstub` = `map_paths.i_peers_gateway(m’’.lvl, m’’.pos, caller, failed)`
+                    *   Se riceve l'eccezione `PeersNonexistentDestinationError`:
                         *   Aspetta alcuni istanti.
-                        *   Esci dal ciclo. Ripeterà il calcolo di approximate.
+                        *   Esci dal ciclo. Ripeterà il calcolo di `approximate`.
                     *   Try:
-                        *   Esegue gwstub.forward_peer_message(m’’).
-                    *   Se riceve l'eccezione StubError (non può ricevere un DeserializeError perché lo stub non attende la processazione):
-                        *   failed = gwstub.
+                        *   Esegue `gwstub.forward_peer_message(m’’)`.
+                    *   Se riceve l'eccezione `StubError` (non può ricevere un `DeserializeError` perché lo stub non attende la processazione):
+                        *   `failed` = `gwstub`.
                         *   Continua con la prossima iterazione del ciclo.
-                    *   consegnato = True.
-                    *   `nstub` = back_stub_factory.i_peers_get_tcp_inside(m’.n.tuple).
-                    *   Calcola `gn` istanza di PeerTupleGNode che rappresenta HCoord(x.lvl, x.pos) con top = m’.n.tuple.size.
+                    *   `consegnato` = True.
+                    *   `nstub` = `back_stub_factory.i_peers_get_tcp_inside(m’.n.tuple)`.
+                    *   Calcola `gn` istanza di PeerTupleGNode che rappresenta `HCoord(x.lvl, x.pos)` con `top` = `m’.n.tuple.size`.
                     *   Try:
-                        *   Esegue nstub.set_next_destination(m’.msg_id, gn).
-                    *   Se riceve StubError o DeserializeError:
+                        *   Esegue `nstub.set_next_destination(m’.msg_id, gn)`.
+                    *   Se riceve `StubError` o `DeserializeError`:
                         *   Ignora.
                     *   Esci dal ciclo. Poi proseguirà con l'elaborazione delle informazioni di non partecipazione.
 *   Altrimenti:
@@ -292,25 +292,25 @@ Firma: `void forward_peer_message(m’)`
     *   IPeersManagerStub? `failed` = null
     *   While True:
         *   Try:
-            *   Calcola gwstub = map_paths.i_peers_gateway(m’.lvl, m’.pos, caller, failed)
-        *   Se riceve l'eccezione PeersNonexistentDestinationError:
+            *   Calcola `gwstub` = `map_paths.i_peers_gateway(m’.lvl, m’.pos, caller, failed)`
+        *   Se riceve l'eccezione `PeersNonexistentDestinationError`:
             *   Rinuncia all'instradamento. Esci dal ciclo.
         *   Try:
-            *   Esegue gwstub.forward_peer_message(m’).
-        *   Se riceve l'eccezione StubError (non può ricevere un DeserializeError perché lo stub non attende la processazione):
-            *   failed = gwstub.
+            *   Esegue `gwstub.forward_peer_message(m’)`.
+        *   Se riceve l'eccezione `StubError` (non può ricevere un `DeserializeError` perché lo stub non attende la processazione):
+            *   `failed` = `gwstub`.
             *   Continua con la prossima iterazione del ciclo.
         *   Esci dal ciclo.
-*   Se opzionale AND participant_maps.has_key(m’.p_id):
-    *   Per ogni TupleGNode `t` in m’.non_participant_tuple_list:
-        *   Se t rappresenta un g-nodo visibile nella nostra mappa:
-            *   Calcola `g` = istanza di HCoord rappresentante lo stesso g-nodo di t.
-            *   Se g ∈ participant_maps[m’.p_id].participant_list:
-                *   Svolgi quanto segue in una nuova tasklet portando dietro p_id=m’.p_id, lvl=g.lvl, pos=g.pos:
-                    *   Si veda sotto l'algoritmo di rilevamento della non partecipazione.
-                    *   Se check_non_participation(p_id, lvl, pos):
-                        *   Se participant_maps.has_key(p_id):
-                            *   participant_maps[p_id].participant_list.remove(HCoord(lvl,pos))
+*   Se `opzionale` **AND** `participant_maps.has_key(m’.p_id)`:
+    *   Per ogni TupleGNode `t` in `m’.non_participant_tuple_list`:
+        *   Se `t` rappresenta un g-nodo visibile nella nostra mappa:
+            *   Calcola `g` = istanza di HCoord rappresentante lo stesso g-nodo di `t`.
+            *   Se `g` ∈ `participant_maps[m’.p_id].participant_list`:
+                *   Svolgi quanto segue in una nuova tasklet portando dietro `p_id=m’.p_id`, `lvl=g.lvl`, `pos=g.pos`:
+                    *   Facciamo riferimento agli algoritmi [complementari](AlgoritmiComplementari.md).
+                    *   Se `check_non_participation(p_id, lvl, pos)`:
+                        *   Se `participant_maps.has_key(p_id)`:
+                            *   Rimuove `HCoord(lvl,pos)` da `participant_maps[p_id].participant_list`.
 
 **approximate**
 

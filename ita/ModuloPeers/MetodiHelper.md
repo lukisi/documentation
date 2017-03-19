@@ -58,12 +58,12 @@ me stesso `(0, pos[0])`.
 Firma: `List<HCoord> get_all_gnodes_up_to_lvl(int lvl)`
 
 *   `ret` =  `new ArrayList<HCoord>()`.
-*   Per `l` da 0 a lvl-1:
-    *   Per `p` da 0 a gsizes[l]-1:
-        *   Se pos[l] ≠ p:
-            *   Aggiungi a ret HCoord(l, p).
-*   Aggiungi a ret HCoord(0, pos[0]).
-*   Return ret.
+*   Per `l` da 0 a `lvl-1`:
+    *   Per `p` da 0 a `gsizes[l]-1`:
+        *   Se `pos[l]` ≠ `p`:
+            *   Aggiungi `HCoord(l, p)` a `ret`.
+*   Aggiungi `HCoord(0, pos[0])` a `ret`.
+*   Return `ret`.
 
 ## <a name="convert_tuple_gnode"></a>convert_tuple_gnode
 
