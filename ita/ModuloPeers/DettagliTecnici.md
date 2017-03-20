@@ -23,6 +23,11 @@
 
 ## <a name="Requisiti"></a>Requisiti
 
+Il modulo fa uso delle [tasklet](../Librerie/TaskletSystem.md), un sistema di multithreading cooperativo.
+
+Il modulo fa uso del framework [ZCD](../Librerie/ZCD.md), precisamente appoggiandosi ad una libreria intermedia
+prodotta con questo framework per formalizzare i metodi remoti usati nel demone *ntkd*.
+
 L'utilizzatore del modulo PeerServices per prima cosa inizializza il modulo richiamando il metodo statico
 `init` di PeersManager. In tale metodo viene anche passata l'istanza di INtkdTasklet per fornire
 l'implementazione del sistema di tasklet.

@@ -24,64 +24,66 @@ possibilità che un nodo decida di non partecipare attivamente (chiamiamo questo
 *servizio opzionale*) va aggiunto il requisito che la funzione associ ad ogni chiave *k* un nodo
 *partecipante* al servizio.
 
-Sia *S* lo spazio di indirizzi validi per i nodi della rete.
+Sia *S* lo spazio di indirizzi validi per i nodi della rete. Per indirizzo valido intendiamo un indirizzo
+Netsukuku *reale* (senza componenti *virtuali* come definiti nel documento di analisi del modulo
+[Qspn](../ModuloQspn/AnalisiFunzionale.md#Nodi_virtuali)).
 
 Sia *V<sub>t</sub>* il set di nodi nella rete al tempo *t*.
 
-Sia *𝛼<sub>t</sub>* : S → V<sub>t</sub> la funzione suriettiva che al tempo *t*  associa ad un indirizzo
-il nodo che lo detiene. È suriettiva in quanto  ogni nodo ha almeno un indirizzo. È una funzione non
-completamente  definita in S poiché un indirizzo potrebbe non essere stato assegnato ad  alcun nodo.
+Sia *𝛼<sub>t</sub>* : *S* → *V<sub>t</sub>* la funzione suriettiva che al tempo *t*  associa ad un indirizzo
+il nodo che lo detiene. È suriettiva in quanto ogni nodo ha almeno un indirizzo valido. È una funzione non
+completamente  definita in *S* poiché un indirizzo potrebbe non essere stato assegnato ad  alcun nodo.
 
-Definiamo una funzione che al tempo *t* assegni ad ogni indirizzo in S un indirizzo nel dominio di
-𝛼<sub>t</sub>. Cioè dato un indirizzo valido che potrebbe non essere stato assegnato tale funzione ritorna
+Definiamo una funzione *H<sub>t</sub>* che al tempo *t* assegni ad ogni indirizzo in *S* un indirizzo nel dominio di
+*𝛼<sub>t</sub>*. Cioè dato un indirizzo valido che potrebbe non essere stato assegnato tale funzione ritorna
 un indirizzo assegnato.
 
-**Definizione:** *H<sub>t</sub>* : S → dom(𝛼<sub>t</sub>)
+**Definizione:** *H<sub>t</sub>* : *S* → *dom(𝛼<sub>t</sub>)*
 
 ### <a name="DHT"></a>DHT: Distributed Hash Table
 
 Sia *p* un servizio distribuito che vuole implementare un database, sia *K* lo spazio delle chiavi definito
-da p per questo database. Il servizio p  definisce una funzione di hash che mappa lo spazio delle chiavi sullo
+da *p* per questo database. Il servizio *p* definisce una funzione di hash *h<sub>p</sub>* che mappa lo spazio delle chiavi sullo
 spazio degli indirizzi.
 
-**Definizione:** *h*<sub>p</sub> : K → S
+**Definizione:** *h<sub>p</sub>* : *K* → *S*
 
 Quando un nodo, al tempo *t*, vuole scrivere la coppia chiave-valore *(k, v)* nel database distribuito
 il nodo calcola:
 
-**Definizione:** *hash_node(k)* = 𝛼<sub>t</sub> ( H<sub>t</sub> ( h<sub>p</sub> ( *k* ) ) )
+**Definizione:** *hash_node(k)* = *𝛼<sub>t</sub> ( H<sub>t</sub> ( h<sub>p</sub> ( k ) ) )*
 
-Contatta quindi il nodo hash_node(k) e chiede di memorizzare la coppia (k, v).
+Contatta quindi il nodo *hash_node(k)* e chiede di memorizzare la coppia *(k, v)*.
 
-Analogamente  il nodo che vuole reperire il dato associato alla chiave k, calcola  hash_node(k), contatta
-il nodo e chiede di leggere il dato associato a k.
+Analogamente  il nodo che vuole reperire il dato associato alla chiave *k*, calcola  *hash_node(k)*, contatta
+il nodo e chiede di leggere il dato associato a *k*.
 
 Questo  procedimento realizza un database distribuito, perché ogni nodo  mantiene solo una porzione delle
 associazioni chiave-valore.
 
-Fondamentale è la funzione H<sub>t</sub>. Questa funzione è indipendente dal servizio p, può quindi essere
-definita e implementata una volta sola. Essa è dipendente dalla conoscenza del dominio di 𝛼<sub>t</sub>, cioè
-di quali indirizzi in S sono detenuti da almeno un nodo. Inoltre, in caso di servizi opzionali, è dipendente
+Fondamentale è la funzione *H<sub>t</sub>*. Questa funzione è indipendente dal servizio *p*, può quindi essere
+definita e implementata una volta sola. Essa è dipendente dalla conoscenza del dominio di *𝛼<sub>t</sub>*, cioè
+di quali indirizzi in *S* sono detenuti da almeno un nodo. Inoltre, in caso di servizi opzionali, è dipendente
 anche dalla conoscenza di quali indirizzi sono detenuti da nodi che partecipano al servizio.
 
 La conoscenza degli indirizzi detenuti dai nodi presenti nella rete è realizzata attraverso il protocollo di
-routing QSPN. Occorre invece definire un ulteriore meccanismo per giungere alla conoscenza di quali indirizzi
+routing Qspn. Occorre invece definire un ulteriore meccanismo per giungere alla conoscenza di quali indirizzi
 sono detenuti da nodi che partecipano ad ognuno dei servizi opzionali.
 
 #### <a name="Memoria_esaurita"></a>Memoria esaurita e memoria non esaustiva
 
-Inoltre, nell'implementazione della funzione H<sub>t</sub>, occorre dare la possibilità al singolo nodo, una volta
+Inoltre, nell'implementazione della funzione *H<sub>t</sub>*, occorre dare la possibilità al singolo nodo, una volta
 che è stato individuato e contattato e gli è stata fatta una richiesta, di rifiutarsi di elaborarla e così di
-obbligare la stessa funzione  H<sub>t</sub> a trovare un altro nodo. Ad esempio, questo si rende necessario quando
+obbligare la stessa funzione  *H<sub>t</sub>* a trovare un altro nodo. Ad esempio, questo si rende necessario quando
 il singolo nodo contattato, chiamiamolo *n*, non ha più memoria libera.
 
 Se la richiesta era di inserimento il nodo *n*, se non ha più memoria libera, rifiuta di memorizzare e quindi la
-funzione H<sub>t</sub> trova il prossimo nodo. Allo stesso tempo il nodo *n* si ricorderà (fin quando permarrà in
+funzione *H<sub>t</sub>* trova il prossimo nodo. Allo stesso tempo il nodo *n* si ricorderà (fin quando permarrà in
 questo stato) di non avere tutte le informazioni necessarie per rispondere "NOT_FOUND" ad una richiesta di lettura
 o aggiornamento, cioè di non essere *esaustivo*.
 
 Se la richiesta era di lettura o aggiornamento il nodo *n*, se non trova il record per la chiave *k* nella sua
-memoria **e** ricorda di non essere esaustivo, rifiuta di rispondere e quindi la funzione H<sub>t</sub> trova
+memoria **e** ricorda di non essere esaustivo, rifiuta di rispondere e quindi la funzione *H<sub>t</sub>* trova
 il prossimo nodo.
 
 Questo concetto di essere non *esaustivo* viene usato da un nodo *n* anche quando è da poco entrato nella rete ed
@@ -91,7 +93,7 @@ Questo concetto di essere non *esaustivo* viene usato da un nodo *n* anche quand
 
 In una struttura gerarchica come Netsukuku ([dettagli](../ModuloQspn/AnalisiFunzionale.md#StrutturaGerarchica)) un nodo
 non ha la conoscenza  di tutti i nodi esistenti nella rete, quindi non può da solo computare la funzione
-H<sub>t</sub> in quanto non conosce per intero dom(𝛼<sub>t</sub>).
+*H<sub>t</sub>* in quanto non conosce per intero *dom(𝛼<sub>t</sub>)*.
 
 Infatti ogni nodo *n* con indirizzo n<sub>0</sub>·n<sub>1</sub>·...·n<sub>l-1</sub> ha solo conoscenza di:
 
@@ -101,18 +103,13 @@ Infatti ogni nodo *n* con indirizzo n<sub>0</sub>·n<sub>1</sub>·...·n<sub>l-1
 *   tutti i g-nodi di livello l-2 appartenenti a n<sub>l-1</sub>,
 *   tutti i g-nodi di livello l-1.
 
-Questa conoscenza la possiamo chiamare dom<sub>n</sub>(𝛼<sub>t</sub>), cioè il dominio della funzione
-𝛼<sub>t</sub> secondo le conoscenze di n.
+Questa conoscenza la possiamo chiamare *dom<sub>n</sub>(𝛼<sub>t</sub>)*, cioè il dominio della funzione
+*𝛼<sub>t</sub>* secondo le conoscenze di *n*.
 
-L'implementazione della funzione H<sub>t</sub> deve dunque avvenire in modo distribuito. Vedremo come nel
+L'implementazione della funzione *H<sub>t</sub>* deve dunque avvenire in modo distribuito. Vedremo come nel
 documento dei [dettagli](DettagliTecnici.md).
 
 ## <a name="Ruolo_del_modulo"></a>Ruolo del modulo PeerServices
-
-Il modulo fa uso delle [tasklet](../Librerie/TaskletSystem.md), un sistema di multithreading cooperativo.
-
-Il modulo fa uso del framework [ZCD](../Librerie/ZCD.md), precisamente appoggiandosi ad una libreria intermedia
-prodotta con questo framework per formalizzare i metodi remoti usati nel demone *ntkd*.
 
 Nel modulo PeerServices il nodo registra i servizi peer-to-peer ai quali intende partecipare, specificando quali
 di questi sono opzionali.
@@ -125,16 +122,31 @@ servizi non opzionali, proprio perché ogni nodo esistente nella rete partecipa 
 
 Allo stesso tempo il modulo PeerServices, nei singoli nodi in cui riceve questa informazione e la propaga, si
 occupa di mantenere la conoscenza, sempre in forma gerarchica, di tutti i partecipanti a tutti i servizi opzionali
-esistenti nella rete; questo pur senza necessitare di conoscere a priori quali servizi opzionali esistano.
-Inoltre, quando un nodo entra in un g-nogo *g* (per migrazione o per ingresso iniziale nella rete) il modulo
-richiede subito ai vicini che erano in *g* prima di lui le mappe di tutti i servizi opzionali esistenti nella rete.
+esistenti nella rete; questo pur senza necessitare di conoscere a priori quali servizi opzionali esistano. Chiamiamo
+l'insieme di tali conoscenze *mappe dei servizi opzionali*.
+
+Quando un nodo *n* entra in una rete, oppure quando migra da un g-nodo ad un diverso g-nodo, le sue mappe gerarchiche dei servizi
+opzionali dovranno essere aggiornate. Se un g-nodo *w* in blocco entra in una nuova rete o migra, tutti i nodi al
+suo interno dovranno reperire e aggiornare le loro mappe.
+
+Generalizzando, quando un nodo *n* come membro di un g-nodo *w* di livello *i* entra in un g-nodo *g* di livello
+*k* (con `k > i`), se fra i suoi diretti vicini c'è un nodo (non appartenente a *w*) che era in *g* prima di lui
+lo contatta e richiede le mappe dei servizi opzionali. Altrimenti si aspetta di ricevere tali informazioni su
+iniziativa di un altro nodo che era in *w*.
+
+In ogni caso, il nodo *n* mantiene valide le informazioni che aveva fino al livello *i* - 1. Ricordiamo che questo tipo
+di eventi (ingresso o migrazione) si realizzano sempre sotto forma di creazione di una nuova identità nel sistema.
+L'istanza del modulo PeerServices associata alla nuova identità recupera alcune informazioni dall'istanza del
+modulo che era già associata alla vecchia identità.
+
+* * *
 
 In ogni momento un nodo può fare al suo modulo PeerServices una richiesta relativa ad un servizio con un dato *p_id*.
 Il modulo PeerServices saprà a chi indirizzare la richiesta. Infatti, se il servizio è non-opzionale per definizione
-esso è fra quelli registrati, quindi il modulo lo conosce, sa che è non-opzionale e non ha bisogno di mappe di
-partecipazione per ricercare un suo hash_node. Se il servizio pur essendo opzionale è stato registrato, anche in questo
+esso è fra quelli registrati nel modulo, quindi il modulo lo conosce, sa che è non-opzionale e non ha bisogno di mappe di
+partecipazione per ricercare un suo hash_node. Se il servizio pur essendo opzionale è stato registrato nel modulo, anche in questo
 caso il modulo lo conosce e sa che deve consultare le mappe di partecipazione (in questo caso almeno il nodo stesso
-è nelle mappe). Se il servizio opzionale non è stato registrato, cioè il nodo non vi partecipa attivamente possono
+è nelle mappe). Se il servizio opzionale non è stato registrato nel modulo dal nodo, cioè il nodo non vi partecipa attivamente possono
 esservi due casi:
 
 1.  Il modulo è venuto a conoscenza di alcuni nodi nella rete che partecipano. Allora ha le mappe per avviare la
@@ -145,20 +157,20 @@ esservi due casi:
 * * *
 
 Il modulo PeerServices si occupa, su richiesta del nodo, di avviare una comunicazione verso un hash_node per la chiave
-*k* di un servizio *p*; cioè esso avvia il calcolo distribuito di H<sub>t</sub>. Per fare questo il modulo non ha
-bisogno di conoscere l'implementazione della funzione h<sub>p</sub> ma soltato il risultato di h<sub>p</sub>(k);
+*k* di un servizio *p*; cioè esso avvia il calcolo distribuito di *H<sub>t</sub>*. Per fare questo il modulo non ha
+bisogno di conoscere l'implementazione della funzione *h<sub>p</sub>* ma soltato il risultato di *h<sub>p</sub>(k)*;
 d'altra parte questa richiesta arriva dal nodo stesso quindi il nodo conosce l'implementazione della funzione
-h<sub>p</sub>. Inoltre per fare questa operazione non è necessario che il nodo partecipi al servizio p.
+*h<sub>p</sub>*. Inoltre per fare questa operazione non è necessario che il nodo partecipi al servizio *p*.
 
 Lo stesso modulo, nei nodi intermedi verso la destinazione, si occupa di instradare il messaggio e di proseguire il
-calcolo distribuito di  H<sub>t</sub>. Per fare questo il modulo non ha bisogno di conoscere la logica interna del
-servizio *p*, ma deve solo sapere l'identificativo del servizio *p_id* e il valore di h<sub>p</sub>(k); questi dati
+calcolo distribuito di  *H<sub>t</sub>*. Per fare questo il modulo non ha bisogno di conoscere la logica interna del
+servizio *p*, ma deve solo sapere l'identificativo del servizio *p_id* e il valore di *h<sub>p</sub>(k)*; questi dati
 sono contenuti nel messaggio da instradare. Quindi per fare questa operazione il nodo non ha bisogno né di partecipare
-al servizio p e nemmeno di conoscere nulla sull'implementazione del servizio p.
+al servizio *p* e nemmeno di conoscere nulla sull'implementazione del servizio *p*.
 
 Lo stesso modulo, nel nodo destinazione del messaggio, si occupa di ricevere la richiesta del nodo originante e di
 servirla. Perché il modulo possa servirla, nel modulo deve essere stato registrato il servizio peer-to-peer. Difatti
-il nodo deve essere partecipante al servizio *p*. Inoltre il modulo fornisce all'implementazione del servizio p la
+il nodo deve essere partecipante al servizio *p*. Inoltre il modulo fornisce all'implementazione del servizio *p* la
 possibilità di replicare qualsiasi dato che esso memorizza su un numero *q* di nodi partecipanti al servizio che
 sarebbero stati i più prossimi destinatari della richiesta in caso di sua assenza.
 
@@ -193,7 +205,7 @@ che il modulo PeerServices fornisce.
 *   Fornisce dei metodi helper (inclusi nel modulo per evitare duplicazione di codice) che potranno essere usati
     dai vari servizi registrati per svolgere alcune mansioni comuni:
 
-    *   Recupero record di pertinenza garantendo la [coerenza del dato](DettagliTecnici.md#Mantenimento_di_un_database_distribuito).
+    *   Recupero record di pertinenza garantendo la [coerenza del dato](DettagliTecnici.md#Mantenimento_database_distribuito).
     *   Gestione memoria esaurita e non esaustiva.
 
     Tali metodi dipendono da quali sono le caratteristiche dello specifico servizio e come possono essere sfruttate
@@ -260,7 +272,7 @@ La mappa delle rotte è un oggetto di cui il modulo conosce l'interfaccia IPeers
 *   Leggere l'identificativo del proprio nodo a ogni livello (metodo `i_peers_get_my_pos`);
 *   Leggere il numero di nodi stimato all'interno del proprio g-nodo a ogni livello
     (metodo `i_peers_get_nodes_in_my_group`);
-*   Determinare se un certo g-nodo esiste nella rete – cioè se appartiene a dom<sub>n</sub>(𝛼<sub>t</sub>)
+*   Determinare se un certo g-nodo esiste nella rete – cioè se appartiene a *dom<sub>n</sub>(𝛼<sub>t</sub>)*
     (metodo `i_peers_exists`);
 *   Ottenere uno stub per inviare un messaggio al miglior gateway verso un certo  g-nodo, segnalando
     opzionalmente se si vuole escludere un certo gateway  perché era il passo precedente nell'instradamento
@@ -268,10 +280,12 @@ La mappa delle rotte è un oggetto di cui il modulo conosce l'interfaccia IPeers
     fallito la comunicazione (metodo `i_peers_gateway`). Questo stub è tale che il client invia il messaggio
     con protocollo reliable (TCP) senza ricevere una risposta e senza attendere la sua processazione, ma solo
     la conferma della ricezione.
-*   Ottenere uno stub per inviare un messaggio ad un mio vicino che appartiene al mio stesso g-nodo
-    di un dato livello (metodo `i_peers_fellow`).  
-    All'avvio del nodo, se esso non ha formato una nuova rete ma piuttosto è entrato in un g-nodo, allora
-    usa subito questo metodo per individuare un vicino che fa parte di quello stesso g-nodo in cui è entrato.
+*   Dato un livello *i* ed un livello *k* con `k > i`, ottenere uno stub per inviare un messaggio ad un mio
+    vicino (se esiste) che appartenga al mio stesso g-nodo di livello *k* ma non al mio stesso g-nodo di
+    livello *i* (metodo `i_peers_fellow`).  
+    All'avvio dell'identità associata a questa istanza del modulo PeerServices, se essa entra insieme al suo
+    g-nodo di livello *i* dentro un g-nodo di livello *k*, allora userà subito questo
+    metodo per individuare un vicino che faceva già parte di quello stesso g-nodo in cui è entrato.
     Userà questo stub per richiedere a tale vicino la mappa corrente dei g-nodi che partecipano a servizi opzionali.
     Questo stub, quindi, è tale che il client invia il messaggio con protocollo reliable (TCP) e attende una risposta.
 
@@ -361,13 +375,13 @@ La classe base ha un metodo astratto `exec` che viene richiamato sull'hash_node 
 richiesta. Se viene chiamato significa che:
 
 *   Nel metodo `is_ready` il nodo aveva dichiarato di essere pronto a gestire una richiesta.
-*   La ricerca H<sub>t</sub> avviata da un nodo su una data chiave aveva portato a questo nodo.
+*   La ricerca *H<sub>t</sub>* avviata da un nodo su una data chiave aveva portato a questo nodo.
 
 Il metodo `exec`, dunque, riceve una istanza di IPeersRequest; ma esso è ancora in grado di rifiutarsi di
 elaborare la richiesta, ad esempio per memoria esaurita o non esaustiva, rilanciando una
 eccezione PeersRefuseExecutionError.
 
-Inoltre, è in grado di dare istruzione al client di riavviare da capo il calcolo distribuito di H<sub>t</sub>,
+Inoltre, è in grado di dare istruzione al client di riavviare da capo il calcolo distribuito di *H<sub>t</sub>*,
 rilanciando una eccezione PeersRedoFromStartError. Lo fa se ritiene plausibile di non essere più il miglior
 candidato, ad esempio se ha fatto attendere il client per una richiesta di scrittura mentre reperiva il record
 dal precedente detentore.
@@ -387,39 +401,39 @@ La classe derivata, per ogni tipo di richiesta che è prevista dal servizio, ha 
 IPeersRequest che rappresenta la richiesta, di specificare quale sia il tempo massimo di attesa per l'esecuzione, di
 interpretare l'istanza di IPeersResponse ricevuta come risposta.
 
-La classe base ha la conoscenza della topologia della rete, cioè il numero  di livelli e per ognuno la gsize. Oltre
+La classe base PeerClient ha la conoscenza della topologia della rete, cioè il numero  di livelli e per ognuno la gsize. Oltre
 a ciò non necessita di  conoscere le posizioni del nodo corrente. Ha inoltre conoscenza dell'identificativo del servizio.
 
 La classe base ha un riferimeno all'istanza di PeersManager che usa per contattare l'hash node (metodo `contact_peer`).
 
-Nella classe derivata va definito il calcolo di h<sub>p</sub>. La funzione h<sub>p</sub> deve associare ad una
-chiave *k* un indirizzo in S, cioè una tupla x̄ = x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>l-1</sub> le cui componenti
-siano compatibili con la topologia della rete. La classe base non sa come ottenere da una chiave *k* la tupla x̄,
+Nella classe derivata va definito il calcolo di *h<sub>p</sub>*. La funzione *h<sub>p</sub>* deve associare ad una
+chiave *k* un indirizzo in *S*, cioè una tupla *x̄* = x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>l-1</sub> le cui componenti
+siano compatibili con la topologia della rete. La classe base non sa come ottenere da una chiave *k* la tupla *x̄*,
 questo procedimento spetta alla classe derivata. Tuttavia molte  operazioni saranno uguali nella maggior parte dei
 servizi. Quindi la  classe base cerca di fornire i servizi comuni senza tuttavia essere di  impedimento alla classe
 derivata se vuole usare altre modalità di  calcolo. Per fare questo la classe base fornisce:
 
-*   un metodo virtuale `perfect_tuple` che riceve a parametro la chiave (Object k) e restituisce la tupla x̄.
-*   un metodo astratto `hash_from_key` che riceve a parametro la chiave (Object k) e un intero (top) e restituisce
-    un intero tra 0 e top.
+*   un metodo virtuale `perfect_tuple` che riceve a parametro la chiave `Object k` e restituisce la tupla *x̄*.
+*   un metodo astratto `hash_from_key` che riceve a parametro la chiave `Object k` e un intero `top` e restituisce
+    un intero tra 0 e `top`.
 
-Quando le operazioni del modulo richiedono il calcolo di h<sub>p</sub>(k) su un certo servizio p, il metodo
-`perfect_tuple` viene  richiamato sull'istanza di PeerService, quindi tale metodo deve essere pubblico.
+Quando le operazioni del modulo richiedono il calcolo di *h<sub>p</sub>(k)* su un certo servizio *p*, il metodo
+`perfect_tuple` viene  richiamato sull'istanza di PeerClient, quindi tale metodo deve essere pubblico.
 
 Se tale metodo non viene ridefinito dalla classe derivata, il suo comportamento è il seguente. L'istanza conosce
 le dimensioni dei g-nodi  ad ogni livello (gsizes) quindi calcola la dimensione dello spazio degli indirizzi validi.
-Poi richiama il metodo `hash_from_key` passando oltre  alla chiave k il numero massimo dell'hash (la dimensione dello
+Poi richiama il metodo `hash_from_key` passando oltre  alla chiave *k* il valore massimo dell'hash (la dimensione dello
 spazio di indirizzi meno uno). In questo metodo la classe derivata deve occuparsi di associare alla chiave un valore
 di hash (di norma uniformemente distribuito) compreso tra 0 e il valore massimo (inclusi). Questo metodo è demandato
 alla classe derivata e quindi è definito astratto. Inoltre deve essere usato solo con la modalità sopra descritta,
-quindi può essere definito protetto.
+cioè può essere chiamato solo dalla stessa istanza della classe, quindi può essere definito protetto.
 
-Poi, nel metodo `perfect_tuple`, l'istanza usa il valore di hash per produrre una tupla x̄ sulla base della sua
+Poi, nel metodo `perfect_tuple`, l'istanza usa il valore di hash per produrre una tupla *x̄* sulla base della sua
 conoscenza di gsizes.
 
-Se  invece la classe derivata ridefinisce il metodo `perfect_tuple` è  libera di calcolare direttamente la tupla x̄ a
+Se  invece la classe derivata ridefinisce il metodo `perfect_tuple` è  libera di calcolare direttamente la tupla *x̄* a
 partire dalla chiave e  dalle sue conoscenze. In questo caso, inoltre, può decidere di restituire una tupla con un
 numero di elementi inferiore al numero di livelli della rete. In questo caso la tupla
-x̄ = x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>j</sub> quando viene passata alla funzione H<sub>t</sub> circoscrive la
+*x̄ *= x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>j</sub> quando viene passata alla funzione *H<sub>t</sub>* circoscrive la
 sua ricerca dell'hash_node al g-nodo n<sub>j+1</sub> del nodo *n* che fa la richiesta.
 
