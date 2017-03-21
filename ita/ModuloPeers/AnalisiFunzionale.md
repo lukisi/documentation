@@ -125,6 +125,19 @@ occupa di mantenere la conoscenza, sempre in forma gerarchica, di tutti i partec
 esistenti nella rete; questo pur senza necessitare di conoscere a priori quali servizi opzionali esistano. Chiamiamo
 l'insieme di tali conoscenze *mappe dei servizi opzionali*.
 
+**Nota**: Dato un servizio opzionale *p_id*, la mappa gerarchica relativa a questo servizio ha significato ai
+livelli da -1 a l-1.  
+Al livello -1 esiste un solo elemento che è il nodo stesso. Esso viene identificato con
+`HCoord (0, pos[0])`.  
+Al livello 0 esistono tutti i nodi di livello 0 che appartengono al mio stesso g-nodo di
+livello 1. Essi sono identificati con `HCoord (0, x)` dove `x ≠ pos[0]`.  
+Al livello `i`, con `0 ≤ i < l`, esistono tutti i nodi di livello `i` che appartengono al mio stesso g-nodo di
+livello `i + 1`. Essi sono identificati con `HCoord (i, x)` dove `x ≠ pos[i]`.  
+In realtà la mappa di un servizio può essere implementata come un insieme di HCoord, e in tali oggetti
+il livello va da 0 a l-1. Ma quando facciamo ragionamenti legati al livello del g-nodo che fa ingresso e/o
+al livello del g-nodo ospitante occorre tenere presente questa differenza: il contenuto della mappa
+che si riferisce a `HCoord (0, pos[0])` è per definizione di livello -1.
+
 Quando un nodo *n* entra in una rete, oppure quando migra da un g-nodo ad un diverso g-nodo, le sue mappe gerarchiche dei servizi
 opzionali dovranno essere aggiornate. Se un g-nodo *w* in blocco entra in una nuova rete o migra, tutti i nodi al
 suo interno dovranno reperire e aggiornare le loro mappe.
@@ -280,11 +293,10 @@ La mappa delle rotte è un oggetto di cui il modulo conosce l'interfaccia IPeers
     fallito la comunicazione (metodo `i_peers_gateway`). Questo stub è tale che il client invia il messaggio
     con protocollo reliable (TCP) senza ricevere una risposta e senza attendere la sua processazione, ma solo
     la conferma della ricezione.
-*   Dato un livello *i* ed un livello *k* con `k > i`, ottenere uno stub per inviare un messaggio ad un mio
-    vicino (se esiste) che appartenga al mio stesso g-nodo di livello *k* ma non al mio stesso g-nodo di
-    livello *i* (metodo `i_peers_fellow`).  
+*   Dato un livello *k* ottenere uno stub per inviare un messaggio ad un mio vicino (se esiste) che abbia come
+    massimo distinto g-nodo nei miei confronti un g-nodo di livello *k* (metodo `i_peers_fellow`).  
     All'avvio dell'identità associata a questa istanza del modulo PeerServices, se essa entra insieme al suo
-    g-nodo di livello *i* dentro un g-nodo di livello *k*, allora userà subito questo
+    g-nodo di livello *i* dentro un g-nodo di livello `k + 1`, allora userà subito questo
     metodo per individuare un vicino che faceva già parte di quello stesso g-nodo in cui è entrato.
     Userà questo stub per richiedere a tale vicino la mappa corrente dei g-nodi che partecipano a servizi opzionali.
     Questo stub, quindi, è tale che il client invia il messaggio con protocollo reliable (TCP) e attende una risposta.

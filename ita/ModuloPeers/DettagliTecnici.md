@@ -36,19 +36,52 @@ Quando il nodo ha completato la sua fase di bootstrap come descritto
 nel [modulo QSPN](../ModuloQspn/AnalisiFunzionale.md), il nodo istanzia il suo
 PeersManager passando al costruttore:
 
-*   La mappa dei percorsi noti (istanza di IPeersMapPaths `map_paths`).
-*   Il livello del g-nodo che questo nodo ha costituito (int `level_new_gnode`).
+*   La precedente istanza di PeersManager (istanza di PeersManager `old_identity`).  
+    Se si tratta di un sistema appena avviato, cioè la prima identità del sistema nasce come unico
+    nodo in una nuova rete, allora questo argomento è null.  
+    In alternativa può trattarsi di una identità che viene creata per sostituire una precedente
+    identità: o in caso di ingresso in un'altra rete o in caso di migrazione in un altro
+    g-nodo. In entrambi i casi in questo argomento viene passata l'istanza di PeersManager
+    che era associata alla precedente identità.  
+    Soltanto in questo secondo caso i successivi due argomenti sono valorizzati:
+    *   Il livello del g-nodo ospite (int `guest_gnode_level`).
+    *   Il livello del g-nodo ospitante (int `host_gnode_level`).
+*   Il gestore della mappa dei percorsi noti (istanza di IPeersMapPaths `map_paths`).
 *   La stub factory per le comunicazioni via percorso interno al nodo che ha avviato una
     richiesta (istanza di IPeersBackStubFactory `back_stub_factory`).
 *   La stub factory per le comunicazioni ai vicini (istanza di IPeersNeighborsFactory `neighbors_factory`).
 
 ## <a name="Deliverables"></a>Deliverables
 
-Quando viene costruito il PeersManager gli viene passato il livello del g-nodo che il nodo ha formato.
-Se non si tratta di un nodo che ha costituito una intera rete ma piuttosto di un nodo entrato in un g-nodo
-*g* esistente, allora il modulo dialoga con un suo vicino appartenente a *g*, per reperire le mappe dei
-partecipanti ai servizi opzionali. Lo stub per parlare con il vicino è ottenuto con il metodo `i_peers_fellow`
-di `map_paths`. Il metodo remoto usato è `get_participant_set`.
+La prima identità di un sistema è sempre un nodo che costituisce una rete a sé. L'istanza di
+PeersManager che viene creata per essere associata a tale identità non ha bisogno di reperire
+inizialmente la mappa dei partecipanti ai servizi opzionali. Solo i servizi opzionali a
+cui lo stesso nodo partecipa esistono nella rete.
+
+Le successive identità nascono per fare ingresso in una rete (o un g-nodo) che esisteva
+prima di loro. L'istanza di PeersManager che viene creata per essere associata a tale identità
+deve inizialmente reperire la mappa dei partecipanti ai servizi opzionali da due fonti. La prima
+è l'istanza di PeersManager associata alla precedente identità e la seconda è il dialogo con i
+nodi vicini.
+
+Quando viene costruito il PeersManager associato ad una nuova identità (per ingresso o per
+migrazione) gli viene passato `old_identity`, `guest_gnode_level` e `host_gnode_level`.
+Accedendo alle mappe di `old_identity` recupera le mappe per i livelli da -1 (il nodo stesso)
+fino a `guest_gnode_level - 1` compreso.
+
+Poi usa il metodo `i_peers_fellow` di `map_paths` per avere uno stub con cui parlare con un
+suo vicino (se esiste) il cui massimo distinto g-nodo è di livello `host_gnode_level - 1`.  
+Difatti, avendo fatto ingresso in un g-nodo di livello `host_gnode_level`
+abbiamo formato un nuovo g-nodo di livello `host_gnode_level - 1`. Avendo fatto questo ingresso
+in blocco come g-nodo di livello `guest_gnode_level` sicuramente non esistono altri g-nodi (oltre
+a quello a cui apparteniamo) di livello compreso tra `guest_gnode_level` e `host_gnode_level - 2`.
+Quindi se il nostro nodo ha un diretto vicino che faceva già parte di quello stesso g-nodo in cui
+è entrato, questo ha come massimo distinto g-nodo nei suoi confronti un g-nodo di livello
+`host_gnode_level - 1`.
+
+Con questo stub chiama il metodo remoto `get_participant_set` e recupera le mappe per i livelli
+da `host_gnode_level - 1` a `levels - 1`. Ai livelli da `guest_gnode_level` a `host_gnode_level - 2`,
+come detto, non ci sono altri g-nodi sulla cui partecipazione dobbiamo informarci.
 
 * * *
 
