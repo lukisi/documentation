@@ -52,20 +52,20 @@ Firma: `bool check_non_participation(p_id, lvl, _pos)`
     *   Se `waiting_answer.exclude_gnode` ≠ null:
         *   Restituisce False. Rimuovi `waiting_answer_map[m’.msg_id]`. Termina algoritmo.
     *   Altrimenti-Se `waiting_answer.non_participant_gnode` ≠ null:
-        *   # significa che abbiamo ricevuto notizia di un gnodo non partecipante.
+        *   Significa che abbiamo ricevuto notizia di un gnodo non partecipante.
         *   `waiting_answer.non_participant_gnode` è un PeerTupleGNode che rappresenta un g-nodo `h` dentro il mio g-nodo di livello `top`.
         *   Se è visibile nella mia mappa, cioè se `(lvl,top)` non partecipa:
             *   Restituisci True. Rimuovi `waiting_answer_map[m’.msg_id]`. Termina algoritmo.
         *   Altrimenti:
             *   Restituisce False. Rimuovi `waiting_answer_map[m’.msg_id]`. Termina algoritmo.
     *   Altrimenti-Se `waiting_answer.response` ≠ null:
-        *   # significa che abbiamo ricevuto il contatto e che `lvl,_pos` partecipa.
+        *   Significa che abbiamo ricevuto il contatto e che `lvl,_pos` partecipa.
         *   Restituisce False. Rimuovi `waiting_answer_map[m’.msg_id]`. Termina algoritmo.
     *   Altrimenti:
-        *   # significa che abbiamo ricevuto un nuovo valore in `waiting_answer.min_target`.
+        *   Significa che abbiamo ricevuto un nuovo valore in `waiting_answer.min_target`.
         *   Restituisce False. Rimuovi `waiting_answer_map[m’.msg_id]`. Termina algoritmo.
 *   Se riceve l'eccezione `TimeoutError`:
-    *   # dobbiamo trattare `waiting_answer.min_target` come da escludere.
+    *   Dobbiamo trattare `waiting_answer.min_target` come da escludere.
     *   Restituisce False. Rimuovi `waiting_answer_map[m’.msg_id]`. Termina algoritmo.
 
 ## <a name="Divulgazione_partecipazione"></a>Algoritmo di divulgazione della partecipazione

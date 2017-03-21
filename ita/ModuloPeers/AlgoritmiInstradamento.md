@@ -58,7 +58,7 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
         *   Se riceve `PeersRefuseExecutionError e`:
             *   `refuse_messages` += `e.message`.
             *   Se `refuse_messages.length` > 500:
-                *   #Solo l'ultima parte.
+                *   Solo l'ultima parte.
                 *   `refuse_messages` = `refuse_messages.substr(refuse_messages.length-500)`.
             *   Mette `HCoord(0, pos[0])` in `exclude_gnode_list`.
             *   Continua con la prossima iterazione del ciclo 1.
@@ -73,7 +73,7 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
     *   `m’.p_id` = `p_id`.
     *   `m’.msg_id` = un identificativo generato a caso per questo messaggio.
     *   Per ogni PeerTupleGNode `t` in `exclude_tuple_list`:
-        *   # Scopriamo se `t` è interno a `x`:
+        *   Scopriamo se `t` è interno a `x`:
         *   int `case`, HCoord `ret`.
         *   Calcola `convert_tuple_gnode(t, out case, out ret)`.
         *   Se `case` = 3:
@@ -113,7 +113,7 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
         *   Try:
             *   Sta in attesa su `waiting_answer.ch` per max `tempo_attesa`.
             *   Se `waiting_answer.exclude_gnode` ≠ null:
-                *   # significa che abbiamo ricevuto notizia di un gnodo da escludere.
+                *   Significa che abbiamo ricevuto notizia di un gnodo da escludere.
                 *   `waiting_answer.exclude_gnode` è un PeerTupleGNode che rappresenta un g-nodo `h` dentro il mio
                     g-nodo di livello `top`.
                 *   Crea `t`, una istanza di PeerTupleGNode con `top=target_levels` che rappresenta il g-nodo `h`.
@@ -124,7 +124,7 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
                 *   Rimuovi `waiting_answer_map[m’.msg_id]`.
                 *   Esci dal ciclo 2.
             *   Altrimenti-Se `waiting_answer.non_participant_gnode` ≠ null:
-                *   # significa che abbiamo ricevuto notizia di un gnodo non partecipante.
+                *   Significa che abbiamo ricevuto notizia di un gnodo non partecipante.
                 *   `waiting_answer.non_participant_gnode` è un PeerTupleGNode che rappresenta un g-nodo `h` dentro il mio
                     g-nodo di livello `top`.
                 *   Crea `t`, una istanza di PeerTupleGNode con `top=target_levels` che rappresenta il g-nodo `h`.
@@ -140,19 +140,19 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
                 *   Rimuovi `waiting_answer_map[m’.msg_id]`.
                 *   Esci dal ciclo 2.
             *   Altrimenti-Se `respondant` = null **e** `waiting_answer.respondant_node` ≠ null:
-                *   # significa che abbiamo consegnato il messaggio.
+                *   Significa che abbiamo consegnato il messaggio.
                 *   `respondant` = `waiting_answer.respondant_node` come tupla fino al livello 0 nel g-nodo di ricerca.
                 *   `tempo_attesa` = `timeout_exec`.
             *   Altrimenti-Se `waiting_answer.response` ≠ null:
-                *   # significa che abbiamo ricevuto la risposta.
+                *   Significa che abbiamo ricevuto la risposta.
                 *   `response` = `waiting_answer.response`.
                 *   Rimuovi `waiting_answer_map[m’.msg_id]`.
                 *   Esci dal ciclo 2. Poi uscirai dal ciclo 1.
             *   Altrimenti-Se `respondant` ≠ null **e** `waiting_answer.refuse_message` ≠ null:
-                *   # significa che l'attuale respondant ha rifiutato di elaborare la richiesta.
+                *   Significa che l'attuale respondant ha rifiutato di elaborare la richiesta.
                 *   `refuse_messages` += `waiting_answer.refuse_message`.
                 *   Se `refuse_messages.length` > 500:
-                    *   #Solo l'ultima parte.
+                    *   Solo l'ultima parte.
                     *   `refuse_messages` = `refuse_messages.substr(refuse_messages.length-500)`.
                 *   Crea `t`, una istanza di PeerTupleGNode con `top=target_levels` che rappresenta il nodo respondant.
                 *   Se è visibile nella mia mappa:
@@ -163,13 +163,13 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
                 *   Rimuovi `waiting_answer_map[m’.msg_id]`.
                 *   Esci dal ciclo 2.
             *   Altrimenti-Se `respondant` ≠ null **e** `waiting_answer.redo_from_start`:
-                *   # significa che l'attuale respondant ha dato istruzione di riavviare il calcolo distribuito di H<sub>t</sub>.
+                *   Significa che l'attuale respondant ha dato istruzione di riavviare il calcolo distribuito di H<sub>t</sub>.
                 *   Return `contact_peer(...)`. Riavvia l'algoritmo.
             *   Altrimenti:
-                *   # significa che abbiamo ricevuto un nuovo valore in `waiting_answer.min_target`.
+                *   Significa che abbiamo ricevuto un nuovo valore in `waiting_answer.min_target`.
                 *   Nessuna operazione.
         *   Se riceve l'eccezione `TimeoutError`:
-            *   # dobbiamo trattare `waiting_answer.min_target` come da escludere.
+            *   Dobbiamo trattare `waiting_answer.min_target` come da escludere.
             *   `waiting_answer.min_target` è un PeerTupleGNode che rappresenta un g-nodo `h` dentro il mio g-nodo di livello `top`.
             *   Crea `t`, una istanza di PeerTupleGNode con `top=target_levels` che rappresenta il g-nodo `h`.
             *   Se è visibile nella mia mappa:
@@ -181,7 +181,7 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
             *   Esci dal ciclo 2.
     *   Se `response` ≠ null:
         *   Esci dal ciclo 1.
-*   # Uscito dal ciclo 1.
+*   Uscito dal ciclo 1.
 *   Restituisce `response`.
 
 **forward_peer_message**
@@ -262,7 +262,7 @@ Firma: `void forward_peer_message(m’)`
                 *   `m’’.pos` = `x.pos`.
                 *   `m’’.x̄` = la tupla *x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>k-1</sub>* dove *k* = `x.lvl`. E' null se *k* = 0.
                 *   Per ogni PeerTupleGNode `t` in `m’.exclude_tuple_list`:
-                    *   # Scopriamo se t è interno a x:
+                    *   Scopriamo se t è interno a x:
                     *   int `case`, HCoord `ret`.
                     *   Calcola `convert_tuple_gnode(t, out case, out ret)`.
                     *   Se `case` = 3:
@@ -329,7 +329,7 @@ Firma: `HCoord? approximate(x̄, exclude_list)`
     *   PeerTupleNode? `x̄`,
     *   List di HCoord `exclude_list`.
 *   Se `x̄` = null:
-    *   # la destinazione sono io o nessun altro.
+    *   La destinazione sono io o nessun altro.
     *   `x` = `new HCoord(0,pos[0])`. Cioè `x` rappresenta me.
     *   Se `x` ∉ `exclude_list`:
         *   Return `x`.
@@ -423,7 +423,7 @@ Firma: `IPeersRequest get_request(int msg_id, IPeerTupleNode _respondant) throws
 *   `wa.respondant_node` = `respondant`.
 *   Si segnala l'evento sul canale con `wa.ch.send_async(0)`.
 *   Se `wa.request` = null:
-    *   # Si tratta di una finta richiesta, vedi `check_non_participation` richiamato dal `forward_peer_message`.
+    *   Si tratta di una finta richiesta, vedi `check_non_participation` richiamato dal `forward_peer_message`.
     *   Lancia l'eccezione `PeersUnknownMessageError`.
 *   Altrimenti:
     *   Return `wa.request`.

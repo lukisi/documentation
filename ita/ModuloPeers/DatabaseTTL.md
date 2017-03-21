@@ -361,7 +361,7 @@ Algoritmo all'avvio:
     *   `tdd.dh.ready` = `True`.
     *   Se `new_network`:
         *   `tdd.dh.timer_default_non_exhaustive` = un nuovo timer che scade dopo **0** millisecondi.
-        *   Return. # L'algoritmo termina.
+        *   Return. L'algoritmo termina.
     *   `IPeersRequest r` = `new RequestSendKeys()`.
     *   `PeerTupleNode tuple_n`.
     *   `PeerTupleNode respondant`.
@@ -372,10 +372,10 @@ Algoritmo all'avvio:
         *   Esegue `ret = contact_peer(p_id, tuple_n, r, tdd.ttl_db_timeout_exec_send_keys, True, out respondant)`.
     *   Se riceve PeersNoParticipantsInNetworkError:
         *   `tdd.dh.timer_default_non_exhaustive` = un nuovo timer che scade dopo **0** millisecondi.
-        *   Return. # L'algoritmo termina.
+        *   Return. L'algoritmo termina.
     *   Se riceve PeersDatabaseError:
         *   `tdd.dh.timer_default_non_exhaustive` = un nuovo timer che scade dopo **0** millisecondi.
-        *   Return. # L'algoritmo termina.
+        *   Return. L'algoritmo termina.
     *   `timer_startup` = un nuovo timer che scade dopo `tdd.ttl_db_msec_ttl / 10` millisecondi.
     *   Try:
         *   Il valore restituito `ret` dovrebbe essere un RequestSendKeysResponse, cioè una lista di Object.
@@ -386,7 +386,7 @@ Algoritmo all'avvio:
                     *   Se `tdd.is_valid_key(k)`:
                         *   Se **not** `tdd.my_records_contains(k)` **e** **not** `ttl_db_is_exhaustive(tdd, k)`
                             **e** **not** `tdd.dh.retrieving_keys.has_key(k)`:
-                            *   # Non sa nulla di `k`.
+                            *   Non sa nulla di `k`.
                             *   `h_p_k` = `tdd.evaluate_hash_node(k)`.
                             *   `l` = `h_p_k.size`.
                             *   `int case`.
@@ -402,7 +402,7 @@ Algoritmo all'avvio:
         *   Prepara `exclude_tuple_list` = \[]  una lista di istanze di tuple globali nel g-nodo di ricerca di livello *levels*.
         *   Metti in `exclude_tuple_list` il nodo `respondant`, espresso come PeerTupleGNode di livello 0 nel g-nodo di livello *levels*.
         *   While **not** `ttl_db_is_out_of_memory(tdd)`:
-            *   # la memoria destinata da *n* al servizio *p* non è esaurita.
+            *   La memoria destinata da *n* al servizio *p* non è esaurita.
             *   Attendi 2 secondi.
             *   Se `timer_startup.is_expired()`: return.
             *   `respondant` = null. Sarà una tupla nel g-nodo di livello *levels*, poiché `tuple_n` ha *levels*.
@@ -414,7 +414,7 @@ Algoritmo all'avvio:
                     *   Se `tdd.is_valid_key(k)`:
                         *   Se **not** `tdd.my_records_contains(k)` **e** **not** `ttl_db_is_exhaustive(tdd, k)`
                             **e** **not** `tdd.dh.retrieving_keys.has_key(k)`:
-                            *   # Non sa nulla di `k`.
+                            *   Non sa nulla di `k`.
                             *   `h_p_k` = `tdd.evaluate_hash_node(k)`.
                             *   `l` = `h_p_k.size`.
                             *   `int case`.
@@ -433,10 +433,10 @@ Algoritmo all'avvio:
                 g-nodo di livello *levels*.
     *   Se riceve PeersNoParticipantsInNetworkError:
         *   `tdd.dh.timer_default_non_exhaustive` = un nuovo timer che scade dopo **0** millisecondi.
-        *   Return. # L'algoritmo termina.
+        *   Return. L'algoritmo termina.
     *   Se riceve PeersDatabaseError:
         *   `tdd.dh.timer_default_non_exhaustive` = un nuovo timer che scade dopo **0** millisecondi.
-        *   Return. # L'algoritmo termina.
+        *   Return. L'algoritmo termina.
 
 Algoritmo alla ricezione della richiesta:
 
@@ -456,7 +456,7 @@ Algoritmo alla ricezione della richiesta:
         *   Se `ret.lst.size` ≥ `r.max_count`:
             *   Esci dal ciclo.
     *   Return `ret`.
-    *   # L'algoritmo termina.
+    *   L'algoritmo termina.
 *   Se `tdd.is_insert_request(r)`:
     *   `Object k` = `tdd.get_key_from_request(r)`.
     *   Se `tdd.my_records_contains(k)`:

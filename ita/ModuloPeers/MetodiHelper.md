@@ -163,9 +163,9 @@ Firma: `bool visible_by_someone_inside_my_gnode(PeerTupleGNode t, int lvl)`
     *   `l` = `lvl`.
 *   Se `t.top` ≤ `l`:
     *   Return True.
-*   # Calcola `h` il g-nodo di livello `l` in cui si trova `g`.
+*   Calcola `h` il g-nodo di livello `l` in cui si trova `g`.
 *   PeerTupleGNode `h` = `new PeerTupleGNode(t.tuple.slice(l-𝜀, t.tuple.size), t.top)`.
-*   # Ora scopriamo se `h` è uno dei g-nodi a cui appartiene `n`.
+*   Ora scopriamo se `h` è uno dei g-nodi a cui appartiene `n`.
 *   int `case`, HCoord `ret`.
 *   `convert_tuple_gnode(h, out case, out ret)`.
 *   Se `case` = 1:
