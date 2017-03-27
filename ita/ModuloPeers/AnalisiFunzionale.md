@@ -61,12 +61,13 @@ il nodo e chiede di leggere il dato associato a *k*.
 Questo  procedimento realizza un database distribuito, perché ogni nodo  mantiene solo una porzione delle
 associazioni chiave-valore.
 
-Fondamentale è la funzione *H<sub>t</sub>*. Questa funzione è indipendente dal servizio *p*, può quindi essere
-definita e implementata una volta sola. Essa è dipendente dalla conoscenza del dominio di *𝛼<sub>t</sub>*, cioè
-di quali indirizzi in *S* sono detenuti da almeno un nodo. Inoltre, in caso di servizi opzionali, è dipendente
-anche dalla conoscenza di quali indirizzi sono detenuti da nodi che partecipano al servizio.
+Fondamentale è la funzione *H<sub>t</sub>*. Questa funzione ha un comportamento unico, indipendente
+dalle caratteristiche dello specifico servizio *p*, può quindi essere definita e implementata una volta sola.
+Nelle sue operazioni, comunque, deve conoscere l'identificativo univoco del servizio *p* in esame
+in quanto, se il servizio è opzionale, il risultato dipende dalla conoscenza di quali indirizzi sono detenuti
+da nodi che partecipano al servizio. Si tratta in questi casi di un sottinsieme del dominio di *𝛼<sub>t</sub>*.
 
-La conoscenza degli indirizzi detenuti dai nodi presenti nella rete è realizzata attraverso il protocollo di
+La conoscenza degli indirizzi detenuti dai nodi presenti nella rete (cioè del dominio di *𝛼<sub>t</sub>*) è realizzata attraverso il protocollo di
 routing Qspn. Occorre invece definire un ulteriore meccanismo per giungere alla conoscenza di quali indirizzi
 sono detenuti da nodi che partecipano ad ognuno dei servizi opzionali.
 
@@ -189,19 +190,28 @@ sarebbero stati i più prossimi destinatari della richiesta in caso di sua assen
 
 * * *
 
-Un nodo che intende partecipare attivamente ad un servizio, se fa ingresso in una rete esistente, può trovarsi
+Un nodo che intende partecipare attivamente ad un servizio, quando fa ingresso (da solo o in blocco insieme ad un g-nodo)
+in una rete esistente oppure quando migra da un g-nodo ad un altro, può trovarsi
 in bisogno di reperire i record che sono di sua pertinenza nel mantenimento del database distribuito, come destinatario
 principale o come replica. Nell'espletamento di questa mansione il nodo si può avvalere di alcune *funzioni helper*
 che il modulo PeerServices fornisce.
 
 ## <a name="Requisiti"></a>Requisiti
 
-*   Mappa delle rotte note.
-*   Livello del g-nodo che questo nodo ha formato entrando nella rete.
+*   Mappa corrente dei percorsi noti.
 *   Factory per aprire una connessione TCP con un percorso interno ad un proprio  g-nodo verso un nodo di cui si
     conosce l'identificativo interno.
 *   Factory per ottenere uno stub per inviare un messaggio in broadcast (con callback per gli archi in cui il
     messaggio fallisce) o uno stub per inviare un messaggio su un arco in modo reliable.
+
+Inoltre, se non si tratta di un sistema appena avviato (cioè della prima identità del sistema, la quale nasce
+come unico nodo in una nuova rete) ma di una identità che viene creata per sostituire una precedente
+identità, cioè o in caso di ingresso in un'altra rete o in caso di migrazione in un altro g-nodo, il modulo
+deve conoscere:
+
+*   L'istanza del modulo che era associata alla precedente identità.
+*   Il livello del g-nodo ospite.
+*   Il livello del g-nodo ospitante.
 
 ## <a name="Deliverables"></a>Deliverables
 
@@ -209,9 +219,9 @@ che il modulo PeerServices fornisce.
     servizio peer-to-peer, sia quelli opzionali che quelli non opzionali.
 *   Viene definita una classe base astratta (PeerClient) che deve essere derivata per implementare una classe da
     usare come client per un servizio peer-to-peer.
-*   Emette un segnale quando ha completato con successo la fase di reperimento delle mappe di partecipazione ai
+*   Emette un segnale quando ha completato con successo la fase di reperimento delle mappe dei
     servizi opzionali.
-*   Emette un segnale se l'operazione di reperimento delle mappe di partecipazione ai servizi opzionali fallisce.
+*   Emette un segnale se l'operazione di reperimento delle mappe dei servizi opzionali fallisce.
     In questo caso il nodo è tenuto a ripetere le operazioni di ingresso nella rete.
 *   Fornisce un metodo (`register`) per registrare le istanze di classi che rappresentano un servizio a cui il
     nodo partecipa.
@@ -377,11 +387,14 @@ identificativo.
 La classe base ha un membro booleano `p_is_optional` che dice se il servizio è da considerarsi opzionale. Esso è
 valorizzato nel costruttore ed è in seguito di sola lettura.
 
-La classe base ha un metodo virtuale `is_ready()` che dice se il nodo è pronto a servire. L'implementazione della
+La classe base ha un metodo virtuale `is_ready(int inside_level)` che dice se il nodo è pronto a servire una
+richiesta che è stata esplicitamente circoscritta al suo g-nodo di un certo livello. L'implementazione della
 classe base risponde sempre True. La classe del servizio che la deriva può modificare l'implementazione. In questo
-caso il nodo può decidere, secondo la logica propria del servizio specifico, di non rispondere in certi momenti
-alle richieste. Questo nonostante che il nodo sia partecipante a questo servizio, sia esso opzionale o non. Infatti
-se non fosse partecipante non esisterebbe l'istanza registrata nel modulo PeersManager.
+caso il nodo può decidere in certi momenti, secondo la logica propria del servizio specifico e sapendo a quale livello
+la richiesta è stata circoscritta, di dichiararsi non pronto a rispondere alle richieste. Si noti che questa
+dichiarazione va fatta dal nodo senza sapere quale sia la specifica richiesta e neppure se effettivamente al
+momento la ricerca dell'hash-node individuerebbe il nodo corrente oppure no. Ma sicuramente il nodo corrente
+è partecipante a questo servizio, sia esso opzionale o no.
 
 La classe base ha un metodo astratto `exec` che viene richiamato sull'hash_node che è chiamato a servire una
 richiesta. Se viene chiamato significa che:
