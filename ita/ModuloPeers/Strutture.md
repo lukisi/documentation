@@ -14,11 +14,11 @@ La classe serializzabile che identifica un nodo *n* (o un indirizzo da approssim
 g-nodo *g*. Deve contenere:
 
 *   `tuple`:
-    *   la lista di posizioni n<sub>0</sub>·...·n<sub>j-1</sub>, dove j è il livello del g-nodo g.
+    *   la lista di posizioni n<sub>0</sub>·...·n<sub>j-1</sub>, dove *j* è il livello del g-nodo *g*.
 
-Il livello del g-nodo g è intrinsecamente indicato nella dimensione della tupla.
+Il livello del g-nodo *g* è intrinsecamente indicato nella dimensione della tupla.
 
-Il g-nodo g è sempre individuabile come vedremo sotto nei casi d'uso.
+Il g-nodo *g* è sempre individuabile come vedremo sotto nei casi d'uso.
 
 Si può testare la validità di un oggetto PeerTupleNode ricevuto dalla rete verificando che:
 
@@ -33,13 +33,13 @@ in modo diverso e restituire una tupla con un numero minore di elementi per indi
 circoscritta ad un proprio g-nodo; in questo caso il g-nodo *g* è uno dei g-nodi a cui il nodo corrente
 (che ha calcolato *h<sub>p</sub>*) appartiene.
 
-Questa classe è usata anche per indicare, all'interno del messaggio m’, un indirizzo all'interno del g-nodo
+Questa classe è usata anche per indicare, all'interno del messaggio *m’*, un indirizzo all'interno del g-nodo
 che è la corrente destinazione del messaggio; in questo caso il g-nodo *g* è individuato dalle coordinate
-m’.lvl, m’.pos.
+`(m’.lvl, m’.pos)`.
 
 Questa classe è usata anche per individuare il nodo *n* originante di un messaggio e viene scritta nel
-messaggio, nel suo membro *m’.n*. Il nodo n, quando genera il messaggio m’, individua anche un g-nodo a cui
-esso appartiene e all'interno del quale avverrà tutto l'instradamento di m’. Esso è il g-nodo *g* in questo caso.
+messaggio, nel suo membro *m’.n*. Il nodo *n*, quando genera il messaggio *m’*, individua anche un g-nodo a cui
+esso appartiene e all'interno del quale avverrà tutto l'instradamento di *m’*. Esso è il g-nodo *g* in questo caso.
 
 ## <a name="PeerTupleGNode"></a>PeerTupleGNode
 
@@ -47,31 +47,31 @@ La classe serializzabile che identifica un g-nodo *h* (possibile che sia di live
 di un g-nodo *g*. Deve contenere:
 
 *   `top`:
-    *   int. Il livello del g-nodo g.
+    *   int. Il livello del g-nodo *g*.
 *   `tuple`:
     *   la lista di posizioni h<sub>𝜀</sub>·...·h<sub>top-1</sub>.
 
-Il valore di 𝜀, che è il livello del g-nodo h, si calcola come top - tuple.size.
+Il valore di *𝜀*, che è il livello del g-nodo *h*, si calcola come `top - tuple.size`.
 
-Il g-nodo g è sempre individuabile come vedremo sotto nei casi d'uso.
+Il g-nodo *g* è sempre individuabile come vedremo sotto nei casi d'uso.
 
 Si può testare la validità di un oggetto PeerTupleGNode ricevuto dalla rete verificando che:
 
 *   0﹤`tuple.size` ≤ `top` ≤ `levels`
+*   `𝜀` = `top` - `tuple.size`
 *   Per `i` da 0 a `tuple.size-1`:
-    *   𝜀 = `top` - `tuple.size`
     *   0 ≤ `tuple[i]`﹤`gsizes[𝜀+i]`
 
-Questa classe è usata per identificare, all'interno del messaggio m’, un g-nodo *h* da escludere dal calcolo
-distribuito di H<sub>t</sub>; in questo caso il g-nodo *g* è individuato dalle coordinate m’.lvl, m’.pos.
+Questa classe è usata per identificare, all'interno del messaggio *m’*, un g-nodo *h* da escludere dal calcolo
+distribuito di *H<sub>t</sub>*; in questo caso il g-nodo *g* è individuato dalle coordinate `(m’.lvl, m’.pos)`.
 
 Questa classe è usata anche per identificare un g-nodo *h* di cui si sta  divulgando la partecipazione ad un
 servizio  opzionale; questa divulgazione avviene sempre a livello globale, quindi in questo caso il g-nodo *g*
 è l'intera rete.
 
 Questa classe è usata anche per identificare un g-nodo *h* di cui si sta divulgando la non-partecipazione ad
-un servizio opzionale; questa divulgazione avviene contestualmente all'instradamento di un messaggio m’ per
-il calcolo distribuito di H<sub>t</sub> e siccome questo calcolo può avvenire anche in modo circoscritto ad
+un servizio opzionale; questa divulgazione avviene contestualmente all'instradamento di un messaggio *m’* per
+il calcolo distribuito di *H<sub>t</sub>* e siccome questo calcolo può avvenire anche in modo circoscritto ad
 un g-nodo, in questo caso il g-nodo *g* di riferimento può non essere l'intera rete, ma sicuramente è sempre
 uno dei g-nodi a cui il nodo corrente appartiene.
 
@@ -91,19 +91,21 @@ L'interfaccia esposta dalla classe consente di:
 
 ## <a name="PeerMessageForwarder"></a>PeerMessageForwarder
 
-La classe serializzabile per inviare i messaggi m’. Deve contenere:
+La classe serializzabile per inviare i messaggi *m’*. Deve contenere:
 
+*   `inside_level`:
+    *   int. La ricerca dell'hash-node per la chiave è stata fin dall'inizio circoscritta al g-nodo di questo livello.
 *   `n`:
-    *   PeerTupleNode di posizioni da 0 a j che identifica il nodo originante dentro il g-nodo di livello j+1
+    *   PeerTupleNode di posizioni da 0 a *j* che identifica il nodo originante dentro il g-nodo di livello *j+1*
         in cui il messaggio si muove sin dall'inizio.
 *   `x_macron`:
-    *   PeerTupleNode di posizioni da 0 a lvl-1 che identifica un indirizzo di nodo dentro il g-nodo attuale
-        destinazione del messaggio. Può essere null se lvl=0.
+    *   PeerTupleNode di posizioni da 0 a `lvl-1` che identifica un indirizzo di nodo dentro il g-nodo attuale
+        destinazione del messaggio. Può essere null se `lvl` è 0.
 *   `lvl`:
     *   int.
 *   `pos`:
-    *   int. lvl+pos identificano il g-nodo attuale destinazione del messaggio, che ora si muove internamente
-        al livello lvl+1.
+    *   int. `(lvl, pos)` identificano il g-nodo attuale destinazione del messaggio, che ora si muove internamente
+        al livello `lvl+1`.
 *   `p_id`:
     *   int.
 *   `msg_id`:
@@ -114,7 +116,7 @@ La classe serializzabile per inviare i messaggi m’. Deve contenere:
 *   `non_participant_tuple_list`:
     *   lista di PeerTupleGNode che rappresentano g-nodi non partecipanti;
     *   Tali g-nodi sono dentro un g-nodo *g* a cui il nodo corrente appartiene. Se la ricerca distribuita
-        di H<sub>t</sub> è portata avanti in modo circoscritto ad un g-nodo allora *g* è quel g-nodo; altrimenti
+        di *H<sub>t</sub>* è portata avanti in modo circoscritto ad un g-nodo allora *g* è quel g-nodo; altrimenti
         *g* è l'intera rete.
 
 Si può testare la validità di un oggetto PeerMessageForwarder ricevuto dalla rete verificando che:
@@ -169,7 +171,7 @@ Contiene:
         ripartire.
 *   `redo_from_start`:
     *   Booleano inizialmente a False. Dice che è stata ricevuta l'istruzione di riavviare da capo il calcolo
-        distribuito di H<sub>t</sub>.
+        distribuito di *H<sub>t</sub>*.
 
 ## <a name="PeerParticipantMap"></a>PeerParticipantMap
 

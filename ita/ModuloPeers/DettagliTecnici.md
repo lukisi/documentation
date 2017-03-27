@@ -164,18 +164,28 @@ ha indirizzo n<sub>0</sub>·n<sub>1</sub>·...·n<sub>l-1</sub>. Ha inoltre una 
 *   tutti i g-nodi di livello l-1.
 
 Il nodo *n* usa la funzione *h<sub>p</sub>* definita da *p* per calcolare dalla chiave *k* l'indirizzo *x̄* formato
-da x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>l-1</sub>. A questo punto dovrebbe calcolare *x=H<sub>t</sub>(x̄)*. Procede così:
+da x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>w-1</sub>. Abbiamo qui indicato una tupla di *w* elementi con *w* ≤ *l*
+perché, ricordiamo, uno specifico servizio potrebbe sulla base della chiave *k* decidere di circoscrivere la
+ricerca dell'hash-node dentro un suo g-nodo di livello *w*.
+
+A questo punto dovrebbe calcolare *x=H<sub>t</sub>(x̄)*. Procede così:
 
 *   Il nodo *n* calcola *H<sub>t</sub>(x̄)* secondo le sue conoscenze, cioè trova un livello *j* e un identificativo
     *x<sub>j</sub>* tali che:
-    *   *x<sub>j</sub>* ∈ *n<sub>j+1</sub>*, oppure *j* = *l-1*.
+
+    *   *x<sub>j</sub>* ∈ *n<sub>j+1</sub>*, oppure *j* = *w-1*.
     *   Il gnodo *x<sub>j</sub>* è quello, fra le conoscenze di *n*, che minimizza la funzione *dist(x̄, x<sub>j</sub>)*.
     *   *x<sub>j</sub>* ≠ *n<sub>j</sub>*, oppure lo stesso nodo *n* è il risultato.
     *   *x<sub>j</sub>* partecipa al servizio (cioè almeno un nodo all'interno di *x<sub>j</sub>* partecipa).
-*   Le  conoscenze del nodo *n* riguardo la partecipazione al servizio possono  essere non aggiornate rispetto agli
+
+    Le  conoscenze del nodo *n* riguardo la partecipazione al servizio possono  essere non aggiornate rispetto agli
     altri nodi, ma a questo come vedremo  in seguito l'algoritmo pone rimedio. Si noti invece che il nodo *n* sa
-    con certezza se esso stesso partecipa al servizio, quindi il calcolo di   *H<sub>t</sub>(x̄)* può dare come risultato
-    lo stesso nodo *n* solo se questo partecipa.
+    con certezza se esso stesso partecipa al servizio, quindi il calcolo di *H<sub>t</sub>(x̄)* può dare come risultato
+    lo stesso nodo *n* solo se questo partecipa.  
+    Inoltre il nodo *n*, se partecipa al servizio *p*, valuta anche la risposta del metodo `is_ready` sulla classe
+    del servizio *p* usando come valore di `inside_level` la lunghezza della tupla *x̄*. Questo metodo permette
+    alla classe dello specifico servizio di optare per escludersi dalla ricerca dell'hash-node destinato a
+    rispondere alla richiesta.
 *   Se il risultato è lo stesso nodo *n* l'algoritmo termina e si passa subito all'esecuzione del messaggio *m*.
 *   Se *j* = 0 allora *n* ha trovato con le sue sole conoscenze *x<sub>0</sub>* = *H<sub>t</sub>(x̄)*.
 *   Se *j* > 0 allora il nodo *n* non conosce l'interno del gnodo *x<sub>j</sub>*.    Ma la sua esistenza e partecipazione
@@ -185,11 +195,15 @@ da x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>l-1</sub>. A questo punto dovr
     percorso che il messaggio deve fare è all'interno di questo  g-nodo; quindi ogni singolo nodo intermedio che
     riceve il messaggio non  necessita, per inoltrarlo, di identificativi a livelli maggiori di *j*.
 *   Il nodo n prepara un messaggio *m’* da inoltrare al gnodo *x<sub>j</sub>*. Questo messaggio contiene:
+
+    *   `inside_level`: il livello del g-nodo in cui la ricerca è circoscritta. Come detto sopra esso è *w*, cioè
+        la lunghezza della tupla *x̄*.
     *   `n`: la tupla n<sub>0</sub>·n<sub>1</sub>·...·n<sub>j</sub>.
     *   `x̄`: la tupla x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>j-1</sub>.
     *   `lvl, pos`: le coordinate del g-nodo che miriamo a raggiungere, cioè *j* e  *x<sub>j</sub>*.
     *   `p_id`: l'identificativo del servizio *p*.
     *   `msg_id`: un identificativo generato a caso per questo messaggio.
+
 *   Il nodo *n* invia il messaggio *m’* al suo miglior gateway verso il gnodo *x<sub>j</sub>*.  Questo invio viene fatto
     con protocollo reliable (TCP) senza ricevere  una risposta e senza attendere la sua processazione: d'ora in poi
     intenderemo tutto questo quando diremo che un nodo instrada un messaggio ad un suo gateway. Se la comunicazione
@@ -215,7 +229,9 @@ Il messaggio *m’* raggiunge un nodo dentro il gnodo che mirava a raggiungere.
 *   Se  *m’.lvl* = 0 allora il messaggio è giunto alla destinazione finale (vedi  sotto il proseguimento
     dell'algoritmo). Altrimenti si prosegue.
 *   Il nodo *v* calcola *H<sub>t</sub>(m’.x̄)* secondo le sue conoscenze relative al suo g-nodo di livello *m’.lvl*,
-    cioè trova un livello *k* e un identificativo *x<sub>k</sub>*. Sicuramente `k < m’.lvl`.
+    cioè trova un livello *k* e un identificativo *x<sub>k</sub>*. Sicuramente `k < m’.lvl`.  
+    Inoltre il nodo *v*, se partecipa al servizio *p*, valuta anche la risposta del metodo `is_ready(m’.inside_level)`
+    sulla classe del servizio *p*.
 *   Se il nodo *v* trova che esso stesso è *H<sub>t</sub>(m’.x̄)*  allora il messaggio è giunto alla destinazione
     finale (vedi sotto il  proseguimento dell'algoritmo). Altrimenti si prosegue.
 *   Il nodo *v* duplica il messaggio *m’* in *m’’* e poi modifica i seguenti membri del messaggio *m’’*:
@@ -307,7 +323,10 @@ deve avere una istanza della classe PeerClient del servizio *p*. Questa conosce 
 *x̄* = *h<sub>p</sub>(k)*, il tempo massimo di attesa dell'esecuzione `timeout_exec`, come produrre la richiesta
 *r* di tipo IPeersRequest e come interpretare la risposta di tipo IPeersResponse. Sempre l'istanza della classe
 PeerClient, avvia il seguente algoritmo, che in seguito chiamiamo `contact_peer`, che ha come argomenti
-(`p_id, x̄, r, timeout_exec, exclude_myself`) e restituisce come risultato una istanza di IPeersResponse.
+(`p_id, x̄, r, timeout_exec, exclude_myself`) e restituisce come risultato una istanza di IPeersResponse.  
+Con l'introduzione del booleano `exclude_myself` permettiamo al richiedente del servizio (precisamente
+alla classe che implementa il PeerClient) di escludere direttamente la partecipazione del nodo stesso alla
+risposta.
 
 *   Metti `refuse_messages` = "".
 *   Prepara una lista vuota `exclude_gnode_list` di istanze HCoord. Qui finiranno i g-nodi visibili nella mappa
@@ -315,7 +334,10 @@ PeerClient, avvia il seguente algoritmo, che in seguito chiamiamo `contact_peer`
 *   Se il servizio `p_id` è opzionale:
     *   Mette in `exclude_gnode_list` tutti i g-nodi che stando alle sue conoscenze attuali non partecipano
         a `p_id`.
-*   Se `exclude_myself`, cioè *n* non intende partecipare (potrebbe volersi escludere anche se *p* non è opzionale):
+*   Oltre a guardare `exclude_myself` come specificato dalla classe client di *p*, se il nodo *n* partecipa al
+    servizio *p* chiede alla classe server di *p* se è pronta a rispondere con il metodo `is_ready` al
+    livello indicato dalla lunghezza della tupla `x̄`.  
+    Se *n* non intende partecipare:
     *   Mette se stesso `(0, pos[0])` in `exclude_gnode_list`.
 *   Prepara una lista vuota `exclude_tuple_list`  di tuple globali nel g-nodo di ricerca. Qui finiranno i
     g-nodi non visibili nella mappa di *n*  che andranno esclusi in eventuali successivi tentativi di raggiungere
@@ -419,7 +441,9 @@ Durante l'istradamento del messaggio *m’* il nodo *v* riceve il messaggio.
         *   Se il servizio *p* è opzionale:
             *   Mette  in `exclude_gnode_list` tutti i g-nodi di livello inferiore a *m’.lvl* che  stando alle sue
                 conoscenze attuali non partecipano a *p*.
-        *   Se *v* non intende partecipare (potrebbe volersi escludere anche se *p* non è opzionale):
+        *   Se il nodo *v* partecipa al servizio *p* chiede alla classe server di *p* se è pronta a rispondere con il metodo
+            `is_ready` al livello indicato da `m’.inside_level`.  
+            Se *v* non intende partecipare:
             *   Mette se stesso `(0, pos[0])` in `exclude_gnode_list`.
         *   Esamina la lista `m’.exclude_tuple_list` di tuple interne. Se vi sono delle tuple che identificano
             dei g-nodi visibili nella mappa di *v* li inserisce in `exclude_gnode_list` come istanza di HCoord.
