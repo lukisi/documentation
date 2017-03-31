@@ -24,7 +24,7 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
 *   bool `opzionale` = False.
 *   Se `services.has_key(p_id)`:
     *   `opzionale` = `services[p_id].p_is_optional`.
-    *   Se **NOT** `services[m’.p_id].is_ready()`:
+    *   Se **NOT** `services[m’.p_id].is_ready(target_levels)`:
         *   `exclude_myself` = True.
 *   Altrimenti:
     *   `opzionale` = True.
@@ -66,8 +66,9 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
             `top` = `target_levels`, cioè il nodo stesso.
         *   Restituisce `response`. Termina l'algoritmo.
     *   `m’` = `new PeerMessageForwarder`.
-    *   `m’.n` = la tupla n<sub>0</sub>·n<sub>1</sub>·...·n<sub>j</sub> dove j = `x.lvl`.
-    *   `m’.x̄` = la tupla x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>j-1</sub>. E' null se j = 0.
+    *   `m’.inside_level` = `target_levels`.
+    *   `m’.n` = la tupla *n<sub>0</sub>·n<sub>1</sub>·...·n<sub>j</sub>* dove *j* = `x.lvl`.
+    *   `m’.x̄` = la tupla *x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>j-1</sub>*. E' null se *j* = 0.
     *   `m’.lvl` = `x.lvl`.
     *   `m’.pos` = `x.pos`.
     *   `m’.p_id` = `p_id`.
@@ -163,7 +164,7 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
                 *   Rimuovi `waiting_answer_map[m’.msg_id]`.
                 *   Esci dal ciclo 2.
             *   Altrimenti-Se `respondant` ≠ null **e** `waiting_answer.redo_from_start`:
-                *   Significa che l'attuale respondant ha dato istruzione di riavviare il calcolo distribuito di H<sub>t</sub>.
+                *   Significa che l'attuale respondant ha dato istruzione di riavviare il calcolo distribuito di *H<sub>t</sub>*.
                 *   Return `contact_peer(...)`. Riavvia l'algoritmo.
             *   Altrimenti:
                 *   Significa che abbiamo ricevuto un nuovo valore in `waiting_answer.min_target`.
@@ -193,7 +194,7 @@ Firma: `void forward_peer_message(m’)`
 *   bool `exclude_myself` = False.
 *   Se `services.has_key(m’.p_id)`:
     *   `opzionale` = `services[m’.p_id].p_is_optional`.
-    *   `exclude_myself` = **NOT** `services[m’.p_id].is_ready()`.
+    *   `exclude_myself` = **NOT** `services[m’.p_id].is_ready(m’.inside_level)`.
 *   Altrimenti:
     *   `opzionale` = True.
 *   Se `pos[m’.lvl] = m’.pos`:
@@ -262,7 +263,7 @@ Firma: `void forward_peer_message(m’)`
                 *   `m’’.pos` = `x.pos`.
                 *   `m’’.x̄` = la tupla *x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>k-1</sub>* dove *k* = `x.lvl`. E' null se *k* = 0.
                 *   Per ogni PeerTupleGNode `t` in `m’.exclude_tuple_list`:
-                    *   Scopriamo se t è interno a x:
+                    *   Scopriamo se `t` è interno a `x`:
                     *   int `case`, HCoord `ret`.
                     *   Calcola `convert_tuple_gnode(t, out case, out ret)`.
                     *   Se `case` = 3:
@@ -346,14 +347,14 @@ Firma: `HCoord? approximate(x̄, exclude_list)`
     *   Se `x` ∉ `exclude_list`:
         *   PeerTupleNode `tuple_x` = `make_tuple_node(x, valid_levels)`.
         *   `distance` = `dist(x̄, tuple_x)`.
-        *   Se `min_distance` = -1 OR `distance` < `min_distance`:
+        *   Se `min_distance` = -1 **OR** `distance` < `min_distance`:
             *   `ret` = `x`.
             *   `min_distance` = `distance`.
 *   `x` = `new HCoord(0,pos[0])`. Cioè `x` rappresenta me.
 *   Se `x` ∉ `exclude_list`:
     *   PeerTupleNode `tuple_x` = `make_tuple_node(x, valid_levels)`.
     *   `distance` = `dist(x̄, tuple_x)`.
-    *   Se `min_distance` = -1 OR `distance` < `min_distance`:
+    *   Se `min_distance` = -1 **OR** `distance` < `min_distance`:
         *   `ret` = `x`.
         *   `min_distance` = `distance`.
 *   Return `ret`.

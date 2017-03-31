@@ -121,9 +121,10 @@ La classe serializzabile per inviare i messaggi *m’*. Deve contenere:
 
 Si può testare la validità di un oggetto PeerMessageForwarder ricevuto dalla rete verificando che:
 
+*   0 < `inside_level` ≤ `levels`
 *   `n` è valido
-*   0 ≤ `lvl`﹤`levels`
-*   0 ≤ `pos`﹤`gsizes[lvl]`
+*   0 ≤ `lvl` < `levels`
+*   0 ≤ `pos` < `gsizes[lvl]`
 *   `n.tuple.size` > `lvl`
 *   se `x_macron` non è null:
     *   `x_macron` è valido

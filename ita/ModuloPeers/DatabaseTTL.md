@@ -63,12 +63,12 @@ Ci sono 3 possibili esiti finali a questa richiesta:
     Chiamiamolo esito "OK".
 1.  Il nodo *q* viene informato che la chiave *k* non è presente nel database. Chiamiamolo esito "NOT-FOUND".
 
-E' importante che l'operazione di sola lettura sia distinta dalle operazioni che **possono** diventare un
-aggiornamento. Diciamo *possono* dal punto di vista di un nodo *n’* che, contattato durante il cammino di
-ricerca dell'​*hash-node* per la chiave *k* e ricevuta la richiesta, si rifiuta di elaborarla in quanto
-*non esaustivo*; infatti l'esito finale della richiesta dipende dal nodo servente *n* che la elaborerà. Il nodo
-*n’*, se la richiesta che riceve può essere identificata come di "sola lettura", non necessiterà di resettare
-il tempo per cui si deve considerare *non esaustivo* per *k*.
+Il fatto che l'operazione di sola lettura sia distinta dalle operazioni che prevedono un aggiornamento è importante
+in questa tipologia di database con scadenza temporale. In particolare questa caratteristica è di aiuto ad un
+generico nodo *n’* che, contattato durante il cammino di ricerca dell'​*hash-node* per la chiave *k* e ricevuta
+la richiesta, si rifiuta di elaborarla in quanto *non esaustivo*: il nodo *n’*, se la richiesta che riceve può
+essere identificata come di "sola lettura", non necessiterà di resettare il tempo per cui si deve considerare
+*non esaustivo* per la chiave *k*.
 
 ## <a name="Operazione_modifica"></a>Operazione di modifica
 
@@ -154,6 +154,12 @@ svuotato quando il nodo passa allo stato di default *esaustivo*.
 
 Quando un nodo partecipante al servizio costituisce una nuova rete allora esso è da subito *esaustivo* poiché
 inizializza un database vuoto. Di seguito analiziamo cosa fa un nodo che, invece, entra in una rete esistente.
+
+Ricordiamo che con questo *ingresso* possiamo intendere anche una *migrazione*. E che in entrambi i casi il
+nodo *n* entra in blocco insieme ad un g-nodo *w* di cui conosce il livello. Tale livello è quello che va a
+valorizzare il `maps_retrieved_at_level` nell'istanza di DatabaseHandler associata a questo servizio.
+
+**TODO** Da approfondire dopo aver completato il [quadro d'insieme](DettagliTecnici.md#Overview).
 
 Inizialmente, quando entra in una rete, il nodo *n* si mette nello stato di default *non esaustivo* per un tempo
 pari al TTL dei record che il servizio *p* memorizza.

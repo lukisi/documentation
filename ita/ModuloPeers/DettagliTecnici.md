@@ -19,6 +19,7 @@
     1.  [Requisiti specifici](#Mantenimento_database_distribuito_Requisiti_specifici)
         1.  [Database con record che hanno un TTL](#Mantenimento_database_distribuito_TTL)
         1.  [Database con un numero esiguo e fisso di chiavi](#Mantenimento_database_distribuito_FixedKeys)
+1.  [Quadro d'insieme](#Overview)
 1.  [Algoritmi](#Algoritmi)
 
 ## <a name="Requisiti"></a>Requisiti
@@ -55,18 +56,18 @@ PeersManager passando al costruttore:
 
 La prima identità di un sistema è sempre un nodo che costituisce una rete a sé. L'istanza di
 PeersManager che viene creata per essere associata a tale identità non ha bisogno di reperire
-inizialmente la mappa dei servizi opzionali. Solo i servizi opzionali a
+inizialmente le mappe dei servizi opzionali. Solo i servizi opzionali a
 cui lo stesso nodo partecipa esistono nella rete.
 
 Le successive identità nascono per fare ingresso in una rete (o un g-nodo) che esisteva
 prima di loro. L'istanza di PeersManager che viene creata per essere associata a tale identità
-deve inizialmente reperire la mappa dei servizi opzionali da due fonti. La prima
+deve inizialmente reperire le mappe dei servizi opzionali da due fonti. La prima
 è l'istanza di PeersManager associata alla precedente identità e la seconda è il dialogo con i
 nodi vicini.
 
 Quando viene costruito il PeersManager associato ad una nuova identità (per ingresso o per
 migrazione) gli viene passato `old_identity`, `guest_gnode_level` e `host_gnode_level`.
-Accedendo alle mappe di `old_identity` recupera le mappe per i livelli da -1 (il nodo stesso)
+Accedendo ai membri di `old_identity` recupera le mappe dei servizi opzionali per i livelli da -1 (il nodo stesso)
 fino a `guest_gnode_level - 1` compreso.
 
 Poi usa il metodo `i_peers_fellow` di `map_paths` per avere uno stub con cui parlare con un
@@ -79,9 +80,9 @@ Quindi se il nostro nodo ha un diretto vicino che faceva già parte di quello st
 è entrato, questo ha come massimo distinto g-nodo nei suoi confronti un g-nodo di livello
 `host_gnode_level - 1`.
 
-Con questo stub chiama il metodo remoto `get_participant_set` e recupera le mappe per i livelli
+Con questo stub chiama il metodo remoto `get_participant_set` e recupera le mappe dei servizi opzionali per i livelli
 da `host_gnode_level - 1` a `levels - 1`. Ai livelli da `guest_gnode_level` a `host_gnode_level - 2`,
-come detto, non ci sono altri g-nodi sulla cui partecipazione dobbiamo informarci.
+come detto, non ci sono altri g-nodi sulla cui partecipazione ai servizi opzionali dobbiamo informarci.
 
 * * *
 
@@ -534,11 +535,12 @@ cui partecipano pochissimi nodi.
 
 ### <a name="Servizi_opzionali_Descrizione_meccanismo"></a>Descrizione del meccanismo individuato
 
-Sia *n* un nodo appena entrato in un g-nodo *g* di livello *l*. Esso chiede ad un vicino che è anche membro
-del g-nodo *g* le mappe dei servizi opzionali dal livello *l* in su, con il metodo remoto
-`get_participant_set`.
+Abbiamo visto come un generico nodo *n* che entra (in blocco insieme al g-nodo *w* di livello *i*) in un
+g-nodo *h* di livello *k* (con `k > i`) si trova per un certo tempo consapevole di avere le mappe dei servizi
+opzionali accurate solo fino al livello *i-1*. Finché ad un certo momento riceve le dovute informazioni e
+diventa consapevole di avere tutte le mappe dei servizi opzionali accurate.
 
-Il nodo *n* considera un generico g-nodo *g*, in assenza di comunicazioni a riguardo di *g*, non partecipante
+Fatta questa premessa, diciamo che il nodo *n* considera un generico g-nodo *g*, in assenza di comunicazioni a riguardo di *g*, non partecipante
 ad un servizio opzionale. Può venire a conoscenza della partecipazione solo quando riceve un messaggio del
 flood che viene illustrato sotto. A quel punto lo considera partecipante.
 
@@ -1095,6 +1097,58 @@ Per facilitare l'implementazione di un servizio con queste caratteristiche, il m
 Questi algoritmi usano i requisiti descritti sopra e altri descritti nell'interfaccia IFixedKeysDatabaseDescriptor.
 
 Esaminiamo nel dettaglio questi algoritmi nel documento [Database a chiavi fisse](DatabaseFixedKeys.md).
+
+## <a name="Overview"></a>Quadro d'insieme
+
+In questo paragrafo intendiamo, portando un esempio pratico, guardare dall'alto il flusso delle operazioni
+di un sistema e come si intende che siano usati i servizi del modulo PeerServices.
+
+Un sistema *n* partecipa ai servizi *p0*, *p1* e *p2*. Di questi *p0* e *p1* sono obbligatori e *p2* è opzionale.
+
+Supponiamo che *p0* e *p2* siano di tipo *Database TTL*.
+
+Quando il sistema *n* si avvia (fra le altre cose) viene chiamato il metodo statico `init` della
+classe PeersManager, per passare la `tasklet` e altri dettagli tecnici.
+
+Quando il sistema si avvia genera il nodo *n0*. Questo è il primo e unico membro di una rete *G0*.
+
+Subito *n0* diventa *qspn_bootstrap_complete*. Inoltre crea la sua istanza di PeersManager, che chiamiamo *pm_n0*.
+
+Al *pm_n0* viene passato:
+
+*   la mappa dei percorsi noti.
+*   l'informazione che si tratta della prima identità del sistema (cioè `previous_identity = null`).
+
+Siccome il nodo *n0* ha generato la rete in cui si trova, il *pm_n0* **non** avvia subito una
+tasklet per cercare di reperire le *mappe dei servizi opzionali*, ma subito imposta (e segnala?)
+il suo stato a `participant_maps_retrieved`.
+
+Poi il nodo *n0* crea una istanza di PeerServiceP0 *p0_n0*, una di PeerServiceP1 *p1_n0*, una di
+PeerServiceP2 *p2_n0* e per ognuna viene fatta la registrazione sul *pm_n0*.
+
+Il costruttore di PeerServiceP0 per l'istanza *p0_n0* istanzia il suo DatabaseDescriptor `tdd`
+(una classe che implementa ITemporalDatabaseDescriptor). Poi registra *p0_n0* sul *pm_n0*.
+Questa registrazione, poiché *p0* non è opzionale, **non** avvia una tasklet per la propagazione
+della partecipazione.
+
+Poi il costruttore di PeerServiceP0 avvia il metodo `ttl_db_on_startup` del PeersManager, cioè di *pm_n0*,
+passandogli il ITemporalDatabaseDescriptor `tdd`. Notare che in questo metodo viene avviata una nuova tasklet
+per procedere, quindi il metodo ritorna subito il controllo al chiamante. Nella nuova tasklet, poiché
+il servizio *p0* non è opzionale, **non** si aspetta che le *mappe dei servizi opzionali* siano state reperite, ma
+subito viene dichiarato che il database è pronto a livello globale
+(cioè `tdd.dh.maps_retrieved_at_level = levels`). Poi, poiché il nodo *n0* ha generato la rete e quindi è
+da solo, **non** si dichiara che il servizio è *di default non esaustivo* per il tempo
+`tdd.TTL` (concetto spiegato nel documento [Database TTL](DatabaseTTL.md)).
+
+Riguardo il costruttore di PeerServiceP1 per l'istanza *p1_n0* diciamo solo che registra *p1_n0*
+sul *pm_n0*. Inoltre, poiché *p1* non è opzionale, non viene avviata alcuna operazione di propagazione.
+
+Il costruttore di PeerServiceP2 per l'istanza *p2_n0* istanzia il suo DatabaseDescriptor `tdd`
+(una classe che implementa ITemporalDatabaseDescriptor). Poi registra *p2_n0* sul *pm_n0*.
+Questa registrazione, poiché *p2* è opzionale, produce due operazioni:
+
+*   memorizza nelle sue *mappe dei servizi opzionali* che `HCoord(0, pos[0])` partecipa a *p2*.
+*   avvia una tasklet per la propagazione della partecipazione.
 
 ## <a name="Algoritmi"></a>Algoritmi
 

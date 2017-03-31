@@ -19,6 +19,7 @@ Firma: `bool check_non_participation(p_id, lvl, _pos)`
 *   Produci `n` = `make_tuple_node(new HCoord(0, pos[0]), lvl+1)` , cioè la tupla *n<sub>0</sub>·n<sub>1</sub>·...·n<sub>lvl</sub>*.
     La tupla che identifica il nodo corrente nel g-nodo di livello `lvl+1` in cui il messaggio si muoverà.
 *   `m’` = `new PeerMessageForwarder`.
+*   `m’.inside_level` = `levels`.
 *   `m’.n` = `n`.
 *   `m’.x̄` = `x̄`.
 *   `m’.lvl` = `lvl`.

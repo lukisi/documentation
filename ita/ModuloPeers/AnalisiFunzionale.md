@@ -388,13 +388,18 @@ La classe base ha un membro booleano `p_is_optional` che dice se il servizio è 
 valorizzato nel costruttore ed è in seguito di sola lettura.
 
 La classe base ha un metodo virtuale `is_ready(int inside_level)` che dice se il nodo è pronto a servire una
-richiesta che è stata esplicitamente circoscritta al suo g-nodo di un certo livello. L'implementazione della
+richiesta che è stata espressamente circoscritta al suo g-nodo di un certo livello. L'implementazione della
 classe base risponde sempre True. La classe del servizio che la deriva può modificare l'implementazione. In questo
 caso il nodo può decidere in certi momenti, secondo la logica propria del servizio specifico e sapendo a quale livello
 la richiesta è stata circoscritta, di dichiararsi non pronto a rispondere alle richieste. Si noti che questa
 dichiarazione va fatta dal nodo senza sapere quale sia la specifica richiesta e neppure se effettivamente al
 momento la ricerca dell'hash-node individuerebbe il nodo corrente oppure no. Ma sicuramente il nodo corrente
-è partecipante a questo servizio, sia esso opzionale o no.
+è partecipante a questo servizio, sia esso opzionale o no.  
+La prima ragione per l'esistenza di questo metodo è il fatto che un nodo che fa ingresso in una nuova rete (o
+che migra in un diverso g-nodo) deve aspettare di ricevere le *mappe dei servizi opzionali* da chi le
+conosceva prima di lui. Fino ad allora si deve considerare *non pronto* a processare richieste di un servizio
+opzionale, a meno che non si tratti di richieste espressamente circoscritte ad un suo g-nodo di livello inferiore
+o uguale al g-nodo che ha fatto questo ingresso (o migrazione) in blocco con lui.
 
 La classe base ha un metodo astratto `exec` che viene richiamato sull'hash_node che è chiamato a servire una
 richiesta. Se viene chiamato significa che:
@@ -432,7 +437,7 @@ a ciò non necessita di  conoscere le posizioni del nodo corrente. Ha inoltre co
 La classe base ha un riferimeno all'istanza di PeersManager che usa per contattare l'hash node (metodo `contact_peer`).
 
 Nella classe derivata va definito il calcolo di *h<sub>p</sub>*. La funzione *h<sub>p</sub>* deve associare ad una
-chiave *k* un indirizzo in *S*, cioè una tupla *x̄* = x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>l-1</sub> le cui componenti
+chiave *k* un indirizzo in *S*, cioè una tupla *x̄* = *x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>l-1</sub>* le cui componenti
 siano compatibili con la topologia della rete. La classe base non sa come ottenere da una chiave *k* la tupla *x̄*,
 questo procedimento spetta alla classe derivata. Tuttavia molte  operazioni saranno uguali nella maggior parte dei
 servizi. Quindi la  classe base cerca di fornire i servizi comuni senza tuttavia essere di  impedimento alla classe
@@ -459,6 +464,6 @@ conoscenza di gsizes.
 Se  invece la classe derivata ridefinisce il metodo `perfect_tuple` è  libera di calcolare direttamente la tupla *x̄* a
 partire dalla chiave e  dalle sue conoscenze. In questo caso, inoltre, può decidere di restituire una tupla con un
 numero di elementi inferiore al numero di livelli della rete. In questo caso la tupla
-*x̄ *= x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>j</sub> quando viene passata alla funzione *H<sub>t</sub>* circoscrive la
-sua ricerca dell'hash_node al g-nodo n<sub>j+1</sub> del nodo *n* che fa la richiesta.
+*x̄ *= *x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>j</sub>* quando viene passata alla funzione *H<sub>t</sub>* circoscrive la
+sua ricerca dell'hash_node al g-nodo *n<sub>j+1</sub>* del nodo *n* che fa la richiesta.
 
