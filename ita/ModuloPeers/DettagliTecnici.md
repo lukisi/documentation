@@ -6,7 +6,8 @@
     1.  [Implementazione distribuita](#Implementazione_distribuita)
 1.  [Gestione degli errori e della non partecipazione](#Gestione_errori)
     1.  [Modifiche agli algoritmi](#Gestione_errori_Modifiche_algoritmi)
-1.  [Mappa dei servizi opzionali](#Servizi_opzionali_Mappa_partecipanti)
+1.  [Mappe dei servizi opzionali: reperimento iniziale](#Servizi_opzionali_Mappa_partecipanti_Reperimento)
+1.  [Mappe dei servizi opzionali: aggiornamento nel tempo](#Servizi_opzionali_Mappa_partecipanti_Aggiornamento)
     1.  [Descrizione del meccanismo individuato](#Servizi_opzionali_Descrizione_meccanismo)
     1.  [Modifiche agli algoritmi per la divulgazione della non partecipazione](#Servizi_opzionali_Algoritmi_divulgazione_non_partecipazione)
     1.  [Divulgazione della partecipazione](#Servizi_opzionali_Algoritmi_divulgazione_partecipazione)
@@ -29,13 +30,15 @@ Il modulo fa uso delle [tasklet](../Librerie/TaskletSystem.md), un sistema di mu
 Il modulo fa uso del framework [ZCD](../Librerie/ZCD.md), precisamente appoggiandosi ad una libreria intermedia
 prodotta con questo framework per formalizzare i metodi remoti usati nel demone *ntkd*.
 
-L'utilizzatore del modulo PeerServices per prima cosa inizializza il modulo richiamando il metodo statico
+Il sistema (così in seguito indicheremo il software che usa il modulo PeerServices, ossia il demone *ntkd*)
+per prima cosa inizializza il modulo richiamando il metodo statico
 `init` di PeersManager. In tale metodo viene anche passata l'istanza di INtkdTasklet per fornire
 l'implementazione del sistema di tasklet.
 
-Quando il nodo ha completato la sua fase di bootstrap come descritto
-nel [modulo QSPN](../ModuloQspn/AnalisiFunzionale.md), il nodo istanzia il suo
-PeersManager passando al costruttore:
+Subito dopo aver creato la sua prima identità (la quale esce immediatamente dalla fase di bootstrap
+come descritto nel [modulo QSPN](../ModuloQspn/AnalisiFunzionale.md)), il sistema crea una istanza
+relativa di PeersManager. In seguito, ogni volta che crea una nuova identità il sistema crea una
+istanza relativa di PeersManager. Quando chiama il costruttore il sistema passa:
 
 *   La precedente istanza di PeersManager (istanza di PeersManager `old_identity`).  
     Se si tratta di un sistema appena avviato, cioè la prima identità del sistema nasce come unico
@@ -54,62 +57,16 @@ PeersManager passando al costruttore:
 
 ## <a name="Deliverables"></a>Deliverables
 
-La prima identità di un sistema è sempre un nodo che costituisce una rete a sé. L'istanza di
-PeersManager che viene creata per essere associata a tale identità non ha bisogno di reperire
-inizialmente le mappe dei servizi opzionali. Solo i servizi opzionali a
-cui lo stesso nodo partecipa esistono nella rete.
-
-Le successive identità nascono per fare ingresso in una rete (o un g-nodo) che esisteva
-prima di loro. L'istanza di PeersManager che viene creata per essere associata a tale identità
-deve inizialmente reperire le mappe dei servizi opzionali da due fonti. La prima
-è l'istanza di PeersManager associata alla precedente identità e la seconda è il dialogo con i
-nodi vicini.
-
-Quando viene costruito il PeersManager associato ad una nuova identità (per ingresso o per
-migrazione) gli viene passato `old_identity`, `guest_gnode_level` e `host_gnode_level`.
-Accedendo ai membri di `old_identity` recupera le mappe dei servizi opzionali per i livelli da -1 (il nodo stesso)
-fino a `guest_gnode_level - 1` compreso.
-
-Poi usa il metodo `i_peers_fellow` di `map_paths` per avere uno stub con cui parlare con un
-suo vicino (se esiste) il cui massimo distinto g-nodo è di livello `host_gnode_level - 1`.  
-Difatti, avendo fatto ingresso in un g-nodo di livello `host_gnode_level`
-abbiamo formato un nuovo g-nodo di livello `host_gnode_level - 1`. Avendo fatto questo ingresso
-in blocco come g-nodo di livello `guest_gnode_level` sicuramente non esistono altri g-nodi (oltre
-a quello a cui apparteniamo) di livello compreso tra `guest_gnode_level` e `host_gnode_level - 2`.
-Quindi se il nostro nodo ha un diretto vicino che faceva già parte di quello stesso g-nodo in cui
-è entrato, questo ha come massimo distinto g-nodo nei suoi confronti un g-nodo di livello
-`host_gnode_level - 1`.
-
-Con questo stub chiama il metodo remoto `get_participant_set` e recupera le mappe dei servizi opzionali per i livelli
-da `host_gnode_level - 1` a `levels - 1`. Ai livelli da `guest_gnode_level` a `host_gnode_level - 2`,
-come detto, non ci sono altri g-nodi sulla cui partecipazione ai servizi opzionali dobbiamo informarci.
-
-* * *
-
-Il modulo segnala quando l'operazione di recupero delle mappe dei servizi opzionali è
-completata con successo, attraverso il segnale `participant_maps_ready` di PeersManager.
-
-* * *
-
-Il modulo segnala quando l'operazione di recupero delle mappe dei servizi opzionali fallisce,
-attraverso il segnale `participant_maps_failure` di PeersManager.
-
-* * *
-
 Il modulo fornisce su richiesta le informazioni riguardanti il proprio ingresso (che gli sono state
 passate nel costruttore di PeersManager) e lo stato dell'operazione di recupero delle mappe dei
-servizi opzionali, con le proprietà `guest_gnode_level`, `host_gnode_level`, `participant_maps_retrieved`,
-`participant_maps_failed` di PeersManager.
+servizi opzionali, con le proprietà `guest_gnode_level`, `host_gnode_level`, `maps_retrieved_below_level`
+di PeersManager.
 
 * * *
 
 Il modulo fornisce la classe base astratta `PeerService`. Se un nodo vuole fornire un servizio, deve
 implementare una classe derivata da PeerService. Una istanza di tale classe va registrata con il metodo
 `register` di PeersManager.
-
-La classe che implementa il servizio può fare in modo che il nodo non venga contattato per elaborare richieste.
-Questo può essere utile (o anche rendersi necessario) per vari motivi a seconda dello specifico servizio.
-Questo la classe lo può fare ridefinendo il suo metodo `is_ready()` definito dalla classe base.
 
 * * *
 
@@ -182,11 +139,7 @@ A questo punto dovrebbe calcolare *x=H<sub>t</sub>(x̄)*. Procede così:
     Le  conoscenze del nodo *n* riguardo la partecipazione al servizio possono  essere non aggiornate rispetto agli
     altri nodi, ma a questo come vedremo  in seguito l'algoritmo pone rimedio. Si noti invece che il nodo *n* sa
     con certezza se esso stesso partecipa al servizio, quindi il calcolo di *H<sub>t</sub>(x̄)* può dare come risultato
-    lo stesso nodo *n* solo se questo partecipa.  
-    Inoltre il nodo *n*, se partecipa al servizio *p*, valuta anche la risposta del metodo `is_ready` sulla classe
-    del servizio *p* usando come valore di `inside_level` la lunghezza della tupla *x̄*. Questo metodo permette
-    alla classe dello specifico servizio di optare per escludersi dalla ricerca dell'hash-node destinato a
-    rispondere alla richiesta.
+    lo stesso nodo *n* solo se questo partecipa.
 *   Se il risultato è lo stesso nodo *n* l'algoritmo termina e si passa subito all'esecuzione del messaggio *m*.
 *   Se *j* = 0 allora *n* ha trovato con le sue sole conoscenze *x<sub>0</sub>* = *H<sub>t</sub>(x̄)*.
 *   Se *j* > 0 allora il nodo *n* non conosce l'interno del gnodo *x<sub>j</sub>*.    Ma la sua esistenza e partecipazione
@@ -483,7 +436,53 @@ Note:
 al g-nodo di livello *w*. Soddisfare questo requisito è banale: basta escludere dalla ricerca iniziale fatta dal nodo
 *n* tutti i g-nodi esterni al g-nodo *n<sub>w</sub>*.
 
-## <a name="Servizi_opzionali_Mappa_partecipanti"></a>Mappa dei servizi opzionali
+## <a name="Servizi_opzionali_Mappa_partecipanti_Reperimento"></a>Mappe dei servizi opzionali: reperimento iniziale
+
+La prima identità di un sistema è sempre un nodo che costituisce una rete a sé. L'istanza di
+PeersManager che viene creata per essere associata a tale identità non ha bisogno di reperire
+inizialmente le mappe dei servizi opzionali. Solo i servizi opzionali a
+cui lo stesso nodo partecipa esistono nella rete.
+
+Le successive identità nascono per fare ingresso in una rete (o un g-nodo) che esisteva
+prima di loro. L'istanza di PeersManager che viene creata per essere associata a tale identità
+deve inizialmente reperire le mappe dei servizi opzionali da due fonti. La prima
+è l'istanza di PeersManager associata alla precedente identità e la seconda è il dialogo con i
+nodi vicini.
+
+Quando viene costruito il PeersManager associato ad una nuova identità (per ingresso o per
+migrazione) gli viene passato `old_identity`, `guest_gnode_level` e `host_gnode_level`.
+Accedendo ai membri di `old_identity` recupera le mappe dei servizi opzionali per i livelli da -1 (il nodo stesso)
+fino a `guest_gnode_level - 1` compreso. Poi imposta `maps_retrieved_below_level = guest_gnode_level`.
+
+Avendo fatto ingresso in un g-nodo di livello `host_gnode_level`, la nuova identità (eventualmente
+in gruppo con altri nodi) ha formato un nuovo g-nodo di livello `host_gnode_level - 1`. Avendo fatto questo ingresso
+in blocco come g-nodo di livello `guest_gnode_level` sicuramente non esistono altri g-nodi (oltre
+a quello a cui apparteniamo) di livello tra `guest_gnode_level` e `host_gnode_level - 2` compresi.
+Quindi se il nostro nodo ha un diretto vicino che faceva già parte di quello stesso g-nodo in cui
+è entrato, questo ha come massimo distinto g-nodo nei suoi confronti un g-nodo di livello
+`host_gnode_level - 1`.
+
+L'istanza di PeersManager usa il metodo `i_peers_fellow` di `map_paths` per avere uno stub con cui parlare con un
+suo vicino (se esiste) il cui massimo distinto g-nodo è di livello `host_gnode_level - 1`.
+
+Se esiste tale vicino il PeersManager dialoga con lui per reperire maggiori informazioni sulle mappe
+dei servizi opzionali. Se non esiste, invece, non può fare altro che aspettare che altri nodi di
+loro iniziativa lo contattino per fornire maggiori informazioni sulle mappe.  
+In entrambi i casi, bisogna considerare che queste maggiori informazioni possono comunque non
+essere complete, cioè non arrivare fino al livello `levels - 1`.
+
+Se un PeersManager chiede le mappe al suo vicino usa il metodo remoto `get_participant_set`. Se
+invece un PeersManager propone le sue mappe a un suo vicino usa il metodo remoto `set_participant_set`.
+In questi metodi le informazioni passate al nodo che riceve le mappe (cioè il PeersManager che ha
+chiamato `get_participant_set` o quello che ha ricevuto la chiamata `set_participant_set`) sono:
+
+*   `int maps_retrieved_below_level`
+*   `mappe`
+
+In entrambi i casi il nodo che riceve le mappe accetta solo le mappe dei livelli superiori al suo corrente
+valore di `maps_retrieved_below_level`. Poi aggiorna il suo valore `maps_retrieved_below_level` a quello ricevuto.
+
+## <a name="Servizi_opzionali_Mappa_partecipanti_Aggiornamento"></a>Mappe dei servizi opzionali: aggiornamento nel tempo
 
 Di default un nodo non partecipa ad un servizio  opzionale. Si ricordi che un nodo non ha bisogno di partecipare ad un
 servizio opzionale per poter chiedere i servizi, ma solo se vuole  fornirli.
@@ -696,12 +695,6 @@ modulo che il servizio richiamerà con l'interfaccia a parametro (di norma il me
 Alcune strutture dati memorizzate nella classe DatabaseHandler sono:
 
 *   `int p_id`: Identificativo del servizio.
-*   `int maps_retrieved_at_level`: La classe è pronta a rispondere alle richieste di questo servizio soltanto se
-    la ricerca di *H<sub>t</sub>* è stata avviata dall'interno del g-nodo di questo livello a cui appartiene il nodo corrente.
-    Se un nodo partecipa ad un servizio opzionale e ha fatto ingresso insieme ad un g-nodo di livello *i* dentro una
-    rete o un altro g-nodo di livello superiore, allora imposta questo valore a *i* dopo aver recuperato dalla
-    precedente istanza di PeersManager le mappe dei servizi opzionali ai livelli inferiori. Potrà in seguito impostare
-    tale valore a *levels* quando le mappe dei servizi opzionali ai livelli superiori saranno state recuperate con successo.
 
 ### <a name="Mantenimento_database_distribuito_Repliche"></a>Repliche
 
@@ -1121,7 +1114,7 @@ Al *pm_n0* viene passato:
 
 Siccome il nodo *n0* ha generato la rete in cui si trova, il *pm_n0* **non** avvia subito una
 tasklet per cercare di reperire le *mappe dei servizi opzionali*, ma subito imposta (e segnala?)
-il suo stato a `participant_maps_retrieved`.
+il suo stato a `participant_maps_retrieved` e `maps_retrieved_below_level = levels`.
 
 Poi il nodo *n0* crea una istanza di PeerServiceP0 *p0_n0*, una di PeerServiceP1 *p1_n0*, una di
 PeerServiceP2 *p2_n0* e per ognuna viene fatta la registrazione sul *pm_n0*.
@@ -1134,9 +1127,8 @@ della partecipazione.
 Poi il costruttore di PeerServiceP0 avvia il metodo `ttl_db_on_startup` del PeersManager, cioè di *pm_n0*,
 passandogli il ITemporalDatabaseDescriptor `tdd`. Notare che in questo metodo viene avviata una nuova tasklet
 per procedere, quindi il metodo ritorna subito il controllo al chiamante. Nella nuova tasklet, poiché
-il servizio *p0* non è opzionale, **non** si aspetta che le *mappe dei servizi opzionali* siano state reperite, ma
-subito viene dichiarato che il database è pronto a livello globale
-(cioè `tdd.dh.maps_retrieved_at_level = levels`). Poi, poiché il nodo *n0* ha generato la rete e quindi è
+il servizio *p0* non è opzionale, **non** si aspetta che le *mappe dei servizi opzionali* siano state reperite.
+Poi, poiché il nodo *n0* ha generato la rete e quindi è
 da solo, **non** si dichiara che il servizio è *di default non esaustivo* per il tempo
 `tdd.TTL` (concetto spiegato nel documento [Database TTL](DatabaseTTL.md)).
 
@@ -1149,6 +1141,60 @@ Questa registrazione, poiché *p2* è opzionale, produce due operazioni:
 
 *   memorizza nelle sue *mappe dei servizi opzionali* che `HCoord(0, pos[0])` partecipa a *p2*.
 *   avvia una tasklet per la propagazione della partecipazione.
+
+Poi il costruttore di PeerServiceP2 avvia il metodo `ttl_db_on_startup` del PeersManager, cioè di *pm_n0*,
+passandogli il ITemporalDatabaseDescriptor `tdd`. Nella nuova tasklet ??? avviata in questo metodo, poiché
+il servizio *p0* è opzionale ci si chiede fino a quale livello il servizio sia pronto ad operare
+e, viceversa, da quale livello in su occorra attendere il reperimento delle *mappe dei servizi opzionali*.
+Siccome il nodo *n0* ha generato la rete (cioè `previous_identity = null`), tale livello
+è `maps_retrieved_below_level = levels`.
+
+Poi, poiché il nodo *n0* ha generato la rete e quindi è da solo, **non** si dichiara che il servizio
+è *di default non esaustivo* per il tempo `tdd.TTL`.
+
+Ora supponiamo che per fare ingresso in un'altra rete *G1* il sistema *n* genera il nodo *n1* che diventa la sua
+*identità principale*, mentre la vecchia *n0* diventa una *identità di connettività*.
+
+Poiché l'identità *n0* è diventata di connettività, nessuno dei suoi servizi sarà mai più chiamato a
+rispondere a richieste. Cioè, le istanze *p0_n0*, *p1_n0* e *p2_n0* possono venire scartate da *pm_n0*.
+
+Il sistema crea le istanze per gli altri moduli, come il Qspn. Ma *n1* non diventa subito *qspn_bootstrap_complete*.
+Il sistema crea l'istanza di PeersManager, che chiamiamo *pm_n1*. Al *pm_n1* viene passato:
+
+*   `int guest_gnode_level`: il livello del g-nodo ospite. Nel nostro esempio 0, poiché
+    a fare ingresso in *G1* è stato il singolo nodo.
+*   `int host_gnode_level`: il livello del g-nodo ospitante.
+*   la mappa dei percorsi noti. Sarà popolata fino al livello `guest_gnode_level` escluso. Nel nostro esempio è vuota.
+*   l'istanza precedente di PeersManager `previous_identity`. Nel nostro esempio *pm_n0*.
+
+Il costruttore di *pm_n1* accede ai membri di `previous_identity` (*pm_n0*) per reperire le *mappe dei servizi opzionali*
+per i livelli da -1 (il nodo stesso) fino a `guest_gnode_level - 1` compreso. Poi imposta
+`maps_retrieved_below_level = guest_gnode_level`. Poi avvia subito una tasklet
+per cercare di reperire le *mappe dei servizi opzionali* per i livelli da `host_gnode_level - 1` a `levels - 1`.
+Questa operazione si può concludere o perché si è avuta una risposta da un diretto vicino del nodo *n1*
+(metodo `map_paths.i_peers_fellow`) o perché un altro nodo che ha compiuto l'operazione di ingresso in blocco
+con *n1* propaga l'informazione. Nel nostro caso abbiamo che *n1* interroga un diretto vicino in *G1*.
+
+Subito dopo aver avviato la nuova tasklet, il *pm_n1* si predispone ad indicare il livello `guest_gnode_level`
+come massima circoscrizione nella quale i suoi *servizi* sono in grado di accettare richieste. Questo significa
+che se dopo aver avviato la tasklet ma prima che essa si sia conclusa viene creata l'istanza *p0_n1* e viene
+eseguita la sua registrazione (`pm_n1.register(p0_n1)`) allora nel metodo `register`
+
+Questo suo
+stato cambierà quando l'operazione si conclude. In quel momento il *pm_n1* si predispone ad indicare il livello `levels`
+come massima circoscrizione nella quale i suoi *servizi* sono in grado di accettare richieste.
+
+Questo significa
+
+
+dei livelli superiori a , ma subito imposta (e segnala?)
+il suo stato a `participant_maps_retrieved`.
+
+Poi il nodo *n0* crea una istanza di PeerServiceP0 *p0_n0*, una di PeerServiceP1 *p1_n0*, una di
+PeerServiceP2 *p2_n0* e per ognuna viene fatta la registrazione sul *pm_n0*.
+
+
+
 
 ## <a name="Algoritmi"></a>Algoritmi
 

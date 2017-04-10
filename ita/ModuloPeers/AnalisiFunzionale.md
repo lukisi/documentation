@@ -5,6 +5,7 @@
         1.  [Memoria esaurita e memoria non esaustiva](#Memoria_esaurita)
     1.  [HDHT: Hierarchical DHT](#HDHT)
 1.  [Ruolo del modulo PeerServices](#Ruolo_del_modulo)
+    1.  [Comunicazioni peer-to-peer](#Comunicazioni_peer_to_peer)
 1.  [Requisiti](#Requisiti)
 1.  [Deliverables](#Deliverables)
 1.  [Classi e interfacce](#Classi_e_interfacce)
@@ -145,7 +146,7 @@ suo interno dovranno reperire e aggiornare le loro mappe.
 
 Generalizzando, quando un nodo *n* come membro di un g-nodo *w* di livello *i* entra in un g-nodo *g* di livello
 *k* (con `k > i`), se fra i suoi diretti vicini c'è un nodo (non appartenente a *w*) che era in *g* prima di lui
-lo contatta e richiede le mappe dei servizi opzionali. Altrimenti si aspetta di ricevere tali informazioni su
+lo contatta e richiede le mappe dei servizi opzionali ai livelli da `k - 1` in su. Altrimenti si aspetta di ricevere tali informazioni su
 iniziativa di un altro nodo che era in *w*.
 
 In ogni caso, il nodo *n* mantiene valide le informazioni che aveva fino al livello *i* - 1. Ricordiamo che questo tipo
@@ -156,37 +157,22 @@ modulo che era già associata alla vecchia identità.
 * * *
 
 In ogni momento un nodo può fare al suo modulo PeerServices una richiesta relativa ad un servizio con un dato *p_id*.
+
+In realtà in ogni sistema, solo la *identità principale* è abilitata a fare richieste al suo modulo PeerServices. E se
+l'identità ha qualche componente *virtuale* nel suo indirizzo, può fare richieste solo circoscritte al massimo
+g-nodo dentro il quale tutte le sue componenti sono *reali*.
+
 Il modulo PeerServices saprà a chi indirizzare la richiesta. Infatti, se il servizio è non-opzionale per definizione
 esso è fra quelli registrati nel modulo, quindi il modulo lo conosce, sa che è non-opzionale e non ha bisogno di mappe di
-partecipazione per ricercare un suo hash_node. Se il servizio pur essendo opzionale è stato registrato nel modulo, anche in questo
+partecipazione per ricercare un suo hash-node. Se il servizio pur essendo opzionale è stato registrato nel modulo, anche in questo
 caso il modulo lo conosce e sa che deve consultare le mappe di partecipazione (in questo caso almeno il nodo stesso
 è nelle mappe). Se il servizio opzionale non è stato registrato nel modulo dal nodo, cioè il nodo non vi partecipa attivamente possono
 esservi due casi:
 
 1.  Il modulo è venuto a conoscenza di alcuni nodi nella rete che partecipano. Allora ha le mappe per avviare la
-    ricerca dell'hash_node.
+    ricerca dell'hash-node.
 1.  Il modulo non ha mai ricevuto informazioni di partecipazioni al servizio con questo identificativo. Allora deduce
     che nessun nodo nella rete è partecipante al servizio.
-
-* * *
-
-Il modulo PeerServices si occupa, su richiesta del nodo, di avviare una comunicazione verso un hash_node per la chiave
-*k* di un servizio *p*; cioè esso avvia il calcolo distribuito di *H<sub>t</sub>*. Per fare questo il modulo non ha
-bisogno di conoscere l'implementazione della funzione *h<sub>p</sub>* ma soltato il risultato di *h<sub>p</sub>(k)*;
-d'altra parte questa richiesta arriva dal nodo stesso quindi il nodo conosce l'implementazione della funzione
-*h<sub>p</sub>*. Inoltre per fare questa operazione non è necessario che il nodo partecipi al servizio *p*.
-
-Lo stesso modulo, nei nodi intermedi verso la destinazione, si occupa di instradare il messaggio e di proseguire il
-calcolo distribuito di  *H<sub>t</sub>*. Per fare questo il modulo non ha bisogno di conoscere la logica interna del
-servizio *p*, ma deve solo sapere l'identificativo del servizio *p_id* e il valore di *h<sub>p</sub>(k)*; questi dati
-sono contenuti nel messaggio da instradare. Quindi per fare questa operazione il nodo non ha bisogno né di partecipare
-al servizio *p* e nemmeno di conoscere nulla sull'implementazione del servizio *p*.
-
-Lo stesso modulo, nel nodo destinazione del messaggio, si occupa di ricevere la richiesta del nodo originante e di
-servirla. Perché il modulo possa servirla, nel modulo deve essere stato registrato il servizio peer-to-peer. Difatti
-il nodo deve essere partecipante al servizio *p*. Inoltre il modulo fornisce all'implementazione del servizio *p* la
-possibilità di replicare qualsiasi dato che esso memorizza su un numero *q* di nodi partecipanti al servizio che
-sarebbero stati i più prossimi destinatari della richiesta in caso di sua assenza.
 
 * * *
 
@@ -195,6 +181,83 @@ in una rete esistente oppure quando migra da un g-nodo ad un altro, può trovars
 in bisogno di reperire i record che sono di sua pertinenza nel mantenimento del database distribuito, come destinatario
 principale o come replica. Nell'espletamento di questa mansione il nodo si può avvalere di alcune *funzioni helper*
 che il modulo PeerServices fornisce.
+
+* * *
+
+Nella fattispecie di un nodo *n* che partecipa ad un servizio *p* e che viene chiamato ad operare quale
+server di una certa richiesta *r*, il modulo PeerServices fornisce al nodo *n* gli strumenti per richiedere
+la replica di *r* (ad esempio la memorizzazione di un dato) su un numero *q* di nodi partecipanti al servizio che
+sarebbero stati i più prossimi destinatari della richiesta *r* in caso di assenza del nodo *n*.
+
+### <a name="Comunicazioni_peer_to_peer"></a>Comunicazioni peer-to-peer
+
+Le comunicazioni peer-to-peer rese possibili da questo modulo, ad alto livello si possono intendere in questo modo:
+un *nodo* della rete vuole un servizio, quindi si comporta come *client* del servizio *p*. Usando una determinata
+chiave *k* identifica implicitamente un altro *nodo* della rete ad agire come *server*. Il *client* trasmette un
+messaggio al *server* e questi a sua volta gli trasmette una risposta.
+
+Scendendo ad un livello più basso senza comunque entrare troppo nei dettagli delle operazioni, indichiamo le fasi
+che comporta il primo messaggio (dal *client* al *server*) e poi il secondo (dal *server* al *client*).
+
+Il nodo client incapsula il messaggio *client-server* in un *pacchetto-p2p*. Tale pacchetto contiene anche altre
+informazioni. Tra queste c'è, in una certa forma, l'indirizzo del nodo server. Ma non è un indirizzo completo.
+
+In pratica, nel pacchetto c'è la parte bassa dell'indirizzo del nodo *teorico* (*h<sub>p</sub>(k)*), e l'indirizzo in forma
+gerarchica (*HCoord*) rispetto al nodo corrente *n* (inizialmente rispetto al nodo client) del g-nodo visibile
+nella sua mappa che contiene il nodo *concreto* (cioè *H<sub>t</sub>(h<sub>p</sub>(k))* secondo la conoscenza
+*dom<sub>n</sub>(𝛼<sub>t</sub>)* del nodo corrente *n*).
+
+Il nodo client (con una logica ovviamente mirata ad avvicinare il pacchetto alla sua destinazione finale) sceglie
+un suo vicino a cui comunica il *pacchetto-p2p*. Questo vicino diventa quindi un nodo
+intermedio, chiamiamolo *forwarder*.
+
+Ogni nodo forwarder è chiamato a instradare il *pacchetto-p2p* trasmettendolo ad un altro suo vicino verso la
+destinazione finale, cioè il server. Un nodo forwarder che riceve un *pacchetto-p2p* si trova in una di 3 possibili
+situazioni:
+
+1.  Il nodo forwarder non fa parte del g-nodo indicato come destinazione nel pacchetto. Quindi deve solo trasmettere
+    il *pacchetto-p2p* al suo diretto vicino più adeguato.
+1.  Il nodo forwarder fa parte del g-nodo indicato come destinazione nel pacchetto. Quindi deve intervenire nel
+    calcolo distribuito di *H<sub>t</sub>(h<sub>p</sub>(k))*: individua un nuovo g-nodo di livello più basso
+    in cui si trova il nodo server e modifica di conseguenza le informazioni contenute
+    nel pacchetto. Poi deve di nuovo trasmettere il *pacchetto-p2p* al suo diretto vicino più adeguato.
+1.  Il nodo forwarder fa parte del g-nodo indicato come destinazione nel pacchetto, ed è in effetti esso stesso
+    il nodo server. Ovviamente nel nodo server il servizio *p* deve essere stato registrato nel modulo PeerServices,
+    cioè il nodo server deve essere partecipante al servizio *p*.
+
+Per quanto riguarda il messaggio *server-client*, invece, il server ha conoscenza di tutto l'indirizzo del nodo
+client e quindi questa comunicazione può avvenire direttamente con una connessione TCP dal server al client.
+
+Fatta questa premessa, scendiamo ancora di livello e vediamo quali operazioni ogni nodo coinvolto deve fare in
+termini di calcolo di *H<sub>t</sub>* e di *h<sub>p</sub>*.
+
+Il nodo client richiede al suo modulo PeerServices di avviare una comunicazione verso
+un hash-node per la chiave *k* di un servizio *p*; il modulo PeerServices del nodo
+client avvia il calcolo distribuito di *H<sub>t</sub>*. Per fare questo il modulo non ha
+bisogno di conoscere l'implementazione della funzione *h<sub>p</sub>* ma soltato il risultato di *h<sub>p</sub>(k)*;
+d'altra parte questa richiesta arriva dal nodo stesso quindi il nodo conosce l'implementazione della funzione
+*h<sub>p</sub>*. Inoltre per fare questa operazione non è necessario che il nodo partecipi al servizio *p*.
+
+Lo stesso modulo, nei nodi forwarder, si occupa di instradare il messaggio e di proseguire il
+calcolo distribuito di  *H<sub>t</sub>*. Per fare questo il modulo non ha bisogno di conoscere la logica interna del
+servizio *p*, ma deve solo sapere l'identificativo del servizio *p_id* e il valore di *h<sub>p</sub>(k)*; questi dati
+sono contenuti nel *pacchetto-p2p*. Quindi per fare questa operazione il nodo non ha bisogno né di partecipare
+al servizio *p* e nemmeno di conoscere nulla sull'implementazione del servizio *p*.  
+Un caso particolare, però, si ha quando il nodo forwarder deve dettagliare a livelli più bassi l'indirizzo del
+server nel *pacchetto-p2p* e allo stesso tempo il servizio *p* è opzionale.  
+Infatti dobbiamo tenere presente che un nodo che fa ingresso in una nuova rete (o che migra in un diverso g-nodo)
+deve aspettare di ricevere le *mappe dei servizi opzionali* da chi le conosceva prima di lui. Fino ad allora tale
+nodo non può ricalcolare la funzione *H<sub>t</sub>* per inoltrare richieste di un servizio opzionale, a meno
+che non si tratti di richieste espressamente circoscritte fin dall'inizio ad un suo g-nodo di livello inferiore
+o uguale al g-nodo che ha fatto questo ingresso (o migrazione) in blocco con lui.  
+L'informazione del livello di g-nodo in cui la richiesta è stata inizialmente circoscritta è
+contenuta nel *pacchetto-p2p*.
+
+Lo stesso modulo, nel nodo server, si occupa di ricevere la richiesta del nodo client, di processarla e di
+trasmettere al client il relativo messaggio di risposta. Tutte queste comunicazioni il nodo server le può
+fare per mezzo di una connessione TCP diretta con il nodo client. Per questo è necessario (e accettabile come
+requisito) che i nodi client e server abbiano nel loro indirizzo componenti *reali* a tutti i livelli
+più bassi del livello di g-nodo in cui la richiesta è circoscritta.
 
 ## <a name="Requisiti"></a>Requisiti
 
@@ -255,7 +318,7 @@ deve conoscere:
         classe derivata nel costruttore.
     *   La chiave *k*.
     *   L'istanza di IPeersRequest che rappresenta la richiesta da fare.
-    *   Il tempo limite per l'esecuzione della richiesta una volta consegnata all'hash_node.
+    *   Il tempo limite per l'esecuzione della richiesta una volta consegnata all'hash-node.
 
     L'utilizzatore di un servizio chiama (con i dovuti argomenti) uno specifico metodo di una specifica classe
     derivata da PeerClient. Tale classe prepara le suddette informazioni e le passa al modulo chiamando il metodo
@@ -387,21 +450,7 @@ identificativo.
 La classe base ha un membro booleano `p_is_optional` che dice se il servizio è da considerarsi opzionale. Esso è
 valorizzato nel costruttore ed è in seguito di sola lettura.
 
-La classe base ha un metodo virtuale `is_ready(int inside_level)` che dice se il nodo è pronto a servire una
-richiesta che è stata espressamente circoscritta al suo g-nodo di un certo livello. L'implementazione della
-classe base risponde sempre True. La classe del servizio che la deriva può modificare l'implementazione. In questo
-caso il nodo può decidere in certi momenti, secondo la logica propria del servizio specifico e sapendo a quale livello
-la richiesta è stata circoscritta, di dichiararsi non pronto a rispondere alle richieste. Si noti che questa
-dichiarazione va fatta dal nodo senza sapere quale sia la specifica richiesta e neppure se effettivamente al
-momento la ricerca dell'hash-node individuerebbe il nodo corrente oppure no. Ma sicuramente il nodo corrente
-è partecipante a questo servizio, sia esso opzionale o no.  
-La prima ragione per l'esistenza di questo metodo è il fatto che un nodo che fa ingresso in una nuova rete (o
-che migra in un diverso g-nodo) deve aspettare di ricevere le *mappe dei servizi opzionali* da chi le
-conosceva prima di lui. Fino ad allora si deve considerare *non pronto* a processare richieste di un servizio
-opzionale, a meno che non si tratti di richieste espressamente circoscritte ad un suo g-nodo di livello inferiore
-o uguale al g-nodo che ha fatto questo ingresso (o migrazione) in blocco con lui.
-
-La classe base ha un metodo astratto `exec` che viene richiamato sull'hash_node che è chiamato a servire una
+La classe base ha un metodo astratto `exec` che viene richiamato sull'hash-node che è chiamato a servire una
 richiesta. Se viene chiamato significa che:
 
 *   Nel metodo `is_ready` il nodo aveva dichiarato di essere pronto a gestire una richiesta.
@@ -465,5 +514,5 @@ Se  invece la classe derivata ridefinisce il metodo `perfect_tuple` è  libera d
 partire dalla chiave e  dalle sue conoscenze. In questo caso, inoltre, può decidere di restituire una tupla con un
 numero di elementi inferiore al numero di livelli della rete. In questo caso la tupla
 *x̄ *= *x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>j</sub>* quando viene passata alla funzione *H<sub>t</sub>* circoscrive la
-sua ricerca dell'hash_node al g-nodo *n<sub>j+1</sub>* del nodo *n* che fa la richiesta.
+sua ricerca dell'hash-node al g-nodo *n<sub>j+1</sub>* del nodo *n* che fa la richiesta.
 

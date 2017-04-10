@@ -157,7 +157,7 @@ inizializza un database vuoto. Di seguito analiziamo cosa fa un nodo che, invece
 
 Ricordiamo che con questo *ingresso* possiamo intendere anche una *migrazione*. E che in entrambi i casi il
 nodo *n* entra in blocco insieme ad un g-nodo *w* di cui conosce il livello. Tale livello è quello che va a
-valorizzare il `maps_retrieved_at_level` nell'istanza di DatabaseHandler associata a questo servizio.
+valorizzare il `maps_retrieved_below_level` nel PeersManager.
 
 **TODO** Da approfondire dopo aver completato il [quadro d'insieme](DettagliTecnici.md#Overview).
 
