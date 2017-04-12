@@ -14,7 +14,7 @@
 1.  [Mantenimento di un database distribuito](#Mantenimento_database_distribuito)
     1.  [Repliche](#Mantenimento_database_distribuito_Repliche)
         1.  [Modifiche agli algoritmi](#Mantenimento_database_distribuito_Algoritmi)
-    1.  [Ingresso nella rete di un nodo partecipante](#Mantenimento_database_distribuito_Ingresso_nuovo_nodo)
+    1.  [Esaustività](#Mantenimento_database_distribuito_Esaustivita)
     1.  [Procedimento di recupero di un record](#Mantenimento_database_distribuito_Recupero_record)
     1.  [Requisiti comuni](#Mantenimento_database_distribuito_Requisiti_comuni)
     1.  [Requisiti specifici](#Mantenimento_database_distribuito_Requisiti_specifici)
@@ -150,8 +150,8 @@ A questo punto dovrebbe calcolare *x=H<sub>t</sub>(x̄)*. Procede così:
     riceve il messaggio non  necessita, per inoltrarlo, di identificativi a livelli maggiori di *j*.
 *   Il nodo n prepara un messaggio *m’* da inoltrare al gnodo *x<sub>j</sub>*. Questo messaggio contiene:
 
-    *   `inside_level`: il livello del g-nodo in cui la ricerca è circoscritta. Come detto sopra esso è *w*, cioè
-        la lunghezza della tupla *x̄*.
+    *   `inside_level`: il livello del g-nodo in cui la ricerca è circoscritta. Come detto sopra questo g-nodo è *w*, cioè
+        il suo livello è pari alla lunghezza della tupla *x̄*.
     *   `n`: la tupla n<sub>0</sub>·n<sub>1</sub>·...·n<sub>j</sub>.
     *   `x̄`: la tupla x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>j-1</sub>.
     *   `lvl, pos`: le coordinate del g-nodo che miriamo a raggiungere, cioè *j* e  *x<sub>j</sub>*.
@@ -183,9 +183,7 @@ Il messaggio *m’* raggiunge un nodo dentro il gnodo che mirava a raggiungere.
 *   Se  *m’.lvl* = 0 allora il messaggio è giunto alla destinazione finale (vedi  sotto il proseguimento
     dell'algoritmo). Altrimenti si prosegue.
 *   Il nodo *v* calcola *H<sub>t</sub>(m’.x̄)* secondo le sue conoscenze relative al suo g-nodo di livello *m’.lvl*,
-    cioè trova un livello *k* e un identificativo *x<sub>k</sub>*. Sicuramente `k < m’.lvl`.  
-    Inoltre il nodo *v*, se partecipa al servizio *p*, valuta anche la risposta del metodo `is_ready(m’.inside_level)`
-    sulla classe del servizio *p*.
+    cioè trova un livello *k* e un identificativo *x<sub>k</sub>*. Sicuramente `k < m’.lvl`.
 *   Se il nodo *v* trova che esso stesso è *H<sub>t</sub>(m’.x̄)*  allora il messaggio è giunto alla destinazione
     finale (vedi sotto il  proseguimento dell'algoritmo). Altrimenti si prosegue.
 *   Il nodo *v* duplica il messaggio *m’* in *m’’* e poi modifica i seguenti membri del messaggio *m’’*:
@@ -249,7 +247,7 @@ escludere un set di determinati  g-nodi.
 
 Gli elementi di questo set sono g-nodi che appartengono ad un unico g-nodo *g* di livello *w*, ma ognuno di
 questi g-nodi *h* può avere un diverso livello *𝜀*, con  `𝜀 < w`. Menzioniamo il g-nodo *g* di livello *w*
-perché in alcuni casi il nodo che inizia la ricerca di un hash-node ha interesse a circoscrivere<sup>1</sup> la
+perché in alcuni casi il nodo che inizia la ricerca di un hash-node ha interesse a circoscrivere <sup>[1](#nota1)</sup> la
 sua ricerca all'interno del suo g-nodo di un certo livello *w*. Lo fa passando alla funzione *H<sub>t</sub>* una tupla
 che ha un numero di *w* elementi. Come caso particolare possiamo avere *w* = *l*, cioè l'intera rete è il g-nodo
 contenente i singoli g-nodi di questo set.
@@ -258,14 +256,16 @@ Ogni elemento del suddetto set ha come dati il livello del g-nodo *g* contenitor
 posizioni del g-nodo *h*, da *𝜀* a *w* - 1. Chiamiamo queste tuple *tuple globali nel g-nodo di ricerca*.
 
 Rendiamo cioè possibile l'esclusione di un g-nodo, di qualsiasi livello, anche se non visibile nella mappa del
-nodo richiedente, nel mezzo dell'esecuzione del calcolo distribuito di *H<sub>t</sub>*.
+nodo richiedente (o *client*), e facciamo in modo che l'individuazione del g-nodo (o dei g-nodi) da escludere
+possa avvenire *in itinere*, cioè durante l'esecuzione del calcolo distribuito di *H<sub>t</sub>*.
 
 Dal momento che rendiamo possibile l'esclusione *in itinere* anche di un singolo nodo, possiamo anche dare al
-nodo che riceve il messaggio (quindi dopo che lo ha ricevuto e letto) la possibilità di rifiutarsi di elaborarlo
+nodo *server* selezionato, dopo che ha ricevuto e letto il messaggio di richiesta, la possibilità di rifiutarsi di elaborarlo
 e far proseguire da qui il calcolo distribuito di *H<sub>t</sub>*. Questo ci consentirà di gestire i casi in cui
 un nodo voglia demandare al successivo per "mancanza di memoria", come descritto nell'analisi funzionale.
 
-Inoltre introduciamo la possibilità da parte del nodo che riceve il messaggio di rifiutarsi di elaborarlo e
+Inoltre introduciamo la possibilità da parte del nodo *server* selezionato, dopo che ha ricevuto
+e letto il messaggio di richiesta, di rifiutarsi di elaborarlo e
 dare istruzione al chiamante di riavviare da capo il calcolo distribuito di *H<sub>t</sub>*. Questo ci servirà
 nelle situazioni in cui, come vedremo in seguito, un servente sia costretto a fare lunghe operazioni di recupero
 dati e nel contempo si voglia garantire la coerenza degli stessi in un database distribuito.
@@ -286,12 +286,11 @@ risposta.
 *   Prepara una lista vuota `exclude_gnode_list` di istanze HCoord. Qui finiranno i g-nodi visibili nella mappa
     di *n* che andranno esclusi dal calcolo di *H<sub>t</sub>*.
 *   Se il servizio `p_id` è opzionale:
+    *   Fino a quando `maps_retrieved_below_level` <sup>[2](#nota2)</sup> è minore della lunghezza della tupla `x̄`:
+        *   Attende qualche istante.
     *   Mette in `exclude_gnode_list` tutti i g-nodi che stando alle sue conoscenze attuali non partecipano
         a `p_id`.
-*   Oltre a guardare `exclude_myself` come specificato dalla classe client di *p*, se il nodo *n* partecipa al
-    servizio *p* chiede alla classe server di *p* se è pronta a rispondere con il metodo `is_ready` al
-    livello indicato dalla lunghezza della tupla `x̄`.  
-    Se *n* non intende partecipare:
+*   Se `exclude_myself`:
     *   Mette se stesso `(0, pos[0])` in `exclude_gnode_list`.
 *   Prepara una lista vuota `exclude_tuple_list`  di tuple globali nel g-nodo di ricerca. Qui finiranno i
     g-nodi non visibili nella mappa di *n*  che andranno esclusi in eventuali successivi tentativi di raggiungere
@@ -333,6 +332,12 @@ risposta.
         1.  Riceve un messaggio che gli segnala come prossima destinazione di *m’* il g-nodo *x<sub>k</sub>* con `k < j`.
             *   Tiene a mente quale sia la destinazione con il valore di *k* più piccolo ricevuta (all'inizio era *j*).
             *   Continua ad aspettare, sempre per un tempo basato sulla dimensione stimata del g-nodo *n<sub>j+1</sub>*.
+        1.  Riceve un messaggio che gli segnala che il pacchetto ha incontrato durante l'instradamento un nodo
+            che non è stato in grado di continuare il calcolo distribuito di *H<sub>t</sub>* in quanto non aveva
+            ricevuto le mappe di partecipazione (deve trattarsi di un servizio opzionale). Questo messaggio
+            lo istruisce di ricominciare da capo il calcolo distribuito di *H<sub>t</sub>*.
+            *   Attende qualche istante.
+            *   Rilancia dall'inizio l'algoritmo `contact_peer`.
         1.  Riceve un messaggio che gli segnala che il g-nodo  *x<sub>k</sub>*, con *k* ≤ *j*, non partecipa al servizio.
             *   Se *x<sub>k</sub>* è visibile nella mappa di *n*, cioè se *k* = *j*:
                 *   Se il servizio *p* è opzionale:
@@ -385,6 +390,10 @@ Durante l'istradamento del messaggio *m’* il nodo *v* riceve il messaggio.
         escludere i gateway che falliscono.
 *   Altrimenti:
     *   Recupera il servizio *p* da `m’.p_id`.
+    *   Se il servizio *p* è opzionale e `maps_retrieved_below_level` è minore della lunghezza della tupla `m’.x̄`:
+        *   Il  nodo *v* si connette via TCP ad  *n* attraverso la tupla *m’.n* e gli  comunica (senza necessitare alcuna
+            risposta) che non ha ancora le mappe dei servizi opzionali necessarie a proseguire il calcolo. Indica in questo
+            messaggio solo l'identificativo `m’.msg_id`.
     *   Se il servizio *p* è opzionale e stando alle sue conoscenze il suo g-nodo di livello *m’.lvl* non partecipa a *p*:
         *   Il  nodo *v* si connette via TCP ad  *n* attraverso la tupla *m’.n* e gli  comunica (senza necessitare alcuna
             risposta) che il suo g-nodo di  livello *m’.lvl* non partecipa a *p*. Indica in questo messaggio
@@ -395,10 +404,6 @@ Durante l'istradamento del messaggio *m’* il nodo *v* riceve il messaggio.
         *   Se il servizio *p* è opzionale:
             *   Mette  in `exclude_gnode_list` tutti i g-nodi di livello inferiore a *m’.lvl* che  stando alle sue
                 conoscenze attuali non partecipano a *p*.
-        *   Se il nodo *v* partecipa al servizio *p* chiede alla classe server di *p* se è pronta a rispondere con il metodo
-            `is_ready` al livello indicato da `m’.inside_level`.  
-            Se *v* non intende partecipare:
-            *   Mette se stesso `(0, pos[0])` in `exclude_gnode_list`.
         *   Esamina la lista `m’.exclude_tuple_list` di tuple interne. Se vi sono delle tuple che identificano
             dei g-nodi visibili nella mappa di *v* li inserisce in `exclude_gnode_list` come istanza di HCoord.
         *   Calcola *x* = *H<sub>t</sub>*(`m’.x̄,  exclude_list=exclude_gnode_list`); come conseguenza del fatto che la
@@ -432,16 +437,20 @@ Durante l'istradamento del messaggio *m’* il nodo *v* riceve il messaggio.
 
 Note:
 
+<a name="nota1"></a>
 **Nota 1**. Quando la tupla passata alla funzione *H<sub>t</sub>* ha un numero di *w* elementi la ricerca è circoscritta
 al g-nodo di livello *w*. Soddisfare questo requisito è banale: basta escludere dalla ricerca iniziale fatta dal nodo
 *n* tutti i g-nodi esterni al g-nodo *n<sub>w</sub>*.
+
+<a name="nota2"></a>
+**Nota 2**. La logica alla base della variabile `maps_retrieved_below_level` è illustrata nel paragrafo successivo.
 
 ## <a name="Servizi_opzionali_Mappa_partecipanti_Reperimento"></a>Mappe dei servizi opzionali: reperimento iniziale
 
 La prima identità di un sistema è sempre un nodo che costituisce una rete a sé. L'istanza di
 PeersManager che viene creata per essere associata a tale identità non ha bisogno di reperire
 inizialmente le mappe dei servizi opzionali. Solo i servizi opzionali a
-cui lo stesso nodo partecipa esistono nella rete.
+cui lo stesso nodo partecipa esistono nella rete. Il PeersManager imposta subito `maps_retrieved_below_level = levels`.
 
 Le successive identità nascono per fare ingresso in una rete (o un g-nodo) che esisteva
 prima di loro. L'istanza di PeersManager che viene creata per essere associata a tale identità
@@ -471,16 +480,18 @@ loro iniziativa lo contattino per fornire maggiori informazioni sulle mappe.
 In entrambi i casi, bisogna considerare che queste maggiori informazioni possono comunque non
 essere complete, cioè non arrivare fino al livello `levels - 1`.
 
-Se un PeersManager chiede le mappe al suo vicino usa il metodo remoto `get_participant_set`. Se
-invece un PeersManager propone le sue mappe a un suo vicino usa il metodo remoto `set_participant_set`.
+Se un PeersManager chiede le mappe al suo vicino usa il metodo remoto `ask_participant_maps`. Se
+invece un PeersManager propone le sue mappe a un suo vicino usa il metodo remoto `give_participant_maps`.
 In questi metodi le informazioni passate al nodo che riceve le mappe (cioè il PeersManager che ha
-chiamato `get_participant_set` o quello che ha ricevuto la chiamata `set_participant_set`) sono:
+chiamato `ask_participant_maps` o quello che ha ricevuto la chiamata `give_participant_maps`) sono:
 
 *   `int maps_retrieved_below_level`
 *   `mappe`
 
 In entrambi i casi il nodo che riceve le mappe accetta solo le mappe dei livelli superiori al suo corrente
-valore di `maps_retrieved_below_level`. Poi aggiorna il suo valore `maps_retrieved_below_level` a quello ricevuto.
+valore di `maps_retrieved_below_level`. Poi aggiorna il suo valore `maps_retrieved_below_level` a quello ricevuto
+se questo è maggiore e a sua volta trasmette le sue mappe (a tutti i livelli inferiori a `maps_retrieved_below_level`)
+in broadcast con `give_participant_maps`.
 
 ## <a name="Servizi_opzionali_Mappa_partecipanti_Aggiornamento"></a>Mappe dei servizi opzionali: aggiornamento nel tempo
 
@@ -534,10 +545,10 @@ cui partecipano pochissimi nodi.
 
 ### <a name="Servizi_opzionali_Descrizione_meccanismo"></a>Descrizione del meccanismo individuato
 
-Abbiamo visto come un generico nodo *n* che entra (in blocco insieme al g-nodo *w* di livello *i*) in un
-g-nodo *h* di livello *k* (con `k > i`) si trova per un certo tempo consapevole di avere le mappe dei servizi
-opzionali accurate solo fino al livello *i-1*. Finché ad un certo momento riceve le dovute informazioni e
-diventa consapevole di avere tutte le mappe dei servizi opzionali accurate.
+Abbiamo visto come un generico nodo *n* che entra (da solo o in blocco con un g-nodo) in una nuova
+rete o migra in un nuovo g-nodo si trova per un certo tempo consapevole di avere le mappe dei servizi
+opzionali accurate solo fino ad un certo livello che memorizza nella variabile `maps_retrieved_below_level`
+del modulo. Quando il reperimento iniziale è completato avrà di nuovo `maps_retrieved_below_level = levels`.
 
 Fatta questa premessa, diciamo che il nodo *n* considera un generico g-nodo *g*, in assenza di comunicazioni a riguardo di *g*, non partecipante
 ad un servizio opzionale. Può venire a conoscenza della partecipazione solo quando riceve un messaggio del
@@ -758,7 +769,7 @@ chiave *k* quando lui non sarà più partecipante procederà così:
     *   Aggiungi *respondant* a `lista_repliche`.
     *   Aggiungi *respondant* a `exclude_tuple_list`.
 
-### <a name="Mantenimento_database_distribuito_Ingresso_nuovo_nodo"></a>Ingresso nella rete di un nodo partecipante
+### <a name="Mantenimento_database_distribuito_Esaustivita"></a>Esaustività
 
 Un primo evento che introduce criticità riguardo la *coerenza dei dati* è l'ingresso nella rete di un
 nuovo nodo che partecipa al servizio.
@@ -981,7 +992,7 @@ Questi algoritmi pongono alcune regole che la classe del servizio deve rispettar
 che sono comuni ai diversi tipi di servizio che in seguito analizzeremo separatamente.
 
 *   Non viene imposto nessun obbligo riguardo il formato delle classi che rappresentano le richieste e le
-    risposte del servizio.
+    risposte del servizio. Ovviamente devono essere Object serializzabili.
 *   La classe del servizio deve essere in grado di effettuare alcune operazioni partendo dalla istanza che
     rappresenta la richiesta:
     *   `Object get_key_from_request(IPeersRequest r)`: Costruire una istanza della chiave interessata da

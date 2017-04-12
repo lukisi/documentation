@@ -304,9 +304,6 @@ deve conoscere:
         chiavi. Inoltre non prevedono l'eccezione `NOT_FOUND` per una chiave. Ad esempio il servizio Coordinator.
         Per questi servizi, gli algoritmi delineati sono `fixed_keys_db_on_startup` e `fixed_keys_db_on_request`.
 
-    Queste operazioni gestiscono anche, nel caso di servizi opzionali, l'attesa del completamento del reperimento
-    delle mappe di partecipazione. Comunque, prima di tale completamento il servizio di tipo opzionale dovrebbe
-    dichiararsi *non pronto* reimplementando il metodo `is_ready` della classe base PeerService.
 *   Fornisce dei metodi (`begin_replica` e `next_replica`) per i vari servizi registrati perché possano replicare
     i record salvati su un numero di nodi replica.  
     Questi vanno chiamati dalle classi che implementano un servizio, appunto quando hanno salvato (o modificato) un record.
@@ -451,19 +448,14 @@ La classe base ha un membro booleano `p_is_optional` che dice se il servizio è 
 valorizzato nel costruttore ed è in seguito di sola lettura.
 
 La classe base ha un metodo astratto `exec` che viene richiamato sull'hash-node che è chiamato a servire una
-richiesta. Se viene chiamato significa che:
-
-*   Nel metodo `is_ready` il nodo aveva dichiarato di essere pronto a gestire una richiesta.
-*   La ricerca *H<sub>t</sub>* avviata da un nodo su una data chiave aveva portato a questo nodo.
-
-Il metodo `exec`, dunque, riceve una istanza di IPeersRequest; ma esso è ancora in grado di rifiutarsi di
+richiesta. Esso riceve una istanza di IPeersRequest, ma è ancora in grado di rifiutarsi di
 elaborare la richiesta, ad esempio per memoria esaurita o non esaustiva, rilanciando una
 eccezione PeersRefuseExecutionError.
 
 Inoltre, è in grado di dare istruzione al client di riavviare da capo il calcolo distribuito di *H<sub>t</sub>*,
 rilanciando una eccezione PeersRedoFromStartError. Lo fa se ritiene plausibile di non essere più il miglior
-candidato, ad esempio se ha fatto attendere il client per una richiesta di scrittura mentre reperiva il record
-dal precedente detentore.
+candidato rispetto a quando la richiesta è stata avviata, ad esempio se ha fatto attendere il client per una
+richiesta di scrittura mentre reperiva il record dal precedente detentore.
 
 Altrimenti, elabora la richiesta e restituisce una istanza di IPeersResponse.
 
