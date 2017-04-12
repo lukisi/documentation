@@ -172,7 +172,11 @@ Contiene:
         ripartire.
 *   `redo_from_start`:
     *   Booleano inizialmente a False. Dice che è stata ricevuta l'istruzione di riavviare da capo il calcolo
-        distribuito di *H<sub>t</sub>*.
+        distribuito di *H<sub>t</sub>* da parte dell'hash-node.
+*   `missing_optional_maps`:
+    *   Booleano inizialmente a False. Dice che è stata ricevuta l'istruzione di riavviare da capo il calcolo
+        distribuito di *H<sub>t</sub>* da parte di un nodo che non aveva le mappe dei servizi opzionali a
+        disposizione per il ricalcolo.
 
 ## <a name="PeerParticipantMap"></a>PeerParticipantMap
 

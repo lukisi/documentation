@@ -24,11 +24,12 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
 *   bool `opzionale` = False.
 *   Se `services.has_key(p_id)`:
     *   `opzionale` = `services[p_id].p_is_optional`.
-    *   Se **NOT** `services[m’.p_id].is_ready(target_levels)`:
-        *   `exclude_myself` = True.
 *   Altrimenti:
     *   `opzionale` = True.
-*   Mette in `exclude_gnode_list` tutti i g-nodi risultanti da `get_non_participant_gnodes(p_id)`.
+*   Se `opzionale`:
+    *   Mentre `maps_retrieved_below_level` < `target_levels`:
+        *   Attende qualche istante.
+*   Mette in `exclude_gnode_list` tutti i g-nodi risultanti da `get_non_participant_gnodes(p_id, target_levels)`.
 *   Se `exclude_myself`:
     *   Mette `HCoord(0, pos[0])` in `exclude_gnode_list`.
 *   Se `exclude_tuple_list` = null:
@@ -113,7 +114,12 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
     *   While True (ciclo 2):
         *   Try:
             *   Sta in attesa su `waiting_answer.ch` per max `tempo_attesa`.
-            *   Se `waiting_answer.exclude_gnode` ≠ null:
+            *   Se `waiting_answer.missing_optional_maps`:
+                *   Significa che un nodo senza le mappe dei servizi opzionali ha dato istruzione di riavviare il
+                    calcolo distribuito di *H<sub>t</sub>*.
+                *   Aspetta alcuni istanti.
+                *   Return `contact_peer(...)`. Riavvia l'algoritmo.
+            *   Altrimenti-Se `waiting_answer.exclude_gnode` ≠ null:
                 *   Significa che abbiamo ricevuto notizia di un gnodo da escludere.
                 *   `waiting_answer.exclude_gnode` è un PeerTupleGNode che rappresenta un g-nodo `h` dentro il mio
                     g-nodo di livello `top`.
@@ -199,7 +205,18 @@ Firma: `void forward_peer_message(m’)`
     *   `opzionale` = True.
 *   Se `pos[m’.lvl] = m’.pos`:
     *   Facciamo riferimento agli algoritmi [helper](MetodiHelper.md).
-    *   Se **NOT** `my_gnode_participates(m’.p_id, m’.lvl)`:
+    *   bool `opzionale` = False.
+    *   Se `services.has_key(m’.p_id)`:
+        *   `opzionale` = `services[m’.p_id].p_is_optional`.
+    *   Altrimenti:
+        *   `opzionale` = True.
+    *   Se `opzionale` **AND** `maps_retrieved_below_level` < `m’.x̄.tuple.size`:
+        *   `nstub` = `back_stub_factory.i_peers_get_tcp_inside(m’.n.tuple)`.
+        *   Try:
+            *   Esegue `nstub.set_missing_optional_maps(m’.msg_id)`.
+        *   Se riceve `StubError` o `DeserializeError`:
+            *   Ignora.
+    *   Altrimenti-Se **NOT** `my_gnode_participates(m’.p_id, m’.lvl)`:
         *   `nstub` = `back_stub_factory.i_peers_get_tcp_inside(m’.n.tuple)`.
         *   Calcola `gn` istanza di PeerTupleGNode che rappresenta `HCoord(m’.lvl, m’.pos)` con `top` = `m’.n.tuple.size`.
         *   Try:
@@ -208,7 +225,7 @@ Firma: `void forward_peer_message(m’)`
             *   Ignora.
     *   Altrimenti:
         *   `exclude_gnode_list` = new ArrayList di HCoord.
-        *   Metti in `exclude_gnode_list` tutti i g-nodi risultanti da `get_non_participant_gnodes(p_id)`.
+        *   Metti in `exclude_gnode_list` tutti i g-nodi risultanti da `get_non_participant_gnodes(p_id, m’.x̄.tuple.size)`.
         *   Se `exclude_myself`:
             *   Mette `HCoord(0, pos[0])` in `exclude_gnode_list`.
         *   Per ogni PeerTupleGNode `gn` in `m’.exclude_tuple_list`:
@@ -376,6 +393,15 @@ Firma: `int dist(x̄, x)`
 *   Return `distance`.
 
 ## <a name="Ritorno"></a>Messaggi di ritorno
+
+**set_missing_optional_maps**
+
+Firma: `void set_missing_optional_maps(int msg_id)`
+
+*   Si verifica che il `msg_id` sia presente come chiave in `wainting_answer_map`. Altrimenti si ignora il messaggio.
+*   Si recupera dalla mappa il relativo `WaitingAnswer wa`.
+*   `wa.missing_optional_maps` = `True`.
+*   Si segnala l'evento sul canale con `wa.ch.send_async(0)`.
 
 **set_next_destination**
 

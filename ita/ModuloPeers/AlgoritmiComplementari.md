@@ -50,7 +50,9 @@ Firma: `bool check_non_participation(p_id, lvl, _pos)`
     *   Esci dal ciclo.
 *   Try:
     *   Sta in attesa su `waiting_answer.ch` per al massimo `timeout_instradamento`.
-    *   Se `waiting_answer.exclude_gnode` ≠ null:
+    *   Se `waiting_answer.missing_optional_maps`:
+        *   Restituisce False. Rimuovi `waiting_answer_map[m’.msg_id]`. Termina algoritmo.
+    *   Altrimenti-Se `waiting_answer.exclude_gnode` ≠ null:
         *   Restituisce False. Rimuovi `waiting_answer_map[m’.msg_id]`. Termina algoritmo.
     *   Altrimenti-Se `waiting_answer.non_participant_gnode` ≠ null:
         *   Significa che abbiamo ricevuto notizia di un gnodo non partecipante.

@@ -29,7 +29,7 @@ Firma: `bool my_gnode_participates(int p_id, int lvl)`
 Questo metodo restituisce una lista con tutte le istanze di HCoord che rappresentano i g-nodi a me visibili
 nella topologia della rete che, stando alle mie conoscenze, non partecipano al servizio con identificativo `p_id`.
 
-Firma: `List<HCoord> get_non_participant_gnodes(int p_id)`
+Firma: `List<HCoord> get_non_participant_gnodes(int p_id, target_levels)`
 
 *   `ret` =  `new ArrayList<HCoord>()`.
 *   bool `opzionale` = False.
@@ -41,7 +41,7 @@ Firma: `List<HCoord> get_non_participant_gnodes(int p_id)`
     *   `map` = null.
     *   Se `(participant_maps.has_key(p_id))`:
         *   `map` = `participant_maps[p_id]`.
-    *   Per ogni HCoord `lp` in `get_all_gnodes_up_to_lvl(levels)`:
+    *   Per ogni HCoord `lp` in `get_all_gnodes_up_to_lvl(target_levels)`:
         *   Se `map` = null:
             *   Aggiungi `lp` a `ret`.
         *   Altrimenti:
@@ -55,10 +55,10 @@ Questo metodo restituisce una lista con tutte le istanze di HCoord che rappresen
 nella topologia della rete che sono dentro il mio g-nodo di livello *lvl*. Compresi i singoli nodi e compreso
 me stesso `(0, pos[0])`.
 
-Firma: `List<HCoord> get_all_gnodes_up_to_lvl(int lvl)`
+Firma: `List<HCoord> get_all_gnodes_up_to_lvl(int target_levels)`
 
 *   `ret` =  `new ArrayList<HCoord>()`.
-*   Per `l` da 0 a `lvl-1`:
+*   Per `l` da 0 a `target_levels-1`:
     *   Per `p` da 0 a `gsizes[l]-1`:
         *   Se `pos[l]` ≠ `p`:
             *   Aggiungi `HCoord(l, p)` a `ret`.
