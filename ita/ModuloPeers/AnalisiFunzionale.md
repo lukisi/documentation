@@ -20,7 +20,7 @@ a partecipare attivamente al servizio rispondendo alle richieste altrui e anche 
 
 Per ogni servizio occorre definire una funzione che associ ad ogni chiave *k* (nel dominio di chiavi
 definito dal servizio) un nodo esistente nella rete. A tale nodo andranno indirizzate le richieste
-concernenti la chiave k. Siccome tale nodo dovrà rispondere alle richieste, se il servizio prevede la
+concernenti la chiave *k*. Siccome tale nodo dovrà rispondere alle richieste, se il servizio prevede la
 possibilità che un nodo decida di non partecipare attivamente (chiamiamo questo tipo di servizio un
 *servizio opzionale*) va aggiunto il requisito che la funzione associ ad ogni chiave *k* un nodo
 *partecipante* al servizio.
@@ -31,8 +31,8 @@ Netsukuku *reale* (senza componenti *virtuali* come definiti nel documento di an
 
 Sia *V<sub>t</sub>* il set di nodi nella rete al tempo *t*.
 
-Sia *𝛼<sub>t</sub>* : *S* → *V<sub>t</sub>* la funzione suriettiva che al tempo *t*  associa ad un indirizzo
-il nodo che lo detiene. È suriettiva in quanto ogni nodo ha almeno un indirizzo valido. È una funzione non
+Sia *𝛼<sub>t</sub>* : *S* → *V<sub>t</sub>* la funzione che al tempo *t*  associa ad un indirizzo
+il nodo che lo detiene. È una funzione non
 completamente  definita in *S* poiché un indirizzo potrebbe non essere stato assegnato ad  alcun nodo.
 
 Definiamo una funzione *H<sub>t</sub>* che al tempo *t* assegni ad ogni indirizzo in *S* un indirizzo nel dominio di
@@ -282,10 +282,6 @@ deve conoscere:
     servizio peer-to-peer, sia quelli opzionali che quelli non opzionali.
 *   Viene definita una classe base astratta (PeerClient) che deve essere derivata per implementare una classe da
     usare come client per un servizio peer-to-peer.
-*   Emette un segnale quando ha completato con successo la fase di reperimento delle mappe dei
-    servizi opzionali.
-*   Emette un segnale se l'operazione di reperimento delle mappe dei servizi opzionali fallisce.
-    In questo caso il nodo è tenuto a ripetere le operazioni di ingresso nella rete.
 *   Fornisce un metodo (`register`) per registrare le istanze di classi che rappresentano un servizio a cui il
     nodo partecipa.
 *   Fornisce dei metodi helper (inclusi nel modulo per evitare duplicazione di codice) che potranno essere usati
