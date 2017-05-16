@@ -360,10 +360,11 @@ La mappa delle rotte è un oggetto di cui il modulo conosce l'interfaccia IPeers
     con protocollo reliable (TCP) senza ricevere una risposta e senza attendere la sua processazione, ma solo
     la conferma della ricezione.
 *   Dato un livello *k* ottenere uno stub per inviare un messaggio ad un mio vicino (se esiste) che abbia come
-    massimo distinto g-nodo nei miei confronti un g-nodo di livello *k* (metodo `i_peers_fellow`).  
-    All'avvio dell'identità associata a questa istanza del modulo PeerServices, se essa entra insieme al suo
-    g-nodo di livello *i* dentro un g-nodo di livello `k + 1`, allora userà subito questo
-    metodo per individuare un vicino che faceva già parte di quello stesso g-nodo in cui è entrato.
+    massimo distinto g-nodo nei miei confronti un g-nodo di livello *k* (metodo `i_peers_neighbor_at_level`).  
+    Quando viene costruita una istanza della classe PeersManager (la classe principale del modulo PeerServices)
+    essa è legata ad una identità del sistema. Se questa identità nasce per fare ingresso insieme al suo
+    g-nodo di livello *i* dentro un g-nodo di livello `k + 1`, allora nel costruttore di PeersManager si
+    userà questo metodo per individuare un vicino che faceva già parte di quello stesso g-nodo in cui è entrato.
     Userà questo stub per richiedere a tale vicino la mappa corrente dei g-nodi che partecipano a servizi opzionali.
     Questo stub, quindi, è tale che il client invia il messaggio con protocollo reliable (TCP) e attende una risposta.
 

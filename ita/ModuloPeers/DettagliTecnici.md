@@ -471,7 +471,7 @@ Quindi se il nostro nodo ha un diretto vicino che faceva già parte di quello st
 è entrato, questo ha come massimo distinto g-nodo nei suoi confronti un g-nodo di livello
 `host_gnode_level - 1`.
 
-L'istanza di PeersManager usa il metodo `i_peers_fellow` di `map_paths` per avere uno stub con cui parlare con un
+L'istanza di PeersManager usa il metodo `i_peers_neighbor_at_level` di `map_paths` per avere uno stub con cui parlare con un
 suo vicino (se esiste) il cui massimo distinto g-nodo è di livello `host_gnode_level - 1`.
 
 Se esiste tale vicino il PeersManager dialoga con lui per reperire maggiori informazioni sulle mappe
@@ -1183,7 +1183,7 @@ per i livelli da -1 (il nodo stesso) fino a `guest_gnode_level - 1` compreso. Po
 `maps_retrieved_below_level = guest_gnode_level`. Poi avvia subito una tasklet
 per cercare di reperire le *mappe dei servizi opzionali* per i livelli da `host_gnode_level - 1` a `levels - 1`.
 Questa operazione si può concludere o perché si è avuta una risposta da un diretto vicino del nodo *n1*
-(metodo `map_paths.i_peers_fellow`) o perché un altro nodo che ha compiuto l'operazione di ingresso in blocco
+(metodo `map_paths.i_peers_neighbor_at_level`) o perché un altro nodo che ha compiuto l'operazione di ingresso in blocco
 con *n1* propaga l'informazione. Nel nostro caso abbiamo che *n1* interroga un diretto vicino in *G1*.
 
 Subito dopo aver avviato la nuova tasklet, il *pm_n1* si predispone ad indicare il livello `guest_gnode_level`
