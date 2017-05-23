@@ -222,9 +222,12 @@ Classe serializzabile usata per passare tutto insieme il set `participant_maps` 
 
 *   `participant_set`:
     *   HashMap con chiave int (l'identificativo del servizio opzionale) e valore PeerParticipantMap.
+*   `retrieved_below_level`:
+    *   int. Dice il livello sotto il quale è aggiornata la conoscenza del nodo che ha prodotto le mappe.
 
 Si può testare la validità di un oggetto PeerParticipantSet ricevuto dalla rete verificando che:
 
+*   0 ≤ `retrieved_below_level` ≤ `levels`
 *   Per ogni PeerParticipantMap `m` in `participant_set`:
     *   `m` è valido
 
