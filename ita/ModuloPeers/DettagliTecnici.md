@@ -480,6 +480,14 @@ loro iniziativa lo contattino per fornire maggiori informazioni sulle mappe.
 In entrambi i casi, bisogna considerare che queste maggiori informazioni possono comunque non
 essere complete, cioè non arrivare fino al livello `levels - 1`.
 
+Inoltre, il PeersManager di ogni nodo che ha preso parte a questa migrazione/ingresso, per ogni servizio
+opzionale a cui prende parte almeno un nodo in tutto il g-nodo che ha fatto ingresso, comunica in
+broadcast una sola volta la partecipazione del g-nodo. La modalità di questa comunicazione è dettagliata
+in seguito nel documento (si veda l'algoritmo in [Divulgazione della partecipazione](#Servizi_opzionali_Algoritmi_divulgazione_partecipazione)
+e si usi la tupla che rappresenta l'intero g-nodo che ha fatto ingresso).  
+Questa comunicazione in broadcast produce effetto (cioè si propaga) solo quando parte dai border-nodi
+del g-nodo che ha fatto ingresso.
+
 Se un PeersManager chiede le mappe al suo vicino usa il metodo remoto `ask_participant_maps`. Se
 invece un PeersManager propone le sue mappe a un suo vicino usa il metodo remoto `give_participant_maps`.
 In questi metodi le informazioni passate al nodo che riceve le mappe (cioè il PeersManager che ha
