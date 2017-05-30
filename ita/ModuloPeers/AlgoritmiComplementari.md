@@ -85,7 +85,7 @@ Firma: `void publish_my_participation(p_id)`
     *   Se `iterazioni` > 0:
         *   Decrementa `iterazioni` di 1.
     *   Altrimenti:
-        *   `tempo_attesa` = 1 giorno + random(1..24*60*60) secondi.
+        *   `tempo_attesa` = 1 giorno + random(1, 24 \* 60 \* 60) secondi.
     *   Prepara un IPeersMissingArcHandler `missing_handler` che in caso di invocazione esegua:
         *   Calcola `tcp_stub` = `neighbors_factory.i_peers_get_tcp(missing_arc)`.
         *   Try:
