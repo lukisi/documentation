@@ -197,19 +197,12 @@ Firma: `void forward_peer_message(m’)`
 
 *   Recupera `caller`, cioè le informazioni sul chiamante del metodo remoto.
 *   bool `opzionale` = False.
-*   bool `exclude_myself` = False.
 *   Se `services.has_key(m’.p_id)`:
     *   `opzionale` = `services[m’.p_id].p_is_optional`.
-    *   `exclude_myself` = **NOT** `services[m’.p_id].is_ready(m’.inside_level)`.
 *   Altrimenti:
     *   `opzionale` = True.
 *   Se `pos[m’.lvl] = m’.pos`:
     *   Facciamo riferimento agli algoritmi [helper](MetodiHelper.md).
-    *   bool `opzionale` = False.
-    *   Se `services.has_key(m’.p_id)`:
-        *   `opzionale` = `services[m’.p_id].p_is_optional`.
-    *   Altrimenti:
-        *   `opzionale` = True.
     *   Se `opzionale` **AND** `maps_retrieved_below_level` < `m’.x̄.tuple.size`:
         *   `nstub` = `back_stub_factory.i_peers_get_tcp_inside(m’.n.tuple)`.
         *   Try:
@@ -226,8 +219,6 @@ Firma: `void forward_peer_message(m’)`
     *   Altrimenti:
         *   `exclude_gnode_list` = new ArrayList di HCoord.
         *   Metti in `exclude_gnode_list` tutti i g-nodi risultanti da `get_non_participant_gnodes(p_id, m’.x̄.tuple.size)`.
-        *   Se `exclude_myself`:
-            *   Mette `HCoord(0, pos[0])` in `exclude_gnode_list`.
         *   Per ogni PeerTupleGNode `gn` in `m’.exclude_tuple_list`:
             *   int `case`, HCoord `ret`.
             *   Calcola `convert_tuple_gnode(gn, out case, out ret)`.
