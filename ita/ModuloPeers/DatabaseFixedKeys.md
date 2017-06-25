@@ -68,8 +68,14 @@ Ci sono 2 possibili esiti finali a questa richiesta:
 
 ## <a name="Fase_iniziale"></a>Fase iniziale
 
-Sia *n* un nodo partecipante che entra in una rete esistente o che crea una nuova rete. Sia `level_new_gnode` il
-livello del nuovo g-nodo che il nodo *n* ha formato. I casi estremi possono essere l'intera rete, cioè *levels*, o *0*.
+Sia *n* un nodo partecipante al servizio. Possono esserci due casi:
+
+1.  Il nodo *n* crea una nuova rete. In questo caso poniamo `level_new_gnode` uguale a *levels*.
+1.  Il nodo *n* entra in una rete. Questa situazione può avvenire in due modi: o il nodo entra in una rete diversa
+    da quella in cui si trovava prima, oppure migra in un diverso g-nodo all'interno della stessa rete. In entrambi
+    i casi con *n* indichiamo la nuova identità del nodo. Questa fa ingresso in blocco insieme ad un vecchio g-nodo
+    *g* di livello *i* (con `0 ≤ i < levels`) all'interno di un g-nodo esistente *w* di livello *j* (con `i < j ≤ levels`)
+    assumendo una nuova posizione al livello *j-1* assegnata da *w*. In questo caso poniamo `level_new_gnode` uguale a *j-1*.
 
 Sia *K* l'insieme completo delle chiavi del servizio *p*, preferibilmente ordinato per avere per prime le chiavi
 che hanno una visibilità locale più ristretta, se il servizio lo prevede.
@@ -169,18 +175,11 @@ Algoritmo all'avvio:
     *   `srv` = `services[p_id]`.
     *   `fkdd.dh` = `new DatabaseHandler()`.
     *   `fkdd.dh.p_id` = `p_id`.
-    *   `fkdd.dh.ready` = `False`.
-    *   Se `srv.is_optional`:
-        *   Mentre **not** `participant_maps_retrieved`:
-            *   Se `participant_maps_failed`:
-                *   Termina l'algoritmo.
-            *   Aspetta 1 secondo.
     *   `fkdd.dh.not_completed_keys` = `new ArrayList<Object>(fkdd.key_equal_data)`.
     *   `fkdd.dh.retrieving_keys` = `new HashMap<Object,INtkdChannel>(fkdd.key_hash_data, fkdd.key_equal_data)`.
     *   `List<Object> k_set` = `fkdd.get_full_key_domain()`.
     *   Per ogni chiave `Object k` in `k_set`:
         *   Mette `k` in `fkdd.dh.not_completed_keys`.
-    *   `fkdd.dh.ready` = `True`.
     *   `wait_before_network_activity` = `False`.
     *   Per ogni chiave `Object k` in `k_set`:
         *   `h_p_k` = `fkdd.evaluate_hash_node(k)`.
@@ -202,7 +201,7 @@ Algoritmo alla ricezione della richiesta:
     *   `fkdd`: istanza di una classe che implementa IFixedKeysDatabaseDescriptor sopra descritta.
     *   `r`: la richiesta.
     *   `common_lvl`: il livello del minimo comune g-nodo con il richiedente, da 0 a `levels` compresi.
-*   Se `fkdd.dh` = `null` **o not** `fkdd.dh.ready`:
+*   Se `fkdd.dh` = `null`:
     *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE`.
     *   L'algoritmo termina.
 *   Se `fkdd.is_read_only_request(r)`:
@@ -257,6 +256,9 @@ Algoritmo di avvio del recupero (in una nuova tasklet) del record per la chiave 
 *   Crea un canale di comunicazione `ch`.
 *   Mette la chiave `k` nell'elenco `fkdd.dh.retrieving_keys`, associandogli il canale `ch`.
 *   In una nuova tasklet:
+    *   Se il servizio è opzionale:
+        *   Aspetta che siano reperite le mappe di partecipazione per i servizi opzionali almeno
+            fino al livello in cui va circoscritta la ricerca dell'hash-node per la chiave `k`.
     *   Avvia il procedimento di recupero del record per la chiave `k`.  
         Si tratta di una richiesta di sola lettura (con attesa del tempo di coerenza) in cui il nodo `n` è
         il client e si auto-esclude come servente.  

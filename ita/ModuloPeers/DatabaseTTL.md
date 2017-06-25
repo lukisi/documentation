@@ -354,17 +354,10 @@ Algoritmo all'avvio:
     *   `srv` = `services[p_id]`.
     *   `tdd.dh` = `new DatabaseHandler()`.
     *   `tdd.dh.p_id` = `p_id`.
-    *   `tdd.dh.ready` = `False`.
-    *   Se `srv.is_optional`:
-        *   Mentre **not** `participant_maps_retrieved`:
-            *   Se `participant_maps_failed`:
-                *   Termina l'algoritmo.
-            *   Aspetta 1 secondo.
     *   `tdd.dh.timer_default_non_exhaustive` = un nuovo timer che scade dopo `tdd.ttl_db_msec_ttl` millisecondi.
     *   `tdd.dh.not_found_keys` = `new ArrayList<Object>(tdd.key_equal_data)`.
     *   `tdd.dh.not_exhaustive_keys` = `new HashMap<Object,Timer>(tdd.key_hash_data, tdd.key_equal_data)`.
     *   `tdd.dh.retrieving_keys` = `new HashMap<Object,INtkdChannel>(tdd.key_hash_data, tdd.key_equal_data)`.
-    *   `tdd.dh.ready` = `True`.
     *   Se `new_network`:
         *   `tdd.dh.timer_default_non_exhaustive` = un nuovo timer che scade dopo **0** millisecondi.
         *   Return. L'algoritmo termina.
@@ -452,7 +445,7 @@ Algoritmo alla ricezione della richiesta:
     *   `tdd`: istanza di una classe che implementa ITemporalDatabaseDescriptor sopra descritta.
     *   `r`: la richiesta.
     *   `common_lvl`: il livello del minimo comune g-nodo con il richiedente, da 0 a *levels* compresi.
-*   Se `tdd.dh` = `null` **o not** `tdd.dh.ready`:
+*   Se `tdd.dh` = `null`:
     *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE`.
     *   L'algoritmo termina.
 *   Se `r` is `RequestSendKeys`:
@@ -596,6 +589,9 @@ Algoritmo di avvio del recupero (in una nuova tasklet) del record per la chiave 
 *   Crea un canale di comunicazione `ch`.
 *   Mette la chiave `k` nell'elenco `tdd.dh.retrieving_keys`, associandogli il canale `ch`.
 *   In una nuova tasklet:
+    *   Se il servizio è opzionale:
+        *   Aspetta che siano reperite le mappe di partecipazione per i servizi opzionali almeno
+            fino al livello in cui va circoscritta la ricerca dell'hash-node per la chiave `k`.
     *   Avvia il procedimento di recupero del record per la chiave `k`.  
         Si tratta di una richiesta di sola lettura (con attesa del tempo di coerenza) in cui il
         nodo *n* è il client e si auto-esclude come servente.  
