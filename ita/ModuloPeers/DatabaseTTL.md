@@ -152,16 +152,46 @@ svuotato quando il nodo passa allo stato di default *esaustivo*.
 
 ## <a name="Fase_iniziale"></a>Fase iniziale
 
-Quando un nodo partecipante al servizio costituisce una nuova rete allora esso è da subito *esaustivo* poiché
+Sia *n* un nodo partecipante al servizio. Il nodo crea una istanza *p* della classe che rappresenta
+il servizio, ereditando dalla classe base PeerService. Possono esserci due casi:
+
+1.  Il nodo *n* crea una nuova rete.  
+    In questo caso il costruttore di *p* pone:
+
+    *   `guest_gnode_level` = *-1*. Significa che non c'era una precedente identità da cui reperire uno stato.
+    *   `new_gnode_level` = *levels*. Significa che è stato formato un nuovo g-nodo di livello *levels*.
+
+1.  Il nodo *n* entra in una rete. Questa situazione può avvenire in due modi: o il nodo entra in una rete diversa
+    da quella in cui si trovava prima, oppure migra in un diverso g-nodo all'interno della stessa rete. In entrambi
+    i casi con *n* indichiamo la nuova identità del nodo. Questa fa ingresso in blocco insieme ad un vecchio g-nodo
+    *g* di livello *i* (con `0 ≤ i < levels`) all'interno di un g-nodo esistente *w* di livello *j* (con `i < j ≤ levels`)
+    assumendo una nuova posizione al livello *j-1* assegnata da *w*.  
+    In questo caso il costruttore di *p* pone:
+
+    *   `guest_gnode_level` = *i*. Significa che dalla precedente identità si devono reperire le informazioni
+        relative ai dati con visibilità locale ai livelli inferiori a *i*.
+    *   `new_gnode_level` = *j-1*. Significa che è stato formato un nuovo g-nodo di livello *j-1*.
+
+    Inoltre in questo caso il costruttore di *p* deve essere messo in grado di recuperare dalla sua precedente
+    identità alcune informazioni. Cioè deve avere un riferimento alla precedente istanza della classe del servizio.
+
+Nel primo caso, cioè se costituisce una nuova rete, il costruttore di *p* si considera da subito *esaustivo* ed
 inizializza un database vuoto. Di seguito analiziamo cosa fa un nodo che, invece, entra in una rete esistente.
 
-Ricordiamo che con questo *ingresso* possiamo intendere anche una *migrazione*. E che in entrambi i casi il
-nodo *n* entra in blocco insieme ad un g-nodo *w* di cui conosce il livello. Tale livello è quello che va a
-valorizzare il `maps_retrieved_below_level` nel PeersManager.
+Nel secondo caso, cioè se ha il riferimento alla precedente istanza, il costruttore di *p* esamina ad uno ad uno
+tutti i record *r* che erano memorizzati nella precedente istanza. Per ogni record *r* guarda la relativa
+chiave *k*. Sia *l* il livello del g-nodo in cui la visibilità del dato per la chiave *k* è circoscritta,
+oppure sia *l* = *levels*.
 
-**TODO** Da approfondire dopo aver completato il [quadro d'insieme](DettagliTecnici.md#Overview).
+Se `guest_gnode_level` ≥ *l*, allora *p* mette nella sua memoria il record che era memorizzato
+dalla precedente istanza. Inoltre *p* si considera *esaustivo* per la chiave *k*.
 
-Inizialmente, quando entra in una rete, il nodo *n* si mette nello stato di default *non esaustivo* per un tempo
+Altrimenti, se `new_gnode_level` ≥ *l*, allora *p* sa che non esiste un record per la chiave *k*
+e si considera *esaustivo* per la chiave *k*.
+
+Altrimenti *p* sa che non è *esaustivo* per la chiave *k*.
+
+Poi, il costruttore di *p* si mette nello stato di default *non esaustivo* per un tempo
 pari al TTL dei record che il servizio *p* memorizza.
 
 Se un record collegato alla chiave *k* in *p* deve rimanere in vita, allora un nodo *q* farà una richiesta
@@ -347,7 +377,7 @@ Algoritmo di rimozione di *k* da `not_found_keys`:
 
 Algoritmo all'avvio:
 
-**void ttl_db_on_startup(ITemporalDatabaseDescriptor tdd, int p_id, bool new_network)**
+**void ttl_db_on_startup(ITemporalDatabaseDescriptor tdd, int p_id, int guest_gnode_level, int new_gnode_level, ITemporalDatabaseDescriptor? prev_id_tdd)**
 
 *   assert: `services.has_key(p_id)`.
 *   In una nuova tasklet:
@@ -358,9 +388,21 @@ Algoritmo all'avvio:
     *   `tdd.dh.not_found_keys` = `new ArrayList<Object>(tdd.key_equal_data)`.
     *   `tdd.dh.not_exhaustive_keys` = `new HashMap<Object,Timer>(tdd.key_hash_data, tdd.key_equal_data)`.
     *   `tdd.dh.retrieving_keys` = `new HashMap<Object,INtkdChannel>(tdd.key_hash_data, tdd.key_equal_data)`.
-    *   Se `new_network`:
+    *   Se `prev_id_tdd` = `null`:
         *   `tdd.dh.timer_default_non_exhaustive` = un nuovo timer che scade dopo **0** millisecondi.
         *   Return. L'algoritmo termina.
+    *   Per ogni chiave `Object k` in `prev_id_tdd.ttl_db_get_all_keys()`:
+        *   `h_p_k` = `tdd.evaluate_hash_node(k)`
+        *   `l` = `h_p_k.size`
+        *   Se `guest_gnode_level ≥ l`:
+            *   Se `prev_id_tdd.my_records_contains(k)`:
+                *   `tdd.set_record_for_key(k, dup_object(prev_id_tdd.get_records_for_key(k)))`
+            *   Altrimenti:
+                *   nop // nel dubbio, meglio non esaustivo
+        *   Altrimenti-Se `new_gnode_level ≥ l`:
+            *   `tdd.dh.not_found_keys.add(k)`
+        *   Altrimenti:
+            *   nop // sono non esaustivo
     *   `IPeersRequest r` = `new RequestSendKeys()`.
     *   `PeerTupleNode tuple_n`.
     *   `PeerTupleNode respondant`.

@@ -68,27 +68,47 @@ Ci sono 2 possibili esiti finali a questa richiesta:
 
 ## <a name="Fase_iniziale"></a>Fase iniziale
 
-Sia *n* un nodo partecipante al servizio. Possono esserci due casi:
+Sia *n* un nodo partecipante al servizio. Il nodo crea una istanza *p* della classe che rappresenta
+il servizio, ereditando dalla classe base PeerService. Possono esserci due casi:
 
-1.  Il nodo *n* crea una nuova rete. In questo caso poniamo `level_new_gnode` uguale a *levels*.
+1.  Il nodo *n* crea una nuova rete.  
+    In questo caso il costruttore di *p* pone:
+
+    *   `guest_gnode_level` = *-1*. Significa che non c'era una precedente identità da cui reperire uno stato.
+    *   `new_gnode_level` = *levels*. Significa che è stato formato un nuovo g-nodo di livello *levels*.
+
 1.  Il nodo *n* entra in una rete. Questa situazione può avvenire in due modi: o il nodo entra in una rete diversa
     da quella in cui si trovava prima, oppure migra in un diverso g-nodo all'interno della stessa rete. In entrambi
     i casi con *n* indichiamo la nuova identità del nodo. Questa fa ingresso in blocco insieme ad un vecchio g-nodo
     *g* di livello *i* (con `0 ≤ i < levels`) all'interno di un g-nodo esistente *w* di livello *j* (con `i < j ≤ levels`)
-    assumendo una nuova posizione al livello *j-1* assegnata da *w*. In questo caso poniamo `level_new_gnode` uguale a *j-1*.
+    assumendo una nuova posizione al livello *j-1* assegnata da *w*.  
+    In questo caso il costruttore di *p* pone:
 
-Sia *K* l'insieme completo delle chiavi del servizio *p*, preferibilmente ordinato per avere per prime le chiavi
+    *   `guest_gnode_level` = *i*. Significa che dalla precedente identità si devono reperire le informazioni
+        relative ai dati con visibilità locale ai livelli inferiori a *i*.
+    *   `new_gnode_level` = *j-1*. Significa che è stato formato un nuovo g-nodo di livello *j-1*.
+
+    Inoltre in questo caso il costruttore di *p* deve essere messo in grado di recuperare dalla sua precedente
+    identità alcune informazioni. Cioè deve avere un riferimento alla precedente istanza della classe del servizio.
+
+Sia *K* l'insieme completo delle chiavi del servizio, preferibilmente ordinato per avere per prime le chiavi
 che hanno una visibilità locale più ristretta, se il servizio lo prevede.
 
-Immediatamente il nodo *n* avvia un esame su tutte le possibili chiavi *k* ∈ *K*. Sia *l* il livello del g-nodo
+Immediatamente *p* avvia un esame su tutte le possibili chiavi *k* ∈ *K*. Sia *l* il livello del g-nodo
 in cui la visibilità del dato per la chiave *k* è circoscritta, oppure sia *l* = *levels*.
 
-Se `level_new_gnode` ≥ *l*, allora il nodo *n* inizializza il record. Cioè mette nella sua memoria il record di
-default associato a *k*. Inoltre mette a *completato* lo stato dell'operazione iniziale di recupero del record
-per la chiave *k*. Di seguito analiziamo cosa fa il nodo *n* se, invece, non deve inizializzare il record per
-la chiave *k*.
+Se `guest_gnode_level` ≥ *l*, allora *p* mette nella sua memoria il record che era memorizzato
+dalla precedente istanza. Inoltre mette a *completato* lo stato dell'operazione iniziale di recupero del record
+per la chiave *k*.
 
-Il nodo *n* avvia un [procedimento di recupero](DettagliTecnici.md#Procedimento_di_recupero_di_un_record) del
+Altrimenti, se `new_gnode_level` ≥ *l*, allora *p* mette nella sua memoria il record di
+default associato a *k*. Inoltre mette a *completato* lo stato dell'operazione iniziale di recupero del record
+per la chiave *k*.
+
+Altrimenti, *p* non ha informazioni per inizializzare il record per la chiave *k*. Di seguito analiziamo cosa fa
+il servizio *p* in questo caso.
+
+Il servizio *p* avvia un [procedimento di recupero](DettagliTecnici.md#Procedimento_di_recupero_di_un_record) del
 record associato a *k*, con attesa del tempo critico di coerenza *𝛿*.
 
 Il procedimento di recupero consiste nell'inviare la richiesta al nodo che in precedenza era detentore del record
@@ -102,7 +122,7 @@ operazioni iniziali dovrebbe essere sufficientemente contenuto per il fatto che 
 locale più ristretta. Diciamo dunque che dopo aver avviato (in una nuova tasklet) l'operazione di recupero di un
 record (ci riferiamo quindi ai record che non vengono inizializzati da *n*) si attendono 200 millisecondi.
 
-Come detto, tale procedimento prevede che se il nodo *n* durante questo tempo riceve richieste per la chiave
+Come detto, tale procedimento prevede che se il servizio *p* nel nodo *n* durante questo tempo riceve richieste per la chiave
 *k* che sono di scrittura, allora non le rifiuta subito, ma le mette in attesa. Siccome ora le richieste di
 scrittura per la chiave *k* passano prima per il nodo *n* che le fa attendere, di sicuro non giungeranno al
 *current(k)*.
@@ -120,7 +140,8 @@ nella sua memoria il record di default per tale chiave.
 
 Esaminiamo ora cosa avviene per le richieste, di qualsiasi tipo, che il nodo *n* riceve da altri.
 
-Quando il nodo *n* riceve una richiesta *r* per una chiave *k*, il suo comportamento dipende da due fattori:
+Quando il servizio *p* nel nodo *n* riceve una richiesta *r* per una chiave *k*, il suo comportamento dipende da due fattori:
+
 *   Lo stato dell'operazione iniziale di recupero del record per la chiave *k*. Può essere *completato* oppure no.
 *   Il tipo della richiesta *r*. Può essere *di sola lettura* oppure no.
 
@@ -140,7 +161,7 @@ miglior candidato.
 
 Se il recupero del record è stato completato, qualunque sia il tipo della richiesta, la serve immediatamente.
 
-Per gestire questo aspetto il nodo *n* fa uso di alcune strutture dati memorizzate nella classe DatabaseHandler:
+Per gestire questo aspetto il servizio *p* fa uso di alcune strutture dati memorizzate nella classe DatabaseHandler:
 
 *   Elenco di chiavi `List<Object> not_completed_keys`.  
     Se una chiave *k* è nell'elenco allora il nodo sa che il recupero del relativo record non è ancora
@@ -168,7 +189,7 @@ userà in tutte le chiamate a questi algoritmi, che sono metodi di PeersManager.
 
 Algoritmo all'avvio:
 
-**void fixed_keys_db_on_startup(IFixedKeysDatabaseDescriptor fkdd, int p_id, int level_new_gnode)**
+**void fixed_keys_db_on_startup(IFixedKeysDatabaseDescriptor fkdd, int p_id, int guest_gnode_level, int new_gnode_level, IFixedKeysDatabaseDescriptor? prev_id_fkdd)**
 
 *   assert: `services.has_key(p_id)`.
 *   In una nuova tasklet:
@@ -184,7 +205,10 @@ Algoritmo all'avvio:
     *   Per ogni chiave `Object k` in `k_set`:
         *   `h_p_k` = `fkdd.evaluate_hash_node(k)`.
         *   `l` = `h_p_k.size`.
-        *   Se `level_new_gnode` ≥ `l`:
+        *   Se `guest_gnode_level` ≥ `l`:
+            *   Esegui `fkdd.set_record_for_key(k, prev_id_fkdd.get_record_for_key(k))`.
+            *   Rimuove `k` da `fkdd.dh.not_completed_keys`.
+        *   Altrimenti-Se `new_gnode_level` ≥ `l`:
             *   Esegui `fkdd.set_record_for_key(k, fkdd.get_default_record_for_key(k))`.
             *   Rimuove `k` da `fkdd.dh.not_completed_keys`.
         *   Altrimenti:
