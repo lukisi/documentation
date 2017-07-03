@@ -1007,7 +1007,7 @@ che sono comuni ai diversi tipi di servizio che in seguito analizzeremo separata
         questa richiesta, avendo come requisito (cioè il chiamante deve averlo già verificato) che dalla
         richiesta *r* si è in grado di reperire una valida chiave; cioè, se non si è in grado di produrre tale
         chiave questa operazione può abortire il programma.
-    *   `int get_timeout_exec(IPeersRequest r)`: Determinare il tempo limite di esecuzione che il client del
+    *   `int get_timeout_exec(IPeersRequest r)`: Determinare il tempo limite di esecuzione in millisecondi che il client del
         servizio si aspetta, avendo come requisito (cioè il chiamante deve averlo già verificato) che la
         richiesta *r* è di tipo *insert* o *update*; cioè, siccome il modulo dovrebbe farne uso solo in questi
         casi, in tutti gli altri casi questa operazione può abortire il programma.
