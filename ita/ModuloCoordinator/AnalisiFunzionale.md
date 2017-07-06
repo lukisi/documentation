@@ -92,7 +92,7 @@ Fornisce metodi per:
 
 *   Chiedere ad un vicino *v*, dato uno stub per contattarlo, quanti posti vede liberi (nella sua mappa, senza contattare i singoli Coordinator) nei suoi g-nodi. Metodo `get_neighbor_map`.  
     Questo metodo può rilanciare l'eccezione CoordinatorStubNotWorkingError se la comunicazione con il vicino non riesce.  
-    Questo metodo può rilanciare l'eccezione CoordinatorNodeNotReadyError se il vicino *v* non ha ancora completato la fase di boostrap (vedi modulo [QSPN](../ModuloQSPN/EsplorazioneRete.md#Rete_completamente_esplorata)). Infatti il nodo *v* non è in grado di rispondere alle richieste dell'interfaccia ICoordinatorMap, quindi il modulo Coordinator nel nodo *v* non ha ancora ricevuto l'istanza di tale interfaccia.  
+    Questo metodo può rilanciare l'eccezione CoordinatorNodeNotReadyError se il vicino *v* non ha ancora completato la fase di boostrap (vedi modulo [QSPN](../ModuloQspn/EsplorazioneRete.md#Rete_esplorata)). Infatti il nodo *v* non è in grado di rispondere alle richieste dell'interfaccia ICoordinatorMap, quindi il modulo Coordinator nel nodo *v* non ha ancora ricevuto l'istanza di tale interfaccia.  
     Se invece non sono rilanciate eccezioni, il metodo restituisce una istanza di ICoordinatorNeighborMap.  
     Dalla risposta deve essere possibile leggere queste informazioni:
 
