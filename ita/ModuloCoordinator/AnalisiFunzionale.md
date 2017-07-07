@@ -1,14 +1,17 @@
 # Modulo Coordinator - Analisi Funzionale
 
+1.  [Il ruolo del modulo Coordinator](#Ruolo_coordinator)
 1.  [Il servizio Coordinator](#Servizio_coordinator)
     1.  [Servizi previsti](#Servizi_previsti)
         1.  [Prenota un posto](#Prenota_un_posto)
 1.  [Richiesta al diretto vicino di accesso al servizio Coordinator](#Richiesta_al_diretto_vicino)
-    1.  [Non sono ancora nella rete](#Per_ingresso)
-    1.  [Sono in un isola che deve migrare](#Per_migrazione)
+    1.  [Ingresso in diversa rete](#Per_ingresso)
+    1.  [Ingresso come risoluzione di uno split di g-nodo](#Per_split)
 1.  [Requisiti](#Requisiti)
 1.  [Deliverables](#Deliverables)
 1.  [Classi e interfacce](#Classi_e_interfacce)
+
+## <a name="Ruolo_coordinator"></a>Il ruolo del modulo Coordinator
 
 Il modulo cerca di fare sì che un singolo g-nodo di livello *l*, sebbene costituito da un numero di singoli
 nodi, abbia un comportamento coerente come singola entità.
@@ -16,7 +19,8 @@ nodi, abbia un comportamento coerente come singola entità.
 Il modulo fa uso delle [tasklet](../Librerie/TaskletSystem.md), un sistema di multithreading cooperativo.
 
 Il modulo fa uso del framework [ZCD](../Librerie/ZCD.md), precisamente appoggiandosi ad una libreria intermedia
-prodotta con questo framework per formalizzare i metodi remoti usati nel demone *ntkd*.
+prodotta con questo framework per formalizzare i metodi remoti usati nel demone *ntkd* per comunicare con i
+diretti vicini.
 
 Il modulo fa uso diretto delle classi e dei servizi forniti dal modulo [PeerServices](../ModuloPeers/AnalisiFunzionale.md).
 In particolare, esso realizza un servizio peer-to-peer, chiamato appunto Coordinator, per mezzo del quale svolge
@@ -85,31 +89,56 @@ questo caso *n* comunica l'esito al vicino *m*.
 In alcuni casi un nodo *n* può voler chiedere ad un suo diretto vicino di accedere al servizio peer-to-peer
 del Coordinator.
 
-### <a name="Per_ingresso"></a>Non sono ancora nella rete
+### <a name="Per_ingresso"></a>Ingresso in diversa rete
 
-Si consideri un nodo *n* che non ha fatto ancora ingresso in una rete. Comunicando con un suo vicino *v*, il
-nodo *n* apprende che *v* appartiene al g-nodo *g* e che in tale g-nodo c'è ancora spazio. Vorrebbe quindi
-richiedere l'accesso nel g-nodo *g*. In questo caso *n* chiede a *v* di accedere alla memoria condivisa del
-g-nodo *g* per cercare di riservargli un posto.
+Si consideri un nodo *n* che appartiene alla rete *G*. Questa è una generalizzazione,
+che comprende ad esempio il caso di un singolo nodo che compone una intera rete.
 
-### <a name="Per_migrazione"></a>Sono in un isola che deve migrare
+Assumiamo che *n* rilevi la presenza di un nodo diretto vicino *v* e comunicando scopra che tale nodo appartiene
+ad una diversa rete *J*. Dopo aver ricevuto alcune informazioni da *v* (tra le quali ad esempio gli spazi
+liberi nei propri g-nodi ai vari livelli e la dimensione della rete *J*) il nodo *n* le comunica direttamente
+con il servizio Coordinator del livello *levels*, cioè di *G*. Sulla base di una certa strategia (che esula da questa
+trattazione) il Coordinator di *G* decide di assegnare a *n* il compito di chiedere al suo g-nodo *g*
+di livello *l* di fare ingresso in *J*.
+
+Ora il nodo *n* comunica direttamente con il servizio Coordinator del livello *l*, cioè di *g*. Il
+Coordinator di *g* accetta questa soluzione.
+
+A questo punto *n* chiede a *v* di trovare un posto per *g* in *J*. Per questa richiesta il nodo *v* comunica
+con il servizio Coordinator del *suo* g-nodo di livello *l* + 1, in *J*.
+
+Quello che si voleva evidenziare qui, è che il modulo Coordinator in *n* comunica con il modulo
+Coordinator del diretto vicino *v*. Solo in seguito il modulo Coordinator in *v* usa il client
+del servizio Coordinator per comunicare (non con un diretto vicino ma tramite i servizi del
+modulo PeerServices) con il server del servizio Coordinator del suo g-nodo di livello *l* + 1, in *J*.
+
+L'obiettivo finale di queste comunicazioni (possono essere necessarie più di una) con il server
+del servizio Coordinator sarà ovviamente la prenotazione di un posto di livello *l* in *J*. Probabilmente si tratterà
+di un posto nello stesso g-nodo di livello *l* + 1 di *v*, eventualmente a fronte dell'esecuzione di
+una migration path. Ma questo esula da questa trattazione.
+
+### <a name="Per_split"></a>Ingresso come risoluzione di uno split di g-nodo
 
 Si consideri un nodo *n* che fa parte di un g-nodo *g* di livello *l*. Il g-nodo *g* fa a sua volta parte di
 un g-nodo *h* di livello *l* + 1. Supponiamo che il g-nodo *g* diventi disconnesso, cioè avviene lo split del
-g-nodo, mentre *h* è ancora connesso. Supponiamo che l'isola in cui si trova *n* sia una di quelle che non
+g-nodo, mentre *h* è ancora connesso. Supponiamo che l'isola in cui si trova *n* (chiamiamola *g1*) sia una di quelle che non
 contengono il nodo più anziano. Supponiamo che *n* abbia un vicino *v* che appartiene a *h* ma non appartiene
 a *g*. Per questo il nodo *n* riceve da *v* l'informazione che tutta la sua isola (di livello *l*) deve
 cambiare indirizzo.
 
-In questo momento il nodo *n* non ha più un indirizzo valido in *g* e non è sicuro nemmeno che ci sia ancora
-spazio per un nuovo g-nodo in *h*.
+In questo momento nessun nodo all'interno dell'isola *g1* ha un indirizzo valido in *h*. Quindi
+non può comunicare con il server del servizio Coordinator del suo g-nodo di livello *l* + 1, o superiori.
+Però si forma automaticamente un nuovo server del servizio Coordinator per *g1*.
 
-Supponiamo che a seguito di tale evento, per una strategia che non è di pertinenza di questo modulo, il nodo
-*n* voglia accedere alla memoria condivisa del g-nodo *h*. Se cercasse di farlo autonomamente potrebbe risultare
-dal calcolo dell'hash-node che esso si trova proprio in *g*. Ma il nodo *n* non è più parte del vero *g* e non
-può nemmeno avere percorsi nella sua mappa che lo colleghino al vero *g*. Allora *n* deve chiedere a *v* di
-accedere in vece sua alla memoria condivisa del g-nodo *h*. Anche se l'hash-node si trova proprio in *g* il
-nodo *v* saprà instradare il messaggio verso il vero *g*.
+Ci troviamo di nuovo in una situazione simile alla precedente. Il nodo *n* comunica direttamente
+con il servizio Coordinator di *g1* proponendo un ingresso facilitato dal nodo diretto vicino *v*. Il
+Coordinator di *g1* accetta questa soluzione.
+
+A questo punto *n* chiede a *v* di trovare un posto per *g1* in *G*. Per questa richiesta il nodo *v* comunica
+con il servizio Coordinator del *suo* g-nodo di livello *l* + 1, che è l'originale g-nodo *h*.
+
+L'obiettivo finale di queste comunicazioni (possono essere necessarie più di una) con il server
+del servizio Coordinator sarà ovviamente la prenotazione di un posto di livello *l* in *G*.
 
 ## <a name="Requisiti"></a>Requisiti
 
