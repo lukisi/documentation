@@ -142,7 +142,13 @@ del servizio Coordinator sarà ovviamente la prenotazione di un posto di livello
 
 ## <a name="Requisiti"></a>Requisiti
 
-*   Il livello a cui il nodo ha costituito un g-nodo nuovo.
+Il nodo quando crea una identità (la prima per avviare il sistema o le successive a seguito di ingressi
+o migrazioni) crea una istanza del modulo Coordinator fornendo:
+
+*   Se si tratta di una identità successiva alla prima, per ingresso o migrazione, il livello del g-nodo
+    (di cui l'identità fa parte come nodo) che compie in blocco questa operazione
+*   Il livello a cui si è costituito un g-nodo nuovo.
+*   Se si tratta di una identità successiva alla prima, un riferimento alla istanza precedente del modulo Coordinator.
 
 Durante le sue operazioni, il modulo viene informato quando il nodo ha completato la fase di bootstrap.
 In quello stesso momento gli vengono forniti:

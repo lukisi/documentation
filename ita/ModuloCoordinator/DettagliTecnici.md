@@ -15,13 +15,32 @@
 ## <a name="Requisiti"></a>Requisiti
 
 L'utilizzatore del modulo Coordinator inizializza il modulo richiamando il metodo statico `init`
-di CoordinatorManager.  In tale metodo viene anche passata l'istanza di INtkdTasklet per fornire
+di CoordinatorManager.  In tale metodo viene anche passata l'istanza di ITasklet per fornire
 l'implementazione del sistema di tasklet.
 
-Appena il nodo entra in una rete o ne costituisce una nuova, istanzia il suo CoordinatorManager
-passando al costruttore:
+Appena il nodo *n* entra in una rete o ne costituisce una nuova, istanzia il suo CoordinatorManager.
 
-*   `level_new_gnode`. Il livello del g-nodo che ha costituito.
+1.  Il nodo *n* crea una nuova rete.  
+    In questo caso il nodo passa al costruttore di CoordinatorManager:
+
+    *   `guest_gnode_level` = *-1*. Significa che non c'era una precedente identità.
+    *   `new_gnode_level` = *levels*. Significa che è stato formato un nuovo g-nodo di livello *levels*.
+    *   `prev_id_coord` = *null*. Significa che non c'era una precedente identità.
+
+1.  Il nodo *n* entra in una rete. Questa situazione può avvenire in due modi: o il nodo entra in una rete diversa
+    da quella in cui si trovava prima, oppure migra in un diverso g-nodo all'interno della stessa rete. In entrambi
+    i casi con *n* indichiamo la nuova identità del nodo. Questa fa ingresso in blocco insieme ad un vecchio g-nodo
+    *g* di livello *i* (con `0 ≤ i < levels`) all'interno di un g-nodo esistente *w* di livello *j* (con `i < j ≤ levels`)
+    assumendo una nuova posizione al livello *j-1* assegnata da *w*.  
+    In questo caso il nodo passa al costruttore di CoordinatorManager:
+
+    *   `guest_gnode_level` = *i*. Significa che dalla precedente identità si devono reperire le informazioni
+        relative ai g-nodi ai livelli inferiori a *i*.
+    *   `new_gnode_level` = *j-1*. Significa che è stato formato un nuovo g-nodo di livello *j-1*.
+    *   `prev_id_coord` = la precedente identità di CoordinatorManager.
+
+    Inoltre in questo caso il costruttore di *p* deve essere messo in grado di recuperare dalla sua precedente
+    identità alcune informazioni. Cioè deve avere un riferimento alla precedente istanza della classe del servizio.
 
 Quando il nodo ha completato la fase di bootstrap del modulo QSPN, il nodo informa il suo CoordinatorManager
 chiamando il metodo `bootstrap_completed` a cui passa:
