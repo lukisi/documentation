@@ -26,6 +26,11 @@ Il modulo fa uso diretto delle classi e dei servizi forniti dal modulo [PeerServ
 In particolare, esso realizza un servizio peer-to-peer, chiamato appunto Coordinator, per mezzo del quale svolge
 alcuni dei suoi compiti.
 
+Siccome chiamiamo con lo stesso nome Coordinator sia il modulo presente su ogni nodo sia il servizio peer-to-peer
+che rappresenta un g-nodo, bisogna che il lettore faccia attenzione al contesto. Di solito se parliamo
+di Coordinator di un g-nodo (dal livello 1 fino all'intera rete) ci riferiamo al servizio, cioè
+al nodo che al momento viene identificato come servente.
+
 ## <a name="Servizio_coordinator"></a>Il servizio Coordinator
 
 Il servizio Coordinator è un servizio non opzionale, cioè tutti i nodi partecipano attivamente. Si tratta di un
@@ -95,27 +100,52 @@ Si consideri un nodo *n* che appartiene alla rete *G*. Questa è una generalizza
 che comprende ad esempio il caso di un singolo nodo che compone una intera rete.
 
 Assumiamo che *n* rilevi la presenza di un nodo diretto vicino *v* e comunicando scopra che tale nodo appartiene
-ad una diversa rete *J*. Dopo aver ricevuto alcune informazioni da *v* (tra le quali ad esempio gli spazi
+ad una diversa rete *J*. Comunicando con il nodo *v*, il nodo *n* scopre alcune caratteristiche della rete
+*J* e le confronta con le caratteristiche della rete *G*.
+
+**Importante** Questa prima disanima delle caratteristiche di *J* e di *G* avviene sulla base delle
+conoscenze di *n* e di *v*. Non va bene importunare il Coordinator della rete (che può essere anche
+grande) ogni qualvolta un singolo nodo della rete incontra un vicino che non appartiene ancora alla
+rete. Infatti può essere subito evidente dalle conoscenze dei singoli nodi che si vengono ad
+incontrare quale sia la rete più piccola, quella cioè che cercherà un posto all'interno dell'altra.
+
+Supponiamo che sia evidente la disparità nelle dimensioni delle due reti, cioè che *G* sia molto
+più piccola di *J*. Allora il nodo *n* dichiara al nodo *v* di essere disposto, insieme ad un suo
+g-nodo di qualche livello, ad entrare con un nuovo indirizzo dentro *J*. Il nodo *v* in questo
+caso non si deve occupare di altro: sarà *n* a interrogarlo di nuovo in seguito.
+
+Le informazioni che il nodo *n* aveva ricevute da *v* circa la rete *J* (tra le quali ad esempio gli spazi
 liberi nei propri g-nodi ai vari livelli e la dimensione della rete *J*) il nodo *n* le comunica direttamente
-con il servizio Coordinator del livello *levels*, cioè di *G*. Sulla base di una certa strategia (che esula da questa
+al Coordinator della rete *G*. Sulla base di una certa strategia (che esula da questa
 trattazione) il Coordinator di *G* decide di assegnare a *n* il compito di chiedere al suo g-nodo *g*
 di livello *l* di fare ingresso in *J*.
 
 Ora il nodo *n* comunica direttamente con il servizio Coordinator del livello *l*, cioè di *g*. Il
-Coordinator di *g* accetta questa soluzione.
+Coordinator di *g* accetta questa soluzione. Questa operazione consta di alcune parti:
 
-A questo punto *n* chiede a *v* di trovare un posto per *g* in *J*. Per questa richiesta il nodo *v* comunica
-con il servizio Coordinator del *suo* g-nodo di livello *l* + 1, in *J*.
+*   Il Coordinator di *g* acquisisce un blocco. Cioè, se erano in coda altre operazioni che collidono
+    con questa (ad esempio un'altra operazione di ingresso, *o altro da valutare*) allora attende prima
+    di procedere.
+*   Acquisito il blocco il Coordinator di *g* avvia una nuova tasklet per fare altre operazioni, ma
+    intanto risponde positivamente al nodo *n*.
+*   Nella tasklet avviata il Coordinator di *g* aspetta un certo tempo ...
+
+A questo punto *n* chiede a *v* di trovare un posto per *g* in *J*.
+
+Per rispondere a questa richiesta, il nodo *v* contatta il Coordinator del *suo* g-nodo di
+livello *l* + 1, chiamiamolo *h*, chiedendogli di prenotare un posto. Se ciò non fosse possibile
+il Coordinator di *h* risponderebbe con una eccezione a *v* e ci sarebbero altre operazioni da fare
+per la ricerca di una migration path; ma in questo esempio assumiamo che il
+g-nodo *h* abbia un posto libero per un g-nodo di livello *l*. Allora il Coordinator di *h* prenota
+il posto e lo comunica al nodo *v*. Il nodo *v* lo comunica al nodo *n*.
 
 Quello che si voleva evidenziare qui, è che il modulo Coordinator in *n* comunica con il modulo
-Coordinator del diretto vicino *v*. Solo in seguito il modulo Coordinator in *v* usa il client
+Coordinator del diretto vicino *v*. Prima di rispondere, il modulo Coordinator in *v* usa il client
 del servizio Coordinator per comunicare (non con un diretto vicino ma tramite i servizi del
 modulo PeerServices) con il server del servizio Coordinator del suo g-nodo di livello *l* + 1, in *J*.
 
-L'obiettivo finale di queste comunicazioni (possono essere necessarie più di una) con il server
-del servizio Coordinator sarà ovviamente la prenotazione di un posto di livello *l* in *J*. Probabilmente si tratterà
-di un posto nello stesso g-nodo di livello *l* + 1 di *v*, eventualmente a fronte dell'esecuzione di
-una migration path. Ma questo esula da questa trattazione.
+In questo modo il nodo *n*, dialogando con il diretto vicino *v*, è come se avesse dialogato con
+l'intero g-nodo *h* come entità unitaria.
 
 ### <a name="Per_split"></a>Ingresso come risoluzione di uno split di g-nodo
 
