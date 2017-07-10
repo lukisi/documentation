@@ -54,6 +54,15 @@ l'hash-node che il nodo che risponde si trovano all'interno del g-nodo stesso.
 
 Elenchiamo tutte le richieste che si possono fare al Coordinator.
 
+#### <a name="Incontrata_rete"></a>Incontrata una rete
+
+Questa richiesta *r* fatta al Coordinator dell'intera rete indica che è stata incontrata una diversa rete. **TODO**
+
+#### <a name="Avviato_ingresso"></a>Avvio ingresso in altra rete
+
+La richiesta *r* di autorizzare l'avvio delle operazioni di ingresso del g-nodo *g* in una diversa rete. Tale
+richiesta arriva ad un nodo *x* come Coordinator di *g*. **TODO**
+
 #### <a name="Prenota_un_posto"></a>Prenota un posto
 
 La richiesta *r* di prenotare un posto può arrivare ad un nodo *x* come Coordinator di un g-nodo *g* di livello
@@ -89,6 +98,11 @@ A questo punto il nodo *n* comunica tutte queste informazioni al suo vicino *m*.
 Se nessun posto è disponibile il nodo *x* lo segnala con una eccezione, che viene ricevuta da *n*. Anche in
 questo caso *n* comunica l'esito al vicino *m*.
 
+#### <a name="Confermato_ingresso"></a>Confermato ingresso in altra rete
+
+La richiesta/segnalazione *r* che sono state completate le operazioni di ingresso del g-nodo *g* in una diversa rete. Tale
+richiesta arriva ad un nodo *x* come Coordinator di *g*. **TODO**
+
 ## <a name="Richiesta_al_diretto_vicino"></a>Richiesta al diretto vicino di accesso al servizio Coordinator
 
 In alcuni casi un nodo *n* può voler chiedere ad un suo diretto vicino di accedere al servizio peer-to-peer
@@ -116,12 +130,12 @@ caso non si deve occupare di altro: sarà *n* a interrogarlo di nuovo in seguito
 
 Le informazioni che il nodo *n* aveva ricevute da *v* circa la rete *J* (tra le quali ad esempio gli spazi
 liberi nei propri g-nodi ai vari livelli e la dimensione della rete *J*) il nodo *n* le comunica direttamente
-al Coordinator della rete *G*. Sulla base di una certa strategia (che esula da questa
+al Coordinator della rete *G* (vedi la richiesta [incontrata-rete](#Incontrata_rete)). Sulla base di una certa strategia (che esula da questa
 trattazione) il Coordinator di *G* decide di assegnare a *n* il compito di chiedere al suo g-nodo *g*
 di livello *l* di fare ingresso in *J*.
 
 Ora il nodo *n* comunica direttamente con il servizio Coordinator del livello *l*, cioè di *g*. Il
-Coordinator di *g* accetta questa soluzione. Questa operazione consta di alcune parti:
+Coordinator di *g* accetta questa soluzione (vedi la richiesta [avvio-ingresso](#Avviato_ingresso)). Questa operazione consta di alcune parti:
 
 *   Il Coordinator di *g* acquisisce un blocco. Cioè, se erano in coda altre operazioni che collidono
     con questa (ad esempio un'altra operazione di ingresso, *o altro da valutare*) allora attende prima
@@ -130,10 +144,11 @@ Coordinator di *g* accetta questa soluzione. Questa operazione consta di alcune 
     intanto risponde positivamente al nodo *n*.
 *   Nella tasklet avviata il Coordinator di *g* aspetta un certo tempo ...
 
-A questo punto *n* chiede a *v* di trovare un posto per *g* in *J*.
+Quando *n* riceve la risposta positiva dal Coordinator di *g*, subito chiede a *v* di trovare un posto per *g* in *J*.
 
 Per rispondere a questa richiesta, il nodo *v* contatta il Coordinator del *suo* g-nodo di
-livello *l* + 1, chiamiamolo *h*, chiedendogli di prenotare un posto. Se ciò non fosse possibile
+livello *l* + 1, chiamiamolo *h*, chiedendogli di prenotare un posto (vedi la richiesta
+[prenota-un-posto](#Prenota_un_posto)). Se ciò non fosse possibile
 il Coordinator di *h* risponderebbe con una eccezione a *v* e ci sarebbero altre operazioni da fare
 per la ricerca di una migration path; ma in questo esempio assumiamo che il
 g-nodo *h* abbia un posto libero per un g-nodo di livello *l*. Allora il Coordinator di *h* prenota
@@ -141,11 +156,29 @@ il posto e lo comunica al nodo *v*. Il nodo *v* lo comunica al nodo *n*.
 
 Quello che si voleva evidenziare qui, è che il modulo Coordinator in *n* comunica con il modulo
 Coordinator del diretto vicino *v*. Prima di rispondere, il modulo Coordinator in *v* usa il client
-del servizio Coordinator per comunicare (non con un diretto vicino ma tramite i servizi del
-modulo PeerServices) con il server del servizio Coordinator del suo g-nodo di livello *l* + 1, in *J*.
+del servizio Coordinator per comunicare, non con un diretto vicino, bensì tramite i servizi del
+modulo PeerServices, con il Coordinator del suo g-nodo di livello *l* + 1, cioè *h*.
 
 In questo modo il nodo *n*, dialogando con il diretto vicino *v*, è come se avesse dialogato con
 l'intero g-nodo *h* come entità unitaria.
+
+Ora che *n* ha ricevuto la prenotazione, di nuovo comunica con il Coordinator di *g* per informarlo
+(vedi la richiesta/segnalazione [confermato-ingresso](#Confermato_ingresso)). Cioè
+gli comunica che ogni singolo nodo in *g* dovrà presto attivarsi per formare una nuova identità che
+prende posto in *h* (come g-nodo isomorfo di *g*).  
+La propagazione delle informazioni necessarie ad ogni singolo nodo avverrà attraverso un diverso
+modulo. (*Da valutare* Ogni singolo nodo potrebbe chiedere conferma al Coordinator di *g* dell'esattezza
+delle suddette informazioni, ma questo comporterebbe un enorme traffico su *g*).  
+Le informazioni suddette che pervengono ad ogni singolo nodo permettono al contempo la trasformazione
+del g-nodo *g* in un g-nodo *di connettività* in *G*.
+
+Ricevuta questa segnalazione, il Coordinator di *g*:
+
+*   Il Coordinator di *g* controlla se la richiesta ha l'identificativo del blocco che era
+    stato acquisito su *g* ed era in corso.
+*   Memorizza le informazioni, rilascia il blocco ed avvia una nuova tasklet per fare altre operazioni, ma
+    intanto risponde positivamente al nodo *n*.
+*   Nella tasklet avviata il Coordinator di *g* aspetta un certo tempo ...
 
 ### <a name="Per_split"></a>Ingresso come risoluzione di uno split di g-nodo
 
