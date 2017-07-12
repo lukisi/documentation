@@ -214,11 +214,58 @@ si adegua se le misurazioni si mantengono su un valore elevato.
 
 <a name="INeighborhoodIPRouteManager"></a>**INeighborhoodIPRouteManager**
 
-**TODO** Vedi documento "Requisiti" nel vecchio repository.
+Tramite l'oggetto che implementa questa interfaccia dovrà essere possibile apportare delle modifiche al sistema. In un
+sistema Linux ad esempio, dotato del software `iproute`, si associano ai metodi dell'interfaccia questi comandi:
+
+*   metodo `add_address`:  
+    `ip address add 169.254.1.1 dev wlan0`
+*   metodo `add_neighbor`:  
+    `ip route add 169.254.22.33 dev wlan0 src 169.254.1.1`
+*   metodo `remove_neighbor`:  
+    `ip route del 169.254.22.33 dev wlan0 src 169.254.1.1`
+*   metodo `remove_address`:  
+    `ip address del 169.254.1.1/32 dev wlan0`
 
 <a name="INeighborhoodNetworkInterface"></a>**INeighborhoodNetworkInterface**
 
-**TODO** Vedi documento "Requisiti" nel vecchio repository.
+Una istanza di tale interfaccia viene passata al modulo quando l'utilizzatore gli chiede di monitorare
+una interfaccia di rete (metodo `start_monitor`). L'istanza di questo oggetto passato al modulo è legata
+alla specifica interfaccia di rete.
+
+Il modulo Neighborhood deve poter misurare il RTT tra l'interfaccia di rete `dev_a` del nodo *a* e
+l'interfaccia di rete `dev_b` del nodo *b*. Il modulo non fa tale misurazione in autonomia. Se lo facesse
+risulterebbe molto inaccurato, in quanto il modulo fa uso di tasklet, cioè thread cooperativi, che non
+possono essere accurati nei tempi di risposta. Quindi il modulo delega questa misurazione all'oggetto che
+implementa questa interfaccia.
+
+L'utilizzatore del modulo Neighborhood misura il RTT di un certo arco nell'implementazione del metodo
+`measure_rtt` dell'interfaccia INeighborhoodNetworkInterface.
+
+Il modulo Neighborhood lo richiama per stabilire il costo (in latenza) di un arco, e passa come parametro
+l'indirizzo di scheda del vicino. Il modulo Neighborhood in seguito verifica anche che presso il vicino
+il modulo stesso sia ancora in vita eseguendo, con protocollo reliable, un metodo remoto che non fa alcuna
+operazione: `nop`. Se riceve un errore rimuove l'arco.
+
+Quando il nodo *a* ha un vicino *b* questi possono avere più di un arco che li unisce. Ma ogni arco ha una
+interfaccia esclusiva su entrambi i nodi. Per esempio il nodo *a* può avere solo un arco che parte dalla sua
+interfaccia *eth0* e arriva al nodo *b*. Un altro arco potrebbe ad esempio partire dall'interfaccia *eth1*
+di *a* e arrivare a *b*. Allo stesso modo il nodo *b* deve avere più interfacce di rete per avere due
+archi verso *a*.
+
+Ogni interfaccia di rete di ogni nodo, inoltre, ha un indirizzo di scheda univoco. Di conseguenza, quando
+il nodo *a* indica un indirizzo di scheda del suo vicino *b*, il nodo *a* indica precisamente un arco che
+lo congiunge a *b* attraverso due specifiche interfacce di rete `dev_a` e `dev_b`.
+
+Sapendo questo, ad esempio in Linux, il comando `ping -q -n -c 1 169.254.21.36` potrà essere usato per misurare la
+latenza esattamente dell'arco che ci interessa, anche nel caso in cui per lo stesso vicino esistano due o più archi.
+
+Il modulo non esclude altri meccanismi di misurazione del costo. Per dare il massimo supporto al suo utilizzatore,
+nel metodo `measure_rtt` sono passate queste informazioni relative all'arco:
+
+*   `string peer_addr` - l'indirizzo di scheda della interfaccia del vicino,
+*   `string peer_mac` - il MAC della interfaccia del vicino,
+*   `string my_dev` - il nome della interfaccia del nodo.
+*   `string my_addr` - l'indirizzo di scheda della interfaccia del nodo.
 
 ## <a name="Produzione_di_uno_stub_per_inviare_un_messaggio_in_broadcast"></a>Produzione di uno stub per inviare un messaggio in broadcast
 

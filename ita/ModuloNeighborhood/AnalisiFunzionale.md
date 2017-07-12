@@ -303,13 +303,11 @@ gli archi esistenti.
 Ovviamente anche lo stesso modulo Neighborhood, il quale è di per se un modulo *di nodo*, può usare in
 completa autonomia le modalità sopra esposte per effettuare chiamate Unicast e Broadcast.
 
-*   **TODO: serve questo?** Alcuni moduli (ad esempio PeerServices) prevedono la possibilità di chiamare un
+Alcuni moduli (ad esempio PeerServices) prevedono la possibilità di chiamare un
 metodo remoto su un nodo che non è un diretto vicino ma si può raggiungere con un TcpClient ad un certo
-indirizzo IP. In questi casi il destinatario del messaggio è sempre uno solo. Anche in questi casi un
-modulo potrebbe essere consapevole della presenza di più *identità* in un nodo e voler individuare una
-particolare identità sulla quale chiamare il metodo remoto. In questi casi il nodo chiamante deve essere
-a conoscenza non solo dell'indirizzo IP a cui raggiungere il nodo, ma anche del NodeID della identità su
-cui operare.
+indirizzo IP. In questi casi il messaggio viene ricevuto dal solo nodo destinatario. Inoltre,
+nel caso si tratti di un *modulo di identità* (ne è un esempio il PeerServices) la sola *identità*
+destinataria sarà la *identità principale* del nodo.
 
 Esaminiamo cosa avviene lato server. Una descrizione passo passo è presente in questo
 [documento](ChiamateLatoServer.md).
