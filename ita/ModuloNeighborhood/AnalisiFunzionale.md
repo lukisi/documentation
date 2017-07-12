@@ -3,11 +3,7 @@
 1.  [Ruolo del modulo](#Ruolo_del_modulo)
 1.  [Operazioni di base](#Operazioni_di_base)
 1.  [Caratteristiche degli archi](#Caratteristiche_degli_archi)
-1.  [Identità multiple in un sistema](#Identit.2BAOA_multiple_in_un_sistema)
-    1.  [Costituzione della prima identità - Associazioni mantenute dal
-        nodo](#Costituzione_della_prima_identit.2BAOA_-_Associazioni_mantenute_dal_nodo)
-    1.  [Creazione di una nuova identità](#Creazione_di_una_nuova_identit.2BAOA-)
-    1.  [Rimozione di un arco-identità](#Rimozione_di_un_arco-identit.2BAOA-)
+1.  [Identità multiple in un sistema](#Identita_multiple_in_un_sistema)
 1.  [Requisiti](#Requisiti)
 1.  [Deliverable](#Deliverable)
 1.  [Classi e interfacce](#Classi_e_interfacce)
@@ -151,30 +147,22 @@ la larghezza di banda in uscita.
 
 Quando un nodo rimuove un arco tenta di comunicarlo al vertice collegato perché faccia altrettanto.
 
-## <a name="Identit.2BAOA_multiple_in_un_sistema"></a>Identità multiple in un sistema
+## <a name="Identita_multiple_in_un_sistema"></a>Identità multiple in un sistema
 
 Introduciamo il concetto di *identità*. In un singolo nodo possono in dati momenti sussistere diverse
-*identità*. La ragione di essere di queste identità sarà discussa in dettaglio nella trattazione del modulo
-QSPN, quando si parla di nodi virtuali.
+*identità*. La ragion d'essere di queste identità sarà discussa in dettaglio nella trattazione del modulo
+QSPN, quando si parla di nodi virtuali. La gestione di queste identità è demandata al modulo Identities.
 
-Ogni *identità* di un nodo ha un suo identificativo. Questo identificativo è distinto dal
-NeigborhoodNodeID, il quale è un concetto interno al modulo Neighborhood. L'identificativo assegnato
-ad una *identità* di un nodo lo chiamiamo semplicemente NodeID.
-
-Il NodeID assegnato a ogni *identità* è essenzialmente un intero di 32 bit scelto a caso, assumendo
-che sia univoco a livello dei domini di collisione in cui il nodo partecipa con le sue interfacce di rete.
-Questo dettaglio implementativo non è di pertinenza del modulo Neighborhood. Il modulo sa solo che il
-NodeID può essere usato come identificativo univoco che si riferisce ad una precisa *identità* all'interno
-di un preciso nodo.
-
-Ogni nodo ha sempre una e una sola *identità principale*. L'identità principale del nodo non è sempre la
-stessa: il nodo può in un certo momento creare una nuova identità e farla diventare la sua principale.
-L'identità principale (i concetti espressi in questa frase verranno chiariti in seguito nel documento) è
-quella che gestisce le interfacce di rete *reali* del nodo nel *network namespace default*, ognuna con il
-suo indirizzo di scheda.
+Ogni *identità* di un nodo ha un suo identificativo univoco, chiamato NodeID. Il modulo Neighborhood
+non conosce i dettagli di questo identificativo, sa solo che il NodeID può essere usato come identificativo
+univoco per riferirsi ad una precisa *identità* all'interno di un preciso nodo.
 
 Il modulo Neighborhood non ha conoscenza diretta di quali siano le *identità* che vivono nel suo nodo in un
-dato momento.
+dato momento. Sa solo che in ogni nodo esiste sempre una e una sola *identità principale*.
+L'identità principale del nodo non è sempre la stessa: il nodo può in un certo momento creare una nuova
+identità e farla diventare la sua principale. L'identità principale è
+quella che gestisce le interfacce di rete *reali* del nodo nel *network namespace default*, ognuna con il
+suo indirizzo di scheda.
 
 Abbiamo visto che la presenza di identità multiple in un nodo è supportata dal framework ZCD. Con questo
 intendiamo evidenziare che è possibile realizzare uno stub che possa essere usato da una precisa identità
@@ -367,369 +355,6 @@ messaggio è pervenuto. Per realizzare questa associazione il modulo Neighborhoo
     essere affatto invocato) è stato rimosso pochi istanti prima. In questo caso l'esecuzione del metodo
     andrebbe "probabilmente" interrotta, ma questo è di pertinenza del codice che implementa il metodo remoto.
 
-### <a name="Costituzione_della_prima_identit.2BAOA_-_Associazioni_mantenute_dal_nodo"></a>Costituzione della prima identità - Associazioni mantenute dal nodo
-
-Con il termine nodo indichiamo l'utilizzatore del modulo Neighborhood.
-
-Quando il nodo *a* inizia l'attività, assume una *identità* che è la sua *identità principale*. Chiamiamola
-*a<sub>0</sub>*. Di fatto questo significa che crea un NodeID e crea una prima istanza di ogni modulo *di identità*.
-
-Il nodo mantiene una associazione *ns* tra questa identità e il network namespace default. Lo indichiamo
-dicendo *ns(a<sub>0</sub>) = ""*. La stringa vuota rappresenta il network namespace default, altrimenti avremmo
-il nome del network namespace.
-
-Il nodo mantiene una associazione *in* tra questa identità e un'altra associazione. Questa associazione interna
-*in(a<sub>0</sub>)* (interfacce gestite da *a<sub>0</sub>*) è tra ogni interfaccia di rete reale gestita dal nodo
-e una struttura dati che rappresenta l'interfaccia gestita dall'identità.
-
-Ad esempio: costruiamo la struttura dati *n* che identifica l'interfaccia "eth0". Abbiamo questi membri:
-
-*   *n.dev = "eth0"*.
-
-*   *n.mac = "02:AF:78:2E:C8:B6"*.
-
-*   *n.linklocal = "169.254.201.13"*.
-
-e poi diciamo che questa struttura è associata all'interfaccia reale "eth0" come viene gestita da *a<sub>0</sub>*:
-
-*   *in(a<sub>0</sub>)("eth0") = n*.
-
-Per la *identità principale a<sub>p</sub>* abbiamo sempre che *ns(a<sub>p</sub>) = ""* e
-*in(a<sub>p</sub>)("xyz").dev = "xyz"*. Cioè la *identità principale* gestisce le interfacce reali
-che sono nel network namespace default.
-
-Quando il modulo Neighborhood forma un arco *i*, questo rappresenta un collegamento tra una interfaccia di rete
-reale di *a* e una interfaccia di rete reale del nodo collegato, chiamiamolo *b*. Da questo momento il nodo mantiene
-una associazione *f* tra la coppia *a<sub>0</sub>-i* e un set di identità nel nodo *b*.
-
-Dopo aver formato l'arco *i* il nodo viene a conoscenza (come lo fa non è di pertinenza del modulo Neighborhood)
-che sopra questo arco devono appoggiarsi *n* *archi-identità* tra *a<sub>0</sub>* e le identità
-*b<sub>0</sub>* ... *b<sub>n-1</sub>*. Viene a conoscere inoltre per ognuna di queste identità di *b*, sempre
-relativamente all'arco *i*, un MAC-address e un indirizzo di scheda. Memorizza tutti questi dati nell'associazione *f*.
-
-Riassumendo, *f(a<sub>0</sub>-i)* è un set di oggetti che chiamiamo *arco-identità*. Un suo elemento,
-diciamo *w*, rappresenta l'arco-identità *a<sub>0</sub>-b<sub>j</sub>* che si appoggia sull'arco *i*.
-L'elemento *w* contiene:
-
-*   *w.peer_nodeid* - Il NodeID di *b<sub>j</sub>*.
-
-*   *w.peer_mac* - Il MAC address dell'interfaccia gestita da *b<sub>j</sub>*. Se *b<sub>j</sub>* è
-la *identità principale* del nodo *b* allora questo MAC address risulta essere lo stesso che si può reperire
-dall'oggetto arco *i*.
-
-*   *w.peer_linklocal* - L'*indirizzo di scheda* dell'interfaccia gestita da *b<sub>j</sub>*. Se *b<sub>j</sub>*
-è la *identità principale* del nodo *b* allora questo *indirizzo di scheda* risulta essere lo stesso che si può
-reperire dall'oggetto arco *i*.
-
-### <a name="Creazione_di_una_nuova_identit.2BAOA-"></a>Creazione di una nuova identità
-
-Abbiamo detto che la creazione di una nuova *identità* di un nodo non è una scelta del modulo, ma del suo
-utilizzatore. Vediamo come questo avviene.
-
-*   Per una comprensione delle motivazioni di queste *identità* e del loro rapporto con gli *indirizzi di scheda* si
-veda il documento ["Modulo QSPN - Esempio di uso degli indirizzi virtuali"](../ModuloQSPN/Esempio1/Step1.md),
-in particolare la premessa.
-
-Esaminiamo il caso in cui, a fronte di una migrazione, il nodo corrente *a* crea una nuova identità *a<sub>1</sub>*,
-cioè un nuovo NodeID, basata su una sua precedente identità *a<sub>0</sub>*.
-
-*   All'inizio della procedura di migrazione, il nodo prepara alcuni dati. Questi dati vanno individuati o scelti
-subito, soprattutto se si tratta della migrazione di un intero cluster che ha altri membri oltre all'identità
-*a<sub>0</sub>*, perché durante la procedura potranno essere oggetto di comunicazioni con i diretti vicini che così
-verificheranno se appartengono al cluster. Appena il nodo decide che una sua identità migra, subito prepara questo set
-di dati che chiamiamo *MigrationData migration_data*:
-
-    *   *migration_id* - Identificativo numerico univoco per la migrazione. Questo è stato in precedenza condiviso
-        dai nodi membri del cluster che migra.
-
-    *   *old_id* - L'identità che migra, in questo esempio *a<sub>0</sub>*.
-
-    *   *new_id* - L'identità nuova, in questo esempio *a<sub>1</sub>*. Questo identificativo viene immediatamente scelto.
-
-    *   *devices* - Il nodo prepara una mappa vuota di oggetti *MigrationDeviceData* associati ad una interfaccia di rete reale.
-
-    *   Cioè: `HashMap<string,MigrationDeviceData> devices`.
-
-    *   Per ogni interfaccia di rete reale *r*:
-
-        *   Il nodo crea subito una nuova pseudo-interfaccia *p(r)* che usa fisicamente *r*.
-
-        *   Crea una istanza di *MigrationDeviceData* che contiene:
-
-            *   *real_mac* - L'indirizzo MAC di *r*.
-
-            *   *old_id_new_dev* - Il nome di *p(r)*.
-
-            *   *old_id_new_mac* - L'indirizzo MAC di *p(r)*.
-
-            *   *old_id_new_linklocal* - Un nuovo indirizzo link-local scelto ora che verrà in seguito assegnato a *p(r)*.
-
-        *   Mette tale oggetto in *devices[r]*.
-
-*   Di fatto, la creazione di una nuova identità consiste nell'istanziare un nuovo QspnManager. Cioè: *a<sub>1</sub>* è
-    un nuovo NodeID associato ad una nuova istanza di ogni modulo *di identità*, in particolare il modulo QSPN.
-
-*   Se *a<sub>0</sub>* era la *identità principale*, allora *a<sub>1</sub>* diventa la *identità principale*.
-
-*   L'utilizzatore del modulo manteneva l'associazione *ns* tra l'identità *a<sub>0</sub>* e un network namespace
-    *n<sub>old</sub>*. Se *a<sub>0</sub>* era la *identità principale*, allora *n<sub>old</sub>* era il network namespace default.
-
-*   L'utilizzatore del modulo, in autonomia, crea un network namespace temporaneo *n<sub>temp</sub>*. Poi aggiorna
-    le sue associazioni: alla vecchia identità *a<sub>0</sub>* associa *n<sub>temp</sub>*. Alla nuova identità
-    *a<sub>1</sub>* associa *n<sub>old</sub>*. D'ora in poi *a<sub>1</sub>* gestirà le interfacce di rete (reali
-    o pseudo) che sono in *n<sub>old</sub>*.
-
-*   In pseudo codice:
-    *   *n<sub>temp</sub>* = new network_namespace().
-
-    *   *n<sub>old</sub>* = *ns(a<sub>0</sub>)*.
-
-    *   *ns(a<sub>0</sub>)* = *n<sub>temp</sub>*.
-
-    *   *ns(a<sub>1</sub>)* = *n<sub>old</sub>*.
-
-*   L'utilizzatore del modulo manteneva anche l'associazione *in(a<sub>0</sub>)* (interfacce gestite da *a<sub>0</sub>*)
-    tra ogni interfaccia di rete reale gestita dal nodo e l'interfaccia (reale o pseudo) gestita dall'identità.
-
-*   Per ogni interfaccia di rete reale *r*:
-
-    *   Avendo creato la pseudo-interfaccia *p(r) = migration_data.devices[r].old_id_new_dev*, sposta *p(r)* sul
-        namespace *n<sub>temp</sub>*: sarà infatti gestita da *a<sub>0</sub>*, mentre quella che prima gestiva
-        *a<sub>0</sub>* sarà gestita da *a<sub>1</sub>*.
-
-    *   Associa il nuovo indirizzo link-local *addr(p(r)) = migration_data.devices[r].old_id_new_linklocal* a
-        *p(r)* in *ns(a<sub>0</sub>)*, cioè *n<sub>temp</sub>*.
-
-    *   Memorizza le nuove associazioni descritte sopra con questo pseudo-codice:
-        *   *in(a<sub>1</sub>)(r)* = *in(a<sub>0</sub>)(r)*.
-
-        *   *in(a<sub>0</sub>)(r)* = new *struttura_dati()*.
-
-        *   *in(a<sub>0</sub>)(r).dev* = *p(r)*.
-
-        *   *in(a<sub>0</sub>)(r).mac* = *mac(p(r)) = migration_data.devices[r].old_id_new_linklocal*.
-
-        *   *in(a<sub>0</sub>)(r).linklocal* = *addr(p(r))*.
-
-*   L'utilizzatore del modulo manteneva anche una associazione *f* tra la coppia *a<sub>0</sub>-i* (formata
-    dall'identità *a<sub>0</sub>* e un arco *i* che il modulo Neighborhood aveva realizzato tra il nodo *a*
-    e un altro nodo) e un set di identità nel nodo collegato all'arco *i*.  
-    Entriamo nel dettaglio dell'associazione *f*. Per ogni arco *i*:
-
-    *   L'arco *i* collega una interfaccia di rete reale di *a* con una interfaccia di rete reale del nodo
-        collegato. Sia *b* questo nodo. Chiamiamo *ir(i)* l'interfaccia reale che in *a* è l'end-point dell'arco *i*.
-
-    *   L'identità *a<sub>0</sub>* poteva essere la *principale* oppure no. Se non lo era, allora non gestiva
-        l'interfaccia reale *ir(i)* bensì una pseudo-interfaccia. Questa usa fisicamente *ir(i)* ma ha un diverso
-        MAC address e un diverso *indirizzo di scheda*. In generale abbiamo detto che indichiamo con
-        *in(a<sub>0</sub>)(ir(i))* l'interfaccia (reale o pseudo) gestita da *a<sub>0</sub>* che usa fisicamente
-        l'interfaccia di rete reale *ir(i)*.
-
-    *   Nel nodo *b*, analogamente, possono esistere più identità. Una di esse, la *principale*, gestisce
-        l'interfaccia di rete reale. Le altre gestiscono ognuna una pseudo-interfaccia che è stata creata sulla
-        reale ma ha un diverso MAC address e un diverso *indirizzo di scheda* rispetto ai dati riportati dall'arco *i*.
-
-    *   L'associazione *f* nel nodo *a*, collega la coppia *a<sub>0</sub>-i* a un set contenente zero o una o
-        più di queste identità di *b*. Supponiamo che siano *n*. Scriviamo *f(a<sub>0</sub>-i).size = n*.
-
-    *   Per ogni elemento *w* di questo set *f(a<sub>0</sub>-i)*:
-
-        *   Sia *b<sub>j</sub>* l'identità di *b* a cui *w* si riferisce.
-
-        *   Questa struttura dati *w* la chiamiamo per brevità *arco-identità* *a<sub>0</sub>*-*b<sub>j</sub>*.
-
-        *   La struttura dati *w* contiene:
-
-            *   *w.peer_nodeid* - Il NodeID di *b<sub>j</sub>*.
-            *   *w.peer_mac* - Il MAC address dell'interfaccia di rete (reale o pseudo) gestita da
-                *b<sub>j</sub>* che usa fisicamente l'interfaccia reale di *b* che è l'end-point dell'arco *i*.
-            *   *w.peer_linklocal* - L'*indirizzo di scheda* dell'interfaccia (reale o pseudo) gestita da
-                *b<sub>j</sub>* che usa fisicamente l'interfaccia reale di *b* che è l'end-point dell'arco *i*.
-
-        *   Altre informazioni su questo *arco-identità*, che sono in realtà valide per tutti gli elementi
-            del set *f(a<sub>0</sub>-i)*, sono:
-
-            *   *ns = ns(a<sub>0</sub>)* - Il nome del network namespace gestito da *a<sub>0</sub>*.
-            *   *dev = in(a<sub>0</sub>)(ir(i)).dev* - Il nome dell'interfaccia (reale o pseudo) gestita
-                da *a<sub>0</sub>* che usa fisicamente l'interfaccia reale di *a* che è l'end-point dell'arco *i*.
-            *   *mac = in(a<sub>0</sub>)(ir(i)).mac* - Il MAC dell'interfaccia (reale o pseudo) gestita da
-                *a<sub>0</sub>* che usa fisicamente l'interfaccia reale di *a* che è l'end-point dell'arco *i*.
-            *   *linklocal = in(a<sub>0</sub>)(ir(i)).linklocal* - L'*indirizzo di scheda* dell'interfaccia
-                (reale o pseudo) gestita da *a<sub>0</sub>* che usa fisicamente l'interfaccia reale di *a* che è l'end-point dell'arco *i*.
-
-*   Ci sono da fare delle operazioni per ogni *arco-identità* che parte da *a<sub>0</sub>* ora che la nuova identità
-    *a<sub>1</sub>* è stata creata basandosi sulla precedente identità *a<sub>0</sub>*.  
-    Per l'esattezza, quali operazioni vanno fatte dipende anche dal fatto che l'identità nel nodo collegato
-    abbia o meno partecipato anch'essa alla migrazione.
-
-*   Per ogni *arco-identità* *w<sub>0</sub>* che parte da *a<sub>0</sub>*:
-
-    *   Sia *i* l'arco su cui si appoggia *w<sub>0</sub>*. Sia *b* il nodo collegato all'arco *i*.
-
-    *   Sia *b<sub>j</sub>* l'identità collegata a *w<sub>0</sub>*.
-
-    *   Il nodo *a* crea un duplicato *w<sub>1</sub>* dell'arco per assegnarlo ad *a<sub>1</sub>*.
-        *w<sub>1</sub> = w<sub>0</sub>.copy(); f(a<sub>1</sub>-i).add(w<sub>1</sub>)*.
-
-    *   Oltre a assegnare il nuovo *arco-identità* alla nuova identità nell'associazione *f*, il nodo passa
-        un IQspnArc alla nuova istanza di QspnManager. Quindi abbiamo una stretta relazione tra questa struttura
-        dati *w<sub>1</sub>* e l'oggetto IQspnArc. Si potrebbe ipotizzare che è questa struttura a implementare
-        l'interfaccia IQspnArc e ad essere passata al QspnManager.
-
-    *   Cambia i dati dell'arco assegnato ad *a<sub>0</sub>* relativamente all'interfaccia locale:
-
-        *   *w<sub>0</sub>.ns = ns(a<sub>0</sub>)*.
-        *   *w<sub>0</sub>.dev = in(a<sub>0</sub>)(ir(i)).dev*.
-        *   *w<sub>0</sub>.mac = in(a<sub>0</sub>)(ir(i)).mac*.
-        *   *w<sub>0</sub>.linklocal = in(a<sub>0</sub>)(ir(i)).linklocal*.
-
-        In realtà questi dati sono stati cambiati automaticamente nel momento in cui sono stati cambiati i
-        valori nelle associazioni *ns(a<sub>0</sub>)* e *in(a<sub>0</sub>)*.
-
-    *   Il nodo *a* deve comunicare al nodo *b* il *migration_id* visto prima e le informazioni che sono relative
-        al *device* su cui è realizzato l'arco *i*. In questa stessa comunicazione il nodo *b*, se la sua identità
-        interessata *b<sub>j</sub>* ha partecipato alla stessa migrazione, risponde con le informazioni che sono
-        relative al *device*. Nel dettaglio:
-
-        *   Il nodo *a* comunica:
-
-            *   *migration_id* - L'identificativo della migrazione.
-            *   *peer_id* - L'identificativo della identità *b<sub>j</sub>* in *b*.
-            *   *old_id* - L'identificativo della vecchia identità *a<sub>0</sub>* in *a*.
-            *   *new_id* - L'identificativo della nuova identità *a<sub>1</sub>* in *a*.
-            *   *old_id_new_mac* - Il MAC della nuova pseudo-interfaccia gestita da *a<sub>0</sub>* per questo arco.
-                Cioè *in(a<sub>0</sub>)(ir(i)).mac* ossia l'equivalente della scrittura *w<sub>0</sub>.mac*.
-            *   *old_id_new_linklocal* - L'indirizzo link-local della nuova pseudo-interfaccia gestita
-                da *a<sub>0</sub>* per questo arco. Cioè *in(a<sub>0</sub>)(ir(i)).linklocal* ossia l'equivalente
-                della scrittura *w<sub>0</sub>.linklocal*.
-
-        *   Il nodo *b* risponde:
-
-            *   Se *b<sub>j</sub>* ha partecipato alla stessa migrazione:
-
-                *   *peer_new_id* - L'identificativo della nuova identità frutto della migrazione di *b<sub>j</sub>*,
-                    chiamiamola *b<sub>k</sub>*.
-                *   *peer_old_id_new_mac* - Il MAC della nuova pseudo-interfaccia gestita da *b<sub>j</sub>* per
-                    questo arco.
-                *   *peer_old_id_new_linklocal* - L'indirizzo link-local della nuova pseudo-interfaccia gestita da
-                    *b<sub>j</sub>* per questo arco.
-
-            *   Altrimenti:
-
-                *   "OK".
-
-    *   Il nodo *a* ora sa se l'identità *b<sub>j</sub>* ha partecipato anch'essa alla migrazione. Se sì, il nodo
-        *a* conosce i dati *peer_old_id_new_mac* e *peer_old_id_new_linklocal* che sono riferiti a *b<sub>k</sub>*,
-        la quale ora gestisce la vecchia interfaccia del nodo *b* che prima era gestita da *b<sub>j</sub>*.
-
-    *   Se *b<sub>j</sub>* ha partecipato alla migrazione:
-
-        *   Il nodo *a* cambia i dati dell'arco assegnato ad *a<sub>0</sub>* relativamente all'interfaccia remota:
-
-            *   *w<sub>0</sub>.peer_mac = peer_old_id_new_mac*.
-
-            *   *w<sub>0</sub>.peer_linklocal = peer_old_id_new_linklocal*.
-
-        *   Il nodo *a* cambia i dati dell'arco assegnato ad *a<sub>1</sub>* relativamente alla *identità* remota:
-
-            *   *w<sub>1</sub>.peer_nodeid* = Il NodeID di *b<sub>k</sub>*.
-
-    *   Il nodo *a* aggiunge alle tabelle nel network namespace *ns(a<sub>0</sub>)* la rotta verso
-        *w<sub>0</sub>.peer_linklocal* partendo da *old_id_new_linklocal* su *in(a<sub>0</sub>)(ir(i)).dev*.
-
-    *   Il nodo *b* a sua volta, ora sa che l'identità *a<sub>0</sub>* in *a* ha migrato e ha dato luogo a
-        *a<sub>1</sub>*; sa anche che *a<sub>0</sub>* aveva un *arco-identità* con *b<sub>j</sub>* appoggiato sul
-        suo arco *i*; ovviamente sa anche se l'identità *b<sub>j</sub>* ha partecipato anch'essa alla migrazione
-        formando *b<sub>k</sub>*.
-
-    *   Se *b<sub>j</sub>* ha partecipato alla migrazione:
-
-        *   Il nodo *b* non ha bisogno di fare nulla in questo momento. Le sue variazioni le apporterà di sua iniziativa
-            poiché anche in esso è avvenuta la migrazione di *b<sub>j</sub>* in *b<sub>k</sub>*.
-
-    *   Altrimenti:
-
-        *   Il nodo *b*, come vedremo in dettaglio poco più sotto, forma un nuovo *arco-identità* *b<sub>j</sub>*-*a<sub>1</sub>*;
-            cambia i dati dell'*arco-identità* *b<sub>j</sub>*-*a<sub>0</sub>*, cioè MAC e linklocal; aggiunge una rotta nelle
-            tabelle di un suo namespace (quello gestito da *b<sub>j</sub>*) per l'arco *b<sub>j</sub>*-*a<sub>0</sub>*.
-
-Tutte queste operazioni non coinvolgono direttamente il modulo Neighborhood. Esso resta comunque in grado, ricevendo
-dall'utilizzatore i NodeID aggiornati, di produrre uno stub per moduli *di identità* per comunicare dalla sua nuova identità
-ad uno o più diretti vicini. Resta anche in grado, dato un messaggio ricevuto che è per moduli *di identità*, di identificare,
-per mezzo delle callback ricevute all'inizio, se è per la sua nuova identità e da parte di chi.
-
-Esaminiamo il caso in cui un nodo vicino *b* crea una nuova identità *b<sub>1</sub>* basata su una sua precedente identità
-*b<sub>0</sub>*. La precedente identità *b<sub>0</sub>* era collegata attraverso un arco *i* (o più di uno) alla identità del
-nodo corrente *a<sub>k</sub>*, la quale non è cambiata. Sia *w* l'*arco-identità* *a<sub>k</sub>*-*b<sub>0</sub>* che si
-appoggia su *i*.
-
-*   Il nodo *a* riceve sull'arco *i* da parte del nodo *b* la comunicazione di cui sopra
-    (*migration_id*, *peer_id*, *old_id*, *new_id*, *old_id_new_mac*, *old_id_new_linklocal*) dalla quale deduce che
-    sono cambiati gli estremi dell'*arco-identità* *a<sub>k</sub>*-*b<sub>0</sub>*.  
-    Il nodo *a* riconosce *a<sub>k</sub>* in *peer_id*. Inoltre riconosce *b<sub>0</sub>* in *old_id* e ritrova nelle sue
-    associazioni l'*arco-identità* *a<sub>k</sub>*-*b<sub>0</sub>* che si appoggia sull'arco *i*.  
-    Il nodo *a* inoltre viene a conoscenza del NodeID di *b<sub>1</sub>* (*new_id*) con il quale dovrà formare un nuovo
-    *arco-identità* *a<sub>k</sub>*-*b<sub>1</sub>*. Questo *arco-identità* avrà per MAC e linklocal i valori che aveva
-    l'*arco-identità* *a<sub>k</sub>*-*b<sub>0</sub>*.  
-    Il nodo *a* inoltre viene a conoscenza dei nuovi valori MAC e linklocal che ora andranno cambiati nell'*arco-identità*
-    *a<sub>k</sub>*-*b<sub>0</sub>*.
-
-*   Il nodo *a*, poiché l'identità *a<sub>k</sub>* non ha partecipato alla migrazione *migration_id*, risponde subito
-    semplicemente "OK".
-
-*   Cerca nell'elenco che ha nell'associazione *f(a<sub>k</sub>-i)* l'*arco-identità* *w* che lo collega a *b<sub>0</sub>*.
-
-*   Memorizza *old_peer_linklocal = w.peer_linklocal*.
-
-*   Memorizza *old_peer_mac = w.peer_mac*.
-
-*   Aggiunge sulle tabelle di routing di *ns(a<sub>k</sub>)* la rotta che collega *in(a<sub>k</sub>)(ir(i)).linklocal*
-    a *old_id_new_linklocal*.
-
-*   Aggiorna tutte le rotte sulle tabelle di routing di *ns(a<sub>k</sub>)* che usano *w* come gateway. Ora dovranno
-    avere *old_id_new_linklocal*.
-
-*   Mantiene nelle tabelle di routing di *ns(a<sub>k</sub>)* la rotta che collega *in(a<sub>k</sub>)(ir(i)).linklocal*
-    a *old_peer_linklocal*. Questa ora servirà il nuovo *arco-identità* di cui sotto.
-
-*   Aggiorna i dati:
-    *   *w.peer_mac = old_id_new_mac*.
-
-    *   *w.peer_linklocal = old_id_new_linklocal*.
-
-*   Il nodo *a* crea un nuovo *arco-identità* sull'arco *i* da *a<sub>k</sub>* a *b<sub>1</sub>* che avrà come valori
-    linklocal e MAC *old_peer_linklocal* e *old_peer_mac*. Lo aggiunge all'elenco che ha nell'associazione *f(a<sub>k</sub>-i)*.
-
-Tutte queste operazioni non coinvolgono direttamente il modulo Neighborhood. Esso resta comunque in grado, ricevendo
-dall'utilizzatore i NodeID aggiornati, di produrre uno stub per moduli *di identità* per comunicare da una sua identità
-alla nuova identità del vicino *b*. Resta anche in grado, dato un messaggio ricevuto che è per moduli *di identità*, di
-identificare, per mezzo delle callback ricevute all'inizio, se è per una sua identità da parte della nuova identità del
-vicino *b*.
-
-### <a name="Rimozione_di_un_arco-identit.2BAOA-"></a>Rimozione di un arco-identità
-
-In un certo momento, l'utilizzatore del modulo decide che una certa *identità* del nodo corrente *a<sub>k</sub>* non deve
-avere più archi verso una certa *identità* di un suo vicino *b<sub>j</sub>*; quindi per ogni arco che il modulo
-Neighborhood aveva creato tra *a* e *b*, l'utilizzatore del modulo fa alcune operazioni per rimuovere gli *archi-identità*
-*a<sub>k</sub>*-*b<sub>j</sub>*.
-
-In precedenza l'utilizzatore del modulo si era dovuto occupare di rimuovere (o cambiare) tutte le rotte che usavano quell'arco
-come gateway.
-
-*   Per ogni arco *i*:
-
-    *   Il nodo *a* comunica sull'arco *i* al nodo *b* che sta rimuovendo il suo *arco-identità* *a<sub>k</sub>*-*b<sub>j</sub>*
-        sull'arco *i* affinché anche il nodo *b* apporti le modifiche alle sue associazioni.
-
-    *   Cerca nell'elenco che ha nell'associazione *f(a<sub>k</sub>-i)* l'*arco-identità* *w* che lo collega a *b<sub>j</sub>*.
-
-    *   Elimina dalle tabelle di routing di *ns(a<sub>k</sub>)* la rotta che collegava
-        *in(a<sub>k</sub>)(ir(i)).linklocal* a *w.peer_linklocal*.
-
-    *   Elimina *w* dall'elenco *f(a<sub>k</sub>-i)*.
-
-Tutte queste operazioni non coinvolgono direttamente il modulo Neighborhood.
-
 ## <a name="Requisiti"></a>Requisiti
 
 *   Implementazione del sistema di tasklet.
@@ -865,17 +490,17 @@ Tramite essa il modulo può:
 *   Dato il nome di una interfaccia di rete e il suo indirizzo IP link-local associato, rimuovere l'indirizzo IP
     dall'interfaccia (metodo 'remove_address').
 
-Il modulo lo usa per rendere possibile la comunicazione via TCP coi vicini tramite un indirizzo fisso. Il modulo
+Il modulo lo usa per rendere possibile la comunicazione reliable (via TCP) coi diretti vicini tramite un indirizzo IP
+che non dipende dalla posizione di essi nella topologia gerarchica della rete. Il modulo
 associa ad ogni interfaccia di rete che gestisce un indirizzo detto *indirizzo di scheda*. Per ogni arco che
 realizza, il modulo aggiunge la rotta con scope link verso l'indirizzo di scheda dell'interfaccia del vicino
 collegata all'arco. Quando rimuove l'arco rimuove anche la rotta. Quando il modulo cessa di gestire un'interfaccia
 rimuove il relativo indirizzo.
 
-Tramite questo meccanismo il modulo gestisce solo gli indirizzi di scheda dell'*identità principale* del nodo
-corrente, nel network namespace default. Allo stesso modo, esso imposta le rotte verso gli indirizzi di scheda
-dell'*identità principale* di ogni nodo vicino, sempre nel network namespace default. Per la gestione delle altre *identità*,
-sia come indirizzi propri sia come rotte verso gli indirizzi dei vicini, il nodo le gestisce in autonomia, senza
-l'intervento del modulo Neighborhood.
+Il modulo Neighborhood gestisce solo gli indirizzi di scheda dell'*identità principale* del nodo e dei suoi
+diretti vicini. (Cioè non si occupa degli indirizzi IP link-local che il nodo vorrà assegnare alle altre *identità*
+allo scopo di instradare pacchetti attraverso *identità di connettività*, come delineato nella trattazione del
+modulo QSPN)
 
 * * *
 

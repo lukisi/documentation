@@ -142,7 +142,7 @@ Di essa viene creata una sola istanza dall'applicazione in esecuzione su un sist
 riferire a tale istanza semplicemente con il termine *manager*.
 
 Poiché il manager è uno solo nel sistema, diciamo che il modulo Identities è un modulo *di sistema*. Si veda
-nella trattazione del modulo [Neighborhood](../ModuloNeighborhood/AnalisiFunzionale.md#Identit.2BAOA_multiple_in_un_sistema)
+nella trattazione del modulo [Neighborhood](../ModuloNeighborhood/AnalisiFunzionale.md#Identita_multiple_in_un_sistema)
 la differenza tra moduli *di sistema* e moduli *di identità*.
 
 Nel costruire l'istanza del manager, l'utilizzatore del modulo specifica quali sono i nomi delle interfacce di
