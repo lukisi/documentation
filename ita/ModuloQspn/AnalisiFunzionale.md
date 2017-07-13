@@ -312,13 +312,13 @@ per ogni diverso fingerprint di *d* che gli viene segnalato attraverso gli ETP r
 
 ### <a name="Elementi_memorizzati_mappa"></a>Elementi memorizzati nella mappa
 
-Riassumendo, per ogni g-nodo nella topologia gerarchica del nodo corrente, la mappa
+Riassumendo, per ogni g-nodo (non virtuale) nella topologia gerarchica del nodo corrente, la mappa
 mantiene queste informazioni:
 
 *   Livello (*lvl*) e identificativo all'interno di quel livello (*pos* : numero da 0 a *gsize(lvl)* - 1). Il modulo
     QSPN lo rappresenta con una istanza della classe [HCoord](#HCoord).  
-    Una istanza di HCoord in generale può rappresentare un g-nodo virtuale. Cioè può avere come *pos* un numero maggiore
-    o uguale a *gsize(lvl)*.
+    Una istanza di HCoord in generale può rappresentare un g-nodo virtuale, cioè può avere come *pos* un numero maggiore
+    o uguale a *gsize(lvl)*, ma questi non sono mai una destinazione.
 *   Tutti i percorsi che il nodo sa di poter usare per raggiungere quel g-nodo. Il modulo li rappresenta con istanze
     della classe [NodePath](#Path). Per ogni percorso vanno mantenute queste informazioni:
 
@@ -685,8 +685,8 @@ valgono tutte le osservazioni viste prima. Rimangono da precisare alcuni aspetti
 Il g-nodo *n’* in *g’* dovrà sparire quando la connettività interna di *g’* e dei suoi g-nodi superiori fino a *U(g’)*,
 cioè ai livelli da *i* + 1 a *j*, risulterà garantita da altri collegamenti. Sarebbe bene che un solo nodo, chiamiamolo
 *n<sub>0</sub>* in *n’*, facesse in modo periodico la richiesta al modulo QSPN di controllare questo evento e in caso
-di esito positivo lo comunicasse a tutti i nodi in *n’*. **TODO: Verificare** che si possa identificare il Coordinator
-di *n’* per affidargli questo compito. Si può parlare di Coordinator di un g-nodo di connettività?
+di esito positivo lo comunicasse a tutti i nodi in *n’*. Possiamo assegnare questo compito al nodo che, stando semplicemente
+alle conoscenze della sua mappa ai livelli da *i* - 1 in giù, ha l'indirizzo più prossimo allo 0.
 
 Si osservi che la migrazione di un g-nodo di livello alto coinvolge un numero elevato di nodi, ma allo stesso tempo
 permette il mantenimento delle informazioni già reperite per un elevato numero di destinazioni (quelle interne). Queste

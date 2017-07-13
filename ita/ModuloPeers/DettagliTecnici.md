@@ -35,9 +35,10 @@ per prima cosa inizializza il modulo richiamando il metodo statico
 `init` di PeersManager. In tale metodo viene anche passata l'istanza di INtkdTasklet per fornire
 l'implementazione del sistema di tasklet.
 
-Subito dopo aver creato la sua prima identità (la quale esce immediatamente dalla fase di bootstrap
-come descritto nel [modulo QSPN](../ModuloQspn/AnalisiFunzionale.md)), il sistema crea una istanza
-relativa di PeersManager. In seguito, ogni volta che crea una nuova identità il sistema crea una
+Subito dopo aver creato la sua prima identità, la quale esce immediatamente dalla fase di bootstrap come descritto
+nel modulo QSPN (si veda [qui](../ModuloQspn/EsplorazioneRete.md#Rete_esplorata)), il sistema crea una istanza
+relativa di PeersManager. In seguito, ogni volta che crea una nuova identità, ma solo dopo che essa è uscita dalla
+fase di bootstrap (si veda [qui](../ModuloQspn/EsplorazioneRete.md#Ingresso_gnodo_in_rete)), il sistema crea una
 istanza relativa di PeersManager. Quando chiama il costruttore il sistema passa:
 
 *   La precedente istanza di PeersManager (istanza di PeersManager `old_identity`).  
