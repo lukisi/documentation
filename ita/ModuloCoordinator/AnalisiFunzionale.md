@@ -56,19 +56,64 @@ Elenchiamo tutte le richieste che si possono fare al Coordinator.
 
 #### <a name="Incontrata_rete"></a>Incontrata una rete
 
-Questa richiesta *r* fatta al Coordinator dell'intera rete indica che è stata incontrata una diversa rete. **TODO**
+Questa richiesta *r* fatta al Coordinator dell'intera rete indica che è stata incontrata una diversa rete *J*.
+Le informazioni riguardo la rete *J* che sono riportate in questa richiesta sono state ottenute dalle
+conoscenze dirette di un singolo nodo (un diretto vicino del client del servizio) che indichiamo con *v*.  
+Indichiamo con *G* la rete corrente. Indichiamo con *n* il singolo nodo in *G* che ci ha contattato come client del servizio.
+
+I membri di *r* sono:
+
+*   `netid` = Identificativo della rete *J*.
+*   `gsizes` = Lista che descrive la topologia della rete *J*. Da essa si ricava `levels`.
+*   `gnode_data` = Lista di informazioni sui g-nodi ai vari livelli secondo la posizione di *v*.  
+    Per ogni livello *i* da `levels` a 1 l'elemento `gnode_data[i-1]` contiene:
+
+    *   `n_nodes` il numero approssimativo di singoli nodi dentro il g-nodo di livello `i` a cui appartiene *v*.
+    *   `pos` la posizione al livello `i-1` di *v* in *J*.
+    *   `n_free_pos` Il numero di posizioni libere dentro il g-nodo di livello `i` a cui appartiene *v*.
+
+Per il momento assumiamo che verrà rifiutata ogni richiesta di fare ingresso in una rete con topologia
+diversa da quella di *G*.
+
+Il Coordinator dell'intera rete *G* non ha particolari informazioni sui g-nodi (di livello inferiore a
+`levels`) a cui appartiene *n*. Ma tali informazioni comunque non gli sono necessarie. Esso infatti dovrà
+solo individuare, sulla base delle informazioni ricevute circa i g-nodi di *v* in *J*, un livello
+a cui cercare di far entrare un g-nodo di *n* dentro un g-nodo di *v*.
+
+Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordinator dell'intera rete, per
+fare in modo che sia "tutta la rete" come entità atomica a venire interpellata. Ma in effetti la strategia
+di ingresso non è di pertinenza del modulo Coordinator. Per questo viene utilizzato un delegato passato
+al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IEnterNetworkHandler.
+
+La risposta ottenuta dal delegato consiste in un valore da 0 a `levels-1` inclusi. Essa viene comunicata
+al client del servizio.
 
 #### <a name="Avviato_ingresso"></a>Avvio ingresso in altra rete
 
-La richiesta *r* di autorizzare l'avvio delle operazioni di ingresso del g-nodo *g* in una diversa rete. Tale
-richiesta arriva ad un nodo *x* come Coordinator di *g*. **TODO**
+La richiesta *r* di autorizzare l'avvio delle operazioni di ingresso del g-nodo *g* in una diversa rete *J*. Tale
+richiesta arriva al nodo Coordinator di *g*.
+
+I membri di *r* sono:
+
+*   `netid` = Identificativo della rete *J*.
+*   `lvl` = livello di *g*.
+
+L'arrivo di questa richiesta implica che la topologia della rete *J* dal livello `lvl-1` in giù sia
+identica alla topologia di *G*.
+
+Il Coordinator di *g* acquisisce un *lock*.
+
+Poi avvia una tasklet su cui procedere, mentre risponde positivamente al client permettendogli di
+proseguire con le operazioni di ingresso di *g* in *J*.
+
+Nella nuova tasklet il Coordinator... **TODO**
 
 #### <a name="Prenota_un_posto"></a>Prenota un posto
 
 La richiesta *r* di prenotare un posto può arrivare ad un nodo *x* come Coordinator di un g-nodo *g* di livello
 *l*, con 0 < *l* ≤ *levels*. I membri di *r* sono:
 
-*   *lvl* = livello di *g*.
+*   `lvl` = livello di *g*.
 
 Il nodo *x* valuta se ci sono posti liberi in *g* considerando la sua mappa dei percorsi. Deve considerare anche
 le prenotazioni concesse in precedenza, le quali restano valide per un certo tempo anche se ancora non sono nella
