@@ -90,9 +90,7 @@ solo individuare, sulla base delle informazioni ricevute circa i g-nodi di *v* i
 a cui cercare di far entrare un g-nodo di *n* dentro un g-nodo di *v*.
 
 Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordinator dell'intera rete, per
-fare in modo che sia "tutta la rete" come entità atomica a venire interpellata. Ma in effetti la strategia
-di ingresso non è di pertinenza del modulo Coordinator. Per questo viene utilizzato un delegato passato
-al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IEnterNetworkHandler.
+fare in modo che sia "tutta la rete" come entità atomica a venire interpellata.
 
 È importante che la decisione venga presa dalla rete come entità atomica, poiché il fatto che un
 singolo nodo abbia rilevato il contatto con una diversa rete non esclude che le due reti siano
@@ -100,8 +98,15 @@ entrate in contatto più o meno nello stesso momento in diversi punti. Occorre e
 più operazioni di ingresso; sarebbe desiderabile, per quanto possibile, cercare di verificare la
 possibilità di fare ingresso sfruttando il punto di contatto migliore.
 
-La risposta ottenuta dal delegato consiste in un valore da 0 a `levels-1` inclusi. Essa viene comunicata
-al client del servizio.
+Ma in effetti la strategia di ingresso non è di pertinenza del modulo Coordinator. Per questo viene utilizzato
+un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IEnterNetworkHandler.
+
+La risposta ottenuta dal delegato consiste in un valore da `minimum_lvl` a `levels-1` inclusi, oppure da una
+eccezione che significa che non deve essere tentato alcun ingresso in *J* dal nodo *n* (ad esempio perché
+la stessa rete è entrata in contatto in un altro punto ed è stato autorizzato l'ingresso di un g-nodo che contiene
+anche *n*).
+
+La risposta ottenuta dal delegato viene comunicata al client del servizio.
 
 Non serve alcuna scrittura nella memoria condivisa del g-nodo, quindi nemmeno è necessario provvedere
 ad alcuna replica.
