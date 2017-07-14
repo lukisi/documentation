@@ -2,8 +2,11 @@
 
 1.  [Il ruolo del modulo Coordinator](#Ruolo_coordinator)
 1.  [Il servizio Coordinator](#Servizio_coordinator)
-    1.  [Servizi previsti](#Servizi_previsti)
+    1.  [Richieste previste](#Richieste_previste)
+        1.  [Incontrata una rete](#Incontrata_rete)
+        1.  [Avvio ingresso in altra rete](#Avvio_ingresso)
         1.  [Prenota un posto](#Prenota_un_posto)
+        1.  [Confermato ingresso in altra rete](#Confermato_ingresso)
 1.  [Richiesta al diretto vicino di accesso al servizio Coordinator](#Richiesta_al_diretto_vicino)
     1.  [Ingresso in diversa rete](#Per_ingresso)
     1.  [Ingresso come risoluzione di uno split di g-nodo](#Per_split)
@@ -50,7 +53,7 @@ La funzione *h<sub>p</sub>* è definita dal servizio in modo da dare ai dati la 
 g-nodo in esame. In altre parole, il nodo corrente può contattare solo il Coordinator di uno dei suoi g-nodi; sia
 l'hash-node che il nodo che risponde si trovano all'interno del g-nodo stesso.
 
-### <a name="Servizi_previsti"></a>Servizi previsti
+### <a name="Richieste_previste"></a>Richieste previste
 
 Elenchiamo tutte le richieste che si possono fare al Coordinator.
 
@@ -70,7 +73,13 @@ I membri di *r* sono:
 
     *   `n_nodes` il numero approssimativo di singoli nodi dentro il g-nodo di livello `i` a cui appartiene *v*.
     *   `pos` la posizione al livello `i-1` di *v* in *J*.
-    *   `n_free_pos` Il numero di posizioni libere dentro il g-nodo di livello `i` a cui appartiene *v*.
+    *   `n_free_pos` Il numero di posizioni libere (per un g-nodo di livello `i-1`) dentro il g-nodo di livello `i` a cui appartiene *v*.
+
+*   `minimum_lvl` = Livello minimo a cui il singolo nodo *n* è disposto a fare ingresso. Infatti il nodo *n*
+    potrebbe essere un gateway verso una rete privata in cui si vogliono adottare diversi meccanismi di
+    assegnazione di indirizzi e routing. In questo caso il gateway potrebbe volere una assegnazione di un
+    g-nodo di livello tale (considerando la topologia della rete *J*) da poter disporre di un certo spazio
+    (numero di bits) per gli indirizzi interni.
 
 Per il momento assumiamo che verrà rifiutata ogni richiesta di fare ingresso in una rete con topologia
 diversa da quella di *G*.
@@ -85,10 +94,19 @@ fare in modo che sia "tutta la rete" come entità atomica a venire interpellata.
 di ingresso non è di pertinenza del modulo Coordinator. Per questo viene utilizzato un delegato passato
 al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IEnterNetworkHandler.
 
+È importante che la decisione venga presa dalla rete come entità atomica, poiché il fatto che un
+singolo nodo abbia rilevato il contatto con una diversa rete non esclude che le due reti siano
+entrate in contatto più o meno nello stesso momento in diversi punti. Occorre evitare di avviare
+più operazioni di ingresso; sarebbe desiderabile, per quanto possibile, cercare di verificare la
+possibilità di fare ingresso sfruttando il punto di contatto migliore.
+
 La risposta ottenuta dal delegato consiste in un valore da 0 a `levels-1` inclusi. Essa viene comunicata
 al client del servizio.
 
-#### <a name="Avviato_ingresso"></a>Avvio ingresso in altra rete
+Non serve alcuna scrittura nella memoria condivisa del g-nodo, quindi nemmeno è necessario provvedere
+ad alcuna replica.
+
+#### <a name="Avvio_ingresso"></a>Avvio ingresso in altra rete
 
 La richiesta *r* di autorizzare l'avvio delle operazioni di ingresso del g-nodo *g* in una diversa rete *J*. Tale
 richiesta arriva al nodo Coordinator di *g*.
@@ -106,7 +124,10 @@ Il Coordinator di *g* acquisisce un *lock*.
 Poi avvia una tasklet su cui procedere, mentre risponde positivamente al client permettendogli di
 proseguire con le operazioni di ingresso di *g* in *J*.
 
-Nella nuova tasklet il Coordinator... **TODO**
+L'acquisizione del lock equivale ad una scrittura nella memoria condivisa, quindi nella nuova tasklet
+il Coordinator come prima cosa provvede alle repliche con il meccanismo fornito dal modulo PeerServices.
+
+Poi... **TODO**
 
 #### <a name="Prenota_un_posto"></a>Prenota un posto
 
@@ -158,7 +179,7 @@ del Coordinator.
 Si consideri un nodo *n* che appartiene alla rete *G*. Questa è una generalizzazione,
 che comprende ad esempio il caso di un singolo nodo che compone una intera rete.
 
-Assumiamo che *n* rilevi la presenza di un nodo diretto vicino *v* e comunicando scopra che tale nodo appartiene
+Assumiamo che *n* rilevi la presenza di un nodo diretto vicino *v* e comunicando (vedi metodo `get_neighbor_map`, magari cambia nome) scopra che tale nodo appartiene
 ad una diversa rete *J*. Comunicando con il nodo *v*, il nodo *n* scopre alcune caratteristiche della rete
 *J* e le confronta con le caratteristiche della rete *G*.
 
@@ -180,7 +201,7 @@ trattazione) il Coordinator di *G* decide di assegnare a *n* il compito di chied
 di livello *l* di fare ingresso in *J*.
 
 Ora il nodo *n* comunica direttamente con il servizio Coordinator del livello *l*, cioè di *g*. Il
-Coordinator di *g* accetta questa soluzione (vedi la richiesta [avvio-ingresso](#Avviato_ingresso)). Questa operazione consta di alcune parti:
+Coordinator di *g* accetta questa soluzione (vedi la richiesta [avvio-ingresso](#Avvio_ingresso)). Questa operazione consta di alcune parti:
 
 *   Il Coordinator di *g* acquisisce un blocco. Cioè, se erano in coda altre operazioni che collidono
     con questa (ad esempio un'altra operazione di ingresso, *o altro da valutare*) allora attende prima
@@ -355,6 +376,10 @@ interfaccia il modulo può:
 *   Leggere la gsize per ogni livello *i*, con *i* da 0 a *levels* - 1 (metodo `get_gsize`).
 *   Leggere il numero di posti liberi in ogni livello *i*, con *i* da 0 a *levels* - 1
     (metodo `get_free_pos_count`).
+
+* * *
+
+Una istanza di IEnterNetworkHandler. **TODO**
 
 * * *
 
