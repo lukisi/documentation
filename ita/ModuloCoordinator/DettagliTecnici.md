@@ -20,27 +20,37 @@ l'implementazione del sistema di tasklet.
 
 Appena il nodo *n* entra in una rete o ne costituisce una nuova, istanzia il suo CoordinatorManager.
 
-1.  Il nodo *n* crea una nuova rete.  
-    In questo caso il nodo passa al costruttore di CoordinatorManager:
+### Identità iniziale
 
-    *   `guest_gnode_level` = *-1*. Significa che non c'era una precedente identità.
-    *   `new_gnode_level` = *levels*. Significa che è stato formato un nuovo g-nodo di livello *levels*.
-    *   `prev_id_coord` = *null*. Significa che non c'era una precedente identità.
+Il nodo *n* crea una nuova rete.  
+In questo caso il nodo passa al costruttore di CoordinatorManager:
 
-1.  Il nodo *n* entra in una rete. Questa situazione può avvenire in due modi: o il nodo entra in una rete diversa
-    da quella in cui si trovava prima, oppure migra in un diverso g-nodo all'interno della stessa rete. In entrambi
-    i casi con *n* indichiamo la nuova identità del nodo. Questa fa ingresso in blocco insieme ad un vecchio g-nodo
-    *g* di livello *i* (con `0 ≤ i < levels`) all'interno di un g-nodo esistente *w* di livello *j* (con `i < j ≤ levels`)
-    assumendo una nuova posizione al livello *j-1* assegnata da *w*.  
-    In questo caso il nodo passa al costruttore di CoordinatorManager:
+*   `guest_gnode_level` = *-1*. Significa che non c'era una precedente identità.
+*   `new_gnode_level` = *levels*. Significa che è stato formato un nuovo g-nodo di livello *levels*.
+*   `prev_id_coord` = *null*. Significa che non c'era una precedente identità.
+*   `peers_manager`. L'istanza di PeersManager.
+*   `map`. La mappa delle posizioni libere.
 
-    *   `guest_gnode_level` = *i*. Significa che dalla precedente identità si devono reperire le informazioni
-        relative ai g-nodi ai livelli inferiori a *i*.
-    *   `new_gnode_level` = *j-1*. Significa che è stato formato un nuovo g-nodo di livello *j-1*.
-    *   `prev_id_coord` = la precedente identità di CoordinatorManager.
+In questo caso il metodo `bootstrap_completed` non verrà richiamato dall'esterno sull'istanza di
+CoordinatorManager.
 
-    Inoltre in questo caso il costruttore di *p* deve essere messo in grado di recuperare dalla sua precedente
-    identità alcune informazioni. Cioè deve avere un riferimento alla precedente istanza della classe del servizio.
+### Identità successive
+
+Il nodo *n* entra in una rete. Questa situazione può avvenire in due modi: o il nodo entra in una rete diversa
+da quella in cui si trovava prima, oppure migra in un diverso g-nodo all'interno della stessa rete. In entrambi
+i casi con *n* indichiamo la nuova identità del nodo. Questa fa ingresso in blocco insieme ad un vecchio g-nodo
+*g* di livello *i* (con `0 ≤ i < levels`) all'interno di un g-nodo esistente *w* di livello *j* (con `i < j ≤ levels`)
+assumendo una nuova posizione al livello *j-1* assegnata da *w*.  
+In questo caso il nodo passa al costruttore di CoordinatorManager:
+
+*   `guest_gnode_level` = *i*. Significa che dalla precedente identità si devono reperire le informazioni
+    relative ai g-nodi ai livelli inferiori a *i*.
+*   `new_gnode_level` = *j-1*. Significa che è stato formato un nuovo g-nodo di livello *j-1*.
+*   `prev_id_coord` = la precedente identità di CoordinatorManager.
+*   `peers_manager` = *null*.
+*   `map` = *null*.
+
+Il costruttore di *p* dovrà recuperare dalla sua precedente identità alcune informazioni.
 
 Quando il nodo ha completato la fase di bootstrap del modulo QSPN, il nodo informa il suo CoordinatorManager
 chiamando il metodo `bootstrap_completed` a cui passa:
@@ -48,13 +58,27 @@ chiamando il metodo `bootstrap_completed` a cui passa:
 *   `peers_manager`. L'istanza di PeersManager.
 *   `map`. La mappa delle posizioni libere.
 
-Prima di questo evento il nodo non è in grado di eseguire i metodi remoti chiamati da un suo vicino. Questa
-impossibilità viene segnalata con l'eccezione CoordinatorNodeNotReadyError.
+Prima di questo evento il nodo non è in grado di partecipare attivamente al servizio
+peer-to-peer Coordinator. Quindi possiamo dire che non esiste un Coordinator per nessuno dei g-nodi di
+livello inferiore o uguale a `guest_gnode_level`. Inoltre il nodo, non avendo le mappe per uscire
+dal g-nodo con cui ha fatto ingresso, non è in grado di accedere correttamente al servizio Coordinator
+per i livelli maggiori di `guest_gnode_level`. Per questo non è in grado di eseguire alcuni dei metodi
+remoti chiamati da un suo vicino. Questa impossibilità viene segnalata con l'eccezione CoordinatorMemoryNotReadyError.
 
 ## <a name="Deliverables"></a>Deliverables
 
-Quando viene chiamato il suo metodo `bootstrap_completed`, il CoordinatorManager crea una istanza di
-CoordinatorService (che descriveremo sotto) e la registra nel PeersManager.
+Il CoordinatorManager fa in modo che il nodo partecipi al servizio peer-to-peer Coordinator, che
+è obbligatorio. Per fare questo, non appena viene portato a conoscenza del suo PeersManager, cioè
+nel costruttore oppure quando viene chiamato il suo metodo `bootstrap_completed`, il CoordinatorManager
+crea una istanza di CoordinatorService (che descriveremo sotto) e la registra nel PeersManager.
+
+* * *
+
+Il modulo permette di chiedere ad un vicino del nodo informazioni sulla sua rete con il
+metodo `get_network_info` di CoordinatorManager. L'implementazione richiama il metodo remoto
+`ask_network_info` sullo stub (che è stato passato al metodo?)
+
+Si veda sotto i dettagli del metodo remoto.
 
 * * *
 
@@ -62,7 +86,7 @@ Il modulo permette di chiedere ad un vicino del nodo informazioni sui posti libe
 metodo `get_neighbor_map` di CoordinatorManager.
 
 Il metodo ha come argomento lo stub per contattare il vicino. Prevede le eccezioni CoordinatorStubNotWorkingError
-e CoordinatorNodeNotReadyError.
+e CoordinatorMemoryNotReadyError.
 
 Restituisce una istanza di ICoordinatorNeighborMap.
 
@@ -72,15 +96,34 @@ Il modulo permette di chiedere ad un vicino del nodo di prenotare per lui un pos
 *l* con il metodo `get_reservation` di CoordinatorManager.
 
 Il metodo ha come argomento lo stub per contattare il vicino e il livello a cui fare richiesta. Prevede le
-eccezioni CoordinatorStubNotWorkingError, CoordinatorNodeNotReadyError, CoordinatorInvalidLevelError e
+eccezioni CoordinatorStubNotWorkingError, CoordinatorMemoryNotReadyError, CoordinatorInvalidLevelError e
 CoordinatorSaturatedGnodeError.
 
 Restituisce una istanza di ICoordinatorReservation.
 
 ## <a name="Comunicazioni_tra_vicini"></a>Comunicazioni tra vicini
 
+Il metodo remoto `ask_network_info`. Non ha argomenti. Prevede l'eccezione CoordinatorMemoryNotReadyError.
+Restituisce una istanza di ICoordinatorNetworkInfoMessage.
+
+L'interfaccia ICoordinatorNetworkInfoMessage è un segnaposto (vuota) esposto dalla libreria intermedia di ZCD
+che espone il metodo remoto. L'implementazione del metodo remoto crea una istanza della classe NetworkInfo. Questa è
+una classe serializzabile interna al modulo, che implementa l'interfaccia segnaposto suddetta.
+
+La classe NetworkInfo contiene:
+
+*   `netid` = Identificativo della rete.
+*   `gsizes` = Topologia della rete. Da essa si ricava `levels`.
+*   `gnode_data` = Lista di informazioni sui g-nodi ai vari livelli secondo la posizione del nodo interrogato *v*.  
+    Per ogni livello *i* da `levels` a 1 l'elemento `gnode_data[i-1]` contiene:
+    *   `n_nodes` il numero approssimativo di singoli nodi dentro il g-nodo di livello `i` a cui appartiene *v*.
+    *   `pos` la posizione al livello `i-1` di *v*.
+    *   `n_free_pos` Il numero di posizioni libere dentro il g-nodo di livello `i` a cui appartiene *v*.
+
+* * *
+
 Quando il modulo vuole chiedere ad un vicino informazioni sui posti liberi nei suoi g-nodi usa il metodo
-remoto `retrieve_neighbor_map`. Non ha argomenti. Prevede l'eccezione CoordinatorNodeNotReadyError, oltre
+remoto `retrieve_neighbor_map`. Non ha argomenti. Prevede l'eccezione CoordinatorMemoryNotReadyError, oltre
 alle solite StubError e DeserializeError. Restituisce una istanza di ICoordinatorNeighborMapMessage.
 
 L'interfaccia ICoordinatorNeighborMapMessage è un segnaposto (vuota) esposto dalla libreria intermedia di ZCD
@@ -91,7 +134,7 @@ una classe serializzabile interna al modulo, che implementa entrambe le interfac
 * * *
 
 Quando il modulo vuole chiedere ad un vicino di prenotare per lui un posto nel suo g-nodo di livello *l* usa il
-metodo remoto `ask_reservation`. Ha come argomento il livello *l*. Prevede le eccezioni CoordinatorNodeNotReadyError,
+metodo remoto `ask_reservation`. Ha come argomento il livello *l*. Prevede le eccezioni CoordinatorMemoryNotReadyError,
 CoordinatorInvalidLevelError e CoordinatorSaturatedGnodeError, oltre alle solite StubError e DeserializeError.
 Restituisce una istanza di ICoordinatorReservationMessage.
 

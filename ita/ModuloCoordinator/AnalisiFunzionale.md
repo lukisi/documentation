@@ -213,8 +213,8 @@ del Coordinator.
 Si consideri un nodo *n* che appartiene alla rete *G*. Questa è una generalizzazione,
 che comprende ad esempio il caso di un singolo nodo che compone una intera rete.
 
-Assumiamo che *n* rilevi la presenza di un nodo diretto vicino *v* e comunicando (vedi metodo `get_neighbor_map`, magari cambia nome) scopra che tale nodo appartiene
-ad una diversa rete *J*. Comunicando con il nodo *v*, il nodo *n* scopre alcune caratteristiche della rete
+Assumiamo che *n* rilevi la presenza di un nodo diretto vicino *v* e comunicando (vedi metodo `get_network_info`) scopra che
+tale nodo appartiene ad una diversa rete *J*. Comunicando con il nodo *v*, il nodo *n* scopre alcune caratteristiche della rete
 *J* e le confronta con le caratteristiche della rete *G*.
 
 **Importante** Questa prima disanima delle caratteristiche di *J* e di *G* avviene sulla base delle
@@ -323,6 +323,22 @@ In quello stesso momento gli vengono forniti:
 
 Fornisce metodi per:
 
+*   Chiedere ad un vicino *v*, dato uno stub per contattarlo, informazioni sulla rete *J* in cui si trova.  
+    Il vicino *v* potrebbe non appartenere alla stessa rete del nodo corrente *n*. Quindi anche avere una
+    diversa topologia. In questo caso le informazioni servono a decidere se e come fare ingresso nell'altra
+    rete.  
+    Oppure il vicino *v* potrebbe appartenere alla stessa rete del nodo corrente *n*. In questo caso le informazioni
+    servono a ... **TODO**.  
+    Questa operazione si implementa nel metodo `get_network_info`. Le informazioni sono richieste al
+    vicino *v* attraverso il metodo remoto `ask_network_info`. Il vicino *v* compila le informazioni sulla
+    base delle sue dirette conoscenze, senza contattare i singoli Coordinator. Le informazioni sono:
+    *   `netid` = Identificativo della rete *J*.
+    *   `gsizes` = Lista che descrive la topologia della rete *J*. Da essa si ricava `levels`.
+    *   `gnode_data` = Lista di informazioni sui g-nodi ai vari livelli secondo la posizione di *v*.  
+        Per ogni livello *i* da `levels` a 1 l'elemento `gnode_data[i-1]` contiene:
+        *   `n_nodes` il numero approssimativo di singoli nodi dentro il g-nodo di livello `i` a cui appartiene *v*.
+        *   `pos` la posizione al livello `i-1` di *v* in *J*.
+        *   `n_free_pos` Il numero di posizioni libere (per un g-nodo di livello `i-1`) dentro il g-nodo di livello `i` a cui appartiene *v*.
 *   Chiedere ad un vicino *v*, dato uno stub per contattarlo, quanti posti vede liberi (nella sua mappa,
     senza contattare i singoli Coordinator) nei suoi g-nodi. Metodo `get_neighbor_map`.  
     Questo metodo può rilanciare l'eccezione CoordinatorStubNotWorkingError se la comunicazione con il
