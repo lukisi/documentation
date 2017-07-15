@@ -324,6 +324,10 @@ In quello stesso momento gli vengono forniti:
 Fornisce metodi per:
 
 *   Chiedere ad un vicino *v*, dato uno stub per contattarlo, informazioni sulla rete *J* in cui si trova.  
+    Questo metodo può rilanciare l'eccezione CoordinatorMemoryNotReadyError se il vicino *v* non ha ancora
+    completato la fase di boostrap (vedi modulo [QSPN](../ModuloQspn/EsplorazioneRete.md#Rete_esplorata)).
+    Infatti il modulo Coordinator nel nodo *v* non ha ancora ricevuto l'istanza di ICoordinatorMap da cui
+    recupera le informazioni richieste.  
     Il vicino *v* potrebbe non appartenere alla stessa rete del nodo corrente *n*. Quindi anche avere una
     diversa topologia. In questo caso le informazioni servono a decidere se e come fare ingresso nell'altra
     rete.  
@@ -332,18 +336,18 @@ Fornisce metodi per:
     Questa operazione si implementa nel metodo `get_network_info`. Le informazioni sono richieste al
     vicino *v* attraverso il metodo remoto `ask_network_info`. Il vicino *v* compila le informazioni sulla
     base delle sue dirette conoscenze, senza contattare i singoli Coordinator. Le informazioni sono:
-    *   `netid` = Identificativo della rete *J*.
-    *   `gsizes` = Lista che descrive la topologia della rete *J*. Da essa si ricava `levels`.
-    *   `gnode_data` = Lista di informazioni sui g-nodi ai vari livelli secondo la posizione di *v*.  
+    *   `int64 netid` = Identificativo della rete *J*.
+    *   `List<int> gsizes` = Lista che descrive la topologia della rete *J*. Da essa si ricava `levels`.
+    *   `List<Object> gnode_data` = Lista di informazioni sui g-nodi ai vari livelli secondo la posizione di *v*.  
         Per ogni livello *i* da `levels` a 1 l'elemento `gnode_data[i-1]` contiene:
-        *   `n_nodes` il numero approssimativo di singoli nodi dentro il g-nodo di livello `i` a cui appartiene *v*.
-        *   `pos` la posizione al livello `i-1` di *v* in *J*.
-        *   `n_free_pos` Il numero di posizioni libere (per un g-nodo di livello `i-1`) dentro il g-nodo di livello `i` a cui appartiene *v*.
+        *   `int n_nodes` il numero approssimativo di singoli nodi dentro il g-nodo di livello `i` a cui appartiene *v*.
+        *   `int pos` la posizione al livello `i-1` di *v* in *J*.
+        *   `int n_free_pos` Il numero di posizioni libere (per un g-nodo di livello `i-1`) dentro il g-nodo di livello `i` a cui appartiene *v*.
 *   Chiedere ad un vicino *v*, dato uno stub per contattarlo, quanti posti vede liberi (nella sua mappa,
     senza contattare i singoli Coordinator) nei suoi g-nodi. Metodo `get_neighbor_map`.  
     Questo metodo può rilanciare l'eccezione CoordinatorStubNotWorkingError se la comunicazione con il
     vicino non riesce.  
-    Questo metodo può rilanciare l'eccezione CoordinatorNodeNotReadyError se il vicino *v* non ha ancora
+    Questo metodo può rilanciare l'eccezione CoordinatorMemoryNotReadyError se il vicino *v* non ha ancora
     completato la fase di boostrap (vedi modulo [QSPN](../ModuloQspn/EsplorazioneRete.md#Rete_esplorata)).
     Infatti il nodo *v* non è in grado di rispondere alle richieste dell'interfaccia ICoordinatorMap,
     quindi il modulo Coordinator nel nodo *v* non ha ancora ricevuto l'istanza di tale interfaccia.  
@@ -367,7 +371,7 @@ Fornisce metodi per:
     Metodo `get_reservation`.  
     Questo metodo può rilanciare l'eccezione CoordinatorStubNotWorkingError se la comunicazione con il
     vicino non riesce.  
-    Questo metodo può rilanciare l'eccezione CoordinatorNodeNotReadyError se il vicino *v* non ha ancora
+    Questo metodo può rilanciare l'eccezione CoordinatorMemoryNotReadyError se il vicino *v* non ha ancora
     completato la fase di boostrap (vedi modulo QSPN). Infatti il nodo *v* non ha ancora potuto instanziare
     il suo PeersManager, né il CoordinatorService.  
     Questo metodo può rilanciare l'eccezione CoordinatorInvalidLevelError, segnalata immediatamente dal
@@ -400,6 +404,7 @@ di un suo g-nodo e richiederne i servizi.
 La mappa delle posizioni libere/occupate ai vari livelli è un oggetto di cui il modulo conosce
 l'interfaccia ICoordinatorMap. Tramite essa il modulo può:
 
+*   Leggere un `int64` che rappresenta l'identificativo della rete (metodo `get_netid`).
 *   Leggere il numero *l* dei livelli della topologia (metodo `get_levels`).
 *   Leggere la gsize di ogni livello *i* da 0 a *l* - 1 (metodo `get_gsize`).  
     Precisiamo il significato di questo indice, restando coerenti con quanto stabilito nella
@@ -410,6 +415,8 @@ l'interfaccia ICoordinatorMap. Tramite essa il modulo può:
     L'anzianità di un g-nodo è un numero progressivo che viene assegnato al g-nodo. Nel confronto
     tra due g-nodi di pari livello *i* entrambi appartenenti allo stesso g-nodo di livello *i* + 1,
     un valore più alto significa che il g-nodo è arrivato dopo, cioè esso è più giovane.
+*   Leggere il numero approssimativo di singoli nodi contenuti nel mio g-nodo ad ogni livello *i*
+    da 0 a *l* - 1 (metodo `get_n_nodes`).  
 *   Leggere la posizione del nodo, cioè la posizione del mio g-nodo ad ogni livello *i* da 0
     a *l* - 1 (metodo `get_my_pos`).
 *   Leggere l'elenco delle posizioni libere in ogni livello *i* da 0 a *l* - 1 (metodo `get_free_pos`).  
@@ -429,7 +436,67 @@ interfaccia il modulo può:
 
 * * *
 
-Una istanza di IEnterNetworkHandler. **TODO**
+Una istanza di IEnterNetworkHandler viene passata al modulo Coordinator. Tale istanza viene
+interrogata da parte del modulo quando si deve decidere sul fare ingresso in una nuova rete.
+
+I metodi previsti dall'interfaccia IEnterNetworkHandler sono:
+
+*   `int choose_target_level(int min_lvl, int max_lvl, int netid, List<int> gsizes, List<int> n_nodes, List<int> n_free_pos)`  
+    Con questo metodo si da una valutazione sul livello in cui sembra opportuno cercare di
+    fare ingresso. Questo a partire dalle informazioni sui g-nodi ottenuti da un singolo
+    nodo con il quale esiste un arco.  
+    Questa prima valutazione viene fatta senza sapere se esistono altri archi che collegano
+    le due reti in altri punti della topologia.  
+    Per descrivere il significato degli argomenti passati, si consideri che questa valutazione viene
+    fatta dalla rete *G* per fare ingresso nella rete *J*; il proponente di questa soluzione è il
+    singolo nodo *n* in *G* che ha un arco verso il singolo nodo *v* in *J*; il nodo che fa questa
+    valutazione è il Coordinator di *G*.  
+    Gli argomenti passati sono:
+    *   `min_lvl` è il livello più basso a cui *n* è disposto a fare ingresso in *J*.  
+        Come abbiamo detto sopra, per *n* potrebbe essere necessario avere la prenotazione di un livello superiore
+        a 0 perché il nodo fa da gateway verso una rete privata in cui si vogliono adottare diversi meccanismi di
+        assegnazione di indirizzi e routing. Il gateway necessita di un livello tale da riservare un certo numero
+        di bit per gli indirizzi interni. La topologia da considerare per questo calcolo è quella di *J*; sebbene
+        è implicitamente necessario che la topologia di *G* e quella di *J* coincidano almeno ai livelli inferiori
+        a quello che sarà scelto per l'ingresso.
+    *   `max_lvl` è il livello più basso di cui la rete *G* è composta da un solo g-nodo.  
+        Se si raggiunge la prenotazione di una posizione a questo livello, l'intera rete *G* può entrare in *J*
+        in blocco. Non è quindi necessario chiedere di più.
+    *   `netid` è l'identificativo della rete *J*. L'implementatore di IEnterNetworkHandler potrebbe farne uso:
+        ad esempio memorizza le reti incontrate (nel nodo stesso oppure nel Coordinator della rete) e sa se
+        in precedenza aveva tentato una migration path (al livello *x*) fallita in quella stessa rete.
+    *   `gsizes` descrive la topologia della rete *J*. Da questa lista si ricava anche `levels` di *J*.  
+        Se la topologia di *G* e quella di *J* dovessero differire (assumendo che questa situazione sia supportata)
+        questo limiterebbe il valore del livello che la presente valutazione può restituire; infatti le topologie
+        devono essere identiche ai livelli inferiori di *l* se si vuole fare ingresso in *J* con un g-nodo di
+        livello *l* che esisteva in *G*.  
+        Ma sappiamo che chi chiama il metodo `choose_target_level` di IEnterNetworkHandler appartiene alla rete
+        *G*; quindi questi (cioè il modulo Coordinator) si sarà accertato che le due topologie coincidono; se non
+        dovessero coincidere ai livelli più alti il Coordinator può variare l'argomento `max_lvl` per fare in modo
+        che le topologie coincidano ai livelli da 0 a `max_lvl`. Ovviamente, anche dopo questa variazione deve
+        rimanere vero che `max_lvl` ≥ `min_lvl`.
+    *   `n_nodes` dice quanti singoli nodi (approssimativamente) esistono in ognuno dei g-nodi di *J* di cui fa
+        parte *v*. Per l'esattezza, il valore `n_nodes[i]` dice quanti nodi ci sono nel g-nodo di livello `i+1`.
+        Il dato potrebbe essere usato nella valutazione, non so come.
+    *   `n_free_pos` dice quanti posti liberi esistono in ognuno dei g-nodi di *J* di cui fa parte *v*. Per
+        l'esattezza, il valore `n_free_pos[i]` dice quanti posti liberi ci sono nel g-nodo di livello `i+1`.  
+        Essenzialmente, ci serve solo sapere se è maggiore di 0. Se la topologia lo permette, un numero maggiore
+        è da preferire, soltanto perché riduce la probabilità dell'evento che un posto apparentemente libero
+        sia stato in effetti prenotato. Ricordiamo infatti che il dato è fornito dal singolo nodo *v* senza
+        contattare il suo Coordinator in *J* e che, comunque, passa del tempo da quando il dato viene fornito da *v*
+        a quando il tentativo di ingresso viene autorizzato dal Coordinator di *G*.
+*   `b`  
+    Con questo metodo si da una valutazione sulla migliore fra alcune possibili soluzioni
+    per l'igresso. **TODO**
+
+**Nota** Supponiamo che si voglia fare ingresso in una rete *J* con topologia a 20 livelli. Supponiamo che il `max_lvl`,
+cioè la dimensione del più grande g-nodo in *G*, sia 5. Supponiamo che al livello 5 non ci sia alcun posto nel
+g-nodo di livello 6 del singolo nodo *v* con cui siamo entrati in contatto. La stessa cosa per i livelli 6..12.
+Invece al livello 13 esiste un posto.  
+Ora abbiamo due possibilità: occupare un nuovo posto dentro il livello 13 (sebbene lo occupiamo con un solo g-nodo
+di livello 5 anziché di livello 12) oppure cercare una migration path a livello 5.  
+Se cerchiamo la migration path, questa può risultare anche molto lunga oppure anche inesistente.  
+Quale soluzione scegliere? **Open question.**
 
 * * *
 
