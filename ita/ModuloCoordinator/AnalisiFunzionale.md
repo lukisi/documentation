@@ -66,16 +66,16 @@ Indichiamo con *G* la rete corrente. Indichiamo con *n* il singolo nodo in *G* c
 
 I membri di *r* sono:
 
-*   `netid` = Identificativo della rete *J*.
-*   `gsizes` = Lista che descrive la topologia della rete *J*. Da essa si ricava `levels`.
-*   `gnode_data` = Lista di informazioni sui g-nodi ai vari livelli secondo la posizione di *v*.  
+*   `int64 netid` = Identificativo della rete *J*.
+*   `List<int> gsizes` = Lista che descrive la topologia della rete *J*. Da essa si ricava `levels`.
+*   `List<Object> gnode_data` = Lista di informazioni sui g-nodi ai vari livelli secondo la posizione di *v*.  
     Per ogni livello *i* da `levels` a 1 l'elemento `gnode_data[i-1]` contiene:
 
-    *   `n_nodes` il numero approssimativo di singoli nodi dentro il g-nodo di livello `i` a cui appartiene *v*.
-    *   `pos` la posizione al livello `i-1` di *v* in *J*.
-    *   `n_free_pos` Il numero di posizioni libere (per un g-nodo di livello `i-1`) dentro il g-nodo di livello `i` a cui appartiene *v*.
+    *   `int n_nodes` il numero approssimativo di singoli nodi dentro il g-nodo di livello `i` a cui appartiene *v*.
+    *   `int pos` la posizione al livello `i-1` di *v* in *J*.
+    *   `int n_free_pos` Il numero di posizioni libere (per un g-nodo di livello `i-1`) dentro il g-nodo di livello `i` a cui appartiene *v*.
 
-*   `minimum_lvl` = Livello minimo a cui il singolo nodo *n* è disposto a fare ingresso. Infatti il nodo *n*
+*   `int minimum_lvl` = Livello minimo a cui il singolo nodo *n* è disposto a fare ingresso. Infatti il nodo *n*
     potrebbe essere un gateway verso una rete privata in cui si vogliono adottare diversi meccanismi di
     assegnazione di indirizzi e routing. In questo caso il gateway potrebbe volere una assegnazione di un
     g-nodo di livello tale (considerando la topologia della rete *J*) da poter disporre di un certo spazio
