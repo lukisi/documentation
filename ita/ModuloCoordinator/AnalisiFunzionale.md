@@ -115,6 +115,12 @@ che istruisce il nodo *n* di ripetere la richiesta dopo aver atteso alcuni istan
 Siccome c'è una scrittura nella memoria condivisa, prima di rispondere si avvia una nuova tasklet
 per provvedere alle repliche con il meccanismo fornito dal modulo PeerServices.
 
+Il tempo limite entro cui il Coordinator intende rispondere, cioè intende prendere una decisione circa
+l'ingresso di (una parte di) *G* in *J*, è direttamente proporzionale al numero di singoli nodi presenti
+in *G*. È lecito presumere che sia la rete più piccola a voler entrare in quella più grande. Quindi lo
+scopo di questa attesa è dare il tempo agli altri singoli nodi di *G*, che potrebbero essere venuti
+in contatto con *J* (quasi) simultaneamente, di raggiungere il Coordinator di *G* con la loro proposta.
+
 Supponiamo che nel frattempo giunga al Coordinator della rete *G* una richiesta simile dal nodo *q*
 relativa alla rete *J*. Il Coordinator di *G* interroga il delegato e scopre che il g-nodo
 coinvolto in questo ingresso, cioè *g<sub>lvl_1</sub>(q)*, interseca (è equivalente, oppure contiene, oppure è contenuto) con
@@ -217,7 +223,7 @@ Assumiamo che *n* rilevi la presenza di un nodo diretto vicino *v* e comunicando
 tale nodo appartiene ad una diversa rete *J*. Comunicando con il nodo *v*, il nodo *n* scopre alcune caratteristiche della rete
 *J* e le confronta con le caratteristiche della rete *G*.
 
-**Importante** Questa prima disanima delle caratteristiche di *J* e di *G* avviene sulla base delle
+**Importante** Questa prima disamina delle caratteristiche di *J* e di *G* avviene sulla base delle
 conoscenze di *n* e di *v*. Non va bene importunare il Coordinator della rete (che può essere anche
 grande) ogni qualvolta un singolo nodo della rete incontra un vicino che non appartiene ancora alla
 rete. Infatti può essere subito evidente dalle conoscenze dei singoli nodi che si vengono ad
@@ -260,7 +266,8 @@ del servizio Coordinator per comunicare, non con un diretto vicino, bensì trami
 modulo PeerServices, con il Coordinator del suo g-nodo di livello *l* + 1, cioè *h*.
 
 In questo modo il nodo *n*, dialogando con il diretto vicino *v*, è come se avesse dialogato con
-l'intero g-nodo *h* come entità unitaria.
+l'intero g-nodo *h* come entità unitaria. Inoltre avendo prima il nodo *n* preso accordo con
+il Coordinator di *g*, è come se i g-nodi *g* e *h* come entità unitarie avessero dialogato tra loro.
 
 Ora che *n* ha ricevuto la prenotazione, di nuovo comunica con il Coordinator di *g* per informarlo
 (vedi la richiesta/segnalazione [confermato-ingresso](#Confermato_ingresso)). Cioè
@@ -336,6 +343,7 @@ Fornisce metodi per:
     Questa operazione si implementa nel metodo `get_network_info`. Le informazioni sono richieste al
     vicino *v* attraverso il metodo remoto `ask_network_info`. Il vicino *v* compila le informazioni sulla
     base delle sue dirette conoscenze, senza contattare i singoli Coordinator. Le informazioni sono:
+
     *   `int64 netid` = Identificativo della rete *J*.
     *   `List<int> gsizes` = Lista che descrive la topologia della rete *J*. Da essa si ricava `levels`.
     *   `List<Object> gnode_data` = Lista di informazioni sui g-nodi ai vari livelli secondo la posizione di *v*.  
