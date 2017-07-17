@@ -81,7 +81,7 @@ I membri di *r* sono:
     g-nodo di livello tale (considerando la topologia della rete *J*) da poter disporre di un certo spazio
     (numero di bits) per gli indirizzi interni.
 
-Per il momento assumiamo che verrà rifiutata ogni richiesta di fare ingresso in una rete con topologia
+Per il momento assumiamo che verrà rifiutata (con l'eccezione IgnoreNetworkError) ogni richiesta di fare ingresso in una rete con topologia
 diversa da quella di *G*.
 
 Il Coordinator dell'intera rete *G* non ha particolari informazioni sui g-nodi (di livello inferiore a
@@ -498,13 +498,26 @@ I metodi previsti dall'interfaccia IEnterNetworkHandler sono:
     per l'igresso. **TODO**
 
 **Nota** Supponiamo che si voglia fare ingresso in una rete *J* con topologia a 20 livelli. Supponiamo che il `max_lvl`,
-cioè la dimensione del più grande g-nodo in *G*, sia 5. Supponiamo che al livello 5 non ci sia alcun posto nel
-g-nodo di livello 6 del singolo nodo *v* con cui siamo entrati in contatto. La stessa cosa per i livelli 6..12.
-Invece al livello 13 esiste un posto.  
-Ora abbiamo due possibilità: occupare un nuovo posto dentro il livello 13 (sebbene lo occupiamo con un solo g-nodo
-di livello 5 anziché di livello 12) oppure cercare una migration path a livello 5.  
-Se cerchiamo la migration path, questa può risultare anche molto lunga oppure anche inesistente.  
-Quale soluzione scegliere? **Open question.**
+cioè la dimensione del più grande g-nodo in *G*, sia 5.
+
+**_caso 0_** Valutando l'ingresso del g-nodo di livello 5, supponiamo che
+non ci sia alcun posto nel g-nodo di livello 6 del singolo nodo *v* con cui siamo entrati in contatto. La stessa cosa per
+tutti i livelli fino al 19. Questo significa in altre parole che come minimo serve una migration-path di lunghezza maggiore di 0.  
+Si inizia con il livello 5. Cioè si cerca la più breve migration-path che libera un posto nel g-nodo di livello 6 del
+singolo nodo *v* facendo spostare *n* border g-nodi di livello 5 (da un g-nodo di livello 6 in un altro) fino al punto
+in cui un g-nodo di livello 5 migra dentro un g-nodo di livello 6 o superiore con un posto libero.  
+Se una tale migration-path al livello 5 non esiste, questo implica che non esiste nemmeno una migration-path al livello
+6 o superiori. In questo caso occorre degradare cercando di fare entrare *G* in *J* con un g-nodo di livello 4 alla volta.  
+Se invece esiste la migration-path al livello 5 che muove *n* g-nodi, possiamo accettare questa oppure cercare ai
+livelli più alti. Forse esiste una migration-path al livello 6 che muove *k* g-nodi, con *k* minore di *n*.
+Forse esiste una migration-path al livello 7 che muove *q* g-nodi, con *q* minore di *k*. Quale soluzione scegliere? **Open question.**
+
+**_caso 1_** Valutando l'ingresso del g-nodo di livello 5, supponiamo che
+non ci sia alcun posto nel g-nodo di livello 6 del singolo nodo *v* con cui siamo entrati in contatto. La stessa cosa per
+i livelli 6..12. Invece valutando l'ingresso di un g-nodo di livello 13, esiste un posto libero nel g-nodo di livello 14
+del singolo nodo *v*. Questo significa in altre parole che sappiamo da subito che la migration-path al livello 13 da
+eseguire per far entrare *G* è di lunghezza 0.  
+Cerchiamo comunque la più breve migration-path al livello 5? **Open question.**
 
 * * *
 
