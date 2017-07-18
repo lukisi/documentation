@@ -79,7 +79,7 @@ I membri di *r* sono:
     potrebbe essere un gateway verso una rete privata in cui si vogliono adottare diversi meccanismi di
     assegnazione di indirizzi e routing. In questo caso il gateway potrebbe volere una assegnazione di un
     g-nodo di livello tale (considerando la topologia della rete *J*) da poter disporre di un certo spazio
-    (numero di bits) per gli indirizzi interni.
+    (numero di bit) per gli indirizzi interni.
 
 Per il momento assumiamo che nessun nodo invia una richiesta di fare ingresso in una rete con topologia
 diversa da quella di *G*.
@@ -415,50 +415,6 @@ In quello stesso momento gli vengono forniti:
 
 Fornisce metodi per:
 
-*   Chiedere ad un vicino *v*, dato uno stub per contattarlo, informazioni sulla rete *J* in cui si trova.  
-    Questo metodo può rilanciare l'eccezione CoordinatorMemoryNotReadyError se il vicino *v* non ha ancora
-    completato la fase di boostrap (vedi modulo [QSPN](../ModuloQspn/EsplorazioneRete.md#Rete_esplorata)).
-    Infatti il modulo Coordinator nel nodo *v* non ha ancora ricevuto l'istanza di ICoordinatorMap da cui
-    recupera le informazioni richieste.  
-    Il vicino *v* potrebbe non appartenere alla stessa rete del nodo corrente *n*. Quindi anche avere una
-    diversa topologia. In questo caso le informazioni servono a decidere se e come fare ingresso nell'altra
-    rete.  
-    Oppure il vicino *v* potrebbe appartenere alla stessa rete del nodo corrente *n*. In questo caso le informazioni
-    servono a ... **TODO**.  
-    Questa operazione si implementa nel metodo `get_network_info`. Le informazioni sono richieste al
-    vicino *v* attraverso il metodo remoto `ask_network_info`. Il vicino *v* compila le informazioni sulla
-    base delle sue dirette conoscenze, senza contattare i singoli Coordinator. Le informazioni sono:
-
-    *   `int64 netid` = Identificativo della rete *J*.
-    *   `List<int> gsizes` = Lista che descrive la topologia della rete *J*. Da essa si ricava `levels`.
-    *   `List<Object> gnode_data` = Lista di informazioni sui g-nodi ai vari livelli secondo la posizione di *v*.  
-        Per ogni livello *i* da `levels` a 1 l'elemento `gnode_data[i-1]` contiene:
-        *   `int n_nodes` il numero approssimativo di singoli nodi dentro il g-nodo di livello `i` a cui appartiene *v*.
-        *   `int pos` la posizione al livello `i-1` di *v* in *J*.
-        *   `int n_free_pos` Il numero di posizioni libere (per un g-nodo di livello `i-1`) dentro il g-nodo di livello `i` a cui appartiene *v*.
-*   Chiedere ad un vicino *v*, dato uno stub per contattarlo, quanti posti vede liberi (nella sua mappa,
-    senza contattare i singoli Coordinator) nei suoi g-nodi. Metodo `get_neighbor_map`.  
-    Questo metodo può rilanciare l'eccezione CoordinatorStubNotWorkingError se la comunicazione con il
-    vicino non riesce.  
-    Questo metodo può rilanciare l'eccezione CoordinatorMemoryNotReadyError se il vicino *v* non ha ancora
-    completato la fase di boostrap (vedi modulo [QSPN](../ModuloQspn/EsplorazioneRete.md#Rete_esplorata)).
-    Infatti il nodo *v* non è in grado di rispondere alle richieste dell'interfaccia ICoordinatorMap,
-    quindi il modulo Coordinator nel nodo *v* non ha ancora ricevuto l'istanza di tale interfaccia.  
-    Se invece non sono rilanciate eccezioni, il metodo restituisce una istanza di ICoordinatorNeighborMap.  
-    Dalla risposta deve essere possibile leggere queste informazioni:
-
-    *   Il numero di livelli nella topologia.
-    *   La gsize di ogni livello.
-    *   Il numero di posti liberi in ogni livello.
-
-    Quando un nodo *n* chiede al vicino *v* quanti posti liberi vede nella sua mappa, non assumiamo che il
-    nodo *v* appartenga già alla stessa rete di *n*; quindi nemmeno che abbiano la stessa topologia.  
-    La topologia della rete in cui si vuole fare ingresso è importante che sia nota. Infatti il nodo richiedente
-    potrebbe essere un gateway verso una rete privata in cui si vogliono adottare diversi meccanismi di
-    assegnazione di indirizzi e routing. In questo caso il gateway potrebbe volere una assegnazione di un
-    g-nodo di livello tale da poter disporre di un certo spazio (numero di bits) per gli indirizzi interni.  
-    Il numero di posti liberi in un dato livello potrebbe essere una informazione eccessiva. Probabilmente
-    al nodo richiedente è sufficiente sapere se c'è almeno un posto o no. Per ora manteniamo questa informazione.
 *   Dato un livello *l*, chiedere ad un vicino *v*, dato uno stub per contattarlo, di richiedere al Coordinator
     del suo g-nodo di livello *l* la prenotazione di un posto, come nuovo g-nodo di livello *l* - 1.
     Metodo `get_reservation`.  
@@ -534,12 +490,18 @@ interrogata da parte del modulo quando si deve decidere sul fare ingresso in una
 
 I metodi previsti dall'interfaccia IEnterNetworkHandler sono:
 
-*   `int choose_target_level(int min_lvl, int max_lvl, int netid, List<int> gsizes, List<int> n_nodes, List<int> n_free_pos)`  
+*   `int choose_target_level(Object network_data)`  
     Con questo metodo si da una valutazione sul livello in cui sembra opportuno cercare di
     fare ingresso. Questo a partire dalle informazioni sui g-nodi ottenuti da un singolo
     nodo con il quale esiste un arco.  
     Questa prima valutazione viene fatta senza sapere se esistono altri archi che collegano
     le due reti in altri punti della topologia.  
+    **TODO** quanto segue va spostato nella trattazione del modulo che si occupa di implementare IEnterNetworkHandler.  
+    I membri di `network_data` sono: `int64 netid`, `List<int> gsizes`,
+    `List<int> n_nodes`, `List<int> n_free_pos`, `int min_lvl`.  
+    Oltre a queste informazioni, l'implementatore dell'interfaccia IEnterNetworkHandler nel nodo
+    chiamato ad eseguire il metodo (il Coordinator della rete *G*) conosce come
+    valorizzare `int max_lvl`.  
     Per descrivere il significato degli argomenti passati, si consideri che questa valutazione viene
     fatta dalla rete *G* per fare ingresso nella rete *J*; il proponente di questa soluzione è il
     singolo nodo *n* in *G* che ha un arco verso il singolo nodo *v* in *J*; il nodo che fa questa
