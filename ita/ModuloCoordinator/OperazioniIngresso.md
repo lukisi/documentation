@@ -70,8 +70,12 @@ il nodo Coordinator della rete *G* esegue il metodo `prepare_enter` esso conosce
 di *G* sia la topologia di *J*. Il valore di `max_lvl` precedentemente calcolato deve essere
 tale che la topologia di *G* e quella di *J* sono identiche ai livelli inferiori di `max_lvl`;
 altrimenti il suo valore va abbassato.  
-Alla fine se ancora `max_lvl` ≥ `min_lvl` non ci saranno problemi. Altrimenti l'ingresso di
-un g-nodo di *n* in *J* risulterebbe impossibile.
+Alla fine se ancora `max_lvl` ≥ `min_lvl` non ci saranno problemi.  
+Se invece `min_lvl` > `max_lvl` allora sarà possibile in questo caso impostare `max_lvl` = `min_lvl` e
+proseguire. Infatti in questo caso specifico l'unico g-nodo a fare ingresso sarebbe quello che
+costituisce la rete privata a gestione autonoma di indirizzi e routing della quale il nodo *n*
+è il gateway. Quindi la topologia usata in *J* ai livelli inferiori a `min_lvl` non è di alcun
+interesse per quel g-nodo, come non lo era la topologia usata in *G*.
 
 Il nodo Coordinator dell'intera rete *G* non ha particolari informazioni sui g-nodi (di livello inferiore a
 `levels`) a cui appartiene *n*. Ma tali informazioni comunque non gli sono necessarie. Esso infatti dovrà
@@ -86,49 +90,5 @@ a quale livello compreso tra `min_lvl` e `max_lvl` andrebbe tentato l'ingresso d
 **TODO** Inserire qui ogni idea su some rispondere alla domanda.
 
 Diciamo che la risposta alla domanda sia *lvl*.
-
-
-
-
-
-Per descrivere il significato degli argomenti passati, si consideri che questa valutazione viene
-fatta dalla rete *G* per fare ingresso nella rete *J*; il proponente di questa soluzione è il
-singolo nodo *n* in *G* che ha un arco verso il singolo nodo *v* in *J*; il nodo che fa questa
-valutazione è il Coordinator di *G*.  
-Gli argomenti passati sono:
-*   `min_lvl` è il livello più basso a cui *n* è disposto a fare ingresso in *J*.  
-    Come abbiamo detto sopra, per *n* potrebbe essere necessario avere la prenotazione di un livello superiore
-    a 0 perché il nodo fa da gateway verso una rete privata in cui si vogliono adottare diversi meccanismi di
-    assegnazione di indirizzi e routing. Il gateway necessita di un livello tale da riservare un certo numero
-    di bit per gli indirizzi interni. La topologia da considerare per questo calcolo è quella di *J*; sebbene
-    è implicitamente necessario che la topologia di *G* e quella di *J* coincidano almeno ai livelli inferiori
-    a quello che sarà scelto per l'ingresso.
-*   `max_lvl` è il livello più basso di cui la rete *G* è composta da un solo g-nodo.  
-    Se si raggiunge la prenotazione di una posizione a questo livello, l'intera rete *G* può entrare in *J*
-    in blocco. Non è quindi necessario chiedere di più.
-*   `netid` è l'identificativo della rete *J*. L'implementatore di IEnterNetworkHandler potrebbe farne uso:
-    ad esempio memorizza le reti incontrate (nel Coordinator della rete con relativa operazione di replica) e sa se
-    in precedenza aveva tentato una migration path (al livello *x*) fallita in quella stessa rete.
-*   `gsizes` descrive la topologia della rete *J*. Da questa lista si ricava anche `levels` di *J*.  
-    Se la topologia di *G* e quella di *J* dovessero differire (assumendo che questa situazione sia supportata)
-    questo limiterebbe il valore del livello che la presente valutazione può restituire; infatti le topologie
-    devono essere identiche ai livelli inferiori di *l* se si vuole fare ingresso in *J* con un g-nodo di
-    livello *l* che esisteva in *G*.  
-    Ma sappiamo che chi chiama il metodo `choose_target_level` di IEnterNetworkHandler appartiene alla rete
-    *G*; quindi questi (cioè il modulo Coordinator) si sarà accertato che le due topologie coincidono; se non
-    dovessero coincidere ai livelli più alti il Coordinator può variare l'argomento `max_lvl` per fare in modo
-    che le topologie coincidano ai livelli da 0 a `max_lvl`. Ovviamente, anche dopo questa variazione deve
-    rimanere vero che `max_lvl` ≥ `min_lvl`.
-*   `n_nodes` dice quanti singoli nodi (approssimativamente) esistono in ognuno dei g-nodi di *J* di cui fa
-    parte *v*. Per l'esattezza, il valore `n_nodes[i]` dice quanti nodi ci sono nel g-nodo di livello `i+1`.
-    Il dato potrebbe essere usato nella valutazione, non so come.
-*   `n_free_pos` dice quanti posti liberi esistono in ognuno dei g-nodi di *J* di cui fa parte *v*. Per
-    l'esattezza, il valore `n_free_pos[i]` dice quanti posti liberi ci sono nel g-nodo di livello `i+1`.  
-    Essenzialmente, ci serve solo sapere se è maggiore di 0. Se la topologia lo permette, un numero maggiore
-    è da preferire, soltanto perché riduce la probabilità dell'evento che un posto apparentemente libero
-    sia stato in effetti prenotato. Ricordiamo infatti che il dato è fornito dal singolo nodo *v* senza
-    contattare il suo Coordinator in *J* e che, comunque, passa del tempo da quando il dato viene fornito da *v*
-    a quando il tentativo di ingresso viene autorizzato dal Coordinator di *G*.
-
 
 
