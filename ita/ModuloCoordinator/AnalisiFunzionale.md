@@ -7,6 +7,7 @@
         1.  [Avvio ingresso in altra rete](#Avvio_ingresso)
         1.  [Prenota un posto](#Prenota_un_posto)
         1.  [Confermato ingresso in altra rete](#Confermato_ingresso)
+    1.  [Contenuto della memoria condivisa di un g-nodo](#Records)
 1.  [Richieste al diretto vicino di accesso al servizio Coordinator](#Richieste_al_diretto_vicino)
     1.  [Ingresso in diversa rete](#Per_ingresso)
     1.  [Ingresso come risoluzione di uno split di g-nodo](#Per_split)
@@ -220,6 +221,45 @@ questo caso *n* comunica l'esito al vicino *m*.
 
 La richiesta/segnalazione *r* che sono state completate le operazioni di ingresso del g-nodo *g* in una diversa rete. Tale
 richiesta arriva ad un nodo *x* come Coordinator di *g*. **TODO**
+
+### <a name="Records"></a>Contenuto della memoria condivisa di un g-nodo
+
+Come abbiamo detto, il servizio Coordinator realizza una sorta di memoria condivisa di un g-nodo *g*. Per far questo
+esso mantiene un database distribuito della tipologia a chiavi fisse in cui la chiave è il livello del g-nodo
+in esame e i dati hanno visibilità locale circoscritta allo stesso g-nodo.
+
+Questo significa che il contenuto di tutta la memoria condivisa di un g-nodo deve essere rappresentabile
+interamente con l'istanza di un oggetto serializzabile. La classe definita nel modulo Coordinator usata per
+memorizzare e trasmettere il contenuto della memoria condivisa è `CoordGnodeMemory`.
+
+**TODO** dettagli sull'implementazione di un Object serializzabile che consenta di avere alcuni (determinati)
+membri che sono Object serializzabili nullable. Le istanze sono di classi che il modulo Coordinator non conosce.
+
+#### Contenuto di pertinenza del modulo Coordinator
+
+Alcune informazioni che si devono poter memorizzare e leggere nella memoria condivisa di un g-nodo sono
+di pertinenza del modulo Coordinator stesso.
+
+Fra queste abbiamo:
+
+*   Elenco delle prenotazioni pendenti. **TODO**
+
+#### Contenuto di pertinenza di altri moduli
+
+Alcune informazioni che si devono poter memorizzare e leggere nella memoria condivisa di un g-nodo sono
+di pertinenza di altri moduli.
+
+Verranno descritte ognuna con i suoi dettagli di seguito.
+
+#### Contenuto della memoria condivisa di tutta la rete
+
+Le operazioni di ingresso in una rete che sono messe in atto quando due reti distinte si incontrano
+per mezzo di alcuni archi, prevedono la memorizzazione e rilettura di alcune informazioni nella
+memoria condivisa di tutta la rete. Questi dati vengono trasmessi al nodo Coordinator di tutta la
+rete che provvede a memorizzarli "aggiungendoli" alle altre informazioni della memoria
+condivisa e avviando i processi di replica.
+
+**TODO** dettagliare le informazioni
 
 ## <a name="Richieste_al_diretto_vicino"></a>Richieste al diretto vicino di accesso al servizio Coordinator
 
