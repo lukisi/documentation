@@ -415,6 +415,17 @@ In quello stesso momento gli vengono forniti:
 
 Fornisce metodi per:
 
+*   Organizzare un ingresso in una nuova rete. Metodo `prepare_enter`.  
+    La logica per il rilevamento di un vicino appartenente ad una diversa rete e per l'ingresso
+    in questa nuova rete è di pertinenza di un diverso modulo X. Vedi [qui](OperazioniIngresso.md#prepare_enter).  
+    Quello che fa questo metodo in realtà è permettere all'utilizzatore del modulo Coordinator di far eseguire una
+    certa operazione sul nodo Coordinator della rete. In particolare, l'utilizzatore del modulo
+    Coordinator nel nodo *n* passa un oggetto al metodo `prepare_enter` (probabilmente su istruzione
+    da parte di un altro modulo X); questi fa pervenire questo oggetto al nodo Coordinator della
+    rete il quale lo passa al delegato `IEnterNetworkHandler` (probabilmente implementato dallo
+    stesso modulo X) nel suo metodo `choose_target_level`.  
+    L'esecuzione del metodo `IEnterNetworkHandler.choose_target_level` produce la decisione per il nodo *n* di tentare
+    o meno l'ingresso nella nuova rete e se sì a quale livello.
 *   Dato un livello *l*, chiedere ad un vicino *v*, dato uno stub per contattarlo, di richiedere al Coordinator
     del suo g-nodo di livello *l* la prenotazione di un posto, come nuovo g-nodo di livello *l* - 1.
     Metodo `get_reservation`.  
@@ -518,7 +529,7 @@ I metodi previsti dall'interfaccia IEnterNetworkHandler sono:
         Se si raggiunge la prenotazione di una posizione a questo livello, l'intera rete *G* può entrare in *J*
         in blocco. Non è quindi necessario chiedere di più.
     *   `netid` è l'identificativo della rete *J*. L'implementatore di IEnterNetworkHandler potrebbe farne uso:
-        ad esempio memorizza le reti incontrate (nel nodo stesso oppure nel Coordinator della rete) e sa se
+        ad esempio memorizza le reti incontrate (nel Coordinator della rete con relativa operazione di replica) e sa se
         in precedenza aveva tentato una migration path (al livello *x*) fallita in quella stessa rete.
     *   `gsizes` descrive la topologia della rete *J*. Da questa lista si ricava anche `levels` di *J*.  
         Se la topologia di *G* e quella di *J* dovessero differire (assumendo che questa situazione sia supportata)
