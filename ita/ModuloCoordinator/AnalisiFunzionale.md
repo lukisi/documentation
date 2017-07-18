@@ -7,7 +7,7 @@
         1.  [Avvio ingresso in altra rete](#Avvio_ingresso)
         1.  [Prenota un posto](#Prenota_un_posto)
         1.  [Confermato ingresso in altra rete](#Confermato_ingresso)
-1.  [Richiesta al diretto vicino di accesso al servizio Coordinator](#Richiesta_al_diretto_vicino)
+1.  [Richieste al diretto vicino di accesso al servizio Coordinator](#Richieste_al_diretto_vicino)
     1.  [Ingresso in diversa rete](#Per_ingresso)
     1.  [Ingresso come risoluzione di uno split di g-nodo](#Per_split)
 1.  [Collaborazioni con gli altri moduli](#Collaborazioni)
@@ -221,37 +221,18 @@ questo caso *n* comunica l'esito al vicino *m*.
 La richiesta/segnalazione *r* che sono state completate le operazioni di ingresso del g-nodo *g* in una diversa rete. Tale
 richiesta arriva ad un nodo *x* come Coordinator di *g*. **TODO**
 
-## <a name="Richiesta_al_diretto_vicino"></a>Richiesta al diretto vicino di accesso al servizio Coordinator
+## <a name="Richieste_al_diretto_vicino"></a>Richieste al diretto vicino di accesso al servizio Coordinator
 
 In alcuni casi un nodo *n* può voler chiedere ad un suo diretto vicino di accedere al servizio peer-to-peer
 del Coordinator.
 
 ### <a name="Per_ingresso"></a>Ingresso in diversa rete
 
-Si consideri un nodo *n* che appartiene alla rete *G*. Questa è una generalizzazione,
-che comprende ad esempio il caso di un singolo nodo che compone una intera rete.
-
-Assumiamo che *n* rilevi la presenza di un nodo diretto vicino *v* e comunicando con esso scopra che
-tale nodo appartiene ad una diversa rete *J*. Comunicando con il nodo *v*, il nodo *n* scopre alcune caratteristiche della rete
-*J* e le confronta con le caratteristiche della rete *G*.
-
-**Importante** Questa prima disamina delle caratteristiche di *J* e di *G* avviene sulla base delle
-conoscenze di *n* e di *v*. Non va bene importunare il Coordinator della rete (che può essere anche
-grande) ogni qualvolta un singolo nodo della rete incontra un vicino che non appartiene ancora alla
-rete. Infatti può essere subito evidente dalle conoscenze dei singoli nodi che si vengono ad
-incontrare quale sia la rete più piccola, quella cioè che cercherà un posto all'interno dell'altra.
-
-Supponiamo che sia evidente la disparità nelle dimensioni delle due reti, cioè che *G* sia molto
-più piccola di *J*. Allora il nodo *n* dichiara al nodo *v* di essere disposto, insieme ad un suo
-g-nodo di qualche livello, ad entrare con un nuovo indirizzo dentro *J*. Il nodo *v* in questo
-caso non si deve occupare di altro: sarà *n* a interrogarlo di nuovo in seguito.
-
-Le informazioni che il nodo *n* aveva ricevute da *v* circa la rete *J* (tra le quali ad esempio gli spazi
-liberi nei propri g-nodi ai vari livelli e la dimensione della rete *J*) il nodo *n* le passa
-al modulo Coordinator (vedi metodo `prepare_enter`). Questi le comunica direttamente
-al Coordinator della rete *G* (vedi la richiesta [incontrata-rete](#Incontrata_rete)). Sulla base di una certa strategia (che esula da questa
-trattazione) il Coordinator di *G* decide di assegnare a *n* il compito di chiedere al suo g-nodo *g*
-di livello *l* di fare ingresso in *J*.
+Si consideri un nodo *n* che appartiene alla rete *G* e un suo diretto vicino nodo
+*v* che appartiene alla rete *J*.  
+Supponiamo che - con le modalità viste in "[ingresso in altra rete](#Collaborazioni_ingresso)" - il
+nodo *n* riceva dal Coordinator della rete *G* il compito di richiedere l'ingresso del suo g-nodo *g*
+di livello *l* dentro *J* tramite il suo arco con *v*.
 
 Ora il nodo *n* comunica direttamente con il servizio Coordinator del livello *l*, cioè di *g*. Il
 Coordinator di *g* accetta questa soluzione (vedi la richiesta [avvio-ingresso](#Avvio_ingresso)). Questa operazione consta di alcune parti:
@@ -325,7 +306,10 @@ del servizio Coordinator sarà ovviamente la prenotazione di un posto di livello
 
 ## <a name="Collaborazioni"></a>Collaborazioni con gli altri moduli
 
-### Ingresso in altra rete
+### <a name="Collaborazioni_ingresso"></a>Ingresso in altra rete
+
+Si consideri un nodo *n* che appartiene alla rete *G*. Questa è una generalizzazione,
+che comprende ad esempio il caso di un singolo nodo che compone una intera rete.
 
 Un modulo del nodo *n* che appartiene alla rete *G* si avvede del vicino *v* di altra rete *J*.
 
@@ -341,7 +325,16 @@ Questa struttura contiene:
 *   `List<int> gnode_n_free_pos` = Per i valori *i* da 1 a `levels`, l'elemento `gnode_n_free_pos[i-1]` è il
     numero di posizioni libere dentro *g<sub>i</sub>(v)*.
 
-Un modulo del nodo *n* decide che *G* deve entrare in *J*. Allora aggiunge un altro dato alla struttura:
+Poi quel modulo confronta la descrizione di *J* data da *v* con la rete *G* come è vista da *n*
+e decide che *G* deve entrare in *J*.
+
+**Importante** Questa prima disamina delle caratteristiche di *J* e di *G* avviene sulla base delle
+conoscenze di *n* e di *v*. Non va bene importunare il Coordinator della rete (che può essere anche
+grande) ogni qualvolta un singolo nodo della rete incontra un vicino che non appartiene ancora alla
+rete. Infatti può essere subito evidente dalle conoscenze dei singoli nodi che si vengono ad
+incontrare quale sia la rete più piccola, quella cioè che cercherà un posto all'interno dell'altra.
+
+Allora quel modulo aggiunge un'altra informazione alla struttura dati di cui sopra:
 
 *   `int minimum_lvl` = Livello minimo a cui il singolo nodo *n* è disposto a fare ingresso.
 
@@ -359,8 +352,8 @@ passandogli la stessa struttura dati di cui sopra.
 La classe client del servizio sa che questo metodo usa come chiave *k* con `k.lvl = levels`. Cioè va contattato
 il Coordinator dell'intera rete.
 
-La classe client nel suo metodo `prepare_enter` prepara una richiesta *r* che comprende la struttura dati
-(ovvero l'istanza di Object serializzabile) di cui sopra.
+La classe client nel suo metodo `prepare_enter` prepara una richiesta *r* = "[incontrata-rete](#Incontrata_rete)"
+che comprende la struttura dati (ovvero l'istanza di Object serializzabile) di cui sopra.
 
 Poi invia la richiesta *r* e interpreta la risposta. Il metodo `prepare_enter` della classe client può restituire:
 
