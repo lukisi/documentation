@@ -22,7 +22,7 @@ Inoltre, quando si verifica un contatto fra due distinte reti, è desiderabile a
 tempo prima di procedere, per cercare di verificare la possibilità di fare ingresso
 sfruttando il punto di contatto migliore.
 
-### <a name="prepare_enter"></a>Prima fase - prepare_enter
+### Prima fase - valutazione del singolo nodo
 
 Il modulo X del nodo *n* chiede e ottiene dal vicino *v* una struttura dati che descrive *J* come è vista da *v*.  
 Questa struttura contiene:
@@ -44,6 +44,8 @@ conoscenze di *n* e di *v*. Non va bene importunare il Coordinator della rete (c
 grande) ogni qualvolta un singolo nodo della rete incontra un vicino che non appartiene ancora alla
 rete. Infatti può essere subito evidente dalle conoscenze dei singoli nodi che si vengono ad
 incontrare quale sia la rete più piccola, quella cioè che cercherà un posto all'interno dell'altra.
+
+### <a name="prepare_enter"></a>Seconda fase - valutazione della rete
 
 Allora il modulo X aggiunge un'altra informazione a quelle della struttura dati di cui sopra:
 
@@ -68,6 +70,8 @@ che è serializzabile.
 Grazie ai meccanismi del modulo Coordinator (di cui è trattato nella relativa documentazione) ora
 nel nodo Coordinator della rete *G* viene chiamato dallo stesso modulo Coordinator (a cui era
 stato passato come delegato nel suo costruttore) il metodo `prepare_enter` del modulo X.  
+Di fatto il modulo Coordinator chiama il metodo `choose_target_level` dell'interfaccia IEnterNetworkHandler
+e questi chiamerà il metodo `prepare_enter` del modulo X.  
 Va considerato che, sempre grazie ai meccanismi del modulo Coordinator, oltre alla struttura dati
 `prepare_enter_data` il metodo `prepare_enter` eseguito sul nodo Coordinator di *G* riceve
 come argomento anche l'indirizzo (la lista delle posizioni ai vari livelli) di *n*.

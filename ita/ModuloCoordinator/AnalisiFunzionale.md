@@ -61,71 +61,29 @@ Elenchiamo tutte le richieste che si possono fare al Coordinator.
 
 #### <a name="Incontrata_rete"></a>Incontrata una rete
 
-Questa richiesta *r* fatta al Coordinator dell'intera rete indica che è stata incontrata una diversa rete *J*.
-Le informazioni riguardo la rete *J* che sono riportate in questa richiesta sono state ottenute dalle
-conoscenze dirette di un singolo nodo (un diretto vicino del client del servizio) che indichiamo con *v*.  
-Indichiamo con *G* la rete corrente. Indichiamo con *n* il singolo nodo in *G* che ci ha contattato come client del servizio.
+Questa richiesta *r* fatta al Coordinator dell'intera rete indica che è stata incontrata una diversa rete *J*
+sulla quale il singolo nodo *n* (il client del servizio) suggerisce di fare ingresso.
 
-I membri di *r* sono:
+I membri di *r* contengono informazioni che non sono di pertinenza del modulo Coordinator.
+Il contenuto della richiesta può essere semplicemente:
 
-*   `int64 netid` = Identificativo della rete *J*.
-*   `List<int> gsizes` = Lista che descrive la topologia della rete *J*. Da essa si ricava `levels`.
-*   `List<int> gnode_n_nodes` = Per i valori *i* da 1 a `levels`, l'elemento `gnode_n_nodes[i-1]` è il
-    numero approssimativo di singoli nodi dentro *g<sub>i</sub>(v)*.
-*   `List<int> gnode_pos` = Per i valori *i* da 1 a `levels`, l'elemento `gnode_pos[i-1]` è la
-    posizione al livello `i-1` di *v* dentro *g<sub>i</sub>(v)*.
-*   `List<int> gnode_n_free_pos` = Per i valori *i* da 1 a `levels`, l'elemento `gnode_n_free_pos[i-1]` è il
-    numero di posizioni libere dentro *g<sub>i</sub>(v)*.
-*   `int minimum_lvl` = Livello minimo a cui il singolo nodo *n* è disposto a fare ingresso. Infatti il nodo *n*
-    potrebbe essere un gateway verso una rete privata in cui si vogliono adottare diversi meccanismi di
-    assegnazione di indirizzi e routing. In questo caso il gateway potrebbe volere una assegnazione di un
-    g-nodo di livello tale (considerando la topologia della rete *J*) da poter disporre di un certo spazio
-    (numero di bit) per gli indirizzi interni.
-
-Per il momento assumiamo che nessun nodo invia una richiesta di fare ingresso in una rete con topologia
-diversa da quella di *G*.
-
-Il Coordinator dell'intera rete *G* non ha particolari informazioni sui g-nodi (di livello inferiore a
-`levels`) a cui appartiene *n*. Ma tali informazioni comunque non gli sono necessarie. Esso infatti dovrà
-solo individuare, sulla base delle informazioni ricevute circa i g-nodi di *v* in *J*, un livello
-a cui cercare di far entrare un g-nodo di *n* dentro un g-nodo di *v*.
+*   `Object network_data` = un oggetto serializzabile la cui classe è nota al delegato IEnterNetworkHandler.
 
 Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordinator dell'intera rete, per
 fare in modo che sia "tutta la rete" come entità atomica a venire interpellata.
-
-È importante che la decisione venga presa dalla rete come entità atomica, poiché il fatto che un
-singolo nodo abbia rilevato il contatto con una diversa rete non esclude che le due reti siano
-entrate in contatto più o meno nello stesso momento in diversi punti. Occorre evitare di avviare
-più operazioni di ingresso che coinvolgono gli stessi g-nodi.  
-Sarebbe desiderabile, per quanto possibile, cercare di verificare la possibilità di fare ingresso
-sfruttando il punto di contatto migliore.
 
 Sebbene la richiesta venga fatta come detto al Coordinator della rete *G*,
 in effetti la strategia di ingresso non è di pertinenza del modulo Coordinator. Per questo viene utilizzato
 un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IEnterNetworkHandler.
 
-La risposta ottenuta dal delegato consiste in due valori:
+La risposta ottenuta dal delegato consiste in un intero oppure una eccezione. Essa va restituita così com'è al
+client del servizio:
 
 *   `int lvl` - il livello del g-nodo di *n* che dovrebbe tentare l'ingresso in *J*.
-*   `uint hash_net` - un identificativo della rete *J* che il modulo Coordinator (pur non conoscendo i dettagli di un network-id)
-    può considerare come univoco.
+*   `AskAgainError` - il client deve attendere alcuni istanti e poi riprovare.
+*   `IgnoreNetworkError` - il client deve ignorare l'altra rete.
 
-Quindi il Coordinator considera il g-nodo *g<sub>lvl</sub>(n)* come coinvolto in questo ingresso in *J* attraverso il
-singolo nodo *n*.
-
-Assumiamo che questa richiesta sia la prima pervenuta che coinvolge il g-nodo *g<sub>lvl_0</sub>(n)*. Allora
-il Coordinator della rete *G* registra nella memoria condivisa (del g-nodo di tutta la rete) le informazioni di
-questa richiesta e della valutazione ottenuta dal delegato e inoltre
-il tempo limite (Timer serializzabile) entro cui intende rispondere. Poi risponde al client *n* con una eccezione AskAgainError
-che istruisce il nodo *n* di ripetere la richiesta dopo aver atteso alcuni istanti.  
-Siccome c'è una scrittura nella memoria condivisa, prima di rispondere si avvia una nuova tasklet
-per provvedere alle repliche con il meccanismo fornito dal modulo PeerServices.
-
-Il tempo limite entro cui il Coordinator intende rispondere, cioè intende prendere una decisione circa
-l'ingresso di (una parte di) *G* in *J*, è direttamente proporzionale al numero di singoli nodi presenti
-in *G*. È lecito presumere che sia la rete più piccola a voler entrare in quella più grande. Quindi lo
-scopo di questa attesa è dare il tempo agli altri singoli nodi di *G*, che potrebbero essere venuti
-in contatto con *J* (quasi) simultaneamente, di raggiungere il Coordinator di *G* con la loro proposta.
+**da spostare**
 
 Supponiamo che nel frattempo giunga al Coordinator della rete *G* una richiesta simile dal nodo *q*
 relativa alla rete *J*. Il Coordinator di *G* interroga il delegato e scopre che il g-nodo
@@ -348,46 +306,14 @@ del servizio Coordinator sarà ovviamente la prenotazione di un posto di livello
 
 ### <a name="Collaborazioni_ingresso"></a>Ingresso in altra rete
 
-Si consideri un nodo *n* che appartiene alla rete *G*. Questa è una generalizzazione,
-che comprende ad esempio il caso di un singolo nodo che compone una intera rete.
-
-Un modulo del nodo *n* che appartiene alla rete *G* si avvede del vicino *v* di altra rete *J*.
-
-Un modulo del nodo *n* chiede e ottiene dal vicino *v* una struttura dati che descrive *J* come è vista da *v*.  
-Questa struttura contiene:
-
-*   `int64 netid` = Identificativo della rete *J*.
-*   `List<int> gsizes` = Lista che descrive la topologia della rete *J*. Da essa si ricava `levels`.
-*   `List<int> gnode_n_nodes` = Per i valori *i* da 1 a `levels`, l'elemento `gnode_n_nodes[i-1]` è il
-    numero di singoli nodi dentro *g<sub>i</sub>(v)*.
-*   `List<int> gnode_pos` = Per i valori *i* da 1 a `levels`, l'elemento `gnode_pos[i-1]` è la
-    posizione al livello `i-1` di *v* dentro *g<sub>i</sub>(v)*.
-*   `List<int> gnode_n_free_pos` = Per i valori *i* da 1 a `levels`, l'elemento `gnode_n_free_pos[i-1]` è il
-    numero di posizioni libere dentro *g<sub>i</sub>(v)*.
-
-Poi quel modulo confronta la descrizione di *J* data da *v* con la rete *G* come è vista da *n*
-e decide che *G* deve entrare in *J*.
-
-**Importante** Questa prima disamina delle caratteristiche di *J* e di *G* avviene sulla base delle
-conoscenze di *n* e di *v*. Non va bene importunare il Coordinator della rete (che può essere anche
-grande) ogni qualvolta un singolo nodo della rete incontra un vicino che non appartiene ancora alla
-rete. Infatti può essere subito evidente dalle conoscenze dei singoli nodi che si vengono ad
-incontrare quale sia la rete più piccola, quella cioè che cercherà un posto all'interno dell'altra.
-
-Allora quel modulo aggiunge un'altra informazione alla struttura dati di cui sopra:
-
-*   `int minimum_lvl` = Livello minimo a cui il singolo nodo *n* è disposto a fare ingresso.
-
-Ora nel nodo *n* l'utilizzatore del modulo Coordinator richiama il suo metodo `prepare_enter`.  
-Al metodo viene passata la struttura dati di cui sopra. Ma il contenuto di questa struttura non è di
-pertinenza del modulo Coordinator, il quale sa solo che si tratta di un oggetto serializzabile.  
-L'obiettivo di questo metodo è indicare all'utilizzatore del modulo Coordinator se deve tentare l'ingresso
-in *J* e a quale livello.
+Quando il modulo X del nodo *n* vuole far eseguire il suo metodo `prepare_enter` nel nodo Coordinator
+della rete *G*, richiama il metodo `prepare_enter` del modulo Coordinator.
 
 L'esecuzione di `prepare_enter` del modulo Coordinator consiste in questo:
 
 Viene preparato un client del servizio Coordinator. Su questo viene chiamato il metodo `prepare_enter`
-passandogli la stessa struttura dati di cui sopra.
+passandogli la stessa struttura dati ricevuta dal metodo `prepare_enter` del modulo Coordinator. Tale
+struttura non è nota al modulo Coordinator, che sa solo che è un Object serializzabile.
 
 La classe client del servizio sa che questo metodo usa come chiave *k* con `k.lvl = levels`. Cioè va contattato
 il Coordinator dell'intera rete.
@@ -395,45 +321,11 @@ il Coordinator dell'intera rete.
 La classe client nel suo metodo `prepare_enter` prepara una richiesta *r* = "[incontrata-rete](#Incontrata_rete)"
 che comprende la struttura dati (ovvero l'istanza di Object serializzabile) di cui sopra.
 
-Poi invia la richiesta *r* e interpreta la risposta. Il metodo `prepare_enter` della classe client può restituire:
+Poi invia la richiesta *r* e restituisce la risposta così com'è. Può restituire:
 
 *   `int ret`.
 *   Eccezione AskAgainError.
 *   Eccezione IgnoreNetworkError.
-
-Se riceve AskAgainError, il metodo `prepare_enter` del modulo Coordinator attende alcuni istanti poi riprova.
-Altrimenti restituisce il risultato. Quindi questo metodo può restituire:
-
-*   `int ret` = livello a cui fare ingresso.
-*   Eccezione IgnoreNetworkError.
-
-Se il risultato è il livello *ret*, questo significa: il nodo *n* richieda l'ingresso del g-nodo *g<sub>ret</sub>(n)*
-dentro il g-nodo *g<sub>ret+1</sub>(v)* in *J* tramite il suo arco con *v*.  
-Se è l'eccezione IgnoreNetworkError, questo significa: il nodo *n* non prenda alcuna iniziativa.
-
-Come abbiamo visto trattando la richiesta "[incontrata una rete](#Incontrata_rete)", il Coordinator
-chiama un delegato (il metodo `choose_target_level` dell'interfaccia IEnterNetworkHandler)
-passandogli le informazioni ricevute dal suo client.  
-Con questo intendiamo evidenziare che il contenuto di queste informazioni può essere nascosto al modulo
-Coordinator, ed essere quindi indipendente. Ad esempio, se il modulo di *n* che recupera da *v* le
-informazioni sulla sua rete *J* cambia la sua logica e di conseguenza la cambia il modulo che si occupa
-di implementare l'interfaccia IEnterNetworkHandler, ciò non dovrebbe comportare alcun cambiamento al
-codice del modulo Coordinator.  
-Per fare questo passiamo al metodo `prepare_enter` del modulo Coordinator un argomento di tipo
-Object serializzabile. La vera classe di tale oggetto dovrà essere nota ai moduli che forniscono/recuperano
-le informazioni sulla rete *J* e al modulo che implementa l'interfaccia IEnterNetworkHandler, ma non
-al modulo Coordinator, che si occupa solo di passarla da un modulo del nodo *n* ad un modulo del nodo
-Coordinator della rete *G*.
-
-Il nodo Coordinator della rete riceve automaticamente l'indirizzo del nodo client *n*. Conosce da solo la
-topologia della rete *G* e il numero approssimativo di singoli nodi in essa. Queste informazioni sono
-sfruttate direttamente dal nodo Coordinator per raggruppare le richieste e valutare il tempo di
-attesa prima di decidere quale richiesta approvare.  
-Inoltre il nodo Coordinator lascia che sia l'utilizzatore del modulo Coordinator nel nodo *n* ad occuparsi di
-validare la conformità delle topologie di *G* e di *J*.  
-In conclusione il contenuto della richiesta può essere semplicemente:
-
-*   `Object network_data` = un oggetto serializzabile la cui classe è nota al delegato IEnterNetworkHandler.
 
 ## <a name="Requisiti"></a>Requisiti
 
@@ -542,58 +434,7 @@ interrogata da parte del modulo quando si deve decidere sul fare ingresso in una
 I metodi previsti dall'interfaccia IEnterNetworkHandler sono:
 
 *   `int choose_target_level(Object network_data)`  
-    Con questo metodo si da una valutazione sul livello in cui sembra opportuno cercare di
-    fare ingresso. Questo a partire dalle informazioni sui g-nodi ottenuti da un singolo
-    nodo con il quale esiste un arco.  
-    Questa prima valutazione viene fatta senza sapere se esistono altri archi che collegano
-    le due reti in altri punti della topologia.  
-    **TODO** quanto segue va spostato nella trattazione del modulo che si occupa di implementare IEnterNetworkHandler.  
-    I membri di `network_data` sono: `int64 netid`, `List<int> gsizes`,
-    `List<int> n_nodes`, `List<int> n_free_pos`, `int min_lvl`.  
-    Oltre a queste informazioni, l'implementatore dell'interfaccia IEnterNetworkHandler nel nodo
-    chiamato ad eseguire il metodo (il Coordinator della rete *G*) conosce come
-    valorizzare `int max_lvl`.  
-    Per descrivere il significato degli argomenti passati, si consideri che questa valutazione viene
-    fatta dalla rete *G* per fare ingresso nella rete *J*; il proponente di questa soluzione è il
-    singolo nodo *n* in *G* che ha un arco verso il singolo nodo *v* in *J*; il nodo che fa questa
-    valutazione è il Coordinator di *G*.  
-    Gli argomenti passati sono:
-    *   `min_lvl` è il livello più basso a cui *n* è disposto a fare ingresso in *J*.  
-        Come abbiamo detto sopra, per *n* potrebbe essere necessario avere la prenotazione di un livello superiore
-        a 0 perché il nodo fa da gateway verso una rete privata in cui si vogliono adottare diversi meccanismi di
-        assegnazione di indirizzi e routing. Il gateway necessita di un livello tale da riservare un certo numero
-        di bit per gli indirizzi interni. La topologia da considerare per questo calcolo è quella di *J*; sebbene
-        è implicitamente necessario che la topologia di *G* e quella di *J* coincidano almeno ai livelli inferiori
-        a quello che sarà scelto per l'ingresso.
-    *   `max_lvl` è il livello più basso di cui la rete *G* è composta da un solo g-nodo.  
-        Se si raggiunge la prenotazione di una posizione a questo livello, l'intera rete *G* può entrare in *J*
-        in blocco. Non è quindi necessario chiedere di più.
-    *   `netid` è l'identificativo della rete *J*. L'implementatore di IEnterNetworkHandler potrebbe farne uso:
-        ad esempio memorizza le reti incontrate (nel Coordinator della rete con relativa operazione di replica) e sa se
-        in precedenza aveva tentato una migration path (al livello *x*) fallita in quella stessa rete.
-    *   `gsizes` descrive la topologia della rete *J*. Da questa lista si ricava anche `levels` di *J*.  
-        Se la topologia di *G* e quella di *J* dovessero differire (assumendo che questa situazione sia supportata)
-        questo limiterebbe il valore del livello che la presente valutazione può restituire; infatti le topologie
-        devono essere identiche ai livelli inferiori di *l* se si vuole fare ingresso in *J* con un g-nodo di
-        livello *l* che esisteva in *G*.  
-        Ma sappiamo che chi chiama il metodo `choose_target_level` di IEnterNetworkHandler appartiene alla rete
-        *G*; quindi questi (cioè il modulo Coordinator) si sarà accertato che le due topologie coincidono; se non
-        dovessero coincidere ai livelli più alti il Coordinator può variare l'argomento `max_lvl` per fare in modo
-        che le topologie coincidano ai livelli da 0 a `max_lvl`. Ovviamente, anche dopo questa variazione deve
-        rimanere vero che `max_lvl` ≥ `min_lvl`.
-    *   `n_nodes` dice quanti singoli nodi (approssimativamente) esistono in ognuno dei g-nodi di *J* di cui fa
-        parte *v*. Per l'esattezza, il valore `n_nodes[i]` dice quanti nodi ci sono nel g-nodo di livello `i+1`.
-        Il dato potrebbe essere usato nella valutazione, non so come.
-    *   `n_free_pos` dice quanti posti liberi esistono in ognuno dei g-nodi di *J* di cui fa parte *v*. Per
-        l'esattezza, il valore `n_free_pos[i]` dice quanti posti liberi ci sono nel g-nodo di livello `i+1`.  
-        Essenzialmente, ci serve solo sapere se è maggiore di 0. Se la topologia lo permette, un numero maggiore
-        è da preferire, soltanto perché riduce la probabilità dell'evento che un posto apparentemente libero
-        sia stato in effetti prenotato. Ricordiamo infatti che il dato è fornito dal singolo nodo *v* senza
-        contattare il suo Coordinator in *J* e che, comunque, passa del tempo da quando il dato viene fornito da *v*
-        a quando il tentativo di ingresso viene autorizzato dal Coordinator di *G*.
-*   `b`  
-    Con questo metodo si da una valutazione sulla migliore fra alcune possibili soluzioni
-    per l'igresso. **TODO**
+    Con questo metodo si richiama il metodo `prepare_enter` del modulo X. Vedi [qui](OperazioniIngresso.md#prepare_enter).
 
 **Nota** Supponiamo che si voglia fare ingresso in una rete *J* con topologia a 20 livelli. Supponiamo che il `max_lvl`,
 cioè la dimensione del più grande g-nodo in *G*, sia 5.
