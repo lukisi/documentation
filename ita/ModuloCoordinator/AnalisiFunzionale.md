@@ -83,40 +83,6 @@ client del servizio:
 *   `AskAgainError` - il client deve attendere alcuni istanti e poi riprovare.
 *   `IgnoreNetworkError` - il client deve ignorare l'altra rete.
 
-**da spostare**
-
-Supponiamo che nel frattempo giunga al Coordinator della rete *G* una richiesta simile dal nodo *q*
-relativa alla rete *J*. Il Coordinator di *G* interroga il delegato e scopre che il g-nodo
-coinvolto in questo ingresso, cioè *g<sub>lvl_1</sub>(q)*, interseca (è equivalente, oppure contiene, oppure è contenuto) con
-il g-nodo *g<sub>lvl_0</sub>(n)*. Il Coordinator deduce che queste richieste (di *n* e di *q*) vanno considerate insieme
-perché sono intersecanti e riguardano la stessa rete *J*. Le due richieste risultano ora collegate
-fra di loro nella memoria condivisa.  
-Come conseguenza avranno sempre la medesima scadenza. Se `lvl_1` è maggiore di `lvl_0`, ovvero più in generale, se il
-livello del g-nodo coinvolto nella richiesta appena pervenuta è maggiore del livello del g-nodo coinvolto in tutte
-le richieste ad essa collegate, allora si sceglie un nuovo tempo limite e si aggiorna su tutte le richieste collegate.
-Altrimenti il tempo limite che rimane alle richieste precedenti viene mantenuto e usato anche per la richiesta di *q*.  
-Dopo aver apportato queste variazioni alla memoria condivisa (e di conseguenza dopo aver avviato una nuova
-tasklet per provvedere alle repliche) il Coordinator si accinge a rispondere alla richiesta di *q*.
-Se il tempo limite non è ancora scaduto il Coordinator risponde anche a questa richiesta con
-una eccezione AskAgainError.
-
-Alla fine arriverà una richiesta di ingresso in *J* tale che il Coordinator di *G* la associerà ad un
-gruppo di richieste il cui tempo limite risulta scaduto. A questo punto il Coordinator eleggerà
-la migliore fra le soluzioni. Di nuovo, per fare questa scelta si avvarrà del delegato IEnterNetworkHandler.
-Poi registrerà la scelta nella memoria condivisa (e provvederà alle repliche).
-
-Dopo aver scelto, se la richiesta proviene dal client *eletto* allora il Coordinator
-risponde positivamente, cioè indicando il livello a cui il client deve tentare l'ingresso in *J*.  
-In tutti gli altri casi risponde con l'eccezione IgnoreNetworkError che istruisce il nodo client
-di non prendere alcuna iniziativa.
-
-In realtà, lo spiegheremo in dettaglio più sotto, i membri di questa richiesta *r* non sono noti al
-modulo Coordinator, il quale li riceve come una singola struttura dati e li passa in blocco al
-delegato (istanza dell'interfaccia IEnterNetworkHandler).  
-Le altre informazioni di cui il modulo Coordinator ha bisogno per gestire questa richiesta sono l'indirizzo
-del nodo richiedente *n* e il numero (approssimativo) di singoli nodi presenti in *G*. Entrambe sono
-note al Coordinator della rete a prescindere dal contenuto di *r*.
-
 #### <a name="Avvio_ingresso"></a>Avvio ingresso in altra rete
 
 La richiesta *r* di autorizzare l'avvio delle operazioni di ingresso del g-nodo *g* in una diversa rete *J*. Tale
@@ -434,7 +400,9 @@ interrogata da parte del modulo quando si deve decidere sul fare ingresso in una
 I metodi previsti dall'interfaccia IEnterNetworkHandler sono:
 
 *   `int choose_target_level(Object network_data)`  
-    Con questo metodo si richiama il metodo `prepare_enter` del modulo X. Vedi [qui](OperazioniIngresso.md#prepare_enter).
+    Con questo metodo si richiama il metodo `prepare_enter` del modulo X. Vedi [qui](OperazioniIngresso.md#prepare_enter).  
+    Può rilanciare l'eccezione `AskAgainError`.  
+    Può rilanciare l'eccezione `IgnoreNetworkError`.
 
 **Nota** Supponiamo che si voglia fare ingresso in una rete *J* con topologia a 20 livelli. Supponiamo che il `max_lvl`,
 cioè la dimensione del più grande g-nodo in *G*, sia 5.
