@@ -45,7 +45,7 @@ grande) ogni qualvolta un singolo nodo della rete incontra un vicino che non app
 rete. Infatti può essere subito evidente dalle conoscenze dei singoli nodi che si vengono ad
 incontrare quale sia la rete più piccola, quella cioè che cercherà un posto all'interno dell'altra.
 
-### <a name="prepare_enter"></a>Seconda fase - valutazione della rete
+### Seconda fase - valutazione della rete
 
 Allora il modulo X aggiunge un'altra informazione a quelle della struttura dati di cui sopra:
 
@@ -175,7 +175,8 @@ e scopre che il g-nodo *g<sub>lvl_1</sub>(q)* interseca (è equivalente, oppure 
 il g-nodo *g<sub>lvl_0</sub>(n)*. Il modulo X nel nodo Coordinator di *G* deduce che queste richieste
 (di *n* e di *q*) vanno considerate insieme perché sono intersecanti e riguardano la stessa rete *J*. Le
 due richieste risultano ora collegate fra di loro. Anche questo collegamento farà parte della
-memoria condivisa di tutta la rete.
+memoria condivisa di tutta la rete: ogni associazione mantiene un membro `next_id` che coincide con
+il membro `prepare_enter_id` della prossima collegata.
 
 Le richieste tra loro collegate devono avere sempre la medesima scadenza. Se `lvl_1` è maggiore di `lvl_0`, ovvero più in generale, se il
 livello del g-nodo coinvolto nella richiesta appena pervenuta è maggiore del livello del g-nodo coinvolto in tutte
@@ -268,4 +269,12 @@ istruisce il modulo X nel nodo *n* di non prendere alcuna iniziativa e di evitar
 rete tramite il diretto vicino *v* per un certo tempo.  
 Questo tempo potrebbe essere un multiplo (diciamo 20 volte tanto) di quello calcolato come `global_timeout`,
 che come abbiamo detto può essere calcolata dal modulo X esclusivamente sulla base del numero di singoli nodi presenti in *G*.
+
+### Quinta fase - comunicazione con il g-nodo entrante
+
+La quinta fase inizia quando un singolo nodo di *G*, assumiamo sia il nodo *n*, riceve l'autorizzazione
+dal Coordinator di *G* di tentare l'ingresso in *J* tramite il suo vicino *v* con il suo g-nodo di livello
+*lvl*.
+
+**TODO**
 

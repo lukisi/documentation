@@ -183,6 +183,30 @@ memoria condivisa di tutta la rete. Questi dati vengono trasmessi al nodo Coordi
 rete che provvede a memorizzarli "aggiungendoli" alle altre informazioni della memoria
 condivisa e avviando i processi di replica.
 
+Nell'istanza di `CoordGnodeMemory` memorizzata come record associato alla chiave `k.lvl = levels`, cioè
+nella memoria condivisa di tutta la rete, abbiamo valorizzato il membro `Object? prepare_enter_memory`
+con una istanza di una classe nota al modulo X. Il modulo Coordinator sa solo che questa è un Object
+serializzabile.
+
+Vediamo come avviene la scrittura e la rilettura della memoria condivisa di tutta la rete ad opera
+del modulo X. Nella trattazione del modulo X abbiamo detto che solo lo stesso nodo Coordinator della
+rete può essere nella posizione di scrivere/leggere in questa memoria.  
+Quando viene chiamato nel modulo Coordinator il metodo `set_prepare_enter_memory` questi avvia il
+contatto con il Coordinator della rete. Quando viene contattato con tale richiesta il nodo Coordinator
+della rete, esso verifica (pena la terminazione della tasklet che esegue la risposta) che il chiamante
+era il nodo stesso.  
+Poi il servente mette l'argomento ricevuto nel membro `prepare_enter_memory` dell'istanza di `CoordGnodeMemory`
+associata alla chiave `k.lvl = levels`.  
+Poi in una nuova tasklet avvia le operazioni di replica. Quando viene contattato con la richiesta
+di replica il nodo Coordinator della rete, esso verifica (pena la terminazione della tasklet che esegue
+la risposta) che il chiamante era più prossimo di lui all'indirizzo del nodo Coordinator.  
+Quando viene chiamato nel modulo Coordinator il metodo `get_prepare_enter_memory` questi avvia il
+contatto con il Coordinator della rete. Quando viene contattato con tale richiesta il nodo Coordinator
+della rete, esso verifica (pena la terminazione della tasklet che esegue la risposta) che il chiamante
+era il nodo stesso.  
+Poi il servente restituisce l'oggetto che è nel membro `prepare_enter_memory` dell'istanza di `CoordGnodeMemory`
+associata alla chiave `k.lvl = levels`.
+
 **TODO** dettagliare le informazioni
 
 ## <a name="Richieste_al_diretto_vicino"></a>Richieste al diretto vicino di accesso al servizio Coordinator
@@ -315,7 +339,7 @@ Fornisce metodi per:
 
 *   Organizzare un ingresso in una nuova rete. Metodo `prepare_enter`.  
     La logica per il rilevamento di un vicino appartenente ad una diversa rete e per l'ingresso
-    in questa nuova rete è di pertinenza di un diverso modulo X. Vedi [qui](OperazioniIngresso.md#prepare_enter).  
+    in questa nuova rete è di pertinenza di un diverso modulo X. Vedi [qui](OperazioniIngresso.md).  
     Quello che fa questo metodo in realtà è permettere all'utilizzatore del modulo Coordinator di far eseguire una
     certa operazione sul nodo Coordinator della rete. In particolare, l'utilizzatore del modulo
     Coordinator nel nodo *n* passa un oggetto al metodo `prepare_enter` (probabilmente su istruzione
@@ -400,7 +424,7 @@ interrogata da parte del modulo quando si deve decidere sul fare ingresso in una
 I metodi previsti dall'interfaccia IEnterNetworkHandler sono:
 
 *   `int choose_target_level(Object network_data)`  
-    Con questo metodo si richiama il metodo `prepare_enter` del modulo X. Vedi [qui](OperazioniIngresso.md#prepare_enter).  
+    Con questo metodo si richiama il metodo `prepare_enter` del modulo X. Vedi [qui](OperazioniIngresso.md).  
     Può rilanciare l'eccezione `AskAgainError`.  
     Può rilanciare l'eccezione `IgnoreNetworkError`.
 
