@@ -143,16 +143,34 @@ a quale livello compreso tra `min_lvl` e `max_lvl` andrebbe tentato l'ingresso d
 Diciamo che la risposta alla domanda sia *lvl_0*.
 
 Assumiamo che questa richiesta sia la prima pervenuta che coinvolge il g-nodo *g<sub>lvl_0</sub>(n)*
-e la rete *J*. Il modulo X se ne avvede accedendo alla memoria condivisa del Coordinator di *G*. Allora
-il modulo X nel nodo Coordinator di *G* associa alla richiesta `prepare_enter_data`, al nodo *n*
-e alla valutazione *lvl_0* una scadenza `t = global_timeout da ora`, rappresentata con un oggetto Timer serializzabile.  
-Vedremo in seguito altri dettagli di queste associazioni. Anticipiamo fin d'ora che esse possono trovarsi
-in diversi stati. Lo stato in cui viene inizializzata questa associazione è "*in valutazione*".
+e la rete *J*. Il modulo X se ne avvede accedendo alla memoria condivisa di tutta la rete (spiegheremo
+meglio il significato di questo a breve).  
+Allora il modulo X nel nodo Coordinator di *G* associa alla richiesta `prepare_enter_data`, al nodo *n*
+e alla valutazione *lvl_0* una scadenza `timeout = global_timeout da ora`, rappresentata con un oggetto Timer serializzabile.  
+Cioè crea una istanza `PrepareEnterResponse resp` con i campi `prepare_enter_data`, `client_address`,
+`lvl`, `timeout` e altri campi che dettaglieremo in seguito. In seguito potremmo riferirci a questa
+struttura dati con il termine *valutazione*.
 
-Questa associazione deve essere memorizzata nella memoria condivisa del Coordinator di *G*. Abbiamo
-già detto che il modulo X può fare in modo che venga richiamato un metodo nel modulo Coordinator, pur non
-avendo una dipendenza diretta sul modulo Coordinator. Con questo particolare metodo il modulo X
-fa memorizzare questa associazione e avvia in una nuova tasklet le operazioni di replica.
+Ogni *valutazione* può trovarsi in un particolare stato, anche questo memorizzato nella suddetta struttura
+dati nel membro `status`. Lo stato in cui viene inizializzata questa valutazione è "*pending*".
+
+Questa valutazione deve essere memorizzata nella memoria condivisa di tutta la rete *G*.  
+Abbiamo già detto che il modulo X può fare in modo che venga richiamato un metodo nel modulo Coordinator, pur non
+avendo una dipendenza diretta sul modulo Coordinator. In particolare avremo una coppia di metodi
+`get_prepare_enter_memory` e `set_prepare_enter_memory` con i quali si recupera e si salva
+una istanza di Object (perché il modulo Coordinator non conosce i dati del modulo X) che costituisce
+l'intera base dati (cioè la memoria condivisa della rete) relativa agli aspetti gestiti dal modulo X.
+In particolare il metodo `set_prepare_enter_memory` provvede anche ad avviare in una nuova tasklet
+le operazioni di replica.  
+Il modulo X nel nodo Coordinator di *G* recupera l'intera base dati corrente e la integra con
+l'aggiunta di questa nuova *valutazione*. Poi immediatamente salva l'intera base dati. Questa
+sequenza di operazioni si può a buon diritto considerare come atomica, in quanto seppure facciamo
+uso dei meccanismi dei servizi peer-to-peer (modulo PeerServices) il solo nodo che ha diritto
+a fare le richieste relative a questi metodi è lo stesso nodo Coordinator di tutta la rete,
+quindi non dovrà essere fatta alcuna operazione bloccante di trasmissione in rete.  
+In seguito ci riferiremo a questa sequenza di operazioni semplicemente dicendo che
+il modulo X nel nodo Coordinator di *G* accede e/o aggiorna la memoria condivisa di tutta la rete con delle
+informazioni di sua pertinenza.
 
 Ora il modulo X nel nodo Coordinator di *G* risponde al client *n* con una eccezione AskAgainError.
 
@@ -169,59 +187,63 @@ relativa alla rete *J*. Eseguendo il metodo `prepare_enter` del modulo X per la 
 da *q*, alla domanda "a quale livello andrebbe tentato l'ingresso dal nodo *q*" il modulo X risponde
 con il livello *lvl_1*.
 
-Ora il modulo X accedendo alla memoria condivisa del Coordinator di *G* scopre che esiste una precedente
-richiesta di ingresso in *J* che ancora è *in valutazione*. Allora confronta i due g-nodi coinvolti
-e scopre che il g-nodo *g<sub>lvl_1</sub>(q)* interseca (è equivalente, oppure contiene, oppure è contenuto)
-il g-nodo *g<sub>lvl_0</sub>(n)*. Il modulo X nel nodo Coordinator di *G* deduce che queste richieste
-(di *n* e di *q*) vanno considerate insieme perché sono intersecanti e riguardano la stessa rete *J*. Le
-due richieste risultano ora collegate fra di loro. Anche questo collegamento farà parte della
-memoria condivisa di tutta la rete: ogni associazione mantiene un membro `next_id` che coincide con
-il membro `prepare_enter_id` della prossima collegata.
+Ora il modulo X nel nodo Coordinator di *G* accedendo alla memoria condivisa della rete scopre che esiste una precedente
+*valutazione* di ingresso in *J* che ancora è *pending*. Allora confronta i due g-nodi coinvolti
+e scopre che il g-nodo *g<sub>lvl_1</sub>(q)* interseca (è equivalente a, oppure contiene, oppure è contenuto in)
+il g-nodo *g<sub>lvl_0</sub>(n)*. Il modulo X nel nodo Coordinator di *G* deduce che queste *valutazioni*
+(quella sulla richiesta di *n* e quella sulla richiesta di *q*) vanno considerate insieme perché sono intersecanti
+e riguardano la stessa rete *J*. Le due *valutazioni* risultano ora collegate fra di loro. Anche questo collegamento farà parte della
+memoria condivisa di tutta la rete: ogni *valutazione* mantiene un membro `next_id` che coincide con
+il membro `prepare_enter_data.prepare_enter_id` della prossima collegata.
 
-Le richieste tra loro collegate devono avere sempre la medesima scadenza. Se `lvl_1` è maggiore di `lvl_0`, ovvero più in generale, se il
-livello del g-nodo coinvolto nella richiesta appena pervenuta è maggiore del livello del g-nodo coinvolto in tutte
-le richieste ad essa collegate, allora il modulo X nel nodo Coordinator di *G* computa una nuova
-scadenza `t = global_timeout da ora` e la aggiorna su tutte le richieste collegate. Altrimenti esso
-mantiene la precedente scadenza (comune a tutte le richieste precedenti) e la usa anche per
-la richiesta di *q*.
+Le *valutazioni* tra loro collegate devono avere sempre la medesima scadenza. Se `lvl_1` è maggiore di `lvl_0`, ovvero più in generale, se il
+livello del g-nodo coinvolto nella *valutazione* della richiesta appena pervenuta è maggiore del livello del g-nodo coinvolto in tutte
+le *valutazioni* ad essa collegate, allora il modulo X nel nodo Coordinator di *G* computa una nuova
+scadenza `timeout = global_timeout da ora` e la aggiorna su tutte le *valutazioni* collegate. Altrimenti esso
+mantiene la precedente scadenza (comune a tutte le *valutazioni* precedenti) e la usa anche per
+la *valutazione* sulla richiesta di *q*.
 
-Queste variazioni alla memoria condivisa di tutta la rete vanno apportate richiamando un
-metodo nel modulo Coordinator, il quale anche avvia in una nuova tasklet le operazioni di replica.
+Il modulo X nel nodo Coordinator di *G* aggiorna la memoria condivisa di tutta la rete con tutte queste variazioni.
 
 Ora il modulo X nel nodo Coordinator di *G* si accinge a rispondere alla richiesta di *q*.
-Se la scadenza non è ancora giunta il Coordinator risponde anche a questa richiesta con
+Se nella *valutazione* sulla richiesta di *q* il timer `timeout` non è ancora scaduto il Coordinator risponde anche a questa richiesta con
 una eccezione AskAgainError.
 
-Se invece la scadenza è giunta si passa alla terza fase.
+Se invece `timeout` è scaduto si passa alla terza fase.
 
 ### Terza fase - elezione dell'ingresso
 
-Alla fine arriverà una richiesta di ingresso in *J* tale che il modulo X nel nodo Coordinator di *G* la associerà ad un
-gruppo di richieste *in valutazione* la cui scadenza è giunta. A questo punto il modulo X eleggerà
+Consideriamo che ogni volta che arriva una richiesta `r` di ingresso in *J* il modulo X nel
+nodo Coordinator di *G* prima di valutarla accede alla memoria condivisa di tutta la rete per
+vedere se a tale richiesta è stata già data una *valutazione*.  
+Una *valutazione* `v` recuperata dalla memoria condivisa della rete è sempre identificabile
+come quella associata ad una particolare richiesta `r` appena pervenuta verificando che
+`r.prepare_enter_id == v.prepare_enter_data.prepare_enter_id`.
+
+Alla fine arriverà una richiesta `req` di ingresso in *J* tale che il modulo X nel nodo Coordinator di *G* ne assocerà
+la *valutazione* `resp` ad un gruppo di *valutazioni* nello stato *pending* il cui `timeout` è scaduto. A questo punto il modulo X eleggerà
 la migliore fra le soluzioni.
 
 **TODO** Inserire qui ogni idea su some individuare la migliore soluzione. Ancora non abbiamo
 avviato alcuna ricerca di migration-path nella rete *J*.
 
-Diciamo che la soluzione eletta sia quella di far fare ingresso al nodo *n* con il suo g-nodo di livello *lvl*.
+Diciamo che la soluzione eletta sia la *valutazione* `v`.
 
-La associazione eletta passa nello stato "*eletta, da comunicare*" e la sua nuova scadenza viene
-valorizzata con `t = global_timeout da ora`. Tutte le altre associazioni collegate passano nello
-stato "*riconsiderabile*" con scadenza `t = global_timeout da ora`.
+La *valutazione* eletta `v` passa nello stato "*eletta, da comunicare*" e la sua nuova scadenza viene
+valorizzata con `timeout = global_timeout da ora`. Tutte le altre *valutazioni* collegate passano nello
+stato "*riconsiderabile*" con scadenza `timeout = global_timeout da ora`.
 
-Queste variazioni alla memoria condivisa di tutta la rete vanno apportate richiamando un
-metodo nel modulo Coordinator, il quale anche avvia in una nuova tasklet le operazioni di replica.
+Il modulo X nel nodo Coordinator di *G* aggiorna la memoria condivisa di tutta la rete con tutte queste variazioni.
 
-Ora il modulo X guarda alla richiesta appena pervenuta. Se è la stessa che è stata eletta
-(l'identificazione si fa con il membro `prepare_enter_data.prepare_enter_id`) allora il modulo X fa
-queste operazioni:
+Ora il modulo X guarda alla richiesta `req` appena pervenuta. Se la relativa *valutazione* `resp` è proprio `v`
+allora il modulo X nel nodo Coordinator di *G* fa queste operazioni:
 
-*   Si prepara a rispondere alla richiesta del client con il livello a cui deve fare ingresso. Cioè memorizza `ret`.
-*   La associazione eletta (relativa alla richieta pervenuta) viene rimossa dall'elenco.
-*   Tutte le associazioni collegate passano nello stato "*scartata, da comunicare*" con scadenza `t = global_timeout da ora`.
-*   Queste variazioni alla memoria condivisa di tutta la rete vanno apportate richiamando un
-    metodo nel modulo Coordinator, il quale anche avvia in una nuova tasklet le operazioni di replica.
-*   Risponde alla richiesta del client con il livello a cui deve fare ingresso.
+*   Si prepara a rispondere alla richiesta del client con il livello a cui deve fare ingresso. Cioè memorizza `ret = resp.lvl`.
+*   La *valutazione* eletta `v` viene rimossa dall'elenco, operando sui campi `next_id` delle altre *valutazioni* oltre che
+    sulle strutture dati della memoria condivisa.
+*   Tutte le *valutazioni* collegate passano nello stato "*scartata, da comunicare*" con scadenza `timeout = global_timeout da ora`.
+*   Aggiorna la memoria condivisa di tutta la rete.
+*   Risponde alla richiesta del client con `ret`.
 
 Altrimenti il modulo X fa queste operazioni:
 
@@ -231,37 +253,36 @@ Le successive richieste saranno gestite nella quarta fase.
 
 ### Quarta fase - comunicazione della elezione
 
-Quando arriva una richiesta il modulo X si avvede che si trova nella quarta fase
-perché la richiesta ha un identificativo `prepare_enter_id` che è nella memoria condivisa di tutta la rete in
-una associazione nello stato *da comunicare* o *riconsiderabile*.
+Quando arriva una richiesta `req` di ingresso in *J* il modulo X nel nodo Coordinator di *G* si avvede che si trova nella quarta fase
+perché la sua *valutazione* `v` era stata già fatta ed è nella memoria condivisa di tutta la rete nello
+stato *da comunicare* o *riconsiderabile*.
 
-Ora il modulo X guarda alla richiesta appena pervenuta. Se è quella nella fase *eletta, da comunicare*
-allora il modulo X fa queste operazioni:
+Se `v` è nello stato *eletta, da comunicare*
+allora il modulo X nel nodo Coordinator di *G* fa queste operazioni:
 
-*   Si prepara a rispondere alla richiesta del client con il livello a cui deve fare ingresso. Cioè memorizza `ret`.
-*   La associazione eletta (relativa alla richieta pervenuta) viene rimossa dall'elenco.
-*   Tutte le associazioni collegate passano nello stato "*scartata, da comunicare*" con scadenza `t = global_timeout da ora`.
-*   Queste variazioni alla memoria condivisa di tutta la rete vanno apportate richiamando un
-    metodo nel modulo Coordinator, il quale anche avvia in una nuova tasklet le operazioni di replica.
-*   Risponde alla richiesta del client con il livello a cui deve fare ingresso.
+*   Si prepara a rispondere alla richiesta del client con il livello a cui deve fare ingresso. Cioè memorizza `ret = v.lvl`.
+*   La *valutazione* eletta `v` viene rimossa dall'elenco, operando sui campi `next_id` delle altre *valutazioni* oltre che
+    sulle strutture dati della memoria condivisa.
+*   Tutte le *valutazioni* collegate passano nello stato "*scartata, da comunicare*" con scadenza `timeout = global_timeout da ora`.
+*   Aggiorna la memoria condivisa di tutta la rete.
+*   Risponde alla richiesta del client con `ret`.
 
-Altrimenti, se è nella fase *riconsiderabile* il modulo X fa queste operazioni:
+Altrimenti, se `v` è nello stato *riconsiderabile* il modulo X fa queste operazioni:
 
-*   Se la scadenza è giunta:
-    *   Cerca fra le associazioni collegate quella nello stato *eletta, da comunicare* e la rimuove dall'elenco.
-    *   Tutte le altre associazioni le mette nello stato *in valutazione* con scadenza immutata, cioè giunta.
+*   Se `v.timeout` è scaduto:
+    *   Cerca fra le *valutazioni* collegate quella nello stato *eletta, da comunicare* e la rimuove dall'elenco.
+    *   Tutte le altre *valutazioni* le mette nello stato *pending* mantenendone immutato il `timeout`.
     *   Il modulo X ricomincia dalla terza fase: cioè si trova a dover eleggere la migliore fra le soluzioni
         collegate a questa.
 *   Altrimenti:
     *   Risponde alla richiesta del client con l'eccezione AskAgainError.
 
-Altrimenti, se è nella fase *scartata, da comunicare* il modulo X fa queste operazioni:
+Altrimenti, se `v` è nello stato *scartata, da comunicare* il modulo X fa queste operazioni:
 
-*   La associazione relativa alla richieta pervenuta viene rimossa dall'elenco.
-*   Cicla fra le associazioni collegate e se ne trova qualcuna la cui scadenza è giunta la rimuove dall'elenco.  
-    Le scadenze dovrebbero giungere tutte insieme.
-*   Queste variazioni alla memoria condivisa di tutta la rete vanno apportate richiamando un
-    metodo nel modulo Coordinator, il quale anche avvia in una nuova tasklet le operazioni di replica.
+*   La *valutazione* `v` viene rimossa dall'elenco.
+*   Cicla fra le *valutazioni* collegate e se ne trova qualcuna il cui `timeout` è scaduto la rimuove dall'elenco.  
+    Le scadenze dovrebbero giungere tutte insieme, quindi in pratica svuota l'elenco.
+*   Aggiorna la memoria condivisa di tutta la rete.
 *   Risponde alla richiesta del client con l'eccezione IgnoreNetworkError.
 
 L'eccezione IgnoreNetworkError ricevuta sulla chiamata del metodo `prepare_enter` sul modulo Coordinator
