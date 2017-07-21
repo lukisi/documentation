@@ -227,6 +227,9 @@ la migliore fra le soluzioni.
 **TODO** Inserire qui ogni idea su some individuare la migliore soluzione. Ancora non abbiamo
 avviato alcuna ricerca di migration-path nella rete *J*.
 
+**Nota 1**: una cosa da evitare è quella di formare g-nodi che facilmente potrebbero "splittarsi", diventare
+disconnessi.
+
 Diciamo che la soluzione eletta sia la *valutazione* `v`.
 
 La *valutazione* eletta `v` passa nello stato "*eletta, da comunicare*" e la sua nuova scadenza viene
@@ -298,4 +301,113 @@ dal Coordinator di *G* di tentare l'ingresso in *J* tramite il suo vicino *v* co
 *lvl*.
 
 **TODO**
+
+## Altre annotazioni
+
+Quando due reti si incontrano e la rete più piccola *G* decide di entrare in *J* il primo tentativo
+è quello di entrare in blocco. Cioè con il livello più piccolo tale che *G* è costituita da un solo
+g-nodo. Quello che abbiamo chiamato `max_lvl`.
+
+Assumiamo che il nodo *n* di *G* vuole usare il nodo *v* di *J* per far entrare il suo g-nodo *g* di livello *l*
+in blocco dentro *J*.
+
+Il nodo *n* per prima cosa richiede a *v*: "trova la shortest migration-path che permetta
+al mio g-nodo di livello *l* di essere connesso attraverso l'arco *n - v* dentro il tuo *attuale* g-nodo di
+livello *l* + 1".  
+Il nodo *n* e il nodo *v* devono avere entrambi un indirizzo completamente *reale*.  
+Indichiamo con *h* l'attuale g-nodo di livello *l* + 1 di *v*.  
+È evidenziato nella richiesta il fatto che *g* vuole entrare dentro *l'attuale* g-nodo di *v*, perché
+come risultato della migration-path lo stesso nodo *v* potrebbe migrare lasciando dentro *h* la sua identità
+di connettività come link per *g*.
+
+Specifichiamo rigorosamente cosa si intende per migration-path.
+
+### Migration Path
+
+Prendiamo liberamente in prestito alcune notazioni dal documento delle migrazioni.
+
+Sia *h* un g-nodo di livello *l* + 1, con *l* da 0 a *levels* - 1. È possibile che sia *size<sub>l</sub>(h)* = *gsizes(l)*. Cioè *h* può essere saturo.
+
+Definiamo *P* una migration path a livello *l* che parte dal g-nodo *h* (di livello *l* + 1) se *P* è una lista di g-nodi che soddisfa questi requisiti:
+
+*   *P* = (*p<sub>1</sub>*, *p<sub>2</sub>*, ... *p<sub>m</sub>*).
+*   *p<sub>1</sub>* = *h*. Se *m* = 1, quindi *p<sub>1</sub>* = *p<sub>m</sub>*, allora *p<sub>1</sub>* può essere *h* o un g-nodo di livello maggiore che contiene *h*.
+*   Per ogni *i* da 1 a *m* - 1:
+    *   **Nota** può essere *m* = 1, quindi questo ciclo non viene mai valutato.
+    *   *lvl(p<sub>i</sub>)* = *lvl(h)* = *l* + 1.
+    *   *p<sub>i+1</sub>* ∈ *𝛤<sub>l+1</sub>(p<sub>i</sub>)*, cioè *p<sub>i+1</sub>* è direttamente collegato a *p<sub>i</sub>* nel grafo *[G]<sub>l+1</sub>*.
+    *   *size<sub>l</sub>(p<sub>i</sub>)* = *gsizes(l)*, cioè *p<sub>i</sub>* è saturo.
+*   *lvl(p<sub>m</sub>)* = *k* ≥ *lvl(h)* = *l* + 1. Indichiamo con *k* il livello di *p<sub>m</sub>*.
+*   *size<sub>k-1</sub>(p<sub>m</sub>)* `<` *gsizes(k-1)*, cioè *p<sub>m</sub>* non è saturo.
+
+Usiamo una definizione che include anche una sorta di migration-path impropria, quella di lunghezza 0.
+
+### Uso della migration path
+
+Detto in altri termini, il nodo *v* deve cercare la shortest migration-path a livello *l* che parte da *h*. Cioè:
+
+*   un posto già libero nel suo g-nodo di livello *l* + 1; *oppure*
+*   un posto già libero in un suo g-nodo di livello maggiore; *oppure*
+*   la shortest migration-path per liberare un posto nel suo g-nodo di livello *l* + 1.
+
+Usare questa migration-path significa far migrare un border g-nodo di livello *l* da ognuno dei g-nodi
+di livello *l* + 1 della lista *P* nel successivo in modo tale da liberare un posto nel primo g-nodo
+di livello *l* + 1 della lista *P*. Come *costo* abbiamo che viene occupato un ulteriore posto nell'ultimo g-nodo
+della lista *P*, il quale non era saturo, ma anche poteva essere di livello maggiore di *l* + 1.
+
+### Caratteristiche della migration path
+
+Una migration-path a livello *l* può essere descritta da 2 principali caratteristiche:
+
+*   *d* - distanza, cioè numero di migrazioni (di g-nodi di livello *l*) necessarie, con *d* ≥ 0.
+*   *hl* - host g-node level, cioè il livello dell'ultimo g-nodo della lista, con *levels* ≥ *hl* > *l*.
+
+Da un lato dello spettro abbiamo il caso ottimale: *d* = 0 e *hl* = *l* + 1. Cioè per far entrare il g-nodo
+*g* non occorre nessuna migrazione e basta occupare una nuova posizione che era libera in un g-nodo esistente
+di livello *l* + 1.
+
+Si intuisce facilmente che allontanandoci da questa situazione, ovvero con il crescere di *d* e/o con
+il crescere del delta *hl* - *l*, andiamo a fare operazioni che danneggiano maggiormente la nuova rete *J*.
+
+Con il crescere di *d* cresce il numero di g-nodi che cambiano indirizzo, quindi è ovvio il danno.
+
+Più sottile è il danno con il crescere del delta *hl* - *l*, ma non indifferente. Partiamo ad esempio
+da un g-nodo di livello 2 saturo. Un nuovo nodo si aggiunge e questo può, senza obbligare a nessuna migrazione,
+occupare un nuovo g-nodo di livello 2 dentro il g-nodo di livello 3 che diventa saturo. Un nuovo nodo si
+aggiunge e ha un solo link con il g-nodo di livello 2 saturo; che è dentro un g-nodo di livello 3 saturo;
+quindi può, senza obbligare a nessuna migrazione, occupare un nuovo g-nodo di livello 3 dentro il g-nodo di
+livello 4 che diventa saturo. Un nuovo nodo si aggiunge e ha un solo link con il g-nodo di livello 2 saturo;
+che è dentro un g-nodo di livello 3 saturo; che è dentro un g-nodo di livello 4 saturo;
+quindi può, senza obbligare a nessuna migrazione, occupare un nuovo g-nodo di livello 4 dentro il g-nodo di
+livello 5 che diventa saturo. E così via, con pochi nodi si rende saturo un g-nodo di alto livello
+e si forma una rete poco bilanciata.  
+Si potrebbe pensare che sarebbe conveniente quando il delta supera un certo *𝜀* investigare per
+cercare una migration-path che, sebbene non sia la più breve come *d* faccia occupare un nuovo posto
+all'interno di un g-nodo di livello *hl* non troppo alto.  
+Ad esempio un nuovo nodo si aggiunge e ha un solo link con il g-nodo di livello 2 saturo; che è dentro un
+g-nodo di livello 3 saturo; sebbene questo sia dentro un g-nodo di livello 4 che non è saturo
+si preferisce cercare una diversa migration path e si trova che facendo migrare un singolo nodo da un g-nodo
+di livello 1 dentro un altro g-nodo esistente sempre di livello 1 si libera un posto per il nuovo nodo.
+
+Si procede in questo modo: la prima ricerca della shortest migration-path si fa senza porre alcun limite
+superiore a *lh*. Trattandosi di una ricerca *breadth-first* o *in ampiezza* questa si ferma alla prima
+shortest migration-path: cioè se dovessimo ripetere la ricerca dall'inizio ponendo dei parametri di ricerca
+più restrittivi di sicuro avremmo un risultato la cui distanza *d* non può migliorare.
+
+Quindi dalla prima ricerca otteniamo una migration-path con distanza *d0* e con livello del g-nodo
+non saturo *hl0*. Se *hl0* risulta soddisfacente ci fermiamo. Altrimenti riavviamo una nuova ricerca
+ponendo un limite superiore a *hl* minore di *hl0*, decrementando di 1. Se la ricerca non trova
+una migration-path ci fermiamo; se invece trova una migration path avremo distanza *d1* e livello ospite *hl1*.
+Di nuovo, se *hl1* risulta soddisfacente ci fermiamo. Altrimenti riavviamo una nuova ricerca
+ponendo un limite superiore a *hl* minore di *hl1*, decrementando di 1. Se la ricerca non trova
+una migration-path ci fermiamo; se invece trova una migration path avremo distanza *d2* e livello ospite *hl2*.
+E così via fino a quando non ci fermiamo perché il delta è minore di *𝜀* o perché non esistono
+migration-path con il delta minore dell'ultimo *hl*.  
+Quando ci siamo fermati avremo un insieme di soluzioni (che potrebbe essere vuoto) tra cui scegliere.
+
+Queste prime ricerche *esplorative* non mettono un blocco sulla rete, che quindi potrebbe anche evolversi nel
+frattempo. Ma accettiamo questa possibilità. Una volta scelta una migration path sulla base della
+ricerca esplorativa appena fatta, si procede con una nuova ricerca in ampiezza con gli stessi
+parametri (cioè con o senza limite superiore) che però sarà *esecutiva*, confidando che l'esito
+non cambierà di molto.
 
