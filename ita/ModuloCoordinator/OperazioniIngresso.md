@@ -29,11 +29,11 @@ Questa struttura contiene:
 
 *   `int64 netid` = Identificativo della rete *J*.
 *   `List<int> gsizes` = Lista che descrive la topologia della rete *J*. Da essa si ricava `levels`.
-*   `List<int> gnode_n_nodes` = Per i valori *i* da 1 a `levels`, l'elemento `gnode_n_nodes[i-1]` è il
+*   `List<int> neighbor_n_nodes` = Per i valori *i* da 1 a `levels`, l'elemento `neighbor_n_nodes[i-1]` è il
     numero di singoli nodi dentro *g<sub>i</sub>(v)*.
-*   `List<int> gnode_pos` = Per i valori *i* da 1 a `levels`, l'elemento `gnode_pos[i-1]` è la
+*   `List<int> neighbor_pos` = Per i valori *i* da 1 a `levels`, l'elemento `neighbor_pos[i-1]` è la
     posizione al livello `i-1` di *v* dentro *g<sub>i</sub>(v)*.
-*   `List<int> gnode_n_free_pos` = Per i valori *i* da 1 a `levels`, l'elemento `gnode_n_free_pos[i-1]` è il
+*   `List<int> neighbor_n_free_pos` = Per i valori *i* da 1 a `levels`, l'elemento `neighbor_n_free_pos[i-1]` è il
     numero di posizioni libere dentro *g<sub>i</sub>(v)*.
 
 Poi quel modulo confronta la descrizione di *J* data da *v* con la rete *G* come è vista da *n*
@@ -60,7 +60,8 @@ Inoltre sceglie un identificativo univoco random per questa richiesta, `int prep
 Ora il modulo X del nodo *n* prepara una nuova struttura dati con le informazioni di cui sopra
 istanziando un `PrepareEnterData prepare_enter_data`.  
 La classe PrepareEnterData è nota al modulo X. Si tratta di una classe serializzabile. I membri di questa classe sono:
-`int64 netid`, `List<int> gsizes`, `List<int> n_nodes`, `List<int> n_free_pos`, `int min_lvl`, `int prepare_enter_id`.  
+`int64 netid`, `List<int> gsizes`, `List<int> neighbor_n_nodes`, `List<int> neighbor_pos`, `List<int> neighbor_n_free_pos`,
+`int min_lvl`, `int prepare_enter_id`.  
 L'istanza `prepare_enter_data` andrà passata ad un metodo del modulo X nel nodo Coordinator della rete.
 
 Ora il modulo X del nodo *n* fa in modo che venga richiamato nel modulo Coordinator (dal suo utilizzatore diretto, poiché
@@ -76,7 +77,7 @@ Di fatto il modulo Coordinator chiama il metodo `choose_target_level` dell'inter
 e questi chiamerà il metodo `prepare_enter` del modulo X.  
 Va considerato che, sempre grazie ai meccanismi del modulo Coordinator, oltre alla struttura dati
 `prepare_enter_data` il metodo `prepare_enter` eseguito sul nodo Coordinator di *G* riceve
-come argomento anche l'indirizzo (la lista delle posizioni ai vari livelli) di *n*.
+come argomento anche l'indirizzo di *n*, `List<int> client_address`.
 
 Vediamo cosa avviene nel metodo `prepare_enter` del modulo X eseguito sul nodo Coordinator di *G*.
 
@@ -228,7 +229,12 @@ la migliore fra le soluzioni.
 avviato alcuna ricerca di migration-path nella rete *J*.
 
 **Nota 1**: una cosa da evitare è quella di formare g-nodi che facilmente potrebbero "splittarsi", diventare
-disconnessi.
+disconnessi.  
+Per questo in `PrepareEnterData prepare_enter_data` memoriziamo `List<int> neighbor_pos` la posizione
+del vicino con cui c'è un arco. Il modulo X nel nodo Coordinator di *G* accedendo nella memoria condivisa
+alla lista di *valutazioni* vede che un certo numero di queste ha per nodo vicino un nodo che appartiene
+al g-nodo di *J* in cui *G* vorrebbe entrare. Deduce quindi il numero di archi che dovrebbero rompersi
+per far sì che il g-nodo divenga disconnesso.
 
 Diciamo che la soluzione eletta sia la *valutazione* `v`.
 
