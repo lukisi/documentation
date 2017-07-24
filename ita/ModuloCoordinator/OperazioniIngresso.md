@@ -303,8 +303,33 @@ che come abbiamo detto può essere calcolata dal modulo X esclusivamente sulla b
 ### Quinta fase - comunicazione con il g-nodo entrante
 
 La quinta fase inizia quando un singolo nodo di *G*, assumiamo sia il nodo *n*, riceve l'autorizzazione
-dal Coordinator di *G* di tentare l'ingresso in *J* tramite il suo vicino *v* con il suo g-nodo di livello
+dal Coordinator di *G* di tentare l'ingresso in *J* tramite il suo vicino *v* con il suo g-nodo *g* di livello
 *lvl*.
+
+A ricevere questa autorizzazione è il modulo X nel nodo *n*, che aveva chiamato `evaluate_enter` nel modulo Coordinator.
+
+Ora il modulo X nel nodo *n* vuole chiamare il metodo `begin_enter` del modulo X nel nodo Coordinator del
+g-nodo *g*.
+
+Prima il modulo X del nodo *n* prepara una nuova struttura dati con le informazioni che servono al metodo `begin_enter`
+del modulo X nel nodo Coordinator del g-nodo *g*. Tale struttura è `BeginEnterData begin_enter_data`. I membri di questa
+classe sono:
+
+*   nessuno?
+
+Poi il modulo X del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il metodo `begin_enter`.  
+A questo metodo viene passato un `Object begin_enter_data` e il livello *lvl*.
+
+Grazie ai meccanismi del modulo Coordinator (di cui è trattato nella relativa documentazione) ora
+nel nodo Coordinator del g-nodo *g* viene chiamato dallo stesso modulo Coordinator (a cui era
+stato passato come delegato nel suo costruttore) il metodo `begin_enter` del modulo X.  
+Di fatto il modulo Coordinator chiama il metodo `begin_enter` dell'interfaccia IBeginEnterHandler
+e questi chiamerà il metodo `begin_enter` del modulo X.  
+Va considerato che, sempre grazie ai meccanismi del modulo Coordinator, oltre alla struttura dati
+`begin_enter_data` il metodo `begin_enter` eseguito sul nodo Coordinator del g-nodo *g* riceve
+come argomento anche l'indirizzo di *n*, `List<int> client_address`.
+
+Vediamo cosa avviene nel metodo `begin_enter` del modulo X eseguito sul nodo Coordinator del g-nodo *g*.
 
 **TODO**
 

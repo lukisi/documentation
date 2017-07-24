@@ -76,12 +76,13 @@ Sebbene la richiesta venga fatta come detto al Coordinator della rete *G*,
 in effetti la strategia di ingresso non è di pertinenza del modulo Coordinator. Per questo viene utilizzato
 un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IEvaluateEnterHandler.
 
-La risposta ottenuta dal delegato consiste in un intero oppure una eccezione. Essa va restituita così com'è al
-client del servizio:
+La risposta ottenuta dal delegato consiste in un intero oppure una eccezione:
 
 *   `int lvl` - il livello del g-nodo di *n* che dovrebbe tentare l'ingresso in *J*.
 *   `AskAgainError` - il client deve attendere alcuni istanti e poi riprovare.
 *   `IgnoreNetworkError` - il client deve ignorare l'altra rete.
+
+Il risultato va restituito così com'è al client del servizio attraverso una istanza di EvaluateEnterResponse.
 
 #### <a name="Avvio_ingresso"></a>Avvio ingresso in altra rete
 
@@ -304,6 +305,8 @@ del servizio Coordinator sarà ovviamente la prenotazione di un posto di livello
 
 ### <a name="Collaborazioni_ingresso"></a>Ingresso in altra rete
 
+#### Metodo evaluate_enter
+
 Quando il modulo X del nodo *n* vuole far eseguire il suo metodo `evaluate_enter` nel nodo Coordinator
 della rete *G*, richiama il metodo `evaluate_enter` del modulo Coordinator.
 
@@ -319,11 +322,33 @@ il Coordinator dell'intera rete.
 La classe client nel suo metodo `evaluate_enter` prepara una richiesta *r* = [EvaluateEnterRequest](#Valuta_ingresso)
 che comprende la struttura dati (ovvero l'istanza di Object serializzabile) di cui sopra.
 
-Poi invia la richiesta *r* e restituisce la risposta così com'è. Può restituire:
+Poi invia la richiesta *r* e ottiene una risposta che è una istanza di EvaluateEnterResponse. Essa contiene
+esattamente i possibili risultati previsti dalla signature del metodo `evaluate_enter`. Quindi restituisce
+al chiamante:
 
-*   `int ret`.
-*   Eccezione AskAgainError.
+*   `int ret`. Oppure:
+*   Eccezione AskAgainError. Oppure:
 *   Eccezione IgnoreNetworkError.
+
+#### Metodo begin_enter
+
+Quando il modulo X del nodo *n* vuole far eseguire il suo metodo `begin_enter(begin_enter_data)` nel nodo Coordinator
+del suo g-nodo *g* di livello *lvl*, richiama il metodo `begin_enter(lvl, begin_enter_data)` del modulo Coordinator.
+
+L'esecuzione di `begin_enter` del modulo Coordinator consiste in questo:
+
+Viene preparato un client del servizio Coordinator. Su questo viene chiamato il metodo `begin_enter(lvl, begin_enter_data)`.
+Ricordiamo che la struttura dati `begin_enter_data` non è nota al modulo Coordinator, che sa solo che è un Object serializzabile.
+
+La classe client del servizio usa come chiave *k* con `k.lvl = lvl`. Prepara una richiesta *r* = [BeginEnterRequest](#Avvio_ingresso)
+che comprende la struttura dati (ovvero l'istanza di Object serializzabile) di cui sopra.
+
+Poi invia la richiesta *r* e ottiene una risposta che è una istanza di BeginEnterResponse.
+
+**TODO** Cosa contiene?
+
+Quando ritorna il metodo `begin_enter` del modulo Coordinator significa che il Coordinator di *g* ha acquisito il lock
+necessario; quindi *n* può procedere. Altrimenti è lanciata una eccezione.
 
 ## <a name="Requisiti"></a>Requisiti
 
@@ -345,7 +370,7 @@ In quello stesso momento gli vengono forniti:
 
 Fornisce metodi per:
 
-*   Organizzare un ingresso in una nuova rete. Metodo `evaluate_enter`.  
+*   Valutare un ingresso in una nuova rete. Metodo `evaluate_enter`.  
     La logica per il rilevamento di un vicino appartenente ad una diversa rete e per l'ingresso
     in questa nuova rete è di pertinenza di un diverso modulo X. Vedi [qui](OperazioniIngresso.md).  
     Quello che fa questo metodo in realtà è permettere all'utilizzatore del modulo Coordinator di far eseguire una
