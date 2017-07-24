@@ -55,31 +55,31 @@ Allora il modulo X aggiunge un'altra informazione a quelle della struttura dati 
     g-nodo di livello tale (**N.B.** considerando la topologia della rete *J*) da poter disporre di un certo spazio
     (numero di bit) per gli indirizzi interni.
 
-Inoltre sceglie un identificativo univoco random per questa richiesta, `int prepare_enter_id`.
+Inoltre sceglie un identificativo univoco random per questa richiesta, `int evaluate_enter_id`.
 
 Ora il modulo X del nodo *n* prepara una nuova struttura dati con le informazioni di cui sopra
-istanziando un `PrepareEnterData prepare_enter_data`.  
-La classe PrepareEnterData è nota al modulo X. Si tratta di una classe serializzabile. I membri di questa classe sono:
+istanziando un `EvaluateEnterData evaluate_enter_data`.  
+La classe EvaluateEnterData è nota al modulo X. Si tratta di una classe serializzabile. I membri di questa classe sono:
 `int64 netid`, `List<int> gsizes`, `List<int> neighbor_n_nodes`, `List<int> neighbor_pos`, `List<int> neighbor_n_free_pos`,
-`int min_lvl`, `int prepare_enter_id`.  
-L'istanza `prepare_enter_data` andrà passata ad un metodo del modulo X nel nodo Coordinator della rete.
+`int min_lvl`, `int evaluate_enter_id`.  
+L'istanza `evaluate_enter_data` andrà passata ad un metodo del modulo X nel nodo Coordinator della rete.
 
 Ora il modulo X del nodo *n* fa in modo che venga richiamato nel modulo Coordinator (dal suo utilizzatore diretto, poiché
-non è detto che il modulo X abbia una dipendenza diretta sul modulo Coordinator) il metodo `prepare_enter`.  
-A questo metodo viene passato un `Object prepare_enter_data`.  
+non è detto che il modulo X abbia una dipendenza diretta sul modulo Coordinator) il metodo `evaluate_enter`.  
+A questo metodo viene passato un `Object evaluate_enter_data`.  
 La reale classe che implementa questa struttura dati non è infatti nota al modulo Coordinator. Questi sa solo
 che è serializzabile.
 
 Grazie ai meccanismi del modulo Coordinator (di cui è trattato nella relativa documentazione) ora
 nel nodo Coordinator della rete *G* viene chiamato dallo stesso modulo Coordinator (a cui era
-stato passato come delegato nel suo costruttore) il metodo `prepare_enter` del modulo X.  
-Di fatto il modulo Coordinator chiama il metodo `choose_target_level` dell'interfaccia IEnterNetworkHandler
-e questi chiamerà il metodo `prepare_enter` del modulo X.  
+stato passato come delegato nel suo costruttore) il metodo `evaluate_enter` del modulo X.  
+Di fatto il modulo Coordinator chiama il metodo `evaluate_enter` dell'interfaccia IEvaluateEnterHandler
+e questi chiamerà il metodo `evaluate_enter` del modulo X.  
 Va considerato che, sempre grazie ai meccanismi del modulo Coordinator, oltre alla struttura dati
-`prepare_enter_data` il metodo `prepare_enter` eseguito sul nodo Coordinator di *G* riceve
+`evaluate_enter_data` il metodo `evaluate_enter` eseguito sul nodo Coordinator di *G* riceve
 come argomento anche l'indirizzo di *n*, `List<int> client_address`.
 
-Vediamo cosa avviene nel metodo `prepare_enter` del modulo X eseguito sul nodo Coordinator di *G*.
+Vediamo cosa avviene nel metodo `evaluate_enter` del modulo X eseguito sul nodo Coordinator di *G*.
 
 Ora il modulo X nel nodo Coordinator di *G* computa il tempo in millisecondi `global_timeout` entro il quale intende rispondere alle
 richieste di ingresso in una diversa rete. Abbiamo accennato prima al fatto che è bene attendere
@@ -118,7 +118,7 @@ il nodo *n* quando incontra *v* e vede la topologia di *J* deve valutare quanto 
 per *G* entrare in *J* prima di decidere.
 
 Considerando che la topologia di *G* e quella di *J* possono essere diverse, introduciamo questa regola:
-quando il nodo Coordinator della rete *G* esegue il metodo `prepare_enter` esso conosce sia la topologia
+quando il nodo Coordinator della rete *G* esegue il metodo `evaluate_enter` del modulo X esso conosce sia la topologia
 di *G* sia la topologia di *J*. Il valore di `max_lvl` precedentemente calcolato deve essere
 tale che la topologia di *G* e quella di *J* sono identiche ai livelli inferiori di `max_lvl`;
 altrimenti il suo valore va abbassato.  
@@ -146,9 +146,9 @@ Diciamo che la risposta alla domanda sia *lvl_0*.
 Assumiamo che questa richiesta sia la prima pervenuta che coinvolge il g-nodo *g<sub>lvl_0</sub>(n)*
 e la rete *J*. Il modulo X se ne avvede accedendo alla memoria condivisa di tutta la rete (spiegheremo
 meglio il significato di questo a breve).  
-Allora il modulo X nel nodo Coordinator di *G* associa alla richiesta `prepare_enter_data`, al nodo *n*
+Allora il modulo X nel nodo Coordinator di *G* associa alla richiesta `evaluate_enter_data`, al nodo *n*
 e alla valutazione *lvl_0* una scadenza `timeout = global_timeout da ora`, rappresentata con un oggetto Timer serializzabile.  
-Cioè crea una istanza `PrepareEnterResponse resp` con i campi `prepare_enter_data`, `client_address`,
+Cioè crea una istanza `EvaluateEnterEvaluation resp` con i campi `evaluate_enter_data`, `client_address`,
 `lvl`, `timeout` e altri campi che dettaglieremo in seguito. In seguito potremmo riferirci a questa
 struttura dati con il termine *valutazione*.
 
@@ -158,10 +158,10 @@ dati nel membro `status`. Lo stato in cui viene inizializzata questa valutazione
 Questa valutazione deve essere memorizzata nella memoria condivisa di tutta la rete *G*.  
 Abbiamo già detto che il modulo X può fare in modo che venga richiamato un metodo nel modulo Coordinator, pur non
 avendo una dipendenza diretta sul modulo Coordinator. In particolare avremo una coppia di metodi
-`get_prepare_enter_memory` e `set_prepare_enter_memory` con i quali si recupera e si salva
+`get_network_entering_memory` e `set_network_entering_memory` con i quali si recupera e si salva
 una istanza di Object (perché il modulo Coordinator non conosce i dati del modulo X) che costituisce
 l'intera base dati (cioè la memoria condivisa della rete) relativa agli aspetti gestiti dal modulo X.
-In particolare il metodo `set_prepare_enter_memory` provvede anche ad avviare in una nuova tasklet
+In particolare il metodo `set_network_entering_memory` provvede anche ad avviare in una nuova tasklet
 le operazioni di replica.  
 Il modulo X nel nodo Coordinator di *G* recupera l'intera base dati corrente e la integra con
 l'aggiunta di questa nuova *valutazione*. Poi immediatamente salva l'intera base dati. Questa
@@ -175,16 +175,16 @@ informazioni di sua pertinenza.
 
 Ora il modulo X nel nodo Coordinator di *G* risponde al client *n* con una eccezione AskAgainError.
 
-L'eccezione AskAgainError ricevuta sulla chiamata del metodo `prepare_enter` sul modulo Coordinator
+L'eccezione AskAgainError ricevuta sulla chiamata del metodo `evaluate_enter` sul modulo Coordinator
 istruisce il modulo X di ripetere la stessa richiesta (con le stesse informazioni
-tra cui lo stesso `prepare_enter_id`) dopo aver atteso alcuni istanti.  
+tra cui lo stesso `evaluate_enter_id`) dopo aver atteso alcuni istanti.  
 Questa attesa deve essere più piccola (almeno 3 o 4 volte) di quella calcolata come `global_timeout`,
 che come abbiamo detto può essere calcolata dal modulo X esclusivamente sulla base del numero di singoli nodi presenti in *G*.
 
 * * *
 
 Supponiamo che nel frattempo giunga al Coordinator della rete *G* una richiesta simile dal nodo *q*
-relativa alla rete *J*. Eseguendo il metodo `prepare_enter` del modulo X per la richiesta pervenuta
+relativa alla rete *J*. Eseguendo il metodo `evaluate_enter` del modulo X per la richiesta pervenuta
 da *q*, alla domanda "a quale livello andrebbe tentato l'ingresso dal nodo *q*" il modulo X risponde
 con il livello *lvl_1*.
 
@@ -195,7 +195,7 @@ il g-nodo *g<sub>lvl_0</sub>(n)*. Il modulo X nel nodo Coordinator di *G* deduce
 (quella sulla richiesta di *n* e quella sulla richiesta di *q*) vanno considerate insieme perché sono intersecanti
 e riguardano la stessa rete *J*. Le due *valutazioni* risultano ora collegate fra di loro. Anche questo collegamento farà parte della
 memoria condivisa di tutta la rete: ogni *valutazione* mantiene un membro `next_id` che coincide con
-il membro `prepare_enter_data.prepare_enter_id` della prossima collegata.
+il membro `evaluate_enter_data.evaluate_enter_id` della prossima collegata.
 
 Le *valutazioni* tra loro collegate devono avere sempre la medesima scadenza. Se `lvl_1` è maggiore di `lvl_0`, ovvero più in generale, se il
 livello del g-nodo coinvolto nella *valutazione* della richiesta appena pervenuta è maggiore del livello del g-nodo coinvolto in tutte
@@ -219,7 +219,7 @@ nodo Coordinator di *G* prima di valutarla accede alla memoria condivisa di tutt
 vedere se a tale richiesta è stata già data una *valutazione*.  
 Una *valutazione* `v` recuperata dalla memoria condivisa della rete è sempre identificabile
 come quella associata ad una particolare richiesta `r` appena pervenuta verificando che
-`r.prepare_enter_id == v.prepare_enter_data.prepare_enter_id`.
+`r.evaluate_enter_id == v.evaluate_enter_data.evaluate_enter_id`.
 
 Alla fine arriverà una richiesta `req` di ingresso in *J* tale che il modulo X nel nodo Coordinator di *G* ne assocerà
 la *valutazione* `resp` ad un gruppo di *valutazioni* nello stato *pending* il cui `timeout` è scaduto. A questo punto il modulo X eleggerà
@@ -230,7 +230,7 @@ avviato alcuna ricerca di migration-path nella rete *J*.
 
 **Nota 1**: una cosa da evitare è quella di formare g-nodi che facilmente potrebbero "splittarsi", diventare
 disconnessi.  
-Per questo in `PrepareEnterData prepare_enter_data` memoriziamo `List<int> neighbor_pos` la posizione
+Per questo in `EvaluateEnterData evaluate_enter_data` memoriziamo `List<int> neighbor_pos` la posizione
 del vicino con cui c'è un arco. Il modulo X nel nodo Coordinator di *G* accedendo nella memoria condivisa
 alla lista di *valutazioni* vede che un certo numero di queste ha per nodo vicino un nodo che appartiene
 al g-nodo di *J* in cui *G* vorrebbe entrare. Deduce quindi il numero di archi che dovrebbero rompersi
@@ -294,7 +294,7 @@ Altrimenti, se `v` è nello stato *scartata, da comunicare* il modulo X fa quest
 *   Aggiorna la memoria condivisa di tutta la rete.
 *   Risponde alla richiesta del client con l'eccezione IgnoreNetworkError.
 
-L'eccezione IgnoreNetworkError ricevuta sulla chiamata del metodo `prepare_enter` sul modulo Coordinator
+L'eccezione IgnoreNetworkError ricevuta sulla chiamata del metodo `evaluate_enter` sul modulo Coordinator
 istruisce il modulo X nel nodo *n* di non prendere alcuna iniziativa e di evitare ulteriori valutazioni di ingresso nella
 rete tramite il diretto vicino *v* per un certo tempo.  
 Questo tempo potrebbe essere un multiplo (diciamo 20 volte tanto) di quello calcolato come `global_timeout`,

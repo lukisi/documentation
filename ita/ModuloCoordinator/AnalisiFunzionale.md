@@ -3,7 +3,7 @@
 1.  [Il ruolo del modulo Coordinator](#Ruolo_coordinator)
 1.  [Il servizio Coordinator](#Servizio_coordinator)
     1.  [Richieste previste](#Richieste_previste)
-        1.  [Incontrata una rete](#Incontrata_rete)
+        1.  [Valuta un ingresso](#Valuta_ingresso)
         1.  [Avvio ingresso in altra rete](#Avvio_ingresso)
         1.  [Prenota un posto](#Prenota_un_posto)
         1.  [Confermato ingresso in altra rete](#Confermato_ingresso)
@@ -59,22 +59,22 @@ l'hash-node che il nodo che risponde si trovano all'interno del g-nodo stesso.
 
 Elenchiamo tutte le richieste che si possono fare al Coordinator.
 
-#### <a name="Incontrata_rete"></a>Incontrata una rete
+#### <a name="Valuta_ingresso"></a>Valuta un ingresso
 
-Questa richiesta *r* fatta al Coordinator dell'intera rete indica che è stata incontrata una diversa rete *J*
+Una richiesta *r* di tipo EvaluateEnterRequest fatta al Coordinator dell'intera rete indica che è stata incontrata una diversa rete *J*
 sulla quale il singolo nodo *n* (il client del servizio) suggerisce di fare ingresso.
 
 I membri di *r* contengono informazioni che non sono di pertinenza del modulo Coordinator.
 Il contenuto della richiesta può essere semplicemente:
 
-*   `Object network_data` = un oggetto serializzabile la cui classe è nota al delegato IEnterNetworkHandler.
+*   `Object evaluate_enter_data` = un oggetto serializzabile la cui classe è nota al delegato IEvaluateEnterHandler.
 
 Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordinator dell'intera rete, per
 fare in modo che sia "tutta la rete" come entità atomica a venire interpellata.
 
 Sebbene la richiesta venga fatta come detto al Coordinator della rete *G*,
 in effetti la strategia di ingresso non è di pertinenza del modulo Coordinator. Per questo viene utilizzato
-un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IEnterNetworkHandler.
+un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IEvaluateEnterHandler.
 
 La risposta ottenuta dal delegato consiste in un intero oppure una eccezione. Essa va restituita così com'è al
 client del servizio:
@@ -156,8 +156,9 @@ Questo significa che il contenuto di tutta la memoria condivisa di un g-nodo dev
 interamente con l'istanza di un oggetto serializzabile. La classe definita nel modulo Coordinator usata per
 memorizzare e trasmettere il contenuto della memoria condivisa è `CoordGnodeMemory`.
 
-**TODO** dettagli sull'implementazione di un Object serializzabile che consenta di avere alcuni (determinati)
-membri che sono Object serializzabili nullable. Le istanze sono di classi che il modulo Coordinator non conosce.
+Si tratta di una classe serializzabile. Il significato di alcuni dei suoi membri è noto al modulo Coordinator.
+Altri membri invece contengono strutture dati che il modulo Coordinator non deve conoscere. Questi membri sono di
+tipo Object nullable e il modulo Coordinator sa solo che se sono valorizzati sono a loro volta oggetti serializzabili.
 
 #### Contenuto di pertinenza del modulo Coordinator
 
@@ -175,39 +176,46 @@ di pertinenza di altri moduli.
 
 Verranno descritte ognuna con i suoi dettagli di seguito.
 
-#### Contenuto della memoria condivisa di tutta la rete
+#### Modulo X
 
-Le operazioni di ingresso in una rete che sono messe in atto quando due reti distinte si incontrano
-per mezzo di alcuni archi, prevedono la memorizzazione e rilettura di alcune informazioni nella
-memoria condivisa di tutta la rete. Questi dati vengono trasmessi al nodo Coordinator di tutta la
-rete che provvede a memorizzarli "aggiungendoli" alle altre informazioni della memoria
-condivisa e avviando i processi di replica.
+Le operazioni di ingresso in una rete, che sono messe in atto quando due reti distinte si incontrano
+per mezzo di alcuni archi, non sono di pertinenza del modulo Coordinator, bensì del modulo X.
 
-Nell'istanza di `CoordGnodeMemory` memorizzata come record associato alla chiave `k.lvl = levels`, cioè
-nella memoria condivisa di tutta la rete, abbiamo valorizzato il membro `Object? prepare_enter_memory`
-con una istanza di una classe nota al modulo X. Il modulo Coordinator sa solo che questa è un Object
-serializzabile.
+Però queste operazioni prevedono:
+
+1.  L'esecuzione di alcuni metodi del modulo X nel nodo Coordinator di tutta la rete su richiesta che
+    viene dal modulo X in un border-nodo che ha incontrato un vicino di un'altra rete.
+1.  La memorizzazione e rilettura di alcune informazioni nella memoria condivisa di tutta la rete.
+
+Per il primo motivo esistono metodi del modulo Coordinator, relativi metodi nella classe client del
+servizio Coordinator, relativi classi di richieste e risposte (IPeersRequest e IPeersResponse) e delegati
+che la classe servente del servizio Coordinator (PeerService) può richiamare.  
+Di norma per ogni metodo del modulo X (di quelli che vanno eseguiti nel nodo Coordinator su richiesta di
+un altro nodo) esiste una specifica istanza dei suddetti elementi.
+
+Per il secondo motivo, esiste una classe serializzabile implementata nel modulo X tale che una sua
+istanza contiene tutta la memoria condivisa di tutta la rete relativamente a quanto è di pertinenza
+del modulo X. Tale istanza viene salvata nel membro `Object? network_entering_memory` della classe `CoordGnodeMemory`.
 
 Vediamo come avviene la scrittura e la rilettura della memoria condivisa di tutta la rete ad opera
 del modulo X. Nella trattazione del modulo X abbiamo detto che solo lo stesso nodo Coordinator della
 rete può essere nella posizione di scrivere/leggere in questa memoria.  
-Quando viene chiamato nel modulo Coordinator il metodo `set_prepare_enter_memory` questi avvia il
+Quando viene chiamato nel modulo Coordinator il metodo `set_network_entering_memory` questi avvia il
 contatto con il Coordinator della rete. Quando viene contattato con tale richiesta il nodo Coordinator
 della rete, esso verifica (pena la terminazione della tasklet che esegue la risposta) che il chiamante
 era il nodo stesso.  
-Poi il servente mette l'argomento ricevuto nel membro `prepare_enter_memory` dell'istanza di `CoordGnodeMemory`
+Poi il servente mette l'argomento ricevuto nel membro `network_entering_memory` dell'istanza di `CoordGnodeMemory`
 associata alla chiave `k.lvl = levels`.  
-Poi in una nuova tasklet avvia le operazioni di replica. Quando viene contattato con la richiesta
-di replica il nodo Coordinator della rete, esso verifica (pena la terminazione della tasklet che esegue
-la risposta) che il chiamante era più prossimo di lui all'indirizzo del nodo Coordinator.  
-Quando viene chiamato nel modulo Coordinator il metodo `get_prepare_enter_memory` questi avvia il
+Poi in una nuova tasklet avvia le operazioni di replica. Quando viene contattato un nodo con la richiesta
+di replica, esso verifica (pena la terminazione della tasklet che esegue la risposta) che il chiamante era più
+prossimo di lui all'indirizzo del nodo Coordinator. **Nota** questo è di pertinenza del codice messo a fattor
+comune nel modulo PeerService. Verificare.  
+Quando viene chiamato nel modulo Coordinator il metodo `get_network_entering_memory` questi avvia il
 contatto con il Coordinator della rete. Quando viene contattato con tale richiesta il nodo Coordinator
 della rete, esso verifica (pena la terminazione della tasklet che esegue la risposta) che il chiamante
 era il nodo stesso.  
-Poi il servente restituisce l'oggetto che è nel membro `prepare_enter_memory` dell'istanza di `CoordGnodeMemory`
+Poi il servente restituisce l'oggetto che è nel membro `network_entering_memory` dell'istanza di `CoordGnodeMemory`
 associata alla chiave `k.lvl = levels`.
-
-**TODO** dettagliare le informazioni
 
 ## <a name="Richieste_al_diretto_vicino"></a>Richieste al diretto vicino di accesso al servizio Coordinator
 
@@ -296,19 +304,19 @@ del servizio Coordinator sarà ovviamente la prenotazione di un posto di livello
 
 ### <a name="Collaborazioni_ingresso"></a>Ingresso in altra rete
 
-Quando il modulo X del nodo *n* vuole far eseguire il suo metodo `prepare_enter` nel nodo Coordinator
-della rete *G*, richiama il metodo `prepare_enter` del modulo Coordinator.
+Quando il modulo X del nodo *n* vuole far eseguire il suo metodo `evaluate_enter` nel nodo Coordinator
+della rete *G*, richiama il metodo `evaluate_enter` del modulo Coordinator.
 
-L'esecuzione di `prepare_enter` del modulo Coordinator consiste in questo:
+L'esecuzione di `evaluate_enter` del modulo Coordinator consiste in questo:
 
-Viene preparato un client del servizio Coordinator. Su questo viene chiamato il metodo `prepare_enter`
-passandogli la stessa struttura dati ricevuta dal metodo `prepare_enter` del modulo Coordinator. Tale
+Viene preparato un client del servizio Coordinator. Su questo viene chiamato il metodo `evaluate_enter`
+passandogli la stessa struttura dati ricevuta dal metodo `evaluate_enter` del modulo Coordinator. Tale
 struttura non è nota al modulo Coordinator, che sa solo che è un Object serializzabile.
 
 La classe client del servizio sa che questo metodo usa come chiave *k* con `k.lvl = levels`. Cioè va contattato
 il Coordinator dell'intera rete.
 
-La classe client nel suo metodo `prepare_enter` prepara una richiesta *r* = "[incontrata-rete](#Incontrata_rete)"
+La classe client nel suo metodo `evaluate_enter` prepara una richiesta *r* = [EvaluateEnterRequest](#Valuta_ingresso)
 che comprende la struttura dati (ovvero l'istanza di Object serializzabile) di cui sopra.
 
 Poi invia la richiesta *r* e restituisce la risposta così com'è. Può restituire:
@@ -337,16 +345,16 @@ In quello stesso momento gli vengono forniti:
 
 Fornisce metodi per:
 
-*   Organizzare un ingresso in una nuova rete. Metodo `prepare_enter`.  
+*   Organizzare un ingresso in una nuova rete. Metodo `evaluate_enter`.  
     La logica per il rilevamento di un vicino appartenente ad una diversa rete e per l'ingresso
     in questa nuova rete è di pertinenza di un diverso modulo X. Vedi [qui](OperazioniIngresso.md).  
     Quello che fa questo metodo in realtà è permettere all'utilizzatore del modulo Coordinator di far eseguire una
     certa operazione sul nodo Coordinator della rete. In particolare, l'utilizzatore del modulo
-    Coordinator nel nodo *n* passa un oggetto al metodo `prepare_enter` (probabilmente su istruzione
+    Coordinator nel nodo *n* passa un oggetto al metodo `evaluate_enter` (probabilmente su istruzione
     da parte di un altro modulo X); questi fa pervenire questo oggetto al nodo Coordinator della
-    rete il quale lo passa al delegato `IEnterNetworkHandler` (probabilmente implementato dallo
-    stesso modulo X) nel suo metodo `choose_target_level`.  
-    L'esecuzione del metodo `IEnterNetworkHandler.choose_target_level` produce la decisione per il nodo *n* di tentare
+    rete il quale lo passa al delegato `IEvaluateEnterHandler` (probabilmente implementato dallo
+    stesso modulo X) nel suo metodo `evaluate_enter`.  
+    L'esecuzione del metodo `IEvaluateEnterHandler.evaluate_enter` produce la decisione per il nodo *n* di tentare
     o meno l'ingresso nella nuova rete e se sì a quale livello.
 *   Dato un livello *l*, chiedere ad un vicino *v*, dato uno stub per contattarlo, di richiedere al Coordinator
     del suo g-nodo di livello *l* la prenotazione di un posto, come nuovo g-nodo di livello *l* - 1.
@@ -418,13 +426,13 @@ interfaccia il modulo può:
 
 * * *
 
-Una istanza di IEnterNetworkHandler viene passata al modulo Coordinator. Tale istanza viene
+Una istanza di IEvaluateEnterHandler viene passata al modulo Coordinator. Tale istanza viene
 interrogata da parte del modulo quando si deve decidere sul fare ingresso in una nuova rete.
 
-I metodi previsti dall'interfaccia IEnterNetworkHandler sono:
+I metodi previsti dall'interfaccia IEvaluateEnterHandler sono:
 
-*   `int choose_target_level(Object network_data)`  
-    Con questo metodo si richiama il metodo `prepare_enter` del modulo X. Vedi [qui](OperazioniIngresso.md).  
+*   `int evaluate_enter(Object evaluate_enter_data)`  
+    Con questo metodo si richiama il metodo `evaluate_enter` del modulo X. Vedi [qui](OperazioniIngresso.md).  
     Può rilanciare l'eccezione `AskAgainError`.  
     Può rilanciare l'eccezione `IgnoreNetworkError`.
 

@@ -74,24 +74,6 @@ crea una istanza di CoordinatorService (che descriveremo sotto) e la registra ne
 
 * * *
 
-Il modulo permette di chiedere ad un vicino del nodo informazioni sulla sua rete con il
-metodo `get_network_info` di CoordinatorManager. L'implementazione richiama il metodo remoto
-`ask_network_info` sullo stub (che è stato passato al metodo?)
-
-Si veda sotto i dettagli del metodo remoto.
-
-* * *
-
-Il modulo permette di chiedere ad un vicino del nodo informazioni sui posti liberi nei suoi g-nodi con il
-metodo `get_neighbor_map` di CoordinatorManager.
-
-Il metodo ha come argomento lo stub per contattare il vicino. Prevede le eccezioni CoordinatorStubNotWorkingError
-e CoordinatorMemoryNotReadyError.
-
-Restituisce una istanza di ICoordinatorNeighborMap.
-
-* * *
-
 Il modulo permette di chiedere ad un vicino del nodo di prenotare per lui un posto nel suo g-nodo di livello
 *l* con il metodo `get_reservation` di CoordinatorManager.
 
@@ -102,36 +84,6 @@ CoordinatorSaturatedGnodeError.
 Restituisce una istanza di ICoordinatorReservation.
 
 ## <a name="Comunicazioni_tra_vicini"></a>Comunicazioni tra vicini
-
-Il metodo remoto `ask_network_info`. Non ha argomenti. Prevede l'eccezione CoordinatorMemoryNotReadyError.
-Restituisce una istanza di ICoordinatorNetworkInfoMessage.
-
-L'interfaccia ICoordinatorNetworkInfoMessage è un segnaposto (vuota) esposto dalla libreria intermedia di ZCD
-che espone il metodo remoto. L'implementazione del metodo remoto crea una istanza della classe NetworkInfo. Questa è
-una classe serializzabile interna al modulo, che implementa l'interfaccia segnaposto suddetta.
-
-La classe NetworkInfo contiene:
-
-*   `netid` = Identificativo della rete.
-*   `gsizes` = Topologia della rete. Da essa si ricava `levels`.
-*   `gnode_data` = Lista di informazioni sui g-nodi ai vari livelli secondo la posizione del nodo interrogato *v*.  
-    Per ogni livello *i* da `levels` a 1 l'elemento `gnode_data[i-1]` contiene:
-    *   `n_nodes` il numero approssimativo di singoli nodi dentro il g-nodo di livello `i` a cui appartiene *v*.
-    *   `pos` la posizione al livello `i-1` di *v*.
-    *   `n_free_pos` Il numero di posizioni libere dentro il g-nodo di livello `i` a cui appartiene *v*.
-
-* * *
-
-Quando il modulo vuole chiedere ad un vicino informazioni sui posti liberi nei suoi g-nodi usa il metodo
-remoto `retrieve_neighbor_map`. Non ha argomenti. Prevede l'eccezione CoordinatorMemoryNotReadyError, oltre
-alle solite StubError e DeserializeError. Restituisce una istanza di ICoordinatorNeighborMapMessage.
-
-L'interfaccia ICoordinatorNeighborMapMessage è un segnaposto (vuota) esposto dalla libreria intermedia di ZCD
-che espone il metodo remoto. L'interfaccia ICoordinatorNeighborMap è esposta dal modulo Coordinator e ha i metodi
-descritti nell'analisi. L'implementazione del metodo remoto crea una istanza della classe NeighborMap. Questa è
-una classe serializzabile interna al modulo, che implementa entrambe le interfacce suddette.
-
-* * *
 
 Quando il modulo vuole chiedere ad un vicino di prenotare per lui un posto nel suo g-nodo di livello *l* usa il
 metodo remoto `ask_reservation`. Ha come argomento il livello *l*. Prevede le eccezioni CoordinatorMemoryNotReadyError,
