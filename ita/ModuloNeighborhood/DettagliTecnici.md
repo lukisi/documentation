@@ -6,7 +6,6 @@
 1.  [Produzione di uno stub per inviare un messaggio in broadcast](#Produzione_di_uno_stub_per_inviare_un_messaggio_in_broadcast)
 1.  [Produzione di uno stub per inviare un messaggio UDP in unicast](#Produzione_di_uno_stub_per_inviare_un_messaggio_UDP_in_unicast)
 1.  [Produzione di uno stub per inviare un messaggio reliable ad un vicino tramite un arco](#Produzione_di_uno_stub_per_inviare_un_messaggio_reliable_ad_un_vicino_tramite_un_arco)
-1.  [Chiamate lato server](#Chiamate_lato_server)
 1.  [Indirizzo IPv4 di scheda](#Indirizzo_IPv4_di_scheda)
 1.  [Proof of concept](#Proof_of_concept)
     1.  [Interazione del programma con l'utente](#Interazione_del_programma_con_utente)
@@ -397,13 +396,6 @@ attendere l'esecuzione del metodo nel nodo vicino oppure no.
 
 Il modulo può aver bisogno internamente di comunicare con un suo vicino passando per un arco; in questo caso produce
 questo tipo di stub. Oppure lo stub gli può essere richiesto dall'esterno.
-
-## <a name="Chiamate_lato_server"></a>Chiamate lato server
-
-In questo capitolo vediamo passo passo come una applicazione debba usare il modulo Neighborhood per gestire gli
-aspetti "lato server" delle chiamate a metodi remoti.
-
-**TODO** Vedi documento "ChiamateLatoServer" nel vecchio repository.
 
 ## <a name="Indirizzo_IPv4_di_scheda"></a>Indirizzo IPv4 di scheda
 
