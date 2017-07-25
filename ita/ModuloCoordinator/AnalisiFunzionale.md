@@ -86,26 +86,27 @@ Il risultato va restituito così com'è al client del servizio attraverso una is
 
 #### <a name="Avvio_ingresso"></a>Avvio ingresso in altra rete
 
-La richiesta *r* di autorizzare l'avvio delle operazioni di ingresso del g-nodo *g* in una diversa rete *J*. Tale
-richiesta arriva al nodo Coordinator di *g*.
+Una richiesta *r* di tipo BeginEnterRequest fatta al nodo Coordinator di *g* indica che il singolo nodo *n*
+(il client del servizio) vuole essere autorizzato ad avviare le operazioni di ingresso del g-nodo *g* in
+una diversa rete *J*.
 
 I membri di *r* sono:
 
-*   `netid` = Identificativo della rete *J*.
 *   `lvl` = livello di *g*.
+*   `Object begin_enter_data` = un oggetto serializzabile la cui classe è nota al delegato IBeginEnterHandler.  
+    Contiene informazioni che non sono di pertinenza del modulo Coordinator.
 
-L'arrivo di questa richiesta implica che la topologia della rete *J* dal livello `lvl-1` in giù sia
-identica alla topologia di *G*.
+Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordinator di *g*, per
+fare in modo che sia *g* come entità atomica a venire interpellata.
 
-Il Coordinator di *g* acquisisce un *lock*.
+Per rispondere, non essendo questa materia di competenza del modulo Coordinator, viene utilizzato
+un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IBeginEnterHandler.
 
-Poi avvia una tasklet su cui procedere, mentre risponde positivamente al client permettendogli di
-proseguire con le operazioni di ingresso di *g* in *J*.
+Il delegato può completare il metodo correttamente (il metodo ha firma `void`) oppure lanciare una eccezione:
 
-L'acquisizione del lock equivale ad una scrittura nella memoria condivisa, quindi nella nuova tasklet
-il Coordinator come prima cosa provvede alle repliche con il meccanismo fornito dal modulo PeerServices.
+*   `AlreadyEnteringError` - il client deve ignorare l'altra rete.
 
-Poi... **TODO**
+Il risultato va restituito così com'è al client del servizio attraverso una istanza di BeginEnterResponse.
 
 #### <a name="Prenota_un_posto"></a>Prenota un posto
 
@@ -323,8 +324,9 @@ La classe client nel suo metodo `evaluate_enter` prepara una richiesta *r* = [Ev
 che comprende la struttura dati (ovvero l'istanza di Object serializzabile) di cui sopra.
 
 Poi invia la richiesta *r* e ottiene una risposta che è una istanza di EvaluateEnterResponse. Essa contiene
-esattamente i possibili risultati previsti dalla signature del metodo `evaluate_enter`. Quindi restituisce
-al chiamante:
+esattamente i possibili risultati previsti dalla signature del metodo `evaluate_enter`.
+
+Quindi il metodo `evaluate_enter` del modulo Coordinator restituisce al chiamante:
 
 *   `int ret`. Oppure:
 *   Eccezione AskAgainError. Oppure:
@@ -341,14 +343,15 @@ Viene preparato un client del servizio Coordinator. Su questo viene chiamato il 
 Ricordiamo che la struttura dati `begin_enter_data` non è nota al modulo Coordinator, che sa solo che è un Object serializzabile.
 
 La classe client del servizio usa come chiave *k* con `k.lvl = lvl`. Prepara una richiesta *r* = [BeginEnterRequest](#Avvio_ingresso)
-che comprende la struttura dati (ovvero l'istanza di Object serializzabile) di cui sopra.
+che comprende il livello *lvl* e la struttura dati (ovvero l'istanza di Object serializzabile) di cui sopra.
 
-Poi invia la richiesta *r* e ottiene una risposta che è una istanza di BeginEnterResponse.
+Poi invia la richiesta *r* e ottiene una risposta che è una istanza di BeginEnterResponse. Essa contiene
+esattamente i possibili risultati previsti dalla signature del metodo `begin_enter`.
 
-**TODO** Cosa contiene?
+Quindi il metodo `begin_enter` del modulo Coordinator restituisce al chiamante:
 
-Quando ritorna il metodo `begin_enter` del modulo Coordinator significa che il Coordinator di *g* ha acquisito il lock
-necessario; quindi *n* può procedere. Altrimenti è lanciata una eccezione.
+*   `void`. Oppure:
+*   Eccezione AlreadyEnteringError.
 
 ## <a name="Requisiti"></a>Requisiti
 
@@ -381,6 +384,11 @@ Fornisce metodi per:
     stesso modulo X) nel suo metodo `evaluate_enter`.  
     L'esecuzione del metodo `IEvaluateEnterHandler.evaluate_enter` produce la decisione per il nodo *n* di tentare
     o meno l'ingresso nella nuova rete e se sì a quale livello.
+*   Iniziare un ingresso in una nuova rete. Metodo `begin_enter`.  
+    Anche in questo caso la logica di queste operazioni non è di pertinenza del modulo Coordinator.  
+    Questo metodo permette all'utilizzatore del modulo Coordinator di far eseguire l'operazione `begin_enter`
+    sul nodo Coordinator di un g-nodo *g* di livello *lvl*. Il delegato `IBeginEnterHandler.begin_enter`
+    sul nodo Coordinator di *g* effettivamente autorizza/nega l'ingresso.
 *   Dato un livello *l*, chiedere ad un vicino *v*, dato uno stub per contattarlo, di richiedere al Coordinator
     del suo g-nodo di livello *l* la prenotazione di un posto, come nuovo g-nodo di livello *l* - 1.
     Metodo `get_reservation`.  
@@ -438,16 +446,6 @@ l'interfaccia ICoordinatorMap. Tramite essa il modulo può:
     Cioè le posizioni nel livello *i* che sono libere nel nostro g-nodo di livello *i* + 1. Questa
     informazione è quella che si basa sulla mappa del nodo corrente, senza contattare il Coordinator
     attuale che ha la conoscenza autoritativa delle prenotazioni pendenti.
-
-* * *
-
-Il metodo `get_neighbor_map` restituisce una istanza di ICoordinatorNeighborMap. Tramite questa
-interfaccia il modulo può:
-
-*   Leggere il numero di livelli nella topologia (metodo `get_levels`).
-*   Leggere la gsize per ogni livello *i*, con *i* da 0 a *levels* - 1 (metodo `get_gsize`).
-*   Leggere il numero di posti liberi in ogni livello *i*, con *i* da 0 a *levels* - 1
-    (metodo `get_free_pos_count`).
 
 * * *
 

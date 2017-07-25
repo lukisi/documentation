@@ -331,7 +331,43 @@ come argomento anche l'indirizzo di *n*, `List<int> client_address`.
 
 Vediamo cosa avviene nel metodo `begin_enter` del modulo X eseguito sul nodo Coordinator del g-nodo *g*.
 
-**TODO**
+La chiamata del metodo implica che la topologia della rete *J* dal livello `lvl-1` in giù sia
+identica alla topologia di *G*.
+
+Analogamente a quanto detto per il modulo X nel nodo Coordinator di tutta la rete *G*, anche il modulo X nel nodo
+Coordinator del g-nodo *g* ha bisogno di poter accedere in lettura e scrittura alla memoria condivisa del
+g-nodo *g* relativa agli aspetti gestiti dal modulo X.  
+Lo fa stimolando la chiamata dei metodi `get_network_entering_memory` e `set_network_entering_memory` nel modulo
+Coordinator. Anche qui le operazioni possono essere considerate atomiche, cioè non comportano
+alcuna operazione bloccante di trasmissione in rete.  
+In seguito ci riferiremo a questa sequenza di operazioni semplicemente dicendo che
+il modulo X nel nodo Coordinator del g-nodo *g* accede e/o aggiorna la memoria condivisa di *g* con delle
+informazioni di sua pertinenza.
+
+Il modulo X nel nodo Coordinator di *g* acquisisce un *lock*. Cioè, accedendo alla memoria condivisa di *g*
+verifica che non sia in corso un'altra operazione di ingresso di *g* in un'altra rete; e allo stesso
+tempo memorizza che ora è in corso questa operazione.  
+Nella memorizzazione deve essere incluso un timer scaduto il quale l'operazione va considerata abortita.
+
+Se l'acquisizione del lock non riesce, allora il metodo `begin_enter` del modulo X nel nodo Coordinator
+del g-nodo *g* fa in modo che venga ricevuta una eccezione AlreadyEnteringError dal modulo X nel nodo
+*n* che aveva fatto richiamare il metodo `begin_enter` nel modulo Coordinator.  
+Questo avviene proprio lanciando una eccezione dal metodo `begin_enter` del modulo X. Il delegato noto al
+modulo Coordinator `IBeginEnterHandler.begin_enter` prevede questa eccezione e il modulo Coordinator
+la gestisce preparando una istanza di BeginEnterResponse che sarà tradotta nel metodo `begin_enter` del
+modulo Coordinator nel nodo *n*.
+
+Se, invece, l'acquisizione del lock riesce, allora il metodo `begin_enter` del modulo X nel nodo Coordinator
+del g-nodo *g* avvia una tasklet su cui procedere, mentre risponde positivamente al client permettendogli di
+proseguire con le operazioni di ingresso di *g* in *J*.
+
+Nella nuova tasklet... **TODO**
+
+### Sesta fase - richiesta della prenotazione di un posto
+
+La sesta fase inizia quando il nodo *n*, riceve l'autorizzazione dal Coordinator di *g* di chiedere al
+suo vicino *v* la prenotazione di un posto per *g* in *J*.
+
 
 ## Altre annotazioni
 
