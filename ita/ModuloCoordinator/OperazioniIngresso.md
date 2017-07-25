@@ -52,7 +52,7 @@ Allora il modulo X aggiunge un'altra informazione a quelle della struttura dati 
 *   `int minimum_lvl` = Livello minimo a cui il singolo nodo *n* è disposto a fare ingresso. Infatti il nodo *n*
     potrebbe essere un gateway verso una rete privata in cui si vogliono adottare diversi meccanismi di
     assegnazione di indirizzi e routing. In questo caso il gateway potrebbe volere una assegnazione di un
-    g-nodo di livello tale (**N.B.** considerando la topologia della rete *J*) da poter disporre di un certo spazio
+    g-nodo di livello tale da poter disporre di un certo spazio
     (numero di bit) per gli indirizzi interni.
 
 Inoltre sceglie un identificativo univoco random per questa richiesta, `int evaluate_enter_id`.
@@ -95,39 +95,11 @@ tale che la rete *G* è composta da un solo g-nodo a quel livello. Questo valore
 se si raggiunge la prenotazione di una posizione a questo livello, l'intera rete *G* può entrare in *J*
 in blocco. Non è quindi necessario chiedere di più.
 
-Consideriamo ora le implicazioni della topologia della rete. I due nodi *n* e *v* si sono
-incontrati; il nodo *n* ha preso visione della topologia della rete *J* e l'ha confrontata con
-la topologia di *G*; ha deciso che *G* dovrebbe cercare di fare ingresso in *J*. Nel prendere questa
-decisione ha ponderato i vantaggi che avrebbe *G* ad entrare in *J* (probabilmente più grande o
-forse con altre caratteristiche positive) ma anche gli svantaggi. Questo ha a che vedere con la
-topologia delle due reti.  
-Supponiamo che la rete *G* possa entrare in blocco nella rete *J*. Questo vorrebbe dire che
-in pratica *G* non subisce alcuna mutazione, cioè i suoi nodi non hanno alcun danno dalla
-procedura di ingresso in *J*. Questo implica necessariamente che la topologia di *J* è identica
-alla topologia di *G* almeno ai livelli inferiori a `max_lvl`.  
-Se invece, anche se le topologie fossero identiche, la rete *G* non potesse entrare in blocco nella
-rete *J* formando un nuovo g-nodo di livello `max_lvl` (nemmeno con delle migration-path, cioè se il grafo di *J* al livello `max_lvl` è
-*pieno*) allora per fare ingresso la rete *G* cercherà un livello più basso *l* al quale sarà possibile
-far entrare i g-nodi di *G* uno alla volta dentro *J*. In questo caso *G* subisce una mutazione
-e i suoi nodi un danno: infatti i nodi di *G* di ogni g-nodo di livello *l* perderanno eventuali connessioni
-aperte con i nodi di *G* di altri g-nodi di livello *l*.  
-Questo tipo di operazioni avviene anche quando la rete *G* vuole entrare nella rete *J* che ha
-una diversa topologia. Il livello più grande in cui un singolo g-nodo di *G* può entrare in
-blocco in *J* è quello tale che le topologie sono identiche a tutti i livelli inferiori. Quindi
-il nodo *n* quando incontra *v* e vede la topologia di *J* deve valutare quanto sia conveniente
-per *G* entrare in *J* prima di decidere.
-
-Considerando che la topologia di *G* e quella di *J* possono essere diverse, introduciamo questa regola:
-quando il nodo Coordinator della rete *G* esegue il metodo `evaluate_enter` del modulo X esso conosce sia la topologia
-di *G* sia la topologia di *J*. Il valore di `max_lvl` precedentemente calcolato deve essere
-tale che la topologia di *G* e quella di *J* sono identiche ai livelli inferiori di `max_lvl`;
-altrimenti il suo valore va abbassato.  
-Alla fine se ancora `max_lvl` ≥ `min_lvl` non ci saranno problemi.  
-Se invece `min_lvl` > `max_lvl` allora sarà possibile in questo caso impostare `max_lvl` = `min_lvl` e
-proseguire. Infatti in questo caso specifico l'unico g-nodo a fare ingresso sarebbe quello che
-costituisce la rete privata a gestione autonoma di indirizzi e routing della quale il nodo *n*
-è il gateway. Quindi la topologia usata in *J* ai livelli inferiori a `min_lvl` non è di alcun
-interesse per quel g-nodo.
+Sebbene in teoria sarebbe possibile far entrare (almeno gradualmente) la rete *G* dentro la rete *J*
+anche nel caso in cui le topologie fossero differenti, questo comporterebbe delle importanti variazioni
+agli algoritmi di calcolo dell'indirizzo IP (globale, interno, anonimizzante).  
+Per questo motivo ci limitiamo per ora a stabilire che l'ingresso in una rete diversa non viene affatto
+tentato se le topologie differiscono.
 
 Il nodo Coordinator dell'intera rete *G* non ha particolari informazioni sui g-nodi (di livello inferiore a
 `levels`) a cui appartiene *n*. Ma tali informazioni comunque non gli sono necessarie. Esso infatti dovrà
@@ -330,9 +302,6 @@ Va considerato che, sempre grazie ai meccanismi del modulo Coordinator, oltre al
 come argomento anche l'indirizzo di *n*, `List<int> client_address`.
 
 Vediamo cosa avviene nel metodo `begin_enter` del modulo X eseguito sul nodo Coordinator del g-nodo *g*.
-
-La chiamata del metodo implica che la topologia della rete *J* dal livello `lvl-1` in giù sia
-identica alla topologia di *G*.
 
 Analogamente a quanto detto per il modulo X nel nodo Coordinator di tutta la rete *G*, anche il modulo X nel nodo
 Coordinator del g-nodo *g* ha bisogno di poter accedere in lettura e scrittura alla memoria condivisa del
