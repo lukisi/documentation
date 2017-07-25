@@ -357,8 +357,18 @@ suo vicino *v* la prenotazione di un posto per *g* in *J*.
 
 Per la premessa abbiamo che l'indirizzo di *v* ha componenti reali al livello *lvl(g)* e a quelli inferiori.
 
+Il modulo X nel nodo *n* chiede al modulo X nel nodo *v* di trovare una migration-path e di riservare
+un posto per *g* (cioè per il g-nodo di livello *lvl* a cui appartiente *n*) dentro *l'attuale* g-nodo
+di *v* di livello *lvl+1* o superiore.
 
-## Altre annotazioni
+Il modulo X nel nodo *v* cerca la shortest migration-path come descritto [qui](#Strategia_ingresso).  
+Prima avvia una ricerca esplorativa. Poi ne avvia altre se il risultato non è soddisfacente.
+Infine avvia una ricerca esecutiva. Poi comunica al nodo *n* i dettagli per fare ingresso nel
+suo g-nodo nel posto che si è appena liberato.
+
+**TODO** dettagli
+
+## <a name="Strategia_ingresso"></a>Strategia di ingresso
 
 Quando due reti si incontrano e la rete più piccola *G* decide di entrare in *J* il primo tentativo
 è quello di entrare in blocco. Cioè con il livello più piccolo tale che *G* è costituita da un solo
@@ -370,7 +380,7 @@ in blocco dentro *J*.
 Il nodo *n* per prima cosa richiede a *v*: "trova la shortest migration-path che permetta
 al mio g-nodo di livello *l* di essere connesso attraverso l'arco *n - v* dentro il tuo *attuale* g-nodo di
 livello *l* + 1".  
-Il nodo *n* e il nodo *v* devono avere entrambi un indirizzo completamente *reale*.  
+Il nodo *n* e il nodo *v* devono essere entrambi identità *principali*.  
 Indichiamo con *h* l'attuale g-nodo di livello *l* + 1 di *v*.  
 È evidenziato nella richiesta il fatto che *g* vuole entrare dentro *l'attuale* g-nodo di *v*, perché
 come risultato della migration-path lo stesso nodo *v* potrebbe migrare lasciando dentro *h* la sua identità
@@ -445,25 +455,45 @@ g-nodo di livello 3 saturo; sebbene questo sia dentro un g-nodo di livello 4 che
 si preferisce cercare una diversa migration path e si trova che facendo migrare un singolo nodo da un g-nodo
 di livello 1 dentro un altro g-nodo esistente sempre di livello 1 si libera un posto per il nuovo nodo.
 
+Quindi, quando si sceglie la topologia di una rete Netsukuku si sceglie anche un *𝜀* (ad esempio 5 se la
+topologia è composta per lo più da gsize=2) per valutare gli ingressi.
+
 Si procede in questo modo: la prima ricerca della shortest migration-path si fa senza porre alcun limite
 superiore a *lh*. Trattandosi di una ricerca *breadth-first* o *in ampiezza* questa si ferma alla prima
 shortest migration-path: cioè se dovessimo ripetere la ricerca dall'inizio ponendo dei parametri di ricerca
 più restrittivi di sicuro avremmo un risultato la cui distanza *d* non può migliorare.
 
-Quindi dalla prima ricerca otteniamo una migration-path con distanza *d0* e con livello del g-nodo
-non saturo *hl0*. Se *hl0* risulta soddisfacente ci fermiamo. Altrimenti riavviamo una nuova ricerca
-ponendo un limite superiore a *hl* minore di *hl0*, decrementando di 1. Se la ricerca non trova
-una migration-path ci fermiamo; se invece trova una migration path avremo distanza *d1* e livello ospite *hl1*.
-Di nuovo, se *hl1* risulta soddisfacente ci fermiamo. Altrimenti riavviamo una nuova ricerca
-ponendo un limite superiore a *hl* minore di *hl1*, decrementando di 1. Se la ricerca non trova
-una migration-path ci fermiamo; se invece trova una migration path avremo distanza *d2* e livello ospite *hl2*.
+Quindi dalla prima ricerca otteniamo una migration-path con distanza *d<sub>0</sub>* e con livello del g-nodo
+non saturo *hl<sub>0</sub>*. Se *hl<sub>0</sub>* risulta soddisfacente (cioè `hl0 - l < 𝜀`) ci fermiamo. Altrimenti riavviamo una nuova ricerca
+ponendo un limite superiore a *hl* di *hl<sub>0</sub>-1*. Se la ricerca non trova
+una migration-path ci fermiamo; se invece trova una migration path avremo distanza *d<sub>1</sub>* e livello ospite *hl<sub>1</sub>*.
+Di nuovo, se *hl<sub>1</sub>* risulta soddisfacente ci fermiamo. Altrimenti riavviamo una nuova ricerca
+ponendo un limite superiore a *hl* di *hl<sub>1</sub>-1*. Se la ricerca non trova
+una migration-path ci fermiamo; se invece trova una migration path avremo distanza *d<sub>2</sub>* e livello ospite *hl<sub>2</sub>*.
 E così via fino a quando non ci fermiamo perché il delta è minore di *𝜀* o perché non esistono
-migration-path con il delta minore dell'ultimo *hl*.  
-Quando ci siamo fermati avremo un insieme di soluzioni (che potrebbe essere vuoto) tra cui scegliere.
+migration-path con il delta minore dell'ultimo *hl*.
 
-Queste prime ricerche *esplorative* non mettono un blocco sulla rete, che quindi potrebbe anche evolversi nel
-frattempo. Ma accettiamo questa possibilità. Una volta scelta una migration path sulla base della
-ricerca esplorativa appena fatta, si procede con una nuova ricerca in ampiezza con gli stessi
-parametri (cioè con o senza limite superiore) che però sarà *esecutiva*, confidando che l'esito
+Quando ci siamo fermati avremo un insieme di soluzioni tra cui scegliere. Qualsiasi soluzione in
+questo insieme, anche se non ottimale, è comunque da preferire all'alternativa di degradare il livello
+a cui si tenta di fare ingresso, come vedremo subito dopo.
+
+Data una soluzione *s<sub>i</sub>* di questo elenco, la successiva *s<sub>i+1</sub>* è da preferire
+se *d<sub>i+1</sub>* `<` *d<sub>i</sub>* + 5 oppure
+se *d<sub>i+1</sub>* `<` *d<sub>i</sub>* x 1.3.
+
+Dopo aver scelto la soluzione la si applica. Le prime ricerche erano solo *esplorative*.
+Ora si procede con una nuova ricerca in ampiezza con gli stessi parametri di quelli usati
+nella soluzione scelta (cioè con o senza limite superiore) che però sarà *esecutiva*, confidando che l'esito
 non cambierà di molto.
+
+### Degradazione
+
+È possibile che la ricerca di una migration-path a livello *l*, anche senza porre alcun limite superiore
+a *lh*, fallisca. Ciò avviene quando il grafo della rete a quel livello è pieno, cioè non esiste in tutta
+la rete una posizione libera per un g-nodo di livello *l* o superiore.
+
+Se il tentativo al livello desiderato (inizialmente `max_lvl`) fallisce non resta che decrementare di
+uno il livello e riprovare. Si cerca in questo modo di fare entrare *G* in *J* anche gradualmente. Ovviamente
+esiste anche il caso limite in cui tutto lo spazio degli indirizzi validi è stato occupato in *J*, quindi nessun
+ulteriore singolo nodo può entrare in *J*.
 
