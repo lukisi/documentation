@@ -11,8 +11,8 @@ Il modulo X del nodo *n* che appartiene alla rete *G* si avvede del vicino *v* d
 Questo incontro tra due singoli nodi di reti diverse è l'evento atomico di cui si compone
 l'evento macroscopico "la rete *G* incontra la rete *J*".
 
-Assumiamo che le due reti si vogliano fondere. Più precisamente, che la rete *G* voglia entrare
-a far parte della rete *J*.
+Esaminiamo in questo documento le fasi che portano il modulo X del nodo *n* a fare la sua parte
+al fine di decidere e effettuare l'ingresso della rete *G* dentro la rete *J*.
 
 È importante che la decisione venga presa dalla rete *G* come entità atomica, poiché il fatto che il
 singolo nodo *n* abbia rilevato il contatto con *J* non esclude che le due reti siano
@@ -23,6 +23,19 @@ tempo prima di procedere, per cercare di verificare la possibilità di fare ingr
 sfruttando il punto di contatto migliore.
 
 ### Prima fase - valutazione del singolo nodo
+
+Diciamo subito che il modulo X opera solo nella *identità principale* di un nodo. Quindi *n* e *v* non
+sono identità *di connettività*. Ma sebbene sono identità principali potrebbero in teoria essere in
+una fase temporanea in cui il loro indirizzo non ha tutte le componenti *reali*.
+
+Il modulo X del nodo *n*, avendo rilevato la presenza del vicino *v* di altra rete, inizia questa prima
+fase (cioè valuta se *G* dovrebbe entrare in *J*) solo se *n* ha un indirizzo completamente *reale* in
+*G*. Infatti dopo dovrà parlare con il nodo Coordinator di *G*.
+
+Il nodo *v* invece potrebbe avere un indirizzo con componenti *virtuali*. Questo non sarà un ostacolo
+se si dovesse scegliere di fare ingresso tramite l'arco *n* - *v* con un g-nodo di livello *lvl* tale
+che le componenti dell'indirizzo di *v* sono tutte reali ai livelli minori o uguali a *lvl*.
+Infatti dopo dovrà parlare con il nodo Coordinator del suo g-nodo di livello *lvl+1*.
 
 Il modulo X del nodo *n* chiede e ottiene dal vicino *v* una struttura dati che descrive *J* come è vista da *v*.  
 Questa struttura contiene:
@@ -112,6 +125,11 @@ assumendo che il fatto di cercare di far entrare *G* dentro *J* sia dato per buo
 a quale livello compreso tra `min_lvl` e `max_lvl` andrebbe tentato l'ingresso di (una parte di) *G* in *J*?
 
 **TODO** Inserire qui ogni idea su some rispondere alla domanda.
+
+**Nota 1** Una cosa da considerare è che se l'indirizzo di *v* (in `evaluate_enter_data.neighbor_pos`) ha
+componenti *virtuali* allora questi limitano il livello *lvl* risposta. Infatti il livello deve essere tale che
+le componenti dell'indirizzo di *v* sono tutte *reali* a quel livello e ai livelli inferiori.  
+Infatti dopo dovrà parlare con il nodo Coordinator del suo g-nodo di livello *lvl+1*.
 
 Diciamo che la risposta alla domanda sia *lvl_0*.
 
@@ -336,6 +354,8 @@ Nella nuova tasklet... **TODO**
 
 La sesta fase inizia quando il nodo *n*, riceve l'autorizzazione dal Coordinator di *g* di chiedere al
 suo vicino *v* la prenotazione di un posto per *g* in *J*.
+
+Per la premessa abbiamo che l'indirizzo di *v* ha componenti reali al livello *lvl(g)* e a quelli inferiori.
 
 
 ## Altre annotazioni
