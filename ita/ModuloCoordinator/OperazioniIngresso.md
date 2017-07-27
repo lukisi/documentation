@@ -29,13 +29,8 @@ sono identità *di connettività*. Ma sebbene sono identità principali potrebbe
 una fase temporanea in cui il loro indirizzo non ha tutte le componenti *reali*.
 
 Il modulo X del nodo *n*, avendo rilevato la presenza del vicino *v* di altra rete, inizia questa prima
-fase (cioè valuta se *G* dovrebbe entrare in *J*) solo se *n* ha un indirizzo completamente *reale* in
-*G*. Infatti dopo dovrà parlare con il nodo Coordinator di *G*.
-
-Il nodo *v* invece potrebbe avere un indirizzo con componenti *virtuali*. Questo non sarà un ostacolo
-se si dovesse scegliere di fare ingresso tramite l'arco *n* - *v* con un g-nodo di livello *lvl* tale
-che le componenti dell'indirizzo di *v* sono tutte reali ai livelli minori o uguali a *lvl*.
-Infatti dopo dovrà parlare con il nodo Coordinator del suo g-nodo di livello *lvl+1*.
+fase (cioè valuta se *G* dovrebbe entrare in *J*) solo se *n* e *v* hanno entrambi un indirizzo completamente
+*reale*.
 
 Il modulo X del nodo *n* chiede e ottiene dal vicino *v* una struttura dati che descrive *J* come è vista da *v*.  
 Questa struttura contiene:

@@ -110,38 +110,45 @@ Il risultato va restituito così com'è al client del servizio attraverso una is
 
 #### <a name="Prenota_un_posto"></a>Prenota un posto
 
-La richiesta *r* di prenotare un posto può arrivare ad un nodo *x* come Coordinator di un g-nodo *g* di livello
-*l*, con 0 < *l* ≤ *levels*. I membri di *r* sono:
+Una richiesta *r* di tipo ReserveRequest fatta al nodo Coordinator di *g* indica che il singolo nodo *n*
+(il client del servizio) chiede la prenotazione di un posto libero in *g* o in uno dei suoi g-nodi di livello superiore.
 
 *   `lvl` = livello di *g*.
+*   `Object reserve_data` = un oggetto serializzabile la cui classe è nota al delegato IReserveHandler.  
+    Contiene informazioni che non sono di pertinenza del modulo Coordinator.
 
-Il nodo *x* valuta se ci sono posti liberi in *g* considerando la sua mappa dei percorsi. Deve considerare anche
-le prenotazioni concesse in precedenza, le quali restano valide per un certo tempo anche se ancora non sono nella
-sua mappa perché non sono ancora state confermate da un ETP.
+Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordinator di *g*, per
+fare in modo che sia *g* come entità atomica a venire interpellata.
 
-Se un posto è disponibile il nodo *x* lo prenota. Questo equivale ad una scrittura nella memoria condivisa,
-quindi è necessario provvedere anche alle repliche con il meccanismo fornito dal modulo PeerServices.
+Per rispondere, non essendo questa materia di competenza del modulo Coordinator, viene utilizzato
+un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IReserveHandler.
 
-Il nodo che fa la richiesta è un nodo *n* che già appartiene al g-nodo *g*. Questi richiede la prenotazione di
+Il delegato può completare il metodo correttamente oppure lanciare una eccezione:
+
+*   `Object reserved` - i dati della prenotazione.
+*   `FullNetworkError` - nella rete non ci sono più posti assegnabili al livello richiesto,
+    nemmeno eseguendo una migration-path.
+
+Il risultato va restituito così com'è al client del servizio attraverso una istanza di ReserveResponse.
+
+Il nodo client del servizio è un nodo *n* che già appartiene al g-nodo *g*. Questi richiede la prenotazione di
 un nuovo posto per conto di un altro nodo suo vicino, *m*, il quale non è ancora in *g* o perfino non è ancora
-nella rete.
+nella rete.  
+Ricevuta la risposta, sia essa un esito positivo o una eccezione, *n* la comunica al vicino *m*.
 
-Nella risposta al nodo *n*, *x* segnala:
+Sebbene il contenuto della risposta non sia di pertinenza del modulo Coordinator, diciamo che
+nella risposta al nodo *n*, il Coordinator di *g* segnala:
 
-*   La posizione assegnata all'interno di *g*.
-*   La anzianità della posizione assegnata all'interno di *g*.
+*   Il livello `l`, maggiore o uguale a `lvl`, del g-nodo dentro cui è stato prenotato il posto.
+*   La posizione assegnata al livello `l-1`.
+*   La anzianità della posizione assegnata al livello `l-1`.
 
 Altre informazioni di cui il nodo *m* necessita per fare ingresso in *g* (e eventualmente nella rete) sono
 direttamente fornite dal nodo *n* che già le conosce. Queste sono:
 
 *   La topologia della rete.
-*   Le posizioni di *g* e dei suoi g-nodi superiori.
-*   L'anzianità di *g* e dei suoi g-nodi superiori.
-
-A questo punto il nodo *n* comunica tutte queste informazioni al suo vicino *m*.
-
-Se nessun posto è disponibile il nodo *x* lo segnala con una eccezione, che viene ricevuta da *n*. Anche in
-questo caso *n* comunica l'esito al vicino *m*.
+*   Le posizioni dei livelli `l` e superiori.
+*   L'anzianità dei livelli `l` e superiori.
 
 #### <a name="Confermato_ingresso"></a>Confermato ingresso in altra rete
 
