@@ -110,18 +110,18 @@ Il risultato va restituito così com'è al client del servizio attraverso una is
 
 #### <a name="Prenota_un_posto"></a>Prenota un posto
 
-Una richiesta *r* di tipo ReserveRequest fatta al nodo Coordinator di *g* indica che il singolo nodo *n*
+Una richiesta *r* di tipo ReserveEnterRequest fatta al nodo Coordinator di *g* indica che il singolo nodo *n*
 (il client del servizio) chiede la prenotazione di un posto libero in *g* o in uno dei suoi g-nodi di livello superiore.
 
 *   `lvl` = livello di *g*.
-*   `Object reserve_data` = un oggetto serializzabile la cui classe è nota al delegato IReserveHandler.  
+*   `Object reserve_enter_data` = un oggetto serializzabile la cui classe è nota al delegato IReserveEnterHandler.  
     Contiene informazioni che non sono di pertinenza del modulo Coordinator.
 
 Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordinator di *g*, per
 fare in modo che sia *g* come entità atomica a venire interpellata.
 
 Per rispondere, non essendo questa materia di competenza del modulo Coordinator, viene utilizzato
-un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IReserveHandler.
+un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IReserveEnterHandler.
 
 Il delegato può completare il metodo correttamente oppure lanciare una eccezione:
 
@@ -129,7 +129,7 @@ Il delegato può completare il metodo correttamente oppure lanciare una eccezion
 *   `FullNetworkError` - nella rete non ci sono più posti assegnabili al livello richiesto,
     nemmeno eseguendo una migration-path.
 
-Il risultato va restituito così com'è al client del servizio attraverso una istanza di ReserveResponse.
+Il risultato va restituito così com'è al client del servizio attraverso una istanza di ReserveEnterResponse.
 
 Il nodo client del servizio è un nodo *n* che già appartiene al g-nodo *g*. Questi richiede la prenotazione di
 un nuovo posto per conto di un altro nodo suo vicino, *m*, il quale non è ancora in *g* o perfino non è ancora
@@ -192,9 +192,9 @@ per mezzo di alcuni archi, non sono di pertinenza del modulo Coordinator, bensì
 
 Però queste operazioni prevedono:
 
-1.  L'esecuzione di alcuni metodi del modulo X nel nodo Coordinator di tutta la rete su richiesta che
-    viene dal modulo X in un border-nodo che ha incontrato un vicino di un'altra rete.
-1.  La memorizzazione e rilettura di alcune informazioni nella memoria condivisa di tutta la rete.
+1.  L'esecuzione di alcuni metodi del modulo X nel nodo Coordinator (di tutta la rete o di un g-nodo) su richiesta che
+    viene dal modulo X in un singolo nodo qualsiasi (ad esempio un border-nodo che ha incontrato un vicino di un'altra rete).
+1.  La memorizzazione e rilettura di alcune informazioni nella memoria condivisa di tutta la rete (o di un g-nodo).
 
 Per il primo motivo esistono metodi del modulo Coordinator, relativi metodi nella classe client del
 servizio Coordinator, relativi classi di richieste e risposte (IPeersRequest e IPeersResponse) e delegati
@@ -203,28 +203,28 @@ Di norma per ogni metodo del modulo X (di quelli che vanno eseguiti nel nodo Coo
 un altro nodo) esiste una specifica istanza dei suddetti elementi.
 
 Per il secondo motivo, esiste una classe serializzabile implementata nel modulo X tale che una sua
-istanza contiene tutta la memoria condivisa di tutta la rete relativamente a quanto è di pertinenza
+istanza contiene tutta la memoria condivisa di tutta la rete (o di un g-nodo) relativamente a quanto è di pertinenza
 del modulo X. Tale istanza viene salvata nel membro `Object? network_entering_memory` della classe `CoordGnodeMemory`.
 
-Vediamo come avviene la scrittura e la rilettura della memoria condivisa di tutta la rete ad opera
-del modulo X. Nella trattazione del modulo X abbiamo detto che solo lo stesso nodo Coordinator della
-rete può essere nella posizione di scrivere/leggere in questa memoria.  
-Quando viene chiamato nel modulo Coordinator il metodo `set_network_entering_memory` questi avvia il
-contatto con il Coordinator della rete. Quando viene contattato con tale richiesta il nodo Coordinator
-della rete, esso verifica (pena la terminazione della tasklet che esegue la risposta) che il chiamante
+Vediamo come avviene la scrittura e la rilettura della memoria condivisa di tutta la rete (o di un g-nodo) ad opera
+del modulo X. Nella trattazione del modulo X abbiamo detto che solo lo stesso nodo Coordinator (di tutta la rete o di un g-nodo)
+può essere nella posizione di scrivere/leggere in questa memoria.  
+Quando viene chiamato nel modulo Coordinator il metodo `set_network_entering_memory(Object data, int level)` questi avvia il
+contatto con il servizio Coordinator per la chiave `k.lvl = level`. Quando viene contattato con tale richiesta,
+il servente Coordinator verifica (pena la terminazione della tasklet che esegue la risposta) che il chiamante
 era il nodo stesso.  
 Poi il servente mette l'argomento ricevuto nel membro `network_entering_memory` dell'istanza di `CoordGnodeMemory`
-associata alla chiave `k.lvl = levels`.  
+associata alla chiave `k`.  
 Poi in una nuova tasklet avvia le operazioni di replica. Quando viene contattato un nodo con la richiesta
 di replica, esso verifica (pena la terminazione della tasklet che esegue la risposta) che il chiamante era più
-prossimo di lui all'indirizzo del nodo Coordinator. **Nota** questo è di pertinenza del codice messo a fattor
-comune nel modulo PeerService. Verificare.  
-Quando viene chiamato nel modulo Coordinator il metodo `get_network_entering_memory` questi avvia il
-contatto con il Coordinator della rete. Quando viene contattato con tale richiesta il nodo Coordinator
-della rete, esso verifica (pena la terminazione della tasklet che esegue la risposta) che il chiamante
+prossimo di lui all'indirizzo del servente Coordinator.
+**Nota questo è di pertinenza del codice messo a fattor comune nel modulo PeerService. Verificare.**  
+Quando viene chiamato nel modulo Coordinator il metodo `get_network_entering_memory(int level)` questi avvia il
+contatto con il servizio Coordinator per la chiave `k.lvl = level`. Quando viene contattato con tale richiesta,
+il servente Coordinator verifica (pena la terminazione della tasklet che esegue la risposta) che il chiamante
 era il nodo stesso.  
 Poi il servente restituisce l'oggetto che è nel membro `network_entering_memory` dell'istanza di `CoordGnodeMemory`
-associata alla chiave `k.lvl = levels`.
+associata alla chiave `k`.
 
 ## <a name="Richieste_al_diretto_vicino"></a>Richieste al diretto vicino di accesso al servizio Coordinator
 
@@ -336,8 +336,8 @@ esattamente i possibili risultati previsti dalla signature del metodo `evaluate_
 Quindi il metodo `evaluate_enter` del modulo Coordinator restituisce al chiamante:
 
 *   `int ret`. Oppure:
-*   Eccezione AskAgainError. Oppure:
-*   Eccezione IgnoreNetworkError.
+*   Eccezione `AskAgainError`. Oppure:
+*   Eccezione `IgnoreNetworkError`.
 
 #### Metodo begin_enter
 
@@ -358,7 +358,28 @@ esattamente i possibili risultati previsti dalla signature del metodo `begin_ent
 Quindi il metodo `begin_enter` del modulo Coordinator restituisce al chiamante:
 
 *   `void`. Oppure:
-*   Eccezione AlreadyEnteringError.
+*   Eccezione `AlreadyEnteringError`.
+
+#### Metodo reserve_enter
+
+Quando il modulo X del nodo *n* vuole far eseguire il suo metodo `reserve_enter(reserve_enter_data)` nel nodo Coordinator
+del suo g-nodo *g* di livello *lvl*, richiama il metodo `reserve_enter(lvl, reserve_enter_data)` del modulo Coordinator.
+
+L'esecuzione di `reserve_enter` del modulo Coordinator consiste in questo:
+
+Viene preparato un client del servizio Coordinator. Su questo viene chiamato il metodo `reserve_enter(lvl, reserve_enter_data)`.
+Ricordiamo che la struttura dati `reserve_enter_data` non è nota al modulo Coordinator, che sa solo che è un Object serializzabile.
+
+La classe client del servizio usa come chiave *k* con `k.lvl = lvl`. Prepara una richiesta *r* = [ReserveEnterRequest](#Prenota_un_posto)
+che comprende il livello *lvl* e la struttura dati (ovvero l'istanza di Object serializzabile) di cui sopra.
+
+Poi invia la richiesta *r* e ottiene una risposta che è una istanza di ReserveEnterResponse. Essa contiene
+esattamente i possibili risultati previsti dalla signature del metodo `reserve_enter`.
+
+Quindi il metodo `reserve_enter` del modulo Coordinator restituisce al chiamante:
+
+*   `Object ret`. Oppure:
+*   Eccezione `FullNetworkError`.
 
 ## <a name="Requisiti"></a>Requisiti
 
@@ -396,6 +417,11 @@ Fornisce metodi per:
     Questo metodo permette all'utilizzatore del modulo Coordinator di far eseguire l'operazione `begin_enter`
     sul nodo Coordinator di un g-nodo *g* di livello *lvl*. Il delegato `IBeginEnterHandler.begin_enter`
     sul nodo Coordinator di *g* effettivamente autorizza/nega l'ingresso.
+*   Prenotare un posto, se necessario a fronte di una migration-path. Metodo `reserve_enter`.  
+    Anche in questo caso la logica di queste operazioni non è di pertinenza del modulo Coordinator.  
+    Questo metodo permette all'utilizzatore del modulo Coordinator di far eseguire l'operazione `reserve_enter`
+    sul nodo Coordinator di un g-nodo *g* di livello *lvl*. Il delegato `IReserveEnterHandler.reserve_enter`
+    sul nodo Coordinator di *g* effettivamente prenota un posto (dopo aver orchestrato una migration-path, se necessario).
 *   Dato un livello *l*, chiedere ad un vicino *v*, dato uno stub per contattarlo, di richiedere al Coordinator
     del suo g-nodo di livello *l* la prenotazione di un posto, come nuovo g-nodo di livello *l* - 1.
     Metodo `get_reservation`.  
@@ -465,6 +491,28 @@ I metodi previsti dall'interfaccia IEvaluateEnterHandler sono:
     Con questo metodo si richiama il metodo `evaluate_enter` del modulo X. Vedi [qui](OperazioniIngresso.md).  
     Può rilanciare l'eccezione `AskAgainError`.  
     Può rilanciare l'eccezione `IgnoreNetworkError`.
+
+* * *
+
+Una istanza di IBeginEnterHandler viene passata al modulo Coordinator. Tale istanza viene
+interrogata da parte del modulo quando si deve autorizzare l'ingresso in una nuova rete.
+
+I metodi previsti dall'interfaccia IBeginEnterHandler sono:
+
+*   `void begin_enter(int lvl, Object begin_enter_data)`  
+    Con questo metodo si richiama il metodo `begin_enter` del modulo X. Vedi [qui](OperazioniIngresso.md).  
+    Può rilanciare l'eccezione `AlreadyEnteringError`.
+
+* * *
+
+Una istanza di IReserveEnterHandler viene passata al modulo Coordinator. Tale istanza viene
+interrogata da parte del modulo quando si deve prenotare un posto.
+
+I metodi previsti dall'interfaccia IEvaluateEnterHandler sono:
+
+*   `Object reserve_enter(int lvl, Object reserve_enter_data)`  
+    Con questo metodo si richiama il metodo `reserve_enter` del modulo X. Vedi [qui](OperazioniIngresso.md).  
+    Può rilanciare l'eccezione `FullNetworkError`.
 
 **Nota** Supponiamo che si voglia fare ingresso in una rete *J* con topologia a 20 livelli. Supponiamo che il `max_lvl`,
 cioè la dimensione del più grande g-nodo in *G*, sia 5.
