@@ -25,15 +25,16 @@ sfruttando il punto di contatto migliore.
 ### Prima fase - valutazione del singolo nodo
 
 Diciamo subito che il modulo X opera solo nella *identità principale* di un nodo. Quindi *n* e *v* non
-sono identità *di connettività*. Ma sebbene sono identità principali potrebbero in teoria essere in
+sono identità *di connettività*.  
+Sebbene siano identità principali potrebbero in teoria essere in
 una fase temporanea in cui il loro indirizzo non ha tutte le componenti *reali*.
-
-Il modulo X del nodo *n*, avendo rilevato la presenza del vicino *v* di altra rete, inizia questa prima
+Però il modulo X del nodo *n*, avendo rilevato la presenza del vicino *v* di altra rete, inizia questa prima
 fase (cioè valuta se *G* dovrebbe entrare in *J*) solo se *n* e *v* hanno entrambi un indirizzo completamente
 *reale*.
 
-Il modulo X del nodo *n* chiede e ottiene dal vicino *v* una struttura dati che descrive *J* come è vista da *v*.  
-Questa struttura contiene:
+Il modulo X del nodo *n* prepara una struttura dati che descrive *G* come è vista da *n*. Poi contatta il nodo *v*,
+gli fornisce questa struttura e gli chiede al contempo di ricevere una struttura dati che descrive *J* come è vista da *v*.  
+Le strutture sono le stesse. Ad esempio, quella ricevuta da *v* contiene:
 
 *   `int64 netid` = Identificativo della rete *J*.
 *   `List<int> gsizes` = Lista che descrive la topologia della rete *J*. Da essa si ricava `levels`.
@@ -44,14 +45,36 @@ Questa struttura contiene:
 *   `List<int> neighbor_n_free_pos` = Per i valori *i* da 1 a `levels`, l'elemento `neighbor_n_free_pos[i-1]` è il
     numero di posizioni libere dentro *g<sub>i</sub>(v)*.
 
-Poi quel modulo confronta la descrizione di *J* data da *v* con la rete *G* come è vista da *n*
-e decide, assumiamo per ipotesi, che *G* deve entrare in *J*.
+Le due reti sicuramente vogliono fondersi in una. Si preferisce che sia la più piccola, come numero di singoli nodi in tutta la rete,
+ad entrare nella più grande. Solo in caso di parità assoluta si ricorra all'identificativo della rete (che è un numero
+casuale) come discriminatore. Però ricordiamo che il numero di singoli nodi in tutta la rete è un dato che ogni singolo
+nodo ha in modo approssimativo.  
+Questo significa che quando si incontrano le reti *G* e *J* attraverso molteplici archi è possibile che
+in uno di questi archi (ad esempio quello dei nodi *n* e *v*) si decida che *G* deve entrare in *J*, mentre
+in un altro arco (formato da altri due singoli nodi) si decida l'inverso. Questo non va bene.
 
-**Importante** Questa prima disamina delle caratteristiche di *J* e di *G* avviene sulla base delle
-conoscenze di *n* e di *v*. Non va bene importunare il Coordinator della rete (che può essere anche
+Una soluzione può essere quella che entrambi i nodi chiedano questa informazione al nodo Coordinator della loro
+rete. Però, non va bene importunare il Coordinator della rete (che può essere anche molto
 grande) ogni qualvolta un singolo nodo della rete incontra un vicino che non appartiene ancora alla
-rete. Infatti può essere subito evidente dalle conoscenze dei singoli nodi che si vengono ad
-incontrare quale sia la rete più piccola, quella cioè che cercherà un posto all'interno dell'altra.
+rete. Infatti, soprattutto se si tratta di singoli nodi o di reti molto piccole, questo evento può
+accadere molte volte e rapidamente, quindi congestionerebbe la rete soprattutto nella prossimità del
+nodo Coordinator.  
+Se invece le due reti hanno dimensioni simili, allora possiamo presumere che questo evento accada
+raramente, quindi interrogare il nodo Coordinator va bene.
+
+Procediamo dunque così: se il nodo *n* vede che la differenza è grande tra le due reti (diciamo una
+20 volte più grande dell'altra) allora prende la decisione da solo. Se *G* deve entrare in *J* il
+nodo *n* procede come vedremo nel seguito. Se è vero il contrario, invece, il nodo *n* non fa nulla. Sarà
+il nodo *v* di sua iniziativa a fare le operazioni.
+
+Se invece il nodo *n* vede che la differenza non è molta, allora riparte: chiede l'informazione
+*numero di singoli nodi in G* al nodo Coordinator di *G*. Poi comunica la struttura di cui sopra al
+nodo *v* indicandogli di rispondere con la medesima struttura, ma solo dopo aver chiesto l'informazione
+*numero di singoli nodi in J* al nodo Coordinator di *J*.  
+A questo punto anche se la differenza fosse piccola entrambi i nodi *n* e *v* sanno se proseguire o meno.
+
+Per analizzare il resto delle operazioni in questo documento, assumiamo per ipotesi che il nodo *n*
+decide che *G* deve entrare in *J*.
 
 ### Seconda fase - valutazione della rete
 
