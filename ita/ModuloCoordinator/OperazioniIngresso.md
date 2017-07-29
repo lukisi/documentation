@@ -144,11 +144,6 @@ a quale livello compreso tra `min_lvl` e `max_lvl` andrebbe tentato l'ingresso d
 
 **TODO** Inserire qui ogni idea su some rispondere alla domanda.
 
-**Nota 1** Una cosa da considerare è che se l'indirizzo di *v* (in `evaluate_enter_data.neighbor_pos`) ha
-componenti *virtuali* allora questi limitano il livello *lvl* risposta. Infatti il livello deve essere tale che
-le componenti dell'indirizzo di *v* sono tutte *reali* a quel livello e ai livelli inferiori.  
-Infatti dopo dovrà parlare con il nodo Coordinator del suo g-nodo di livello *lvl+1*.
-
 Diciamo che la risposta alla domanda sia *lvl_0*.
 
 Assumiamo che questa richiesta sia la prima pervenuta che coinvolge il g-nodo *g<sub>lvl_0</sub>(n)*
@@ -352,7 +347,7 @@ informazioni di sua pertinenza.
 Il modulo X nel nodo Coordinator di *g* acquisisce un *lock*. Cioè, accedendo alla memoria condivisa di *g*
 verifica che non sia in corso un'altra operazione di ingresso di *g* in un'altra rete; e allo stesso
 tempo memorizza che ora è in corso questa operazione.  
-Nella memorizzazione deve essere incluso un timer scaduto il quale l'operazione va considerata abortita.
+Nella memorizzazione deve essere incluso un timer. Scaduto questo timer l'operazione va considerata abortita.
 
 Se l'acquisizione del lock non riesce, allora il metodo `begin_enter` del modulo X nel nodo Coordinator
 del g-nodo *g* fa in modo che venga ricevuta una eccezione AlreadyEnteringError dal modulo X nel nodo
@@ -373,16 +368,57 @@ Nella nuova tasklet... **TODO**
 La sesta fase inizia quando il nodo *n*, riceve l'autorizzazione dal Coordinator di *g* di chiedere al
 suo vicino *v* la prenotazione di un posto per *g* in *J*.
 
-Per la premessa abbiamo che l'indirizzo di *v* ha componenti reali al livello *lvl(g)* e a quelli inferiori.
-
 Il modulo X nel nodo *n* chiede al modulo X nel nodo *v* di trovare una migration-path e di riservare
 un posto per *g* (cioè per il g-nodo di livello *lvl* a cui appartiente *n*) dentro *l'attuale* g-nodo
 di *v* di livello *lvl+1* o superiore.
 
-Il modulo X nel nodo *v* cerca la shortest migration-path come descritto [qui](#Strategia_ingresso).  
-Prima avvia una ricerca esplorativa. Poi ne avvia altre se il risultato non è soddisfacente.
-Infine avvia una ricerca esecutiva. Poi comunica al nodo *n* i dettagli per fare ingresso nel
-suo g-nodo nel posto che si è appena liberato.
+Il modulo X nel nodo *v* cerca la shortest migration-path come descritto [qui](#Strategia_ingresso).
+
+**TODO** Descrivere nel dettaglio le comunicazioni del nodo *v* con il nodo Coordinator del suo g-nodo
+di livello *lvl+1*. È questi infatti a fare la ricerca. E se si rende necessaria una degradazione questo
+fatto è solo comunicato dal nodo Coordinator al nodo *v*. Sarà poi il nodo *v* a comunicare con il
+nodo Coordinator di un suo g-nodo di livello inferiore per proseguire con le ricerche nel livello degradato.
+
+**TODO** Quando il nodo *v* avvia una IPeersRequest al nodo Coordinator del suo g-nodo di livello *lvl+1*
+il meccanismo di risposta del PeerServices (il fatto che il nodo servente comunica la risposta al
+nodo client tramite connessione TCP con l'indirizzo IP interno) non funzionerebbe bene se fosse
+necessaria (prima della risposta) la migrazione del g-nodo di livello *lvl* che contiene *v* **XOR** la migrazione del
+g-nodo di livello *lvl* che contiene il nodo Coordinator.
+
+Il risultato di questa ricerca che parte dal nodo *v* può essere il completo fallimento (cioè nemmeno
+un altro singolo nodo può fare ingresso in *J*) oppure una soluzione.
+
+Se l'esito è il fallimento, questo viene comunicato al nodo *n* che dovrà abortire il tentativo.
+
+Se invece si trova una soluzione questo significa che è stata portata a termine una ricerca *esecutiva*,
+cioè sono state effettivamente eseguite tutte le migrazioni necessarie e ora in uno dei g-nodi di *v*
+c'è un posto che adesso è stato riservato per l'ingresso di una parte di *G*.
+
+In questo caso, quindi, l'esito della ricerca di *v* consiste in queste informazioni:
+
+*   `host_gnode_level` - il livello del g-nodo di *v* in cui adesso è stato riservato un posto.  
+    Questo livello può essere diverso da quello richiesto dal nodo *n*, sia maggiore sia minore. Infatti, come
+    descritto [qui](#Strategia_ingresso), la migration-path giudicata ottimale potrebbe essere
+    una di lunghezza zero che comporta la creazione di un nuovo g-nodo di grandezza maggiore; oppure
+    può essere stata necessaria una degradazione.
+*   `int new_pos` - la posizione di livello `host_gnode_level` - 1 riservata.
+*   `int new_eldership` - l'anzianità della nuova posizione dentro il livello `host_gnode_level`.
+
+Il nodo *v* conosce da solo le altre informazioni che servono a *n*.
+
+*   le altre posizioni del nuovo g-nodo, ai livelli superiori, che sono le stesse di *v*.
+*   le altre anzianità del nuovo g-nodo, ai livelli superiori.
+
+Va ricordato che *v* ora potrebbe anche avere una posizione *virtuale* al livello `host_gnode_level` - 1,
+cioè essere una identità *di connettività* ai livelli da `host_gnode_level` (fino a un altro livello).
+Ma questo sicuramente non cambia le sue conoscenze ai livelli superiori.
+
+Il nodo *v* comunica al nodo *n* i dettagli per fare ingresso nel suo g-nodo nel posto che si è appena liberato.
+
+*   `List<int> pos` - Posizioni ai livelli da `host_gnode_level` - 1 a `levels`.
+*   `List<int> elderships` - Anzianità ai livelli da `host_gnode_level` - 1 a `levels`.
+
+### Settima fase - ingresso
 
 **TODO** dettagli
 
@@ -392,7 +428,7 @@ Quando due reti si incontrano e la rete più piccola *G* decide di entrare in *J
 è quello di entrare in blocco. Cioè con il livello più piccolo tale che *G* è costituita da un solo
 g-nodo. Quello che abbiamo chiamato `max_lvl`.
 
-Assumiamo che il nodo *n* di *G* vuole usare il nodo *v* di *J* per far entrare il suo g-nodo *g* di livello *l*
+Assumiamo che il nodo *n* di *G* vuole usare il nodo diretto vicino *v* di *J* per far entrare il suo g-nodo *g* di livello *l*
 in blocco dentro *J*.
 
 Il nodo *n* per prima cosa richiede a *v*: "trova la shortest migration-path che permetta
@@ -430,9 +466,9 @@ Usiamo una definizione che include anche una sorta di migration-path impropria, 
 
 Detto in altri termini, il nodo *v* deve cercare la shortest migration-path a livello *l* che parte da *h*. Cioè:
 
-*   un posto già libero nel suo g-nodo di livello *l* + 1; *oppure*
+*   un posto già libero nel suo g-nodo di livello *l* + 1, cioè in *h*; *oppure*
 *   un posto già libero in un suo g-nodo di livello maggiore; *oppure*
-*   la shortest migration-path per liberare un posto nel suo g-nodo di livello *l* + 1.
+*   la shortest migration-path per liberare un posto nel suo g-nodo di livello *l* + 1, cioè in *h*.
 
 Usare questa migration-path significa far migrare un border g-nodo di livello *l* da ognuno dei g-nodi
 di livello *l* + 1 della lista *P* nel successivo in modo tale da liberare un posto nel primo g-nodo
