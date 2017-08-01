@@ -374,37 +374,26 @@ di *v* di livello *lvl+1* o superiore.
 
 Il modulo X nel nodo *v* cerca la shortest migration-path come descritto [qui](#Strategia_ingresso).
 
-**TODO** Descrivere nel dettaglio le comunicazioni del nodo *v* con il nodo Coordinator del suo g-nodo
-di livello *lvl+1*. È questi infatti a fare la ricerca. E se si rende necessaria una degradazione questo
-fatto è solo comunicato dal nodo Coordinator al nodo *v*. Sarà poi il nodo *v* a comunicare con il
-nodo Coordinator di un suo g-nodo di livello inferiore per proseguire con le ricerche nel livello degradato.
+Se il nodo *v* trova che non esiste una migration-path a livello *lvl* lo comunica a *n*. Questi
+potrà decidere di degradare, cioè tentare ingresso con un g-nodo di livello inferiore.  
+Dovrà ripartire dalla comunicazione con il g-nodo entrante. Cioè prima comunicare al modulo X nel nodo
+Coordinator di *g* che questo ingresso è abortito. Poi chiamare il metodo `begin_enter` del modulo X nel
+nodo Coordinator di *g'* (di livello inferiore) e quindi fare la richiesta di nuovo a *v*.
 
-**TODO** Quando il nodo *v* avvia una IPeersRequest al nodo Coordinator del suo g-nodo di livello *lvl+1*
-il meccanismo di risposta del PeerServices (il fatto che il nodo servente comunica la risposta al
-nodo client tramite connessione TCP con l'indirizzo IP interno) non funzionerebbe bene se fosse
-necessaria (prima della risposta) la migrazione del g-nodo di livello *lvl* che contiene *v* **XOR** la migrazione del
-g-nodo di livello *lvl* che contiene il nodo Coordinator.
+Altrimenti il nodo *v* trova un set di soluzioni e giudica quale sia la migliore e la esegue.
+Cioè coordina l'effettiva esecuzione di tutte le migrazioni necessarie; di modo che in uno dei g-nodi di *v*
+ci sarà un posto riservato per l'ingresso di *g*.
 
-Il risultato di questa ricerca che parte dal nodo *v* può essere il completo fallimento (cioè nemmeno
-un altro singolo nodo può fare ingresso in *J*) oppure una soluzione.
-
-Se l'esito è il fallimento, questo viene comunicato al nodo *n* che dovrà abortire il tentativo.
-
-Se invece si trova una soluzione questo significa che è stata portata a termine una ricerca *esecutiva*,
-cioè sono state effettivamente eseguite tutte le migrazioni necessarie e ora in uno dei g-nodi di *v*
-c'è un posto che adesso è stato riservato per l'ingresso di una parte di *G*.
-
-In questo caso, quindi, l'esito della ricerca di *v* consiste in queste informazioni:
+La migration-path scelta da *v* conteneva, riguardo ai g-nodi di appartenenza di *v*, queste informazioni:
 
 *   `host_gnode_level` - il livello del g-nodo di *v* in cui adesso è stato riservato un posto.  
-    Questo livello può essere diverso da quello richiesto dal nodo *n*, sia maggiore sia minore. Infatti, come
+    Questo livello può essere maggiore o uguale a quello richiesto dal nodo *n*. Infatti, come
     descritto [qui](#Strategia_ingresso), la migration-path giudicata ottimale potrebbe essere
-    una di lunghezza zero che comporta la creazione di un nuovo g-nodo di grandezza maggiore; oppure
-    può essere stata necessaria una degradazione.
+    una di lunghezza zero che comporta la creazione di un nuovo g-nodo di grandezza maggiore.
 *   `int new_pos` - la posizione di livello `host_gnode_level` - 1 riservata.
 *   `int new_eldership` - l'anzianità della nuova posizione dentro il livello `host_gnode_level`.
 
-Il nodo *v* conosce da solo le altre informazioni che servono a *n*.
+Il nodo *v* aggiunge le altre informazioni che servono a *n*.
 
 *   le altre posizioni del nuovo g-nodo, ai livelli superiori, che sono le stesse di *v*.
 *   le altre anzianità del nuovo g-nodo, ai livelli superiori.
@@ -431,20 +420,27 @@ g-nodo. Quello che abbiamo chiamato `max_lvl`.
 Assumiamo che il nodo *n* di *G* vuole usare il nodo diretto vicino *v* di *J* per far entrare il suo g-nodo *g* di livello *l*
 in blocco dentro *J*.
 
-Il nodo *n* per prima cosa richiede a *v*: "trova la shortest migration-path che permetta
-al mio g-nodo di livello *l* di essere connesso attraverso l'arco *n - v* dentro il tuo *attuale* g-nodo di
-livello *l* + 1".  
-Il nodo *n* e il nodo *v* devono essere entrambi identità *principali*.  
+Il nodo *n* e il nodo *v* devono essere entrambi identità *principali* con indirizzi completamente *reali*.  
+Il nodo *n* per prima cosa richiede a *v* di far entrare *g* in uno dei suoi *attuali* g-nodi,
+in blocco come g-nodo di livello *l*.
+
+Abbiamo detto un *attuale* g-nodo di *v*, perché *v* è attualmente una identità principale
+in *J*, ma l'esito della richiesta potrebbe essere che lo stesso nodo *v* migra lasciando nel suo *attuale* posto
+una identità *di connettività* come link per *g*.
+
+Il nodo *v* tenterà di riservare una posizione per un g-nodo di livello *l* in un g-nodo esistente
+in *J* di livello *l* + 1 o superiore. Se questo non fosse possibile il nodo *v* lo comunicherà a *n*
+e questi potrà decidere di tentare di far entrare gradualmente *G* in *J* riprovando con un livello inferiore.
+
 Indichiamo con *h* l'attuale g-nodo di livello *l* + 1 di *v*.  
-È evidenziato nella richiesta il fatto che *g* vuole entrare dentro *l'attuale* g-nodo di *v*, perché
-come risultato della migration-path lo stesso nodo *v* potrebbe migrare lasciando dentro *h* la sua identità
-di connettività come link per *g*.
+Il nodo *v* per riservare una posizione per *g* cerca la shortest migration-path
+che libera un posto in *h* o in un suo g-nodo superiore.
 
 Specifichiamo rigorosamente cosa si intende per migration-path.
 
 ### Migration Path
 
-Prendiamo liberamente in prestito alcune notazioni dal documento delle migrazioni.
+Usiamo alcune notazioni che sono spiegate nel documento delle migrazioni.
 
 Sia *h* un g-nodo di livello *l* + 1, con *l* da 0 a *levels* - 1. È possibile che sia *size<sub>l</sub>(h)* = *gsizes(l)*. Cioè *h* può essere saturo.
 
@@ -535,10 +531,27 @@ Data una soluzione *s<sub>i</sub>* di questo elenco, la successiva *s<sub>i+1</s
 se *d<sub>i+1</sub>* `<` *d<sub>i</sub>* + 5 oppure
 se *d<sub>i+1</sub>* `<` *d<sub>i</sub>* x 1.3.
 
-Dopo aver scelto la soluzione la si applica. Le prime ricerche erano solo *esplorative*.
-Ora si procede con una nuova ricerca in ampiezza con gli stessi parametri di quelli usati
-nella soluzione scelta (cioè con o senza limite superiore) che però sarà *esecutiva*, confidando che l'esito
-non cambierà di molto.
+Vediamo in dettaglio l'algoritmo di questa ricerca.
+
+### Algoritmo
+
+Si definiscono le seguenti strutture dati serializzabili:
+
+```
+TupleGNode:
+  List<int> pos
+
+SolutionStep:
+  TupleGNode gnode
+  SolutionStep? parent
+
+Solution:
+  SolutionStep lastgnode
+  int new_pos
+  int new_eldership
+```
+
+**TODO**
 
 ### Degradazione
 
