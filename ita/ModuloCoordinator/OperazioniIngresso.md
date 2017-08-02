@@ -539,6 +539,7 @@ Si definiscono le seguenti strutture dati serializzabili:
 
 ```
 TupleGNode:
+  int levels
   List<int> pos
 
 SolutionStep:
@@ -547,9 +548,122 @@ SolutionStep:
 
 Solution:
   SolutionStep lastgnode
+  int host_lvl
   int new_pos
   int new_eldership
 ```
+
+La signature dell'algoritmo è la seguente:
+
+```
+List<Solution> CercaShortestMig(int ask_lvl, int 𝜀)
+```
+
+L'algoritmo è il seguente:
+
+```
+TupleGNode v = make_tuple_from_level(ask_lvl + 1, levels)
+int max_host_lvl = levels
+List<Solution> solutions = []
+int enter_id = random
+
+S = new Set<TupleGNode>
+Q = new Queue<SolutionStep>
+
+S.add(v)
+SolutionStep root = new SolutionStep(gnode = v, parent = NIL)
+Q.enqueue(root)
+
+Mentre Q is not empty:
+  SolutionStep current = Q.dequeue().
+  // Contatta un singolo nodo in `current`. Comunica `ask_lvl`, `max_host_lvl`, `enter_id`, `𝜀 ≥ 1`.
+  // La risposta sarà una tupla composta di `esito`, `host_lvl`, `pos`, `eldership`, `max_host_lvl`, `set_adjacent`.
+  `Esito esito`, `int host_lvl`, `int pos`, `int eldership`, `Set<TupleGNode> set_adjacent`.
+  (esito, host_lvl, pos, eldership, max_host_lvl, set_adjacent) = ask_enter_net(current, ask_lvl, max_host_lvl, enter_id, 𝜀)
+    // Questo algoritmo è eseguito nel singolo nodo contattato in current.
+    int host_lvl = ask_lvl + 1
+    int ok_host_lvl = ask_lvl + 𝜀
+    // richiesta al proprio nodo Coordinator di livello host_lvl
+    int pos, int eldership = coord_reserve(host_lvl, enter_id)
+    Se pos ﹤ gsizes(host_lvl - 1):
+      Restituisci esito=GOAL, host_lvl, pos, eldership
+    Mentre host_lvl ﹤ max_host_lvl:
+      host_lvl++
+      pos, eldership = coord_reserve(host_lvl, enter_id)
+      Se pos ﹤ gsizes(host_lvl - 1):
+        Se host_lvl ≤ ok_host_lvl:
+          Restituisci esito=GOAL, host_lvl, pos, eldership
+        max_host_lvl = host_lvl - 1
+        // Naturalmente di conseguenza esce dal ciclo.
+    Set<TupleGNode> set_adjacent = new Set<TupleGNode>
+    Per i = ask_lvl + 1 to levels - 1:
+      // Vede quali g-nodi di livello i sono adiacenti al mio g-nodo di livello ask_lvl + 1
+      Set<HCoord> adjacent_hc_set = adj_to_me(i, ask_lvl + 1)
+      Se i = ask_lvl + 1:
+        Per ogni HCoord hc in adjacent_hc_set:
+          TupleGNode adj = make_tuple_from_hc(hc, levels)
+          set_adjacent.add(adj)
+      Altrimenti:
+        Per ogni HCoord hc in adjacent_hc_set:
+          // Contatta un singolo nodo in `hc`. Comunica `ask_lvl + 1`.
+          // La risposta sarà il TupleGNode di livello `ask_lvl + 1` a cui
+          // appartiene il singolo nodo incontrato per primo in `hc`, cioè
+          // quello che lui ottiene con make_tuple_from_level(ask_lvl + 1, levels).
+          TupleGNode adj = ask_tuple(hc, ask_lvl + 1)
+          set_adjacent.add(adj)
+    Se pos ﹤ gsizes(host_lvl - 1)
+      Restituisci esito=SOLUTION, host_lvl, pos, eldership, max_host_lvl, set_adjacent
+    Altrimenti:
+      Restituisci esito=NO_SOLUTION, max_host_lvl, set_adjacent
+  Se esito = GOAL:
+    Solution sol = new Solution(current, host_lvl, pos, eldership)
+    solutions.add(sol)
+    Restituisci solutions.
+  Se esito = SOLUTION:
+    Solution sol = new Solution(current, host_lvl, pos, eldership)
+    solutions.add(sol)
+  Per ogni TupleGNode n in set_adjacent:
+    // Notare che n è una tupla di livello `ask_lvl + 1`.
+    Se n is not in S:
+      S.add(n)
+      SolutionStep n_step = new SolutionStep(gnode = n, parent = current)
+      Q.enqueue(n_step)
+Restituisci solutions.
+```
+
+#### Maggiori dettagli
+
+La classe TupleGNode serve a identificare un preciso g-nodo all'interno della rete. Nel membro `pos`
+sono indicate tutte le posizioni dal livello del g-nodo fino al livello `levels` - 1. Ad esempio
+la funzione `make_tuple_from_level` produce una istanza che identifica il g-nodo a cui
+appartiene il nodo corrente. La funzione `make_tuple_from_hc` produce una istanza che identifica
+il g-nodo che il nodo corrente vede nella sua mappa gerarchica con le coordinate `hc`.
+
+Il nodo *v* ha un valore `𝜀` che ritiene eccessivo come delta tra il livello del g-nodo che vuole
+entrare e il livello nel quale (al termine della migration-path) un g-nodo vedrà diminuito il numero di
+posti liberi.
+
+Come detto sopra, per la prima ricerca in ampiezza non viene imposto alcun limite al delta.
+Per questo motivo il nodo *v* pone inizialmente `max_host_lvl` = `levels`.
+
+Il nodo *v* all'inizio inventa un identificativo di ingresso `enter_id`. Questo verrà comunicato
+ogni volta che, durante questa ricerca, verrà chiesto al Coordinator di un g-nodo di riservare un posto.
+
+Quando viene chiesto al Coordinator di un g-nodo di riservare un posto
+questi esegue la richiesta. Se non ci sono posti disponibili, comunque la prenotazione di un posto
+*virtuale* viene fatta.  
+Se viene prenotato un posto *virtuale*, anche se poi non fosse usato, questo non danneggia la
+rete in alcun modo. D'altra parte, se viene prenotato un posto *reale* e poi l'ingresso non viene
+completato la rete si viene a trovare privata di una risorsa inutilmente. Per questo il Coordinator
+associa ad ogni prenotazione (soprattutto quelle *reali*) un timeout scaduto il quale la
+prenotazione viene considerata abortita. E di conseguenza se non è stato ricevuto un ETP che
+segnala la presenza del nuovo g-nodo, allora quel posto ridiventa disponibile.  
+Il fatto che una prenotazione viene richiesta e poi non viene effettivamente usata può accadere
+per diversi motivi. Ad esempio perché il nodo richiedente va in crash o viene staccato dalla
+rete. Può avvenire anche più semplicemente perché nell'insieme delle soluzioni trovate solo
+una viene adottata. Però si preferisce che in questo caso il richiedente inoltri al g-nodo
+interessato la richiesta di avvertire il proprio Coordinator che una certa prenotazione (identificabile
+con `enter_id`) non serve più.
 
 **TODO**
 

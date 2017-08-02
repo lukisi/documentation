@@ -111,44 +111,76 @@ Il risultato va restituito così com'è al client del servizio attraverso una is
 #### <a name="Prenota_un_posto"></a>Prenota un posto
 
 Una richiesta *r* di tipo ReserveEnterRequest fatta al nodo Coordinator di *g* indica che il singolo nodo *n*
-(il client del servizio) chiede la prenotazione di un posto libero in *g* o in uno dei suoi g-nodi di livello superiore.
+(il client del servizio) chiede la prenotazione di un posto in *g*.
 
-*   `lvl` = livello di *g*.
-*   `Object reserve_enter_data` = un oggetto serializzabile la cui classe è nota al delegato IReserveEnterHandler.  
-    Contiene informazioni che non sono di pertinenza del modulo Coordinator.
+*   `int lvl` = livello di *g*.
+*   `int enter_id` = un identificativo di questa prenotazione.
 
 Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordinator di *g*, per
 fare in modo che sia *g* come entità atomica a venire interpellata.
 
-Per rispondere, non essendo questa materia di competenza del modulo Coordinator, viene utilizzato
-un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IReserveEnterHandler.
+Per prima cosa il nodo Coordinator di *g* accede alla memoria condivisa di *g*. Nel membro `reserve_list` dell'istanza
+di `CoordGnodeMemory` associata al livello `lvl` (come illustrato più sotto) vengono memorizzate
+le prenotazioni pendenti. Se esiste già una prenotazione con l'identificativo `enter_id` allora
+la stessa viene restituita al client. Altrimenti si prosegue.
 
-Il delegato può completare il metodo correttamente oppure lanciare una eccezione:
+Il nodo Coordinator di *g* accede alla propria mappa di percorsi, per vedere quali g-nodi
+di livello `lvl` - 1 (oltre a quello a cui esso stesso appartiene) dentro al suo g-nodo di livello
+`lvl` sono già presenti come destinazioni, quindi esistenti nella rete e non assegnabili alla
+nuova richiesta.
 
-*   `Object reserved` - i dati della prenotazione.
-*   `FullNetworkError` - nella rete non ci sono più posti assegnabili al livello richiesto,
-    nemmeno eseguendo una migration-path.
+Questo non bata: il Coordinator di *g* guarda ancora le prenotazioni pendenti nella memoria condivisa
+di *g*, quelle cioè assegnate in precedenza anche se ancora nessun ETP ha fatto
+sì che venissero salvate come destinazioni nella propria mappa di percorsi. Anche queste non sono assegnabili alla
+nuova richiesta.
 
-Il risultato va restituito così com'è al client del servizio attraverso una istanza di ReserveEnterResponse.
+Se nessuna posizione *reale* è assegnabile viene scelto il prossimo valore *virtuale* come posizione.
+Il valore più alto finora assegnato è anch'esso memorizzato nell'istanza di `CoordGnodeMemory` associata
+al livello `lvl`, nel membro `max_virtual_pos`. Viene incrementato di 1.
+
+Infine viene assegnata l'anzianità. Anche qui incrementando di 1 il precedente valore massimo, il
+quale è memorizzato nell'istanza di `CoordGnodeMemory` associata
+al livello `lvl`, nel membro `max_eldership`.
+
+Scelto il posto e l'anzianità, subito il Coordinator di *g* accede in scrittura alla memoria condivisa di *g*.
+Questo come sappiamo comporta l'avvio di una tasklet che si occupi di replicare la scrittura nei nodi replica.
+
+Il risultato della prenotazione è composto dalla nuova posizione e dalla sua anzianità. Esso viene
+restituito al client del servizio attraverso una istanza di ReserveEnterResponse:
+
+*   `int new_pos`
+*   `int new_eldership`
 
 Il nodo client del servizio è un nodo *n* che già appartiene al g-nodo *g*. Questi richiede la prenotazione di
 un nuovo posto per conto di un altro nodo suo vicino, *m*, il quale non è ancora in *g* o perfino non è ancora
 nella rete.  
-Ricevuta la risposta, sia essa un esito positivo o una eccezione, *n* la comunica al vicino *m*.
-
-Sebbene il contenuto della risposta non sia di pertinenza del modulo Coordinator, diciamo che
-nella risposta al nodo *n*, il Coordinator di *g* segnala:
-
-*   Il livello `l`, maggiore o uguale a `lvl`, del g-nodo dentro cui è stato prenotato il posto.
-*   La posizione assegnata al livello `l-1`.
-*   La anzianità della posizione assegnata al livello `l-1`.
+Ricevuta la risposta dal nodo Coordinator, *n* la comunica al vicino *m*.
 
 Altre informazioni di cui il nodo *m* necessita per fare ingresso in *g* (e eventualmente nella rete) sono
 direttamente fornite dal nodo *n* che già le conosce. Queste sono:
 
 *   La topologia della rete.
-*   Le posizioni dei livelli `l` e superiori.
-*   L'anzianità dei livelli `l` e superiori.
+*   Le posizioni dei livelli maggiori di `lvl`.
+*   Le anzianità dei livelli maggiori di `lvl`.
+
+#### <a name="Cancella_prenotazione"></a>Cancella prenotazione
+
+Una richiesta *r* di tipo DeleteReserveEnterRequest fatta al nodo Coordinator di *g* indica che il singolo nodo *n*
+(il client del servizio) chiede la rimozione di una prenotazione pendente in *g*.
+
+*   `int lvl` = livello di *g*.
+*   `int enter_id` = l'identificativo della prenotazione pendente da rimuovere.
+
+Il Coordinator di *g* accede alla memoria condivisa di *g*. Nel membro `reserve_list` dell'istanza
+di `CoordGnodeMemory` associata al livello `lvl` (come illustrato più sotto) vengono memorizzate
+le prenotazioni pendenti, quelle cioè assegnate in precedenza anche se ancora nessun ETP ha fatto
+sì che venissero salvate come destinazioni nella propria mappa di percorsi.
+
+Trovata la prenotazione da rimuovere, il Coordinator di *g* accede in scrittura alla memoria condivisa di *g*. Questo come
+sappiamo comporta l'avvio di una tasklet che si occupi di replicare la scrittura nei nodi replica.
+
+L'avvenuta rimozione (anche nel caso non si fosse trovata affatto la prenotazione pendente) viene
+comunicata al client del servizio attraverso una istanza di DeleteReserveEnterResponse, che è vuota.
 
 #### <a name="Confermato_ingresso"></a>Confermato ingresso in altra rete
 
@@ -176,7 +208,11 @@ di pertinenza del modulo Coordinator stesso.
 
 Fra queste abbiamo:
 
-*   Elenco delle prenotazioni pendenti. **TODO**
+*   `reserve_list` - Elenco delle prenotazioni pendenti.
+*   `max_virtual_pos` - Massimo valore *virtuale* di `pos` assegnato ad un g-nodo al nostro interno.
+*   `max_eldership` - Massimo valore di eldership assegnato ad un g-nodo al nostro interno. Maggiore è questo valore
+    e più giovane è il g-nodo.
+*   **TODO**
 
 #### Contenuto di pertinenza di altri moduli
 
