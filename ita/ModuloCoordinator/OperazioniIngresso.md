@@ -655,6 +655,8 @@ Per questo motivo il nodo *v* pone inizialmente `max_host_lvl` = `levels`.
 Il nodo *v* all'inizio inventa un identificativo di ingresso `enter_id`. Questo verrà comunicato
 ogni volta che, durante questa ricerca, verrà chiesto al Coordinator di un g-nodo di riservare un posto.
 
+##### Contatta il g-nodo da interrogare
+
 Nell'algoritmo abbiamo detto che il nodo *v* contatta un singolo nodo in `current.gnode`. Questo contatto avviene
 inviando un pacchetto da trasmettere con meccanismi simili al PeerServices. Ma non viene instradato il
 pacchetto (attraverso il miglior gateway) direttamente al g-nodo `current.gnode`, bensì attraverso
@@ -672,6 +674,8 @@ Nella comunicazione TCP tra *v* e *w*, il nodo *v* comunica `ask_lvl`, `max_host
 Poi il nodo *w* prosegue con l'algoritmo descritto sopra prima di restituire la tupla composta di
 `esito`, `host_lvl`, `pos`, `eldership`, `max_host_lvl`, `set_adjacent`, `middle_pos`, `middle_eldership`.
 
+##### Riserva un posto per la migrazione
+
 Il nodo *w*, agendo per conto dell'intero g-nodo `current.gnode` e collaborando con i Coordinator
 di quel g-nodo e dei suoi g-nodi superiori, ora vede se c'è un posto disponibile al livello
 richiesto o a uno dei livelli superiori accettabili (cioè fino a `max_host_lvl`). Se no comunque
@@ -684,8 +688,6 @@ La funzione `coord_reserve(host_lvl, enter_id)` invia la richiesta ReserveEnterR
 al servizio Coordinator usando come chiave `host_lvl`. Come descritto nel relativo documento,
 questo serve a prenotare un posto. Dalla posizione prenotata si deduce se il g-nodo aveva a
 disposizione una posizione *reale* oppure no.
-
-**TODO**
 
 Quando viene chiesto al Coordinator di un g-nodo di riservare un posto
 questi esegue la richiesta. Se non ci sono posti disponibili, comunque la prenotazione di un posto
@@ -702,6 +704,39 @@ rete. Può avvenire anche più semplicemente perché nell'insieme delle soluzion
 una viene adottata. Però si preferisce che in questo caso il richiedente inoltri al g-nodo
 interessato la richiesta di avvertire il proprio Coordinator che una certa prenotazione pendente
 (identificabile con `enter_id`) va cancellata.
+
+##### Recupera i g-nodi adiacenti per proseguire la ricerca in ampiezza
+
+Vediamo ora come fa il nodo *w* a dire quali g-nodi di livello `ask_lvl + 1` sono adiacenti al
+suo g-nodo di livello `ask_lvl + 1`.
+
+Il nodo *w* sa quali sono i g-nodi di livello `ask_lvl + 1` interni al suo g-nodo di livello `ask_lvl + 2`,
+cioè quali HCoord di livello `ask_lvl + 1` sono presenti nella sua mappa dei percorsi.
+Tra questi sa dire quali (se ce ne sono) siano anche adiacenti al suo g-nodo di livello `ask_lvl + 1`: infatti esiste
+un percorso verso essi che non contiene hops intermedi di livello `ask_lvl + 1`.
+
+Generalizzando, il nodo *w* sa quali HCoord di livello `i` (con `i` da `ask_lvl + 1` fino a `levels-1`)
+sono adiacenti al suo g-nodo di livello `ask_lvl + 1`: infatti esiste
+un percorso verso essi che non contiene hops intermedi di livello tra `ask_lvl + 1` e `i`.
+
+Questo è quanto realizzato dalla chiamata reiterata della funzione `adj_to_me`.
+
+Per gli HCoord di livello `ask_lvl + 1` il nodo *w* sa produrre la tupla completa del g-nodo
+di livello `ask_lvl + 1`. Per ognuno di quelli di livello superiore, invece,
+il nodo *w* invia un pacchetto (da trasmettere con meccanismi simili al PeerServices) per attivare una comunicazione
+TCP (tramite indirizzi IP interni al minimo comune g-nodo) e così chiedere al primo singolo nodo che incontra
+in essi la tupla completa del g-nodo di livello `ask_lvl + 1`. In conclusione il nodo *w* ottiene un set di tuple
+del livello desiderato.
+
+Agendo in questo modo, sebbene il nodo *w* non ha modo di identificare tutti i g-nodi di livello `ask_lvl + 1` adiacenti
+al suo, identifica comunque quanti ne servono per permettere l'esplorazione graduale di tutta la rete.
+
+##### Prosegue l'algoritmo di ricerca in ampiezza della shortest migration-path
+
+Infine il nodo *w* restituisce al nodo *v* la tupla composta di
+`esito`, `host_lvl`, `pos`, `eldership`, `max_host_lvl`, `set_adjacent`, `middle_pos`, `middle_eldership`
+e questi prosegue con l'algoritmo di ricerca in ampiezza fino a trovare la shortest migration-path
+che soddisfa il criterio di un delta minore di `𝜀`.
 
 **TODO**
 
