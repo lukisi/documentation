@@ -545,9 +545,11 @@ TupleGNode:
 SolutionStep:
   TupleGNode gnode
   SolutionStep? parent
+  int? middle_pos
+  int? middle_eldership
 
 Solution:
-  SolutionStep lastgnode
+  SolutionStep leaf
   int host_lvl
   int new_pos
   int new_eldership
@@ -571,22 +573,26 @@ S = new Set<TupleGNode>
 Q = new Queue<SolutionStep>
 
 S.add(v)
-SolutionStep root = new SolutionStep(gnode = v, parent = NIL)
+SolutionStep root = new SolutionStep(gnode=v, parent=NIL, middle_pos=NIL, middle_eldership=NIL)
 Q.enqueue(root)
 
 Mentre Q is not empty:
   SolutionStep current = Q.dequeue().
-  // Contatta un singolo nodo in `current`. Comunica `ask_lvl`, `max_host_lvl`, `enter_id`, `𝜀 ≥ 1`.
-  // La risposta sarà una tupla composta di `esito`, `host_lvl`, `pos`, `eldership`, `max_host_lvl`, `set_adjacent`.
+  // Contatta un singolo nodo in `current.gnode`. Comunica `ask_lvl`, `max_host_lvl`, `enter_id`, `𝜀 ≥ 1`.
+  // La risposta sarà una tupla composta di:
+  // `esito`, `host_lvl`, `pos`, `eldership`, `max_host_lvl`, `set_adjacent`, `middle_pos`, `middle_eldership`.
   `Esito esito`, `int host_lvl`, `int pos`, `int eldership`, `Set<TupleGNode> set_adjacent`.
-  (esito, host_lvl, pos, eldership, max_host_lvl, set_adjacent) = ask_enter_net(current, ask_lvl, max_host_lvl, enter_id, 𝜀)
-    // Questo algoritmo è eseguito nel singolo nodo contattato in current.
+  (esito, host_lvl, pos, eldership, max_host_lvl, set_adjacent, middle_pos, middle_eldership) =
+                                     ask_enter_net(current, ask_lvl, max_host_lvl, enter_id, 𝜀)
+    // Questo algoritmo è eseguito nel singolo nodo contattato in `current.gnode`.
     int host_lvl = ask_lvl + 1
     int ok_host_lvl = ask_lvl + 𝜀
     // richiesta al proprio nodo Coordinator di livello host_lvl
     int pos, int eldership = coord_reserve(host_lvl, enter_id)
     Se pos ﹤ gsizes(host_lvl - 1):
       Restituisci esito=GOAL, host_lvl, pos, eldership
+    int middle_pos = pos
+    int middle_eldership = eldership
     Mentre host_lvl ﹤ max_host_lvl:
       host_lvl++
       pos, eldership = coord_reserve(host_lvl, enter_id)
@@ -612,9 +618,9 @@ Mentre Q is not empty:
           TupleGNode adj = ask_tuple(hc, ask_lvl + 1)
           set_adjacent.add(adj)
     Se pos ﹤ gsizes(host_lvl - 1)
-      Restituisci esito=SOLUTION, host_lvl, pos, eldership, max_host_lvl, set_adjacent
+      Restituisci esito=SOLUTION, host_lvl, pos, eldership, max_host_lvl, set_adjacent, middle_pos, middle_eldership
     Altrimenti:
-      Restituisci esito=NO_SOLUTION, max_host_lvl, set_adjacent
+      Restituisci esito=NO_SOLUTION, max_host_lvl, set_adjacent, middle_pos, middle_eldership
   Se esito = GOAL:
     Solution sol = new Solution(current, host_lvl, pos, eldership)
     solutions.add(sol)
@@ -626,7 +632,7 @@ Mentre Q is not empty:
     // Notare che n è una tupla di livello `ask_lvl + 1`.
     Se n is not in S:
       S.add(n)
-      SolutionStep n_step = new SolutionStep(gnode = n, parent = current)
+      SolutionStep n_step = new SolutionStep(gnode=n, parent=current, middle_pos, middle_eldership)
       Q.enqueue(n_step)
 Restituisci solutions.
 ```
@@ -649,21 +655,53 @@ Per questo motivo il nodo *v* pone inizialmente `max_host_lvl` = `levels`.
 Il nodo *v* all'inizio inventa un identificativo di ingresso `enter_id`. Questo verrà comunicato
 ogni volta che, durante questa ricerca, verrà chiesto al Coordinator di un g-nodo di riservare un posto.
 
+Nell'algoritmo abbiamo detto che il nodo *v* contatta un singolo nodo in `current.gnode`. Questo contatto avviene
+inviando un pacchetto da trasmettere con meccanismi simili al PeerServices. Ma non viene instradato il
+pacchetto (attraverso il miglior gateway) direttamente al g-nodo `current.gnode`, bensì attraverso
+il percorso indicato in `current.parent.parent....`.  
+Sia ad esempio `current.gnode` il g-nodo D, mentre nella traccia dei parent il percorso
+è composto da A, B, C, allora prima si instrada il pacchetto verso A. Quando si raggiunge il primo singolo
+nodo appartenente a A si instrada il pacchetto verso B. Poi verso C e infine verso D. Tutti questi passi
+sono TupleGNode di livello `ask_lvl + 1` che dovrebbero risultare l'uno adiacente all'altro. Infine il primo singolo nodo
+che si incontra dentro D avvia una comunicazione TCP con *v* tramite indirizzi
+IP interni al loro minimo comune g-nodo. Per questo nel pacchetto viene indicato l'indirizzo del mittente come lista
+di posizioni interne al minimo comune g-nodo con `current.gnode`.
+
+Indichiamo per semplicità con *w* il primo singolo nodo che si è incontrato in `current.gnode`.
+Nella comunicazione TCP tra *v* e *w*, il nodo *v* comunica `ask_lvl`, `max_host_lvl`, `enter_id`, `𝜀 ≥ 1`.
+Poi il nodo *w* prosegue con l'algoritmo descritto sopra prima di restituire la tupla composta di
+`esito`, `host_lvl`, `pos`, `eldership`, `max_host_lvl`, `set_adjacent`, `middle_pos`, `middle_eldership`.
+
+Il nodo *w*, agendo per conto dell'intero g-nodo `current.gnode` e collaborando con i Coordinator
+di quel g-nodo e dei suoi g-nodi superiori, ora vede se c'è un posto disponibile al livello
+richiesto o a uno dei livelli superiori accettabili (cioè fino a `max_host_lvl`). Se no comunque
+memorizza (in `middle_pos` e `middle_eldership`) e restituisce le informazioni necessarie
+alla migration-path, cioè i posti *virtuali* al livello `ask_lvl + 1`.
+
+Per sapere se c'è un posto al livello `host_lvl` viene usata la funzione `coord_reserve`.
+La funzione `coord_reserve(host_lvl, enter_id)` invia la richiesta ReserveEnterRequest
+([prenota un posto](../ModuloCoordinator/AnalisiFunzionale.md#Prenota_un_posto))
+al servizio Coordinator usando come chiave `host_lvl`. Come descritto nel relativo documento,
+questo serve a prenotare un posto. Dalla posizione prenotata si deduce se il g-nodo aveva a
+disposizione una posizione *reale* oppure no.
+
+**TODO**
+
 Quando viene chiesto al Coordinator di un g-nodo di riservare un posto
 questi esegue la richiesta. Se non ci sono posti disponibili, comunque la prenotazione di un posto
 *virtuale* viene fatta.  
 Se viene prenotato un posto *virtuale*, anche se poi non fosse usato, questo non danneggia la
 rete in alcun modo. D'altra parte, se viene prenotato un posto *reale* e poi l'ingresso non viene
 completato la rete si viene a trovare privata di una risorsa inutilmente. Per questo il Coordinator
-associa ad ogni prenotazione (soprattutto quelle *reali*) un timeout scaduto il quale la
+associa ad ogni prenotazione pendente *reale* un timeout scaduto il quale la
 prenotazione viene considerata abortita. E di conseguenza se non è stato ricevuto un ETP che
 segnala la presenza del nuovo g-nodo, allora quel posto ridiventa disponibile.  
 Il fatto che una prenotazione viene richiesta e poi non viene effettivamente usata può accadere
 per diversi motivi. Ad esempio perché il nodo richiedente va in crash o viene staccato dalla
 rete. Può avvenire anche più semplicemente perché nell'insieme delle soluzioni trovate solo
 una viene adottata. Però si preferisce che in questo caso il richiedente inoltri al g-nodo
-interessato la richiesta di avvertire il proprio Coordinator che una certa prenotazione (identificabile
-con `enter_id`) non serve più.
+interessato la richiesta di avvertire il proprio Coordinator che una certa prenotazione pendente
+(identificabile con `enter_id`) va cancellata.
 
 **TODO**
 
