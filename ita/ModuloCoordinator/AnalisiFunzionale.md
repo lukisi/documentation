@@ -256,10 +256,14 @@ di pertinenza del modulo Coordinator stesso.
 
 Fra queste abbiamo:
 
-*   `reserve_list` - Elenco delle prenotazioni pendenti.
+*   `reserve_list` - Elenco delle prenotazioni pendenti. **TODO** dettagli.
 *   `max_virtual_pos` - Massimo valore *virtuale* di `pos` assegnato ad un g-nodo al nostro interno.
 *   `max_eldership` - Massimo valore di eldership assegnato ad un g-nodo al nostro interno. Maggiore è questo valore
     e più giovane è il g-nodo.
+*   `number_of_nodes` - Solo per il Coordinator di tutta la rete. Numero di nodi nella rete, come risposto nella
+    precedente richiesta.  
+    Contiene la risposta e un timeout da aspettare prima di guardare di nuovo alla conoscenza acquisita dal
+    modulo Qspn.
 *   **TODO**
 
 #### Contenuto di pertinenza di altri moduli
