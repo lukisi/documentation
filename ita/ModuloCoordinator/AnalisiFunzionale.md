@@ -186,9 +186,13 @@ comunicata al client del servizio attraverso una istanza di DeleteReserveEnterRe
 
 #### <a name="Replica"></a>Replica memoria condivisa
 
-Una richiesta *r* di tipo ReplicaRequest fatta al nodo Coordinator di *g* indica che il singolo nodo *n*
-(che è il nodo con indirizzo più prossimo alla tupla del Coordinator) chiede la replica di un
-record nella memoria condivisa di *g*.
+Una richiesta *r* di tipo ReplicaRequest con livello *lvl* che giunge a un nodo servente del servizio Coordinator,
+il quale appartiene al g-nodo *g* di livello *lvl*, indica che il nodo client della richiesta
+chiede la replica di un record nella memoria condivisa di *g*.
+
+In realtà, come in tutte le repliche, il nodo client in questo caso è il nodo con indirizzo
+attualmente più prossimo alla tupla del Coordinator di *g*, mentre il nodo servente è uno dei nodi
+che potrebbero trovarsi in sua assenza a rispondere alle future richieste.
 
 La gestione di questa richiesta avviene attraverso il codice del modulo PeerServices. Il modulo
 Coordinator ha il compito di implementare i metodi dell'interfaccia IDatabaseDescriptor,
