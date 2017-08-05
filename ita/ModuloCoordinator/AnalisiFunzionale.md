@@ -6,6 +6,8 @@
         1.  [Valuta un ingresso](#Valuta_ingresso)
         1.  [Avvio ingresso in altra rete](#Avvio_ingresso)
         1.  [Prenota un posto](#Prenota_un_posto)
+        1.  [Cancella prenotazione](#Cancella_prenotazione)
+        1.  [Replica memoria condivisa](#Replica)
         1.  [Confermato ingresso in altra rete](#Confermato_ingresso)
     1.  [Contenuto della memoria condivisa di un g-nodo](#Records)
 1.  [Richieste al diretto vicino di accesso al servizio Coordinator](#Richieste_al_diretto_vicino)
@@ -129,7 +131,7 @@ di livello `lvl` - 1 (oltre a quello a cui esso stesso appartiene) dentro al s
 `lvl` sono già presenti come destinazioni, quindi esistenti nella rete e non assegnabili alla
 nuova richiesta.
 
-Questo non bata: il Coordinator di *g* guarda ancora le prenotazioni pendenti nella memoria condivisa
+Questo non basta: il Coordinator di *g* guarda ancora le prenotazioni pendenti nella memoria condivisa
 di *g*, quelle cioè assegnate in precedenza anche se ancora nessun ETP ha fatto
 sì che venissero salvate come destinazioni nella propria mappa di percorsi. Anche queste non sono assegnabili alla
 nuova richiesta.
@@ -181,6 +183,19 @@ sappiamo comporta l'avvio di una tasklet che si occupi di replicare la scrittura
 
 L'avvenuta rimozione (anche nel caso non si fosse trovata affatto la prenotazione pendente) viene
 comunicata al client del servizio attraverso una istanza di DeleteReserveEnterResponse, che è vuota.
+
+#### <a name="Replica"></a>Replica memoria condivisa
+
+Una richiesta *r* di tipo ReplicaRequest fatta al nodo Coordinator di *g* indica che il singolo nodo *n*
+(che è il nodo con indirizzo più prossimo alla tupla del Coordinator) chiede la replica di un
+record nella memoria condivisa di *g*.
+
+La gestione di questa richiesta avviene attraverso il codice del modulo PeerServices. Il modulo
+Coordinator ha il compito di implementare i metodi dell'interfaccia IDatabaseDescriptor,
+come dettagliato [qui](../ModuloPeers/DettagliTecnici.md#Mantenimento_database_distribuito),
+in particolare i metodi `is_replica_value_request` e `execute`.
+
+La risposta è una istanza di ReplicaResponse.
 
 #### <a name="Confermato_ingresso"></a>Confermato ingresso in altra rete
 
