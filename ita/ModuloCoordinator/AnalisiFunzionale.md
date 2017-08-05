@@ -503,27 +503,6 @@ Fornisce metodi per:
     sul nodo Coordinator di *g* effettivamente autorizza/nega l'ingresso.
 *   Prenotare un posto (se possibile *reale*, altrimenti *virtuale*) nel proprio g-nodo di livello
     *l*. Metodo `reserve`. **TODO**
-*   Dato un livello *l*, chiedere ad un vicino *v*, dato uno stub per contattarlo, di richiedere al Coordinator
-    del suo g-nodo di livello *l* la prenotazione di un posto, come nuovo g-nodo di livello *l* - 1.
-    Metodo `get_reservation`.  
-    Questo metodo può rilanciare l'eccezione CoordinatorStubNotWorkingError se la comunicazione con il
-    vicino non riesce.  
-    Questo metodo può rilanciare l'eccezione CoordinatorMemoryNotReadyError se il vicino *v* non ha ancora
-    completato la fase di boostrap (vedi modulo QSPN). Infatti il nodo *v* non ha ancora potuto instanziare
-    il suo PeersManager, né il CoordinatorService.  
-    Questo metodo può rilanciare l'eccezione CoordinatorInvalidLevelError, segnalata immediatamente dal
-    vicino, se il livello richiesto non è coerente con la topologia della rete in cui si trova il vicino.  
-    Questo metodo può rilanciare l'eccezione CoordinatorSaturatedGnodeError, segnalata dal vicino dopo
-    aver comunicato con il servizio Coordinator, se al livello richiesto non è stato possibile riservare
-    un posto.  
-    Di solito questa operazione si fa subito dopo aver ottenuto dallo stesso vicino la lista del numero di
-    posti che vede liberi. Se da questa lista il livello *l* risultava avere posti liberi, ma la richiesta
-    della prenotazione rilancia l'eccezione CoordinatorSaturatedGnodeError, tale esito potrebbe essere dovuto
-    alle precedenti prenotazioni non ancora confermate da un ETP. Quindi avrebbe poco senso chiedere di nuovo
-    al vicino quanti posti vede liberi. Si assuma che al livello *l* i posti sono 0 e si continui a ritenere
-    validi i valori per gli altri livelli, sia superiori che inferiori.  
-    Se invece non sono rilanciate eccezioni, il metodo restituisce una istanza di ICoordinatorReservation. Con
-    i dati contenuti in questa istanza (si veda sotto il dettaglio) il nodo potrà costituire un nuovo g-nodo.
 
 Implementa il servizio Coordinator derivando la classe CoordinatorService dalla classe base PeerService.
 
@@ -583,20 +562,4 @@ I metodi previsti dall'interfaccia IBeginEnterHandler sono:
 *   `void begin_enter(int lvl, Object begin_enter_data)`  
     Con questo metodo si richiama il metodo `begin_enter` del modulo X. Vedi [qui](OperazioniIngresso.md).  
     Può rilanciare l'eccezione `AlreadyEnteringError`.
-
-* * *
-
-Il metodo `get_reservation` restituisce una istanza di ICoordinatorReservation. Tramite questa
-interfaccia il modulo può:
-
-*   Leggere il numero di livelli nella topologia (metodo `get_levels`).
-*   Leggere la gsize per ogni livello *i*, con *i* da 0 a *levels* - 1 (metodo `get_gsize`).
-*   Leggere il livello, la posizione e l'anzianità del g-nodo appena riservato
-    (metodi `get_lvl`, `get_pos` e `get_eldership`).
-*   Leggere la posizione del g-nodo in cui siamo entrati per ogni livello *i*, con *i* da *lvl* + 1
-    fino a *levels* - 1, inclusi (metodo `get_upper_pos`).
-*   Leggere il valore di anzianità per ogni livello *i*, con *i* da *lvl* + 1 fino a *levels* - 1,
-    inclusi (metodo `get_upper_eldership`).  
-    Per i livelli inferiori a *lvl* il nodo, che ha appena costituito un nuovo g-nodo di livello
-    *lvl*, userà come anzianità il valore 0 e come posizione un valore random congruente con la topologia.
 
