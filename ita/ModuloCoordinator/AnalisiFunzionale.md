@@ -3,6 +3,7 @@
 1.  [Il ruolo del modulo Coordinator](#Ruolo_coordinator)
 1.  [Il servizio Coordinator](#Servizio_coordinator)
     1.  [Richieste previste](#Richieste_previste)
+        1.  [Numero di nodi nella rete](#Numero_nodi_nella_rete)
         1.  [Valuta un ingresso](#Valuta_ingresso)
         1.  [Avvio ingresso in altra rete](#Avvio_ingresso)
         1.  [Prenota un posto](#Prenota_un_posto)
@@ -60,6 +61,34 @@ l'hash-node che il nodo che risponde si trovano all'interno del g-nodo stesso.
 ### <a name="Richieste_previste"></a>Richieste previste
 
 Elenchiamo tutte le richieste che si possono fare al Coordinator.
+
+#### <a name="Numero_nodi_nella_rete"></a>Numero di nodi nella rete
+
+Una richiesta *r* di tipo NumberOfNodesRequest fatta al Coordinator dell'intera rete *G* indica che
+il client del servizio (avendo incontrata una diversa rete di dimensioni simili a questa) vuole
+chiedere alla rete (come entità atomica) quanti sono i suoi nodi.
+
+Il motivo per cui viene fatta questa richiesta al Coordinator di *G* è perché i singoli nodi
+della rete hanno una valutazione approssimativa. Supponiamo che ci siano le reti *G* e *J*.
+Due distinte coppie di nodi *n<sub>0</sub>-v<sub>0</sub>* e *n<sub>1</sub>-v<sub>1</sub>* si
+incontrano con *n<sub>i</sub>* ∈ *G* e *v<sub>i</sub>* ∈ *J*. Le dimensioni di *G* e *J* sono
+simili, per questo succede che *n<sub>0</sub>-v<sub>0</sub>* stabiliscono che *G* deve entrare
+in *J* mentre *n<sub>1</sub>-v<sub>1</sub>* ritengono meglio l'inverso. Per evitare questo
+disaccordo entrambe le coppie interrogano il Coordinator.
+
+Però avremo che *n<sub>0</sub>* interroga il Coordinator al tempo *t* e *n<sub>1</sub>* lo
+interroga al tempo *t+1* e il valore potrebbe essere cambiato. Questo renderebbe di nuovo
+possibile il disaccordo di prima.
+
+Quindi, il nodo Coordinator prima di rispondere sulla base delle conoscenze che ha acquisito con
+il Qspn, accede alla memoria condivisa di *G* per vedere se non abbia da poco risposto ad una
+precedente richiesta e in questo caso risponde con lo stesso valore di prima.
+
+In ogni caso, il nodo Coordinator prima di rispondere accede in scrittura (con relativa nuova
+tasklet che si occupa delle repliche) alla memoria condivisa di *G* per salvare la risposta che
+sta per dare, con un relativo timeout di scadenza.
+
+La risposta va restituita al client del servizio attraverso una istanza di NumberOfNodesResponse.
 
 #### <a name="Valuta_ingresso"></a>Valuta un ingresso
 
