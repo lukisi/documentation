@@ -501,11 +501,8 @@ Fornisce metodi per:
     Questo metodo permette all'utilizzatore del modulo Coordinator di far eseguire l'operazione `begin_enter`
     sul nodo Coordinator di un g-nodo *g* di livello *lvl*. Il delegato `IBeginEnterHandler.begin_enter`
     sul nodo Coordinator di *g* effettivamente autorizza/nega l'ingresso.
-*   Prenotare un posto, se necessario a fronte di una migration-path. Metodo `reserve_enter`.  
-    Anche in questo caso la logica di queste operazioni non è di pertinenza del modulo Coordinator.  
-    Questo metodo permette all'utilizzatore del modulo Coordinator di far eseguire l'operazione `reserve_enter`
-    sul nodo Coordinator di un g-nodo *g* di livello *lvl*. Il delegato `IReserveEnterHandler.reserve_enter`
-    sul nodo Coordinator di *g* effettivamente prenota un posto (dopo aver orchestrato una migration-path, se necessario).
+*   Prenotare un posto (se possibile *reale*, altrimenti *virtuale*) nel proprio g-nodo di livello
+    *l*. Metodo `reserve`. **TODO**
 *   Dato un livello *l*, chiedere ad un vicino *v*, dato uno stub per contattarlo, di richiedere al Coordinator
     del suo g-nodo di livello *l* la prenotazione di un posto, come nuovo g-nodo di livello *l* - 1.
     Metodo `get_reservation`.  
@@ -586,39 +583,6 @@ I metodi previsti dall'interfaccia IBeginEnterHandler sono:
 *   `void begin_enter(int lvl, Object begin_enter_data)`  
     Con questo metodo si richiama il metodo `begin_enter` del modulo X. Vedi [qui](OperazioniIngresso.md).  
     Può rilanciare l'eccezione `AlreadyEnteringError`.
-
-* * *
-
-Una istanza di IReserveEnterHandler viene passata al modulo Coordinator. Tale istanza viene
-interrogata da parte del modulo quando si deve prenotare un posto.
-
-I metodi previsti dall'interfaccia IEvaluateEnterHandler sono:
-
-*   `Object reserve_enter(int lvl, Object reserve_enter_data)`  
-    Con questo metodo si richiama il metodo `reserve_enter` del modulo X. Vedi [qui](OperazioniIngresso.md).  
-    Può rilanciare l'eccezione `FullNetworkError`.
-
-**Nota** Supponiamo che si voglia fare ingresso in una rete *J* con topologia a 20 livelli. Supponiamo che il `max_lvl`,
-cioè la dimensione del più grande g-nodo in *G*, sia 5.
-
-**_caso 0_** Valutando l'ingresso del g-nodo di livello 5, supponiamo che
-non ci sia alcun posto nel g-nodo di livello 6 del singolo nodo *v* con cui siamo entrati in contatto. La stessa cosa per
-tutti i livelli fino al 19. Questo significa in altre parole che come minimo serve una migration-path di lunghezza maggiore di 0.  
-Si inizia con il livello 5. Cioè si cerca la più breve migration-path che libera un posto nel g-nodo di livello 6 del
-singolo nodo *v* facendo spostare *n* border g-nodi di livello 5 (da un g-nodo di livello 6 in un altro) fino al punto
-in cui un g-nodo di livello 5 migra dentro un g-nodo di livello 6 o superiore con un posto libero.  
-Se una tale migration-path al livello 5 non esiste, questo implica che non esiste nemmeno una migration-path al livello
-6 o superiori. In questo caso occorre degradare cercando di fare entrare *G* in *J* con un g-nodo di livello 4 alla volta.  
-Se invece esiste la migration-path al livello 5 che muove *n* g-nodi, possiamo accettare questa oppure cercare ai
-livelli più alti. Forse esiste una migration-path al livello 6 che muove *k* g-nodi, con *k* minore di *n*.
-Forse esiste una migration-path al livello 7 che muove *q* g-nodi, con *q* minore di *k*. Quale soluzione scegliere? **Open question.**
-
-**_caso 1_** Valutando l'ingresso del g-nodo di livello 5, supponiamo che
-non ci sia alcun posto nel g-nodo di livello 6 del singolo nodo *v* con cui siamo entrati in contatto. La stessa cosa per
-i livelli 6..12. Invece valutando l'ingresso di un g-nodo di livello 13, esiste un posto libero nel g-nodo di livello 14
-del singolo nodo *v*. Questo significa in altre parole che sappiamo da subito che la migration-path al livello 13 da
-eseguire per far entrare *G* è di lunghezza 0.  
-Cerchiamo comunque la più breve migration-path al livello 5? **Open question.**
 
 * * *
 
