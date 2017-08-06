@@ -273,29 +273,29 @@ di pertinenza di altri moduli.
 
 Verranno descritte ognuna con i suoi dettagli di seguito.
 
-#### Modulo X
+#### Modulo Migrations
 
 Le operazioni di ingresso in una rete, che sono messe in atto quando due reti distinte si incontrano
-per mezzo di alcuni archi, non sono di pertinenza del modulo Coordinator, bensì del modulo X.
+per mezzo di alcuni archi, non sono di pertinenza del modulo Coordinator, bensì del modulo Migrations.
 
 Però queste operazioni prevedono:
 
-1.  L'esecuzione di alcuni metodi del modulo X nel nodo Coordinator (di tutta la rete o di un g-nodo) su richiesta che
-    viene dal modulo X in un singolo nodo qualsiasi (ad esempio un border-nodo che ha incontrato un vicino di un'altra rete).
+1.  L'esecuzione di alcuni metodi del modulo Migrations nel nodo Coordinator (di tutta la rete o di un g-nodo) su richiesta che
+    viene dal modulo Migrations in un singolo nodo qualsiasi (ad esempio un border-nodo che ha incontrato un vicino di un'altra rete).
 1.  La memorizzazione e rilettura di alcune informazioni nella memoria condivisa di tutta la rete (o di un g-nodo).
 
 Per il primo motivo esistono metodi del modulo Coordinator, relativi metodi nella classe client del
 servizio Coordinator, relativi classi di richieste e risposte (IPeersRequest e IPeersResponse) e delegati
 che la classe servente del servizio Coordinator (PeerService) può richiamare.  
-Di norma per ogni metodo del modulo X (di quelli che vanno eseguiti nel nodo Coordinator su richiesta di
+Di norma per ogni metodo del modulo Migrations (di quelli che vanno eseguiti nel nodo Coordinator su richiesta di
 un altro nodo) esiste una specifica istanza dei suddetti elementi.
 
-Per il secondo motivo, esiste una classe serializzabile implementata nel modulo X tale che una sua
+Per il secondo motivo, esiste una classe serializzabile implementata nel modulo Migrations tale che una sua
 istanza contiene tutta la memoria condivisa di tutta la rete (o di un g-nodo) relativamente a quanto è di pertinenza
-del modulo X. Tale istanza viene salvata nel membro `Object? network_entering_memory` della classe `CoordGnodeMemory`.
+del modulo Migrations. Tale istanza viene salvata nel membro `Object? network_entering_memory` della classe `CoordGnodeMemory`.
 
 Vediamo come avviene la scrittura e la rilettura della memoria condivisa di tutta la rete (o di un g-nodo) ad opera
-del modulo X. Nella trattazione del modulo X abbiamo detto che solo lo stesso nodo Coordinator (di tutta la rete o di un g-nodo)
+del modulo Migrations. Nella trattazione del modulo Migrations abbiamo detto che solo lo stesso nodo Coordinator (di tutta la rete o di un g-nodo)
 può essere nella posizione di scrivere/leggere in questa memoria.  
 Quando viene chiamato nel modulo Coordinator il metodo `set_network_entering_memory(Object data, int level)` questi avvia il
 contatto con il servizio Coordinator per la chiave `k.lvl = level`. Quando viene contattato con tale richiesta,
@@ -403,7 +403,7 @@ del servizio Coordinator sarà ovviamente la prenotazione di un posto di livello
 
 #### Metodo evaluate_enter
 
-Quando il modulo X del nodo *n* vuole far eseguire il suo metodo `evaluate_enter` nel nodo Coordinator
+Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `evaluate_enter` nel nodo Coordinator
 della rete *G*, richiama il metodo `evaluate_enter` del modulo Coordinator.
 
 L'esecuzione di `evaluate_enter` del modulo Coordinator consiste in questo:
@@ -429,7 +429,7 @@ Quindi il metodo `evaluate_enter` del modulo Coordinator restituisce al chiamant
 
 #### Metodo begin_enter
 
-Quando il modulo X del nodo *n* vuole far eseguire il suo metodo `begin_enter(begin_enter_data)` nel nodo Coordinator
+Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `begin_enter(begin_enter_data)` nel nodo Coordinator
 del suo g-nodo *g* di livello *lvl*, richiama il metodo `begin_enter(lvl, begin_enter_data)` del modulo Coordinator.
 
 L'esecuzione di `begin_enter` del modulo Coordinator consiste in questo:
@@ -450,7 +450,7 @@ Quindi il metodo `begin_enter` del modulo Coordinator restituisce al chiamante:
 
 #### Metodo reserve_enter
 
-Quando il modulo X del nodo *n* vuole far eseguire il suo metodo `reserve_enter(reserve_enter_data)` nel nodo Coordinator
+Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `reserve_enter(reserve_enter_data)` nel nodo Coordinator
 del suo g-nodo *g* di livello *lvl*, richiama il metodo `reserve_enter(lvl, reserve_enter_data)` del modulo Coordinator.
 
 L'esecuzione di `reserve_enter` del modulo Coordinator consiste in questo:
@@ -491,13 +491,13 @@ Fornisce metodi per:
 
 *   Valutare un ingresso in una nuova rete. Metodo `evaluate_enter`.  
     La logica per il rilevamento di un vicino appartenente ad una diversa rete e per l'ingresso
-    in questa nuova rete è di pertinenza di un diverso modulo X. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).  
+    in questa nuova rete è di pertinenza di un diverso modulo Migrations. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).  
     Quello che fa questo metodo in realtà è permettere all'utilizzatore del modulo Coordinator di far eseguire una
     certa operazione sul nodo Coordinator della rete. In particolare, l'utilizzatore del modulo
     Coordinator nel nodo *n* passa un oggetto al metodo `evaluate_enter` (probabilmente su istruzione
-    da parte di un altro modulo X); questi fa pervenire questo oggetto al nodo Coordinator della
+    da parte di un altro modulo Migrations); questi fa pervenire questo oggetto al nodo Coordinator della
     rete il quale lo passa al delegato `IEvaluateEnterHandler` (probabilmente implementato dallo
-    stesso modulo X) nel suo metodo `evaluate_enter`.  
+    stesso modulo Migrations) nel suo metodo `evaluate_enter`.  
     L'esecuzione del metodo `IEvaluateEnterHandler.evaluate_enter` produce la decisione per il nodo *n* di tentare
     o meno l'ingresso nella nuova rete e se sì a quale livello.
 *   Iniziare un ingresso in una nuova rete. Metodo `begin_enter`.  
@@ -552,7 +552,7 @@ interrogata da parte del modulo quando si deve decidere sul fare ingresso in una
 I metodi previsti dall'interfaccia IEvaluateEnterHandler sono:
 
 *   `int evaluate_enter(Object evaluate_enter_data)`  
-    Con questo metodo si richiama il metodo `evaluate_enter` del modulo X. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).  
+    Con questo metodo si richiama il metodo `evaluate_enter` del modulo Migrations. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).  
     Può rilanciare l'eccezione `AskAgainError`.  
     Può rilanciare l'eccezione `IgnoreNetworkError`.
 
@@ -564,6 +564,6 @@ interrogata da parte del modulo quando si deve autorizzare l'ingresso in una nuo
 I metodi previsti dall'interfaccia IBeginEnterHandler sono:
 
 *   `void begin_enter(int lvl, Object begin_enter_data)`  
-    Con questo metodo si richiama il metodo `begin_enter` del modulo X. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).  
+    Con questo metodo si richiama il metodo `begin_enter` del modulo Migrations. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).  
     Può rilanciare l'eccezione `AlreadyEnteringError`.
 

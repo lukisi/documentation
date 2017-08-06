@@ -25,12 +25,12 @@
 Si consideri un nodo *n* che appartiene alla rete *G*. Questa è una generalizzazione,
 che comprende ad esempio il caso di un singolo nodo che compone una intera rete.
 
-Il modulo X del nodo *n* che appartiene alla rete *G* si avvede del vicino *v* di altra rete *J*.
+Il modulo Migrations del nodo *n* che appartiene alla rete *G* si avvede del vicino *v* di altra rete *J*.
 
 Questo incontro tra due singoli nodi di reti diverse è l'evento atomico di cui si compone
 l'evento macroscopico "la rete *G* incontra la rete *J*".
 
-Esaminiamo in questo documento le fasi che portano il modulo X del nodo *n* a fare la sua parte
+Esaminiamo in questo documento le fasi che portano il modulo Migrations del nodo *n* a fare la sua parte
 al fine di decidere e effettuare l'ingresso della rete *G* dentro la rete *J*.
 
 È importante che la decisione venga presa dalla rete *G* come entità atomica, poiché il fatto che il
@@ -43,15 +43,15 @@ sfruttando il punto di contatto migliore.
 
 ### <a name="Fusione_reti_fase1"></a>Prima fase - valutazione del singolo nodo
 
-Diciamo subito che il modulo X opera solo nella *identità principale* di un nodo. Quindi *n* e *v* non
+Diciamo subito che il modulo Migrations opera solo nella *identità principale* di un nodo. Quindi *n* e *v* non
 sono identità *di connettività*.  
 Sebbene siano identità principali potrebbero in teoria essere in
 una fase temporanea in cui il loro indirizzo non ha tutte le componenti *reali*.
-Però il modulo X del nodo *n*, avendo rilevato la presenza del vicino *v* di altra rete, inizia questa prima
+Però il modulo Migrations del nodo *n*, avendo rilevato la presenza del vicino *v* di altra rete, inizia questa prima
 fase (cioè valuta se *G* dovrebbe entrare in *J*) solo se *n* e *v* hanno entrambi un indirizzo completamente
 *reale*.
 
-Il modulo X del nodo *n* prepara una struttura dati che descrive *G* come è vista da *n*. Poi contatta il nodo *v*,
+Il modulo Migrations del nodo *n* prepara una struttura dati che descrive *G* come è vista da *n*. Poi contatta il nodo *v*,
 gli fornisce questa struttura e gli chiede al contempo di ricevere una struttura dati che descrive *J* come è vista da *v*.  
 Le strutture sono le stesse. Ad esempio, quella ricevuta da *v* contiene:
 
@@ -97,7 +97,7 @@ decide che *G* deve entrare in *J*.
 
 ### <a name="Fusione_reti_fase2"></a>Seconda fase - valutazione della rete
 
-Allora il modulo X aggiunge un'altra informazione a quelle della struttura dati di cui sopra:
+Allora il modulo Migrations aggiunge un'altra informazione a quelle della struttura dati di cui sopra:
 
 *   `int minimum_lvl` = Livello minimo a cui il singolo nodo *n* è disposto a fare ingresso. Infatti il nodo *n*
     potrebbe essere un gateway verso una rete privata in cui si vogliono adottare diversi meccanismi di
@@ -107,31 +107,31 @@ Allora il modulo X aggiunge un'altra informazione a quelle della struttura dati 
 
 Inoltre sceglie un identificativo univoco random per questa richiesta, `int evaluate_enter_id`.
 
-Ora il modulo X del nodo *n* prepara una nuova struttura dati con le informazioni di cui sopra
+Ora il modulo Migrations del nodo *n* prepara una nuova struttura dati con le informazioni di cui sopra
 istanziando un `EvaluateEnterData evaluate_enter_data`.  
-La classe EvaluateEnterData è nota al modulo X. Si tratta di una classe serializzabile. I membri di questa classe sono:
+La classe EvaluateEnterData è nota al modulo Migrations. Si tratta di una classe serializzabile. I membri di questa classe sono:
 `int64 netid`, `List<int> gsizes`, `List<int> neighbor_n_nodes`, `List<int> neighbor_pos`, `List<int> neighbor_n_free_pos`,
 `int min_lvl`, `int evaluate_enter_id`.  
-L'istanza `evaluate_enter_data` andrà passata ad un metodo del modulo X nel nodo Coordinator della rete.
+L'istanza `evaluate_enter_data` andrà passata ad un metodo del modulo Migrations nel nodo Coordinator della rete.
 
-Ora il modulo X del nodo *n* fa in modo che venga richiamato nel modulo Coordinator (dal suo utilizzatore diretto, poiché
-non è detto che il modulo X abbia una dipendenza diretta sul modulo Coordinator) il metodo `evaluate_enter`.  
+Ora il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator (dal suo utilizzatore diretto, poiché
+non è detto che il modulo Migrations abbia una dipendenza diretta sul modulo Coordinator) il metodo `evaluate_enter`.  
 A questo metodo viene passato un `Object evaluate_enter_data`.  
 La reale classe che implementa questa struttura dati non è infatti nota al modulo Coordinator. Questi sa solo
 che è serializzabile.
 
 Grazie ai meccanismi del modulo Coordinator (di cui è trattato nella relativa documentazione) ora
 nel nodo Coordinator della rete *G* viene chiamato dallo stesso modulo Coordinator (a cui era
-stato passato come delegato nel suo costruttore) il metodo `evaluate_enter` del modulo X.  
+stato passato come delegato nel suo costruttore) il metodo `evaluate_enter` del modulo Migrations.  
 Di fatto il modulo Coordinator chiama il metodo `evaluate_enter` dell'interfaccia IEvaluateEnterHandler
-e questi chiamerà il metodo `evaluate_enter` del modulo X.  
+e questi chiamerà il metodo `evaluate_enter` del modulo Migrations.  
 Va considerato che, sempre grazie ai meccanismi del modulo Coordinator, oltre alla struttura dati
 `evaluate_enter_data` il metodo `evaluate_enter` eseguito sul nodo Coordinator di *G* riceve
 come argomento anche l'indirizzo di *n*, `List<int> client_address`.
 
-Vediamo cosa avviene nel metodo `evaluate_enter` del modulo X eseguito sul nodo Coordinator di *G*.
+Vediamo cosa avviene nel metodo `evaluate_enter` del modulo Migrations eseguito sul nodo Coordinator di *G*.
 
-Ora il modulo X nel nodo Coordinator di *G* computa il tempo in millisecondi `global_timeout` entro il quale intende rispondere alle
+Ora il modulo Migrations nel nodo Coordinator di *G* computa il tempo in millisecondi `global_timeout` entro il quale intende rispondere alle
 richieste di ingresso in una diversa rete. Abbiamo accennato prima al fatto che è bene attendere
 un tempo per verificare la possibilità di fare ingresso sfruttando il punto di contatto migliore
 fra le due reti.  
@@ -156,7 +156,7 @@ Il nodo Coordinator dell'intera rete *G* non ha particolari informazioni sui g-n
 solo individuare, sulla base delle informazioni ricevute circa i g-nodi di *v* in *J*, un livello
 a cui cercare di far entrare un g-nodo di *n* dentro un g-nodo di *v*.
 
-Ora il modulo X nel nodo Coordinator di *G* si chiede: se il solo punto di contatto fra *G* e *J*
+Ora il modulo Migrations nel nodo Coordinator di *G* si chiede: se il solo punto di contatto fra *G* e *J*
 fosse il nodo *n* con il suo arco verso il nodo *v*, di cui conosciamo la visione della rete *J*,
 assumendo che il fatto di cercare di far entrare *G* dentro *J* sia dato per buono,
 a quale livello compreso tra `min_lvl` e `max_lvl` andrebbe tentato l'ingresso di (una parte di) *G* in *J*?
@@ -166,9 +166,9 @@ a quale livello compreso tra `min_lvl` e `max_lvl` andrebbe tentato l'ingresso d
 Diciamo che la risposta alla domanda sia *lvl_0*.
 
 Assumiamo che questa richiesta sia la prima pervenuta che coinvolge il g-nodo *g<sub>lvl_0</sub>(n)*
-e la rete *J*. Il modulo X se ne avvede accedendo alla memoria condivisa di tutta la rete (spiegheremo
+e la rete *J*. Il modulo Migrations se ne avvede accedendo alla memoria condivisa di tutta la rete (spiegheremo
 meglio il significato di questo a breve).  
-Allora il modulo X nel nodo Coordinator di *G* associa alla richiesta `evaluate_enter_data`, al nodo *n*
+Allora il modulo Migrations nel nodo Coordinator di *G* associa alla richiesta `evaluate_enter_data`, al nodo *n*
 e alla valutazione *lvl_0* una scadenza `timeout = global_timeout da ora`, rappresentata con un oggetto Timer serializzabile.  
 Cioè crea una istanza `EvaluateEnterEvaluation resp` con i campi `evaluate_enter_data`, `client_address`,
 `lvl`, `timeout` e altri campi che dettaglieremo in seguito. In seguito potremmo riferirci a questa
@@ -178,42 +178,42 @@ Ogni *valutazione* può trovarsi in un particolare stato, anche questo memorizza
 dati nel membro `status`. Lo stato in cui viene inizializzata questa valutazione è "*pending*".
 
 Questa valutazione deve essere memorizzata nella memoria condivisa di tutta la rete *G*.  
-Abbiamo già detto che il modulo X può fare in modo che venga richiamato un metodo nel modulo Coordinator, pur non
+Abbiamo già detto che il modulo Migrations può fare in modo che venga richiamato un metodo nel modulo Coordinator, pur non
 avendo una dipendenza diretta sul modulo Coordinator. In particolare avremo una coppia di metodi
 `get_network_entering_memory` e `set_network_entering_memory` con i quali si recupera e si salva
-una istanza di Object (perché il modulo Coordinator non conosce i dati del modulo X) che costituisce
-l'intera base dati (cioè la memoria condivisa della rete) relativa agli aspetti gestiti dal modulo X.
+una istanza di Object (perché il modulo Coordinator non conosce i dati del modulo Migrations) che costituisce
+l'intera base dati (cioè la memoria condivisa della rete) relativa agli aspetti gestiti dal modulo Migrations.
 In particolare il metodo `set_network_entering_memory` provvede anche ad avviare in una nuova tasklet
 le operazioni di replica.  
-Il modulo X nel nodo Coordinator di *G* recupera l'intera base dati corrente e la integra con
+Il modulo Migrations nel nodo Coordinator di *G* recupera l'intera base dati corrente e la integra con
 l'aggiunta di questa nuova *valutazione*. Poi immediatamente salva l'intera base dati. Questa
 sequenza di operazioni si può a buon diritto considerare come atomica, in quanto seppure facciamo
 uso dei meccanismi dei servizi peer-to-peer (modulo PeerServices) il solo nodo che ha diritto
 a fare le richieste relative a questi metodi è lo stesso nodo Coordinator di tutta la rete,
 quindi non dovrà essere fatta alcuna operazione bloccante di trasmissione in rete.  
 In seguito ci riferiremo a questa sequenza di operazioni semplicemente dicendo che
-il modulo X nel nodo Coordinator di *G* accede e/o aggiorna la memoria condivisa di tutta la rete con delle
+il modulo Migrations nel nodo Coordinator di *G* accede e/o aggiorna la memoria condivisa di tutta la rete con delle
 informazioni di sua pertinenza.
 
-Ora il modulo X nel nodo Coordinator di *G* risponde al client *n* con una eccezione AskAgainError.
+Ora il modulo Migrations nel nodo Coordinator di *G* risponde al client *n* con una eccezione AskAgainError.
 
 L'eccezione AskAgainError ricevuta sulla chiamata del metodo `evaluate_enter` sul modulo Coordinator
-istruisce il modulo X di ripetere la stessa richiesta (con le stesse informazioni
+istruisce il modulo Migrations di ripetere la stessa richiesta (con le stesse informazioni
 tra cui lo stesso `evaluate_enter_id`) dopo aver atteso alcuni istanti.  
 Questa attesa deve essere più piccola (almeno 3 o 4 volte) di quella calcolata come `global_timeout`,
-che come abbiamo detto può essere calcolata dal modulo X esclusivamente sulla base del numero di singoli nodi presenti in *G*.
+che come abbiamo detto può essere calcolata dal modulo Migrations esclusivamente sulla base del numero di singoli nodi presenti in *G*.
 
 * * *
 
 Supponiamo che nel frattempo giunga al Coordinator della rete *G* una richiesta simile dal nodo *q*
-relativa alla rete *J*. Eseguendo il metodo `evaluate_enter` del modulo X per la richiesta pervenuta
-da *q*, alla domanda "a quale livello andrebbe tentato l'ingresso dal nodo *q*" il modulo X risponde
+relativa alla rete *J*. Eseguendo il metodo `evaluate_enter` del modulo Migrations per la richiesta pervenuta
+da *q*, alla domanda "a quale livello andrebbe tentato l'ingresso dal nodo *q*" il modulo Migrations risponde
 con il livello *lvl_1*.
 
-Ora il modulo X nel nodo Coordinator di *G* accedendo alla memoria condivisa della rete scopre che esiste una precedente
+Ora il modulo Migrations nel nodo Coordinator di *G* accedendo alla memoria condivisa della rete scopre che esiste una precedente
 *valutazione* di ingresso in *J* che ancora è *pending*. Allora confronta i due g-nodi coinvolti
 e scopre che il g-nodo *g<sub>lvl_1</sub>(q)* interseca (è equivalente a, oppure contiene, oppure è contenuto in)
-il g-nodo *g<sub>lvl_0</sub>(n)*. Il modulo X nel nodo Coordinator di *G* deduce che queste *valutazioni*
+il g-nodo *g<sub>lvl_0</sub>(n)*. Il modulo Migrations nel nodo Coordinator di *G* deduce che queste *valutazioni*
 (quella sulla richiesta di *n* e quella sulla richiesta di *q*) vanno considerate insieme perché sono intersecanti
 e riguardano la stessa rete *J*. Le due *valutazioni* risultano ora collegate fra di loro. Anche questo collegamento farà parte della
 memoria condivisa di tutta la rete: ogni *valutazione* mantiene un membro `next_id` che coincide con
@@ -221,14 +221,14 @@ il membro `evaluate_enter_data.evaluate_enter_id` della prossima collegata.
 
 Le *valutazioni* tra loro collegate devono avere sempre la medesima scadenza. Se `lvl_1` è maggiore di `lvl_0`, ovvero più in generale, se il
 livello del g-nodo coinvolto nella *valutazione* della richiesta appena pervenuta è maggiore del livello del g-nodo coinvolto in tutte
-le *valutazioni* ad essa collegate, allora il modulo X nel nodo Coordinator di *G* computa una nuova
+le *valutazioni* ad essa collegate, allora il modulo Migrations nel nodo Coordinator di *G* computa una nuova
 scadenza `timeout = global_timeout da ora` e la aggiorna su tutte le *valutazioni* collegate. Altrimenti esso
 mantiene la precedente scadenza (comune a tutte le *valutazioni* precedenti) e la usa anche per
 la *valutazione* sulla richiesta di *q*.
 
-Il modulo X nel nodo Coordinator di *G* aggiorna la memoria condivisa di tutta la rete con tutte queste variazioni.
+Il modulo Migrations nel nodo Coordinator di *G* aggiorna la memoria condivisa di tutta la rete con tutte queste variazioni.
 
-Ora il modulo X nel nodo Coordinator di *G* si accinge a rispondere alla richiesta di *q*.
+Ora il modulo Migrations nel nodo Coordinator di *G* si accinge a rispondere alla richiesta di *q*.
 Se nella *valutazione* sulla richiesta di *q* il timer `timeout` non è ancora scaduto il Coordinator risponde anche a questa richiesta con
 una eccezione AskAgainError.
 
@@ -236,15 +236,15 @@ Se invece `timeout` è scaduto si passa alla terza fase.
 
 ### <a name="Fusione_reti_fase3"></a>Terza fase - elezione dell'ingresso
 
-Consideriamo che ogni volta che arriva una richiesta `r` di ingresso in *J* il modulo X nel
+Consideriamo che ogni volta che arriva una richiesta `r` di ingresso in *J* il modulo Migrations nel
 nodo Coordinator di *G* prima di valutarla accede alla memoria condivisa di tutta la rete per
 vedere se a tale richiesta è stata già data una *valutazione*.  
 Una *valutazione* `v` recuperata dalla memoria condivisa della rete è sempre identificabile
 come quella associata ad una particolare richiesta `r` appena pervenuta verificando che
 `r.evaluate_enter_id == v.evaluate_enter_data.evaluate_enter_id`.
 
-Alla fine arriverà una richiesta `req` di ingresso in *J* tale che il modulo X nel nodo Coordinator di *G* ne assocerà
-la *valutazione* `resp` ad un gruppo di *valutazioni* nello stato *pending* il cui `timeout` è scaduto. A questo punto il modulo X eleggerà
+Alla fine arriverà una richiesta `req` di ingresso in *J* tale che il modulo Migrations nel nodo Coordinator di *G* ne assocerà
+la *valutazione* `resp` ad un gruppo di *valutazioni* nello stato *pending* il cui `timeout` è scaduto. A questo punto il modulo Migrations eleggerà
 la migliore fra le soluzioni.
 
 **TODO** Inserire qui ogni idea su some individuare la migliore soluzione. Ancora non abbiamo
@@ -253,7 +253,7 @@ avviato alcuna ricerca di migration-path nella rete *J*.
 **Nota 1**: una cosa da evitare è quella di formare g-nodi che facilmente potrebbero "splittarsi", diventare
 disconnessi.  
 Per questo in `EvaluateEnterData evaluate_enter_data` memoriziamo `List<int> neighbor_pos` la posizione
-del vicino con cui c'è un arco. Il modulo X nel nodo Coordinator di *G* accedendo nella memoria condivisa
+del vicino con cui c'è un arco. Il modulo Migrations nel nodo Coordinator di *G* accedendo nella memoria condivisa
 alla lista di *valutazioni* vede che un certo numero di queste ha per nodo vicino un nodo che appartiene
 al g-nodo di *J* in cui *G* vorrebbe entrare. Deduce quindi il numero di archi che dovrebbero rompersi
 per far sì che il g-nodo divenga disconnesso.
@@ -264,10 +264,10 @@ La *valutazione* eletta `v` passa nello stato "*eletta, da comunicare*" e la sua
 valorizzata con `timeout = global_timeout da ora`. Tutte le altre *valutazioni* collegate passano nello
 stato "*riconsiderabile*" con scadenza `timeout = global_timeout da ora`.
 
-Il modulo X nel nodo Coordinator di *G* aggiorna la memoria condivisa di tutta la rete con tutte queste variazioni.
+Il modulo Migrations nel nodo Coordinator di *G* aggiorna la memoria condivisa di tutta la rete con tutte queste variazioni.
 
-Ora il modulo X guarda alla richiesta `req` appena pervenuta. Se la relativa *valutazione* `resp` è proprio `v`
-allora il modulo X nel nodo Coordinator di *G* fa queste operazioni:
+Ora il modulo Migrations guarda alla richiesta `req` appena pervenuta. Se la relativa *valutazione* `resp` è proprio `v`
+allora il modulo Migrations nel nodo Coordinator di *G* fa queste operazioni:
 
 *   Si prepara a rispondere alla richiesta del client con il livello a cui deve fare ingresso. Cioè memorizza `ret = resp.lvl`.
 *   La *valutazione* eletta `v` viene rimossa dall'elenco, operando sui campi `next_id` delle altre *valutazioni* oltre che
@@ -276,7 +276,7 @@ allora il modulo X nel nodo Coordinator di *G* fa queste operazioni:
 *   Aggiorna la memoria condivisa di tutta la rete.
 *   Risponde alla richiesta del client con `ret`.
 
-Altrimenti il modulo X fa queste operazioni:
+Altrimenti il modulo Migrations fa queste operazioni:
 
 *   Risponde alla richiesta del client con l'eccezione AskAgainError.
 
@@ -284,12 +284,12 @@ Le successive richieste saranno gestite nella quarta fase.
 
 ### <a name="Fusione_reti_fase4"></a>Quarta fase - comunicazione della elezione
 
-Quando arriva una richiesta `req` di ingresso in *J* il modulo X nel nodo Coordinator di *G* si avvede che si trova nella quarta fase
+Quando arriva una richiesta `req` di ingresso in *J* il modulo Migrations nel nodo Coordinator di *G* si avvede che si trova nella quarta fase
 perché la sua *valutazione* `v` era stata già fatta ed è nella memoria condivisa di tutta la rete nello
 stato *da comunicare* o *riconsiderabile*.
 
 Se `v` è nello stato *eletta, da comunicare*
-allora il modulo X nel nodo Coordinator di *G* fa queste operazioni:
+allora il modulo Migrations nel nodo Coordinator di *G* fa queste operazioni:
 
 *   Si prepara a rispondere alla richiesta del client con il livello a cui deve fare ingresso. Cioè memorizza `ret = v.lvl`.
 *   La *valutazione* eletta `v` viene rimossa dall'elenco, operando sui campi `next_id` delle altre *valutazioni* oltre che
@@ -298,17 +298,17 @@ allora il modulo X nel nodo Coordinator di *G* fa queste operazioni:
 *   Aggiorna la memoria condivisa di tutta la rete.
 *   Risponde alla richiesta del client con `ret`.
 
-Altrimenti, se `v` è nello stato *riconsiderabile* il modulo X fa queste operazioni:
+Altrimenti, se `v` è nello stato *riconsiderabile* il modulo Migrations fa queste operazioni:
 
 *   Se `v.timeout` è scaduto:
     *   Cerca fra le *valutazioni* collegate quella nello stato *eletta, da comunicare* e la rimuove dall'elenco.
     *   Tutte le altre *valutazioni* le mette nello stato *pending* mantenendone immutato il `timeout`.
-    *   Il modulo X ricomincia dalla terza fase: cioè si trova a dover eleggere la migliore fra le soluzioni
+    *   Il modulo Migrations ricomincia dalla terza fase: cioè si trova a dover eleggere la migliore fra le soluzioni
         collegate a questa.
 *   Altrimenti:
     *   Risponde alla richiesta del client con l'eccezione AskAgainError.
 
-Altrimenti, se `v` è nello stato *scartata, da comunicare* il modulo X fa queste operazioni:
+Altrimenti, se `v` è nello stato *scartata, da comunicare* il modulo Migrations fa queste operazioni:
 
 *   La *valutazione* `v` viene rimossa dall'elenco.
 *   Cicla fra le *valutazioni* collegate e se ne trova qualcuna il cui `timeout` è scaduto la rimuove dall'elenco.  
@@ -317,10 +317,10 @@ Altrimenti, se `v` è nello stato *scartata, da comunicare* il modulo X fa quest
 *   Risponde alla richiesta del client con l'eccezione IgnoreNetworkError.
 
 L'eccezione IgnoreNetworkError ricevuta sulla chiamata del metodo `evaluate_enter` sul modulo Coordinator
-istruisce il modulo X nel nodo *n* di non prendere alcuna iniziativa e di evitare ulteriori valutazioni di ingresso nella
+istruisce il modulo Migrations nel nodo *n* di non prendere alcuna iniziativa e di evitare ulteriori valutazioni di ingresso nella
 rete tramite il diretto vicino *v* per un certo tempo.  
 Questo tempo potrebbe essere un multiplo (diciamo 20 volte tanto) di quello calcolato come `global_timeout`,
-che come abbiamo detto può essere calcolata dal modulo X esclusivamente sulla base del numero di singoli nodi presenti in *G*.
+che come abbiamo detto può essere calcolata dal modulo Migrations esclusivamente sulla base del numero di singoli nodi presenti in *G*.
 
 ### <a name="Fusione_reti_fase5"></a>Quinta fase - comunicazione con il g-nodo entrante
 
@@ -328,55 +328,55 @@ La quinta fase inizia quando un singolo nodo di *G*, assumiamo sia il nodo *n*, 
 dal Coordinator di *G* di tentare l'ingresso in *J* tramite il suo vicino *v* con il suo g-nodo *g* di livello
 *lvl*.
 
-A ricevere questa autorizzazione è il modulo X nel nodo *n*, che aveva chiamato `evaluate_enter` nel modulo Coordinator.
+A ricevere questa autorizzazione è il modulo Migrations nel nodo *n*, che aveva chiamato `evaluate_enter` nel modulo Coordinator.
 
-Ora il modulo X nel nodo *n* vuole chiamare il metodo `begin_enter` del modulo X nel nodo Coordinator del
+Ora il modulo Migrations nel nodo *n* vuole chiamare il metodo `begin_enter` del modulo Migrations nel nodo Coordinator del
 g-nodo *g*.
 
-Prima il modulo X del nodo *n* prepara una nuova struttura dati con le informazioni che servono al metodo `begin_enter`
-del modulo X nel nodo Coordinator del g-nodo *g*. Tale struttura è `BeginEnterData begin_enter_data`. I membri di questa
+Prima il modulo Migrations del nodo *n* prepara una nuova struttura dati con le informazioni che servono al metodo `begin_enter`
+del modulo Migrations nel nodo Coordinator del g-nodo *g*. Tale struttura è `BeginEnterData begin_enter_data`. I membri di questa
 classe sono:
 
 *   nessuno?
 
-Poi il modulo X del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il metodo `begin_enter`.  
+Poi il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il metodo `begin_enter`.  
 A questo metodo viene passato un `Object begin_enter_data` e il livello *lvl*.
 
 Grazie ai meccanismi del modulo Coordinator (di cui è trattato nella relativa documentazione) ora
 nel nodo Coordinator del g-nodo *g* viene chiamato dallo stesso modulo Coordinator (a cui era
-stato passato come delegato nel suo costruttore) il metodo `begin_enter` del modulo X.  
+stato passato come delegato nel suo costruttore) il metodo `begin_enter` del modulo Migrations.  
 Di fatto il modulo Coordinator chiama il metodo `begin_enter` dell'interfaccia IBeginEnterHandler
-e questi chiamerà il metodo `begin_enter` del modulo X.  
+e questi chiamerà il metodo `begin_enter` del modulo Migrations.  
 Va considerato che, sempre grazie ai meccanismi del modulo Coordinator, oltre alla struttura dati
 `begin_enter_data` il metodo `begin_enter` eseguito sul nodo Coordinator del g-nodo *g* riceve
 come argomento anche l'indirizzo di *n*, `List<int> client_address`.
 
-Vediamo cosa avviene nel metodo `begin_enter` del modulo X eseguito sul nodo Coordinator del g-nodo *g*.
+Vediamo cosa avviene nel metodo `begin_enter` del modulo Migrations eseguito sul nodo Coordinator del g-nodo *g*.
 
-Analogamente a quanto detto per il modulo X nel nodo Coordinator di tutta la rete *G*, anche il modulo X nel nodo
+Analogamente a quanto detto per il modulo Migrations nel nodo Coordinator di tutta la rete *G*, anche il modulo Migrations nel nodo
 Coordinator del g-nodo *g* ha bisogno di poter accedere in lettura e scrittura alla memoria condivisa del
-g-nodo *g* relativa agli aspetti gestiti dal modulo X.  
+g-nodo *g* relativa agli aspetti gestiti dal modulo Migrations.  
 Lo fa stimolando la chiamata dei metodi `get_network_entering_memory` e `set_network_entering_memory` nel modulo
 Coordinator. Anche qui le operazioni possono essere considerate atomiche, cioè non comportano
 alcuna operazione bloccante di trasmissione in rete.  
 In seguito ci riferiremo a questa sequenza di operazioni semplicemente dicendo che
-il modulo X nel nodo Coordinator del g-nodo *g* accede e/o aggiorna la memoria condivisa di *g* con delle
+il modulo Migrations nel nodo Coordinator del g-nodo *g* accede e/o aggiorna la memoria condivisa di *g* con delle
 informazioni di sua pertinenza.
 
-Il modulo X nel nodo Coordinator di *g* acquisisce un *lock*. Cioè, accedendo alla memoria condivisa di *g*
+Il modulo Migrations nel nodo Coordinator di *g* acquisisce un *lock*. Cioè, accedendo alla memoria condivisa di *g*
 verifica che non sia in corso un'altra operazione di ingresso di *g* in un'altra rete; e allo stesso
 tempo memorizza che ora è in corso questa operazione.  
 Nella memorizzazione deve essere incluso un timer. Scaduto questo timer l'operazione va considerata abortita.
 
-Se l'acquisizione del lock non riesce, allora il metodo `begin_enter` del modulo X nel nodo Coordinator
-del g-nodo *g* fa in modo che venga ricevuta una eccezione AlreadyEnteringError dal modulo X nel nodo
+Se l'acquisizione del lock non riesce, allora il metodo `begin_enter` del modulo Migrations nel nodo Coordinator
+del g-nodo *g* fa in modo che venga ricevuta una eccezione AlreadyEnteringError dal modulo Migrations nel nodo
 *n* che aveva fatto richiamare il metodo `begin_enter` nel modulo Coordinator.  
-Questo avviene proprio lanciando una eccezione dal metodo `begin_enter` del modulo X. Il delegato noto al
+Questo avviene proprio lanciando una eccezione dal metodo `begin_enter` del modulo Migrations. Il delegato noto al
 modulo Coordinator `IBeginEnterHandler.begin_enter` prevede questa eccezione e il modulo Coordinator
 la gestisce preparando una istanza di BeginEnterResponse che sarà tradotta nel metodo `begin_enter` del
 modulo Coordinator nel nodo *n*.
 
-Se, invece, l'acquisizione del lock riesce, allora il metodo `begin_enter` del modulo X nel nodo Coordinator
+Se, invece, l'acquisizione del lock riesce, allora il metodo `begin_enter` del modulo Migrations nel nodo Coordinator
 del g-nodo *g* avvia una tasklet su cui procedere, mentre risponde positivamente al client permettendogli di
 proseguire con le operazioni di ingresso di *g* in *J*.
 
@@ -387,16 +387,16 @@ Nella nuova tasklet... **TODO**
 La sesta fase inizia quando il nodo *n*, riceve l'autorizzazione dal Coordinator di *g* di chiedere al
 suo vicino *v* la prenotazione di un posto per *g* in *J*.
 
-Il modulo X nel nodo *n* chiede al modulo X nel nodo *v* di trovare una migration-path e di riservare
+Il modulo Migrations nel nodo *n* chiede al modulo Migrations nel nodo *v* di trovare una migration-path e di riservare
 un posto per *g* (cioè per il g-nodo di livello *lvl* a cui appartiente *n*) dentro *l'attuale* g-nodo
 di *v* di livello *lvl+1* o superiore.
 
-Il modulo X nel nodo *v* cerca la shortest migration-path come descritto [qui](#Strategia_ingresso).
+Il modulo Migrations nel nodo *v* cerca la shortest migration-path come descritto [qui](#Strategia_ingresso).
 
 Se il nodo *v* trova che non esiste una migration-path a livello *lvl* lo comunica a *n*. Questi
 potrà decidere di degradare, cioè tentare ingresso con un g-nodo di livello inferiore.  
-Dovrà ripartire dalla comunicazione con il g-nodo entrante. Cioè prima comunicare al modulo X nel nodo
-Coordinator di *g* che questo ingresso è abortito. Poi chiamare il metodo `begin_enter` del modulo X nel
+Dovrà ripartire dalla comunicazione con il g-nodo entrante. Cioè prima comunicare al modulo Migrations nel nodo
+Coordinator di *g* che questo ingresso è abortito. Poi chiamare il metodo `begin_enter` del modulo Migrations nel
 nodo Coordinator di *g'* (di livello inferiore) e quindi fare la richiesta di nuovo a *v*.
 
 Altrimenti il nodo *v* trova un set di soluzioni e giudica quale sia la migliore e la esegue.
