@@ -115,7 +115,8 @@ La classe EvaluateEnterData è nota al modulo Migrations. Si tratta di una class
 L'istanza `evaluate_enter_data` andrà passata ad un metodo del modulo Migrations nel nodo Coordinator della rete.
 
 Ora il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator (dal suo utilizzatore diretto, poiché
-non è detto che il modulo Migrations abbia una dipendenza diretta sul modulo Coordinator) il metodo `evaluate_enter`.  
+non è detto che il modulo Migrations abbia una dipendenza diretta sul modulo Coordinator) il
+metodo `evaluate_enter` (vedi [qui](../ModuloCoordinator.md#Deliverables)).  
 A questo metodo viene passato un `Object evaluate_enter_data`.  
 La reale classe che implementa questa struttura dati non è infatti nota al modulo Coordinator. Questi sa solo
 che è serializzabile.
@@ -180,7 +181,8 @@ dati nel membro `status`. Lo stato in cui viene inizializzata questa valutazione
 Questa valutazione deve essere memorizzata nella memoria condivisa di tutta la rete *G*.  
 Abbiamo già detto che il modulo Migrations può fare in modo che venga richiamato un metodo nel modulo Coordinator, pur non
 avendo una dipendenza diretta sul modulo Coordinator. In particolare avremo una coppia di metodi
-`get_network_entering_memory` e `set_network_entering_memory` con i quali si recupera e si salva
+`get_network_entering_memory` e `set_network_entering_memory`
+(vedi [qui](../ModuloCoordinator.md#Deliverables)) con i quali si recupera e si salva
 una istanza di Object (perché il modulo Coordinator non conosce i dati del modulo Migrations) che costituisce
 l'intera base dati (cioè la memoria condivisa della rete) relativa agli aspetti gestiti dal modulo Migrations.
 In particolare il metodo `set_network_entering_memory` provvede anche ad avviare in una nuova tasklet
@@ -339,7 +341,8 @@ classe sono:
 
 *   nessuno?
 
-Poi il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il metodo `begin_enter`.  
+Poi il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
+metodo `begin_enter` (vedi [qui](../ModuloCoordinator.md#Deliverables)).  
 A questo metodo viene passato un `Object begin_enter_data` e il livello *lvl*.
 
 Grazie ai meccanismi del modulo Coordinator (di cui è trattato nella relativa documentazione) ora
@@ -701,7 +704,8 @@ richiesto o a uno dei livelli superiori accettabili (cioè fino a `max_host_lvl`
 memorizza (in `middle_pos` e `middle_eldership`) e restituisce le informazioni necessarie
 alla migration-path, cioè i posti *virtuali* al livello `ask_lvl + 1`.
 
-Per sapere se c'è un posto al livello `host_lvl` viene usata la funzione `coord_reserve`.
+Per sapere se c'è un posto al livello `host_lvl` viene usata la funzione `coord_reserve`, la quale è un delegato
+che chiama nel modulo Coordinator il metodo `reserve` (vedi [qui](../ModuloCoordinator.md#Deliverables)).
 La funzione `coord_reserve(host_lvl, enter_id)` invia la richiesta ReserveEnterRequest
 ([prenota un posto](../ModuloCoordinator/AnalisiFunzionale.md#Prenota_un_posto))
 al servizio Coordinator usando come chiave `host_lvl`. Come descritto nel relativo documento,

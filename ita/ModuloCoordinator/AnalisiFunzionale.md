@@ -491,22 +491,28 @@ Fornisce metodi per:
 
 *   Valutare un ingresso in una nuova rete. Metodo `evaluate_enter`.  
     La logica per il rilevamento di un vicino appartenente ad una diversa rete e per l'ingresso
-    in questa nuova rete è di pertinenza di un diverso modulo Migrations. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).  
+    in questa nuova rete è di pertinenza del modulo [Migrations](../ModuloMigrations/AnalisiFunzionale.md)
+    e non del modulo Coordinator.  
     Quello che fa questo metodo in realtà è permettere all'utilizzatore del modulo Coordinator di far eseguire una
     certa operazione sul nodo Coordinator della rete. In particolare, l'utilizzatore del modulo
-    Coordinator nel nodo *n* passa un oggetto al metodo `evaluate_enter` (probabilmente su istruzione
-    da parte di un altro modulo Migrations); questi fa pervenire questo oggetto al nodo Coordinator della
-    rete il quale lo passa al delegato `IEvaluateEnterHandler` (probabilmente implementato dallo
+    Coordinator nel nodo *n* passa un oggetto al metodo `evaluate_enter` (su istruzione
+    del modulo Migrations); questi fa pervenire questo oggetto al nodo Coordinator della
+    rete il quale lo passa al delegato `IEvaluateEnterHandler` (implementato dallo
     stesso modulo Migrations) nel suo metodo `evaluate_enter`.  
     L'esecuzione del metodo `IEvaluateEnterHandler.evaluate_enter` produce la decisione per il nodo *n* di tentare
     o meno l'ingresso nella nuova rete e se sì a quale livello.
 *   Iniziare un ingresso in una nuova rete. Metodo `begin_enter`.  
-    Anche in questo caso la logica di queste operazioni non è di pertinenza del modulo Coordinator.  
-    Questo metodo permette all'utilizzatore del modulo Coordinator di far eseguire l'operazione `begin_enter`
+    Anche in questo caso la logica di queste operazioni è di pertinenza del
+    modulo [Migrations](../ModuloMigrations/AnalisiFunzionale.md)
+    e non del modulo Coordinator.  
+    Questo metodo permette all'utilizzatore del modulo Coordinator (su istruzione
+    del modulo Migrations) di far eseguire l'operazione `begin_enter`
     sul nodo Coordinator di un g-nodo *g* di livello *lvl*. Il delegato `IBeginEnterHandler.begin_enter`
-    sul nodo Coordinator di *g* effettivamente autorizza/nega l'ingresso.
+    sul nodo Coordinator di *g* (implementato dallo
+    stesso modulo Migrations) effettivamente autorizza/nega l'ingresso.
 *   Prenotare un posto (se possibile *reale*, altrimenti *virtuale*) nel proprio g-nodo di livello
     *l*. Metodo `reserve`. **TODO**
+*   Metodi `get_network_entering_memory` e `set_network_entering_memory`. **TODO**
 
 Implementa il servizio Coordinator derivando la classe CoordinatorService dalla classe base PeerService.
 
