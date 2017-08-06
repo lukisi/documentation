@@ -1,7 +1,26 @@
-**NOTA**
-Il contenuto di questo file andrà tasferito nella trattazione di un diverso modulo.
+# Modulo Migrations - Analisi Funzionale
 
-## Incontro e fusione di due reti distinte
+1.  [Il ruolo del modulo Migrations](#Ruolo_Migrations)
+1.  [Incontro e fusione di due reti distinte](#Fusione_reti)
+    1.  [Prima fase - valutazione del singolo nodo](#Fusione_reti_fase1)
+    1.  [Seconda fase - valutazione della rete](#Fusione_reti_fase2)
+    1.  [Terza fase - elezione dell'ingresso](#Fusione_reti_fase3)
+    1.  [Quarta fase - comunicazione della elezione](#Fusione_reti_fase4)
+    1.  [Quinta fase - comunicazione con il g-nodo entrante](#Fusione_reti_fase5)
+    1.  [Sesta fase - richiesta della prenotazione di un posto](#Fusione_reti_fase6)
+    1.  [Settima fase - ingresso](#Fusione_reti_fase7)
+1.  [Strategia di ingresso](#Strategia_ingresso)
+    1.  [Definizione della migration-path](#Strategia_ingresso_Definizione_migration_path)
+    1.  [Uso della migration-path](#Strategia_ingresso_Uso_migration_path)
+    1.  [Caratteristiche della migration-path](#Strategia_ingresso_Caratteristiche_migration_path)
+    1.  [Algoritmo](#Strategia_ingresso_Algoritmo)
+    1.  [Degradazione](#Strategia_ingresso_Degradazione)
+
+## <a name="Ruolo_Migrations"></a>Il ruolo del modulo Migrations
+
+**TODO**
+
+## <a name="Fusione_reti"></a>Incontro e fusione di due reti distinte
 
 Si consideri un nodo *n* che appartiene alla rete *G*. Questa è una generalizzazione,
 che comprende ad esempio il caso di un singolo nodo che compone una intera rete.
@@ -22,7 +41,7 @@ Inoltre, quando si verifica un contatto fra due distinte reti, è desiderabile a
 tempo prima di procedere, per cercare di verificare la possibilità di fare ingresso
 sfruttando il punto di contatto migliore.
 
-### Prima fase - valutazione del singolo nodo
+### <a name="Fusione_reti_fase1"></a>Prima fase - valutazione del singolo nodo
 
 Diciamo subito che il modulo X opera solo nella *identità principale* di un nodo. Quindi *n* e *v* non
 sono identità *di connettività*.  
@@ -76,7 +95,7 @@ A questo punto anche se la differenza fosse piccola entrambi i nodi *n* e *v* sa
 Per analizzare il resto delle operazioni in questo documento, assumiamo per ipotesi che il nodo *n*
 decide che *G* deve entrare in *J*.
 
-### Seconda fase - valutazione della rete
+### <a name="Fusione_reti_fase2"></a>Seconda fase - valutazione della rete
 
 Allora il modulo X aggiunge un'altra informazione a quelle della struttura dati di cui sopra:
 
@@ -215,7 +234,7 @@ una eccezione AskAgainError.
 
 Se invece `timeout` è scaduto si passa alla terza fase.
 
-### Terza fase - elezione dell'ingresso
+### <a name="Fusione_reti_fase3"></a>Terza fase - elezione dell'ingresso
 
 Consideriamo che ogni volta che arriva una richiesta `r` di ingresso in *J* il modulo X nel
 nodo Coordinator di *G* prima di valutarla accede alla memoria condivisa di tutta la rete per
@@ -263,7 +282,7 @@ Altrimenti il modulo X fa queste operazioni:
 
 Le successive richieste saranno gestite nella quarta fase.
 
-### Quarta fase - comunicazione della elezione
+### <a name="Fusione_reti_fase4"></a>Quarta fase - comunicazione della elezione
 
 Quando arriva una richiesta `req` di ingresso in *J* il modulo X nel nodo Coordinator di *G* si avvede che si trova nella quarta fase
 perché la sua *valutazione* `v` era stata già fatta ed è nella memoria condivisa di tutta la rete nello
@@ -303,7 +322,7 @@ rete tramite il diretto vicino *v* per un certo tempo.
 Questo tempo potrebbe essere un multiplo (diciamo 20 volte tanto) di quello calcolato come `global_timeout`,
 che come abbiamo detto può essere calcolata dal modulo X esclusivamente sulla base del numero di singoli nodi presenti in *G*.
 
-### Quinta fase - comunicazione con il g-nodo entrante
+### <a name="Fusione_reti_fase5"></a>Quinta fase - comunicazione con il g-nodo entrante
 
 La quinta fase inizia quando un singolo nodo di *G*, assumiamo sia il nodo *n*, riceve l'autorizzazione
 dal Coordinator di *G* di tentare l'ingresso in *J* tramite il suo vicino *v* con il suo g-nodo *g* di livello
@@ -363,7 +382,7 @@ proseguire con le operazioni di ingresso di *g* in *J*.
 
 Nella nuova tasklet... **TODO**
 
-### Sesta fase - richiesta della prenotazione di un posto
+### <a name="Fusione_reti_fase6"></a>Sesta fase - richiesta della prenotazione di un posto
 
 La sesta fase inizia quando il nodo *n*, riceve l'autorizzazione dal Coordinator di *g* di chiedere al
 suo vicino *v* la prenotazione di un posto per *g* in *J*.
@@ -407,7 +426,7 @@ Il nodo *v* comunica al nodo *n* i dettagli per fare ingresso nel suo g-nodo nel
 *   `List<int> pos` - Posizioni ai livelli da `host_gnode_level` - 1 a `levels`.
 *   `List<int> elderships` - Anzianità ai livelli da `host_gnode_level` - 1 a `levels`.
 
-### Settima fase - ingresso
+### <a name="Fusione_reti_fase7"></a>Settima fase - ingresso
 
 **TODO** dettagli
 
@@ -438,7 +457,7 @@ che libera un posto in *h* o in un suo g-nodo superiore.
 
 Specifichiamo rigorosamente cosa si intende per migration-path.
 
-### Migration Path
+### <a name="Strategia_ingresso_Definizione_migration_path"></a>Definizione della migration-path
 
 Usiamo alcune notazioni che sono spiegate nel documento delle migrazioni.
 
@@ -458,7 +477,7 @@ Definiamo *P* una migration path a livello *l* che parte dal g-nodo *h* (di live
 
 Usiamo una definizione che include anche una sorta di migration-path impropria, quella di lunghezza 0.
 
-### Uso della migration path
+### <a name="Strategia_ingresso_Uso_migration_path"></a>Uso della migration-path
 
 Detto in altri termini, il nodo *v* deve cercare la shortest migration-path a livello *l* che parte da *h*. Cioè:
 
@@ -471,7 +490,7 @@ di livello *l* + 1 della lista *P* nel successivo in modo tale da liberare un 
 di livello *l* + 1 della lista *P*. Come *costo* abbiamo che viene occupato un ulteriore posto nell'ultimo g-nodo
 della lista *P*, il quale non era saturo, ma anche poteva essere di livello maggiore di *l* + 1.
 
-### Caratteristiche della migration path
+### <a name="Strategia_ingresso_Caratteristiche_migration_path"></a>Caratteristiche della migration-path
 
 Una migration-path a livello *l* può essere descritta da 2 principali caratteristiche:
 
@@ -533,7 +552,7 @@ se *d<sub>i+1</sub>* `<` *d<sub>i</sub>* x 1.3.
 
 Vediamo in dettaglio l'algoritmo di questa ricerca.
 
-### Algoritmo
+### <a name="Strategia_ingresso_Algoritmo"></a>Algoritmo
 
 Si definiscono le seguenti strutture dati serializzabili:
 
@@ -740,7 +759,7 @@ che soddisfa il criterio di un delta minore di `𝜀`.
 
 **TODO**
 
-### Degradazione
+### <a name="Strategia_ingresso_Degradazione"></a>Degradazione
 
 È possibile che la ricerca di una migration-path a livello *l*, anche senza porre alcun limite superiore
 a *lh*, fallisca. Ciò avviene quando il grafo della rete a quel livello è pieno, cioè non esiste in tutta
