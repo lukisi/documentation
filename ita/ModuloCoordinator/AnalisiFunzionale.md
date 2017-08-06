@@ -491,7 +491,7 @@ Fornisce metodi per:
 
 *   Valutare un ingresso in una nuova rete. Metodo `evaluate_enter`.  
     La logica per il rilevamento di un vicino appartenente ad una diversa rete e per l'ingresso
-    in questa nuova rete è di pertinenza di un diverso modulo X. Vedi [qui](OperazioniIngresso.md).  
+    in questa nuova rete è di pertinenza di un diverso modulo X. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).  
     Quello che fa questo metodo in realtà è permettere all'utilizzatore del modulo Coordinator di far eseguire una
     certa operazione sul nodo Coordinator della rete. In particolare, l'utilizzatore del modulo
     Coordinator nel nodo *n* passa un oggetto al metodo `evaluate_enter` (probabilmente su istruzione
@@ -552,7 +552,7 @@ interrogata da parte del modulo quando si deve decidere sul fare ingresso in una
 I metodi previsti dall'interfaccia IEvaluateEnterHandler sono:
 
 *   `int evaluate_enter(Object evaluate_enter_data)`  
-    Con questo metodo si richiama il metodo `evaluate_enter` del modulo X. Vedi [qui](OperazioniIngresso.md).  
+    Con questo metodo si richiama il metodo `evaluate_enter` del modulo X. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).  
     Può rilanciare l'eccezione `AskAgainError`.  
     Può rilanciare l'eccezione `IgnoreNetworkError`.
 
@@ -564,6 +564,6 @@ interrogata da parte del modulo quando si deve autorizzare l'ingresso in una nuo
 I metodi previsti dall'interfaccia IBeginEnterHandler sono:
 
 *   `void begin_enter(int lvl, Object begin_enter_data)`  
-    Con questo metodo si richiama il metodo `begin_enter` del modulo X. Vedi [qui](OperazioniIngresso.md).  
+    Con questo metodo si richiama il metodo `begin_enter` del modulo X. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).  
     Può rilanciare l'eccezione `AlreadyEnteringError`.
 
