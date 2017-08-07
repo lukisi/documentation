@@ -159,10 +159,13 @@ Una richiesta *r* di tipo ReserveEnterRequest fatta al nodo Coordinator di *g* i
 Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordinator di *g*, per
 fare in modo che sia *g* come entità atomica a venire interpellata.
 
-Per prima cosa il nodo Coordinator di *g* accede alla memoria condivisa di *g*. Nel membro `reserve_list` dell'istanza
-di `CoordGnodeMemory` associata al livello `lvl` (come illustrato più sotto) vengono memorizzate
-le prenotazioni pendenti. Se esiste già una prenotazione con l'identificativo `enter_id` allora
-la stessa viene restituita al client. Altrimenti si prosegue.
+Per prima cosa il nodo Coordinator di *g* accede alla memoria condivisa di *g*. Nel membro `reserve_list`
+dell'istanza di `CoordGnodeMemory` associata al livello `lvl` (come illustrato più sotto) vengono memorizzate
+in una lista di Booking le prenotazioni pendenti con la scadenza associata. Le prenotazioni scadute vengono adesso
+rimosse.
+
+Poi il nodo Coordinator di *g* guarda se esiste già una prenotazione con l'identificativo `enter_id`. In
+questo caso gli stessi valori `new_pos` e `new_eldership` saranno restituiti al client. Altrimenti si prosegue.
 
 Il nodo Coordinator di *g* accede alla propria mappa di percorsi, per vedere quali g-nodi
 di livello `lvl` - 1 (oltre a quello a cui esso stesso appartiene) dentro al suo g-nodo di livello
@@ -182,7 +185,12 @@ Infine viene assegnata l'anzianità. Anche qui incrementando di 1 il precedente 
 quale è memorizzato nell'istanza di `CoordGnodeMemory` associata
 al livello `lvl`, nel membro `max_eldership`.
 
-Scelto il posto e l'anzianità, subito il Coordinator di *g* accede in scrittura alla memoria condivisa di *g*.
+Avendo così scelto nuovi valori `new_pos` e `new_eldership` il nodo Coordinator di *g* prepara una nuova
+istanza di Booking con la scadenza default. E la aggiunge alla lista `reserve_list`.
+
+Prima di rispondere al client, in entrambi i casi esaminati (cioè se esisteva già un Booking con
+l'identificativo `enter_id` oppure se è stata scelta una nuova posizione e quindi creata una nuova istanza
+di Booking) il nodo Coordinator di *g* accede in scrittura alla memoria condivisa di *g*.  
 Questo come sappiamo comporta l'avvio di una tasklet che si occupi di replicare la scrittura nei nodi replica.
 
 Il risultato della prenotazione è composto dalla nuova posizione e dalla sua anzianità. Esso viene
@@ -230,6 +238,11 @@ Una richiesta *r* di tipo ReplicaRequest con livello *lvl* che giunge a un nodo 
 il quale appartiene al g-nodo *g* di livello *lvl*, indica che il nodo client della richiesta
 chiede la replica di un record nella memoria condivisa di *g*.
 
+La classe ReplicaRequest contiene:
+
+*   `int lvl`
+*   `CoordGnodeMemory memory`
+
 In realtà, come in tutte le repliche, il nodo client in questo caso è il nodo con indirizzo
 attualmente più prossimo alla tupla del Coordinator di *g*, mentre il nodo servente è uno dei nodi
 che potrebbero trovarsi in sua assenza a rispondere alle future richieste.
@@ -239,7 +252,7 @@ Coordinator ha il compito di implementare i metodi dell'interfaccia IDatabaseDes
 come dettagliato [qui](../ModuloPeers/DettagliTecnici.md#Mantenimento_database_distribuito),
 in particolare i metodi `is_replica_value_request` e `execute`.
 
-La risposta è una istanza di ReplicaResponse.
+La risposta è una istanza di ReplicaResponse, che non ha membri.
 
 #### <a name="Confermato_ingresso"></a>Confermato ingresso in altra rete
 
@@ -267,7 +280,12 @@ di pertinenza del modulo Coordinator stesso.
 
 Fra queste abbiamo:
 
-*   `reserve_list` - Elenco delle prenotazioni pendenti. **TODO** dettagli.
+*   `List<Booking> reserve_list` - Elenco delle prenotazioni pendenti.  
+    Ogni istanza di Booking contiene:
+    *   `int enter_id`
+    *   `int new_pos`
+    *   `int new_eldership`
+    *   `Timer timeout`
 *   `int max_virtual_pos` - Massimo valore *virtuale* di `pos` assegnato ad un g-nodo al nostro interno.
 *   `int max_eldership` - Massimo valore di eldership assegnato ad un g-nodo al nostro interno. Maggiore è questo valore
     e più giovane è il g-nodo.
