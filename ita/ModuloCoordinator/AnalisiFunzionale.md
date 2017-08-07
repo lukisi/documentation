@@ -60,6 +60,17 @@ l'hash-node che il nodo che risponde si trovano all'interno del g-nodo stesso.
 
 ### <a name="Richieste_previste"></a>Richieste previste
 
+Ricordiamo che il servizio Coordinator mantiene un database distribuito della tipologia a chiavi fisse.
+Per questo esso definisce una classe CoordinatorService.DatabaseDescriptor che implementa i metodi
+dell'interfaccia [IDatabaseDescriptor](../ModuloPeers/DettagliTecnici.md#Mantenimento_database_distribuito)
+e quelli dell'interfaccia [IFixedKeysDatabaseDescriptor](../ModuloPeers/DatabaseFixedKeys.md).
+
+Quando il servente riceve una richiesta, cioè nel metodo `exec` che deve implementare la
+classe servente CoordinatorService, questi deve chiamare il metodo `fixed_keys_db_on_request`
+del modulo PeerServices.  
+Il riconoscimento delle singole richieste che si possono fare al Coordinator dovrà quindi avvenire
+nel metodo `execute` della classe CoordinatorService.DatabaseDescriptor.
+
 Elenchiamo tutte le richieste che si possono fare al Coordinator.
 
 #### <a name="Numero_nodi_nella_rete"></a>Numero di nodi nella rete
@@ -247,10 +258,8 @@ In realtà, come in tutte le repliche, il nodo client in questo caso è il nodo 
 attualmente più prossimo alla tupla del Coordinator di *g*, mentre il nodo servente è uno dei nodi
 che potrebbero trovarsi in sua assenza a rispondere alle future richieste.
 
-La gestione di questa richiesta avviene attraverso il codice del modulo PeerServices. Il modulo
-Coordinator ha il compito di implementare i metodi dell'interfaccia IDatabaseDescriptor,
-come dettagliato [qui](../ModuloPeers/DettagliTecnici.md#Mantenimento_database_distribuito),
-in particolare i metodi `is_replica_value_request` e `execute`.
+Il servente dovrà copiare `memory` nella sua memoria come istanza di `CoordGnodeMemory`
+associata al livello `lvl`.
 
 La risposta è una istanza di ReplicaResponse, che non ha membri.
 
@@ -270,7 +279,7 @@ interamente con l'istanza di un oggetto serializzabile. La classe definita nel m
 memorizzare e trasmettere il contenuto della memoria condivisa è `CoordGnodeMemory`.
 
 Si tratta di una classe serializzabile. Il significato di alcuni dei suoi membri è noto al modulo Coordinator.
-Altri membri invece contengono strutture dati che il modulo Coordinator non deve conoscere. Questi membri sono di
+Altri membri invece contengono strutture dati che il modulo Coordinator non è tenuto a conoscere. Questi membri sono di
 tipo Object nullable e il modulo Coordinator sa solo che se sono valorizzati sono a loro volta oggetti serializzabili.
 
 #### Contenuto di pertinenza del modulo Coordinator
@@ -580,6 +589,13 @@ I metodi della classe CoordinatorClient sono:
 *   `void completed_enter(int lvl, Object completed_enter_data)` -
     chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
     Vedi la relativa [richiesta](#Confermato_ingresso).
+*   `void make_replicas(int lvl)` - dopo aver apportato delle variazioni al contenuto della
+    memoria condivisa del g-nodo di livello *lvl*, il nodo attuale Coordinator avvia una
+    nuova tasklet e su questa chiama su una sua istanza di classe client questo metodo.  
+    L'implementazione di questo metodo non chiama il metodo protetto `call` della classe base
+    PeerClient, come avviene per gli altri metodi di CoordinatorClient, bensì chiama
+    i metodi `begin_replica` e `next_replica` del modulo PeerServices.
+    Vedi la relativa [richiesta](#Replica).
 
 ## <a name="Classi_e_interfacce"></a>Classi e interfacce
 
@@ -606,7 +622,7 @@ l'interfaccia ICoordinatorMap. Tramite essa il modulo può:
     informazione è quella che si basa sulla mappa del nodo corrente, senza contattare il Coordinator
     attuale che ha la conoscenza autoritativa delle prenotazioni pendenti.
 
-* * *
+### Delegati
 
 Una istanza di IEvaluateEnterHandler viene passata al modulo Coordinator. Tale istanza viene
 interrogata da parte del modulo quando si deve decidere sul fare ingresso in una nuova rete.
