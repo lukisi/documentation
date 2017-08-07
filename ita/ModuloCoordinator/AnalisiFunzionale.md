@@ -63,7 +63,7 @@ l'hash-node che il nodo che risponde si trovano all'interno del g-nodo stesso.
 Ricordiamo che il servizio Coordinator mantiene un database distribuito della tipologia a chiavi fisse.
 Per questo esso definisce una classe CoordinatorService.DatabaseDescriptor che implementa i metodi
 dell'interfaccia [IDatabaseDescriptor](../ModuloPeers/DettagliTecnici.md#Mantenimento_database_distribuito)
-e quelli dell'interfaccia [IFixedKeysDatabaseDescriptor](../ModuloPeers/DatabaseFixedKeys.md).
+e quelli dell'interfaccia [IFixedKeysDatabaseDescriptor](../ModuloPeers/DatabaseFixedKeys.md#Algoritmi).
 
 Quando il servente riceve una richiesta, cioè nel metodo `exec` che deve implementare la
 classe servente CoordinatorService, questi deve chiamare il metodo `fixed_keys_db_on_request`
@@ -151,7 +151,8 @@ Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordina
 fare in modo che sia *g* come entità atomica a venire interpellata.
 
 Per rispondere, non essendo questa materia di competenza del modulo Coordinator, viene utilizzato
-un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IBeginEnterHandler.
+un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IBeginEnterHandler
+che ha il metodo `begin_enter`.
 
 Il delegato può completare il metodo correttamente (il metodo ha firma `void`) oppure lanciare una eccezione:
 
@@ -265,8 +266,24 @@ La risposta è una istanza di ReplicaResponse, che non ha membri.
 
 #### <a name="Confermato_ingresso"></a>Confermato ingresso in altra rete
 
-La richiesta/segnalazione *r* che sono state completate le operazioni di ingresso del g-nodo *g* in una diversa rete. Tale
-richiesta arriva ad un nodo *x* come Coordinator di *g*. **TODO**
+Una richiesta/segnalazione *r* di tipo CompletedEnterRequest fatta al nodo Coordinator di *g* dal singolo nodo *n*
+(il client del servizio) indica che sono state completate le operazioni di ingresso del g-nodo *g* in una diversa rete.
+
+I membri di *r* sono:
+
+*   `lvl` = livello di *g*.
+*   `Object completed_enter_data` = un oggetto serializzabile la cui classe è nota al delegato ICompletedEnterHandler.  
+    Contiene informazioni che non sono di pertinenza del modulo Coordinator.
+
+Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordinator di *g*, perché esso
+era stato interpellata all'avvio delle operazioni (con la richiesta).
+
+Per rispondere, non essendo questa materia di competenza del modulo Coordinator, viene utilizzato
+un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia ICompletedEnterHandler
+che ha il metodo `completed_enter`.  
+Il metodo ha firma `void`.
+
+La risposta è una istanza di CompletedEnterResponse, che non ha membri.
 
 ### <a name="Records"></a>Contenuto della memoria condivisa di un g-nodo
 
