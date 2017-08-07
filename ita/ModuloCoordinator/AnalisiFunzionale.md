@@ -14,9 +14,12 @@
 1.  [Richieste al diretto vicino di accesso al servizio Coordinator](#Richieste_al_diretto_vicino)
     1.  [Ingresso in diversa rete](#Per_ingresso)
     1.  [Ingresso come risoluzione di uno split di g-nodo](#Per_split)
-1.  [Collaborazioni con gli altri moduli](#Collaborazioni)
 1.  [Requisiti](#Requisiti)
 1.  [Deliverables](#Deliverables)
+    1.  [CoordinatorManager](#Deliverables_manager)
+    1.  [CoordinatorService e CoordinatorClient](#Deliverables_service)
+### <a name=""></a>
+### <a name=""></a>
 1.  [Classi e interfacce](#Classi_e_interfacce)
 
 ## <a name="Ruolo_coordinator"></a>Il ruolo del modulo Coordinator
@@ -451,9 +454,59 @@ con il servizio Coordinator del *suo* g-nodo di livello *l* + 1, che è l'origin
 L'obiettivo finale di queste comunicazioni (possono essere necessarie più di una) con il server
 del servizio Coordinator sarà ovviamente la prenotazione di un posto di livello *l* in *G*.
 
-## <a name="Collaborazioni"></a>Collaborazioni con gli altri moduli
+## <a name="Requisiti"></a>Requisiti
 
-### <a name="Collaborazioni_ingresso"></a>Ingresso in altra rete
+Il nodo quando crea una identità (la prima per avviare il sistema o le successive a seguito di ingressi
+o migrazioni) crea una istanza del modulo Coordinator fornendo:
+
+*   Se si tratta di una identità successiva alla prima, per ingresso o migrazione, il livello del g-nodo
+    (di cui l'identità fa parte come nodo) che compie in blocco questa operazione
+*   Il livello a cui si è costituito un g-nodo nuovo.
+*   Se si tratta di una identità successiva alla prima, un riferimento alla istanza precedente del modulo Coordinator.
+
+Durante le sue operazioni, il modulo viene informato quando il nodo ha completato la fase di bootstrap.
+In quello stesso momento gli vengono forniti:
+
+*   L'istanza di PeersManager.
+*   Mappa delle posizioni libere/occupate ai vari livelli.
+
+## <a name="Deliverables"></a>Deliverables
+
+### <a name="Deliverables_manager"></a>Implementazione di CoordinatorManager
+
+Fornisce metodi per:
+
+*   Valutare un ingresso in una nuova rete. Metodo `evaluate_enter`.  
+    La logica per il rilevamento di un vicino appartenente ad una diversa rete e per l'ingresso
+    in questa nuova rete è di pertinenza del modulo [Migrations](../ModuloMigrations/AnalisiFunzionale.md)
+    e non del modulo Coordinator.  
+    Quello che fa questo metodo in realtà è permettere all'utilizzatore del modulo Coordinator di far eseguire una
+    certa operazione sul nodo Coordinator della rete. In particolare, l'utilizzatore del modulo
+    Coordinator nel nodo *n* passa un oggetto al metodo `evaluate_enter` (su istruzione
+    del modulo Migrations); questi fa pervenire questo oggetto al nodo Coordinator della
+    rete il quale lo passa al delegato `IEvaluateEnterHandler` (implementato dallo
+    stesso modulo Migrations) nel suo metodo `evaluate_enter`.  
+    L'esecuzione del metodo `IEvaluateEnterHandler.evaluate_enter` produce la decisione per il nodo *n* di tentare
+    o meno l'ingresso nella nuova rete e se sì a quale livello.
+*   Iniziare un ingresso in una nuova rete. Metodo `begin_enter`.  
+    Anche in questo caso la logica di queste operazioni è di pertinenza del
+    modulo [Migrations](../ModuloMigrations/AnalisiFunzionale.md)
+    e non del modulo Coordinator.  
+    Questo metodo permette all'utilizzatore del modulo Coordinator (su istruzione
+    del modulo Migrations) di far eseguire l'operazione `begin_enter`
+    sul nodo Coordinator di un g-nodo *g* di livello *lvl*. Il delegato `IBeginEnterHandler.begin_enter`
+    sul nodo Coordinator di *g* (implementato dallo
+    stesso modulo Migrations) effettivamente autorizza/nega l'ingresso.
+*   Prenotare un posto (se possibile *reale*, altrimenti *virtuale*) nel proprio g-nodo di livello
+    *lvl*. Metodo `reserve(int lvl, int enter_id)`.  
+    Il metodo, attraverso la classe client del servizio CoordinatorClient, invia una richiesta ReserveEnterRequest
+    al nodo Coordinator del g-nodo *g* di livello *lvl*. La risposta è una istanza di ReserveEnterResponse
+    che contiene `int new_pos` e `int new_eldership`.  
+    A questa risposta il metodo `reserve` aggiunge:
+    *   La topologia della rete.
+    *   Le posizioni dei livelli maggiori di `lvl`.
+    *   Le anzianità dei livelli maggiori di `lvl`.
+*   Metodi `get_network_entering_memory` e `set_network_entering_memory`. **TODO**
 
 #### Metodo evaluate_enter
 
@@ -502,80 +555,7 @@ Quindi il metodo `begin_enter` del modulo Coordinator restituisce al chiamante:
 *   `void`. Oppure:
 *   Eccezione `AlreadyEnteringError`.
 
-#### Metodo reserve_enter
-
-**TODO** cancellare?
-
-Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `reserve_enter(reserve_enter_data)` nel nodo Coordinator
-del suo g-nodo *g* di livello *lvl*, richiama il metodo `reserve_enter(lvl, reserve_enter_data)` del modulo Coordinator.
-
-L'esecuzione di `reserve_enter` del modulo Coordinator consiste in questo:
-
-Viene preparato un client del servizio Coordinator. Su questo viene chiamato il metodo `reserve_enter(lvl, reserve_enter_data)`.
-Ricordiamo che la struttura dati `reserve_enter_data` non è nota al modulo Coordinator, che sa solo che è un Object serializzabile.
-
-La classe client del servizio usa come chiave *k* con `k.lvl = lvl`. Prepara una richiesta *r* = [ReserveEnterRequest](#Prenota_un_posto)
-che comprende il livello *lvl* e la struttura dati (ovvero l'istanza di Object serializzabile) di cui sopra.
-
-Poi invia la richiesta *r* e ottiene una risposta che è una istanza di ReserveEnterResponse. Essa contiene
-esattamente i possibili risultati previsti dalla signature del metodo `reserve_enter`.
-
-Quindi il metodo `reserve_enter` del modulo Coordinator restituisce al chiamante:
-
-*   `Object ret`. Oppure:
-*   Eccezione `FullNetworkError`.
-
-## <a name="Requisiti"></a>Requisiti
-
-Il nodo quando crea una identità (la prima per avviare il sistema o le successive a seguito di ingressi
-o migrazioni) crea una istanza del modulo Coordinator fornendo:
-
-*   Se si tratta di una identità successiva alla prima, per ingresso o migrazione, il livello del g-nodo
-    (di cui l'identità fa parte come nodo) che compie in blocco questa operazione
-*   Il livello a cui si è costituito un g-nodo nuovo.
-*   Se si tratta di una identità successiva alla prima, un riferimento alla istanza precedente del modulo Coordinator.
-
-Durante le sue operazioni, il modulo viene informato quando il nodo ha completato la fase di bootstrap.
-In quello stesso momento gli vengono forniti:
-
-*   L'istanza di PeersManager.
-*   Mappa delle posizioni libere/occupate ai vari livelli.
-
-## <a name="Deliverables"></a>Deliverables
-
-Fornisce metodi per:
-
-*   Valutare un ingresso in una nuova rete. Metodo `evaluate_enter`.  
-    La logica per il rilevamento di un vicino appartenente ad una diversa rete e per l'ingresso
-    in questa nuova rete è di pertinenza del modulo [Migrations](../ModuloMigrations/AnalisiFunzionale.md)
-    e non del modulo Coordinator.  
-    Quello che fa questo metodo in realtà è permettere all'utilizzatore del modulo Coordinator di far eseguire una
-    certa operazione sul nodo Coordinator della rete. In particolare, l'utilizzatore del modulo
-    Coordinator nel nodo *n* passa un oggetto al metodo `evaluate_enter` (su istruzione
-    del modulo Migrations); questi fa pervenire questo oggetto al nodo Coordinator della
-    rete il quale lo passa al delegato `IEvaluateEnterHandler` (implementato dallo
-    stesso modulo Migrations) nel suo metodo `evaluate_enter`.  
-    L'esecuzione del metodo `IEvaluateEnterHandler.evaluate_enter` produce la decisione per il nodo *n* di tentare
-    o meno l'ingresso nella nuova rete e se sì a quale livello.
-*   Iniziare un ingresso in una nuova rete. Metodo `begin_enter`.  
-    Anche in questo caso la logica di queste operazioni è di pertinenza del
-    modulo [Migrations](../ModuloMigrations/AnalisiFunzionale.md)
-    e non del modulo Coordinator.  
-    Questo metodo permette all'utilizzatore del modulo Coordinator (su istruzione
-    del modulo Migrations) di far eseguire l'operazione `begin_enter`
-    sul nodo Coordinator di un g-nodo *g* di livello *lvl*. Il delegato `IBeginEnterHandler.begin_enter`
-    sul nodo Coordinator di *g* (implementato dallo
-    stesso modulo Migrations) effettivamente autorizza/nega l'ingresso.
-*   Prenotare un posto (se possibile *reale*, altrimenti *virtuale*) nel proprio g-nodo di livello
-    *lvl*. Metodo `reserve(int lvl, int enter_id)`.  
-    Il metodo, attraverso la classe client del servizio CoordinatorClient, invia una richiesta ReserveEnterRequest
-    al nodo Coordinator del g-nodo *g* di livello *lvl*. La risposta è una istanza di ReserveEnterResponse
-    che contiene `int new_pos` e `int new_eldership`.  
-    A questa risposta il metodo `reserve` aggiunge:
-    *   La topologia della rete.
-    *   Le posizioni dei livelli maggiori di `lvl`.
-    *   Le anzianità dei livelli maggiori di `lvl`.
-*   Metodi `get_network_entering_memory` e `set_network_entering_memory`. **TODO**
+### <a name="Deliverables_service"></a>Implementazione di CoordinatorService e di CoordinatorClient
 
 Implementa il servizio Coordinator derivando la classe CoordinatorService dalla classe base PeerService.
 
