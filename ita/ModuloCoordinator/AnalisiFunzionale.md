@@ -560,7 +560,26 @@ IFixedKeysDatabaseDescriptor. Con questa istanza come parametro, al bisogno, chi
 `fixed_keys_db_on_startup` e `fixed_keys_db_on_request` di PeersManager.
 
 Deriva la classe CoordinatorClient dalla classe base PeerClient per avviare il contatto del Coordinator
-di un suo g-nodo e richiederne i servizi.
+di un suo g-nodo e richiederne i servizi.  
+I metodi della classe CoordinatorClient sono:
+
+*   `int get_n_nodes()` - chiede al Coordinator della rete il numero di nodi in tutta la rete.  
+    Vedi la relativa [richiesta](#Numero_nodi_nella_rete).
+*   `int evaluate_enter(Object evaluate_enter_data) throws AskAgainError, IgnoreNetworkError` -
+    chiede al Coordinator della rete di eseguire il delegato del metodo.  
+    Vedi la relativa [richiesta](#Valuta_ingresso).
+*   `void begin_enter(int lvl, Object begin_enter_data) throws AlreadyEnteringError` -
+    chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
+    Vedi la relativa [richiesta](#Avvio_ingresso).
+*   `void reserve_enter(int lvl, int enter_id, out int new_pos, out int new_eldership)` -
+    chiede al Coordinator del g-nodo di livello *lvl* di riservare un posto.  
+    Vedi la relativa [richiesta](#Prenota_un_posto).
+*   `void delete_reserve_enter(int lvl, int enter_id)` -
+    chiede al Coordinator del g-nodo di livello *lvl* di eliminare la prenotazione di un posto.  
+    Vedi la relativa [richiesta](#Cancella_prenotazione).
+*   `void completed_enter(int lvl, Object completed_enter_data)` -
+    chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
+    Vedi la relativa [richiesta](#Confermato_ingresso).
 
 ## <a name="Classi_e_interfacce"></a>Classi e interfacce
 
