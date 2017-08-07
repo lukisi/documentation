@@ -555,6 +555,22 @@ Quindi il metodo `begin_enter` del modulo Coordinator restituisce al chiamante:
 *   `void`. Oppure:
 *   Eccezione `AlreadyEnteringError`.
 
+#### Metodo completed_enter
+
+Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `completed_enter(completed_enter_data)` nel nodo Coordinator
+del suo g-nodo *g* di livello *lvl*, richiama il metodo `completed_enter(lvl, completed_enter_data)` del modulo Coordinator.
+
+L'esecuzione di `completed_enter` del modulo Coordinator consiste in questo:
+
+Viene preparato un client del servizio Coordinator. Su questo viene chiamato il metodo `completed_enter(lvl, completed_enter_data)`.
+Ricordiamo che la struttura dati `completed_enter_data` non è nota al modulo Coordinator, che sa solo che è un Object serializzabile.
+
+La classe client del servizio usa come chiave *k* con `k.lvl = lvl`. Prepara una richiesta *r* = [CompletedEnterRequest](#Confermato_ingresso)
+che comprende il livello *lvl* e la struttura dati (ovvero l'istanza di Object serializzabile) di cui sopra.
+
+Poi invia la richiesta *r* e ottiene una risposta che è una istanza di CompletedEnterResponse, la quale
+non ha membri: infatti la signature del metodo è `void completed_enter`.
+
 ### <a name="Deliverables_service"></a>Implementazione di CoordinatorService e di CoordinatorClient
 
 Implementa il servizio Coordinator derivando la classe CoordinatorService dalla classe base PeerService.
