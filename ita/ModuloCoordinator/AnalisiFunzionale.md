@@ -66,12 +66,16 @@ Elenchiamo tutte le richieste che si possono fare al Coordinator.
 
 Una richiesta *r* di tipo NumberOfNodesRequest fatta al Coordinator dell'intera rete *G* indica che
 il client del servizio (avendo incontrata una diversa rete di dimensioni simili a questa) vuole
-chiedere alla rete (come entità atomica) quanti sono i suoi nodi.
+chiedere alla rete (come entità atomica) quanti sono i suoi nodi.  
+La classe della richiesta non ha alcun membro.
 
 Il motivo per cui viene fatta questa richiesta al Coordinator di *G* è perché i singoli nodi
 della rete hanno una valutazione approssimativa. Supponiamo che ci siano le reti *G* e *J*.
 Due distinte coppie di nodi *n<sub>0</sub>-v<sub>0</sub>* e *n<sub>1</sub>-v<sub>1</sub>* si
-incontrano con *n<sub>i</sub>* ∈ *G* e *v<sub>i</sub>* ∈ *J*. Le dimensioni di *G* e *J* sono
+incontrano con *n<sub>i</sub>* ∈ *G* e *v<sub>i</sub>* ∈ *J*.
+Quando si incontrano due nodi di reti diverse questi si accordano affinché una rete cerchi
+un posto nell'altra per entrare, di modo che si fondano in una sola. La regola impone che la
+rete più piccola cerchi di entrare nella più grande. Ma supponiamo che le dimensioni di *G* e *J* sono
 simili, per questo succede che *n<sub>0</sub>-v<sub>0</sub>* stabiliscono che *G* deve entrare
 in *J* mentre *n<sub>1</sub>-v<sub>1</sub>* ritengono meglio l'inverso. Per evitare questo
 disaccordo entrambe le coppie interrogano il Coordinator.
@@ -88,7 +92,12 @@ In ogni caso, il nodo Coordinator prima di rispondere accede in scrittura (con r
 tasklet che si occupa delle repliche) alla memoria condivisa di *G* per salvare la risposta che
 sta per dare, con un relativo timeout di scadenza.
 
-La risposta va restituita al client del servizio attraverso una istanza di NumberOfNodesResponse.
+Si vedano più sotto i membri `n_nodes` e `n_nodes_timeout` della classe CoordGnodeMemory.
+
+La risposta va restituita al client del servizio attraverso una istanza di NumberOfNodesResponse.  
+La classe ha un solo membro:
+
+*   `int n_nodes`
 
 #### <a name="Valuta_ingresso"></a>Valuta un ingresso
 
@@ -194,6 +203,8 @@ direttamente fornite dal nodo *n* che già le conosce. Queste sono:
 *   Le posizioni dei livelli maggiori di `lvl`.
 *   Le anzianità dei livelli maggiori di `lvl`.
 
+Si veda [sotto](#Deliverables) il metodo `reserve`.
+
 #### <a name="Cancella_prenotazione"></a>Cancella prenotazione
 
 Una richiesta *r* di tipo DeleteReserveEnterRequest fatta al nodo Coordinator di *g* indica che il singolo nodo *n*
@@ -257,13 +268,12 @@ di pertinenza del modulo Coordinator stesso.
 Fra queste abbiamo:
 
 *   `reserve_list` - Elenco delle prenotazioni pendenti. **TODO** dettagli.
-*   `max_virtual_pos` - Massimo valore *virtuale* di `pos` assegnato ad un g-nodo al nostro interno.
-*   `max_eldership` - Massimo valore di eldership assegnato ad un g-nodo al nostro interno. Maggiore è questo valore
+*   `int max_virtual_pos` - Massimo valore *virtuale* di `pos` assegnato ad un g-nodo al nostro interno.
+*   `int max_eldership` - Massimo valore di eldership assegnato ad un g-nodo al nostro interno. Maggiore è questo valore
     e più giovane è il g-nodo.
-*   `number_of_nodes` - Solo per il Coordinator di tutta la rete. Numero di nodi nella rete, come risposto nella
-    precedente richiesta.  
-    Contiene la risposta e un timeout da aspettare prima di guardare di nuovo alla conoscenza acquisita dal
-    modulo Qspn.
+*   `int n_nodes` e `Timer? n_nodes_timeout` - Solo per il Coordinator di tutta la rete. Numero di nodi nella rete,
+    come risposto nella precedente richiesta e timeout da aspettare prima di guardare di nuovo alla conoscenza
+    acquisita dal modulo Qspn.
 *   **TODO**
 
 #### Contenuto di pertinenza di altri moduli
@@ -450,6 +460,8 @@ Quindi il metodo `begin_enter` del modulo Coordinator restituisce al chiamante:
 
 #### Metodo reserve_enter
 
+**TODO** cancellare?
+
 Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `reserve_enter(reserve_enter_data)` nel nodo Coordinator
 del suo g-nodo *g* di livello *lvl*, richiama il metodo `reserve_enter(lvl, reserve_enter_data)` del modulo Coordinator.
 
@@ -511,7 +523,14 @@ Fornisce metodi per:
     sul nodo Coordinator di *g* (implementato dallo
     stesso modulo Migrations) effettivamente autorizza/nega l'ingresso.
 *   Prenotare un posto (se possibile *reale*, altrimenti *virtuale*) nel proprio g-nodo di livello
-    *l*. Metodo `reserve`. **TODO**
+    *lvl*. Metodo `reserve(int lvl, int enter_id)`.  
+    Il metodo, attraverso la classe client del servizio CoordinatorClient, invia una richiesta ReserveEnterRequest
+    al nodo Coordinator del g-nodo *g* di livello *lvl*. La risposta è una istanza di ReserveEnterResponse
+    che contiene `int new_pos` e `int new_eldership`.  
+    A questa risposta il metodo `reserve` aggiunge:
+    *   La topologia della rete.
+    *   Le posizioni dei livelli maggiori di `lvl`.
+    *   Le anzianità dei livelli maggiori di `lvl`.
 *   Metodi `get_network_entering_memory` e `set_network_entering_memory`. **TODO**
 
 Implementa il servizio Coordinator derivando la classe CoordinatorService dalla classe base PeerService.
