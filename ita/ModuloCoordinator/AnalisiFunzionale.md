@@ -6,10 +6,10 @@
         1.  [Numero di nodi nella rete](#Numero_nodi_nella_rete)
         1.  [Valuta un ingresso](#Valuta_ingresso)
         1.  [Avvio ingresso in altra rete](#Avvio_ingresso)
+        1.  [Confermato ingresso in altra rete](#Confermato_ingresso)
         1.  [Prenota un posto](#Prenota_un_posto)
         1.  [Cancella prenotazione](#Cancella_prenotazione)
         1.  [Replica memoria condivisa](#Replica)
-        1.  [Confermato ingresso in altra rete](#Confermato_ingresso)
     1.  [Contenuto della memoria condivisa di un g-nodo](#Records)
 1.  [Requisiti](#Requisiti)
 1.  [Deliverables](#Deliverables)
@@ -117,6 +117,8 @@ sulla quale il singolo nodo *n* (il client del servizio) suggerisce di fare ingr
 I membri di *r* contengono informazioni che non sono di pertinenza del modulo Coordinator.
 Il contenuto della richiesta può essere semplicemente:
 
+*   `int lvl` - il livello del g-nodo il cui Coordinator deve essere interpellato.  
+    Per questo metodo specifico avremo sempre `lvl` = `levels`, ma questo è un dettaglio non di pertinenza del modulo Coordinator.
 *   `Object evaluate_enter_data` = un oggetto serializzabile la cui classe è nota al delegato IEvaluateEnterHandler.
 
 Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordinator dell'intera rete, per
@@ -124,13 +126,11 @@ fare in modo che sia "tutta la rete" come entità atomica a venire interpellata.
 
 Sebbene la richiesta venga fatta come detto al Coordinator della rete *G*,
 in effetti la strategia di ingresso non è di pertinenza del modulo Coordinator. Per questo viene utilizzato
-un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IEvaluateEnterHandler.
+un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IEvaluateEnterHandler
+che ha il metodo `evaluate_enter`.
 
-La risposta ottenuta dal delegato consiste in un intero oppure una eccezione:
-
-*   `int lvl` - il livello del g-nodo di *n* che dovrebbe tentare l'ingresso in *J*.
-*   `AskAgainError` - il client deve attendere alcuni istanti e poi riprovare.
-*   `IgnoreNetworkError` - il client deve ignorare l'altra rete.
+La risposta ottenuta dal delegato contiene informazioni che non sono di pertinenza del modulo Coordinator.
+Si tratta di una istanza di Object che sappiamo essere serializzabile.
 
 Il risultato va restituito così com'è al client del servizio attraverso una istanza di EvaluateEnterResponse.
 
@@ -153,11 +153,33 @@ Per rispondere, non essendo questa materia di competenza del modulo Coordinator,
 un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IBeginEnterHandler
 che ha il metodo `begin_enter`.
 
-Il delegato può completare il metodo correttamente (il metodo ha firma `void`) oppure lanciare una eccezione:
-
-*   `AlreadyEnteringError` - il client deve ignorare l'altra rete.
+La risposta ottenuta dal delegato contiene informazioni che non sono di pertinenza del modulo Coordinator.
+Si tratta di una istanza di Object che sappiamo essere serializzabile.
 
 Il risultato va restituito così com'è al client del servizio attraverso una istanza di BeginEnterResponse.
+
+#### <a name="Confermato_ingresso"></a>Confermato ingresso in altra rete
+
+Una richiesta/segnalazione *r* di tipo CompletedEnterRequest fatta al nodo Coordinator di *g* dal singolo nodo *n*
+(il client del servizio) indica che sono state completate le operazioni di ingresso del g-nodo *g* in una diversa rete.
+
+I membri di *r* sono:
+
+*   `lvl` = livello di *g*.
+*   `Object completed_enter_data` = un oggetto serializzabile la cui classe è nota al delegato ICompletedEnterHandler.  
+    Contiene informazioni che non sono di pertinenza del modulo Coordinator.
+
+Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordinator di *g*, perché esso
+era stato interpellata all'avvio delle operazioni (con la richiesta).
+
+Per rispondere, non essendo questa materia di competenza del modulo Coordinator, viene utilizzato
+un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia ICompletedEnterHandler
+che ha il metodo `completed_enter`.
+
+La risposta ottenuta dal delegato contiene informazioni che non sono di pertinenza del modulo Coordinator.
+Si tratta di una istanza di Object che sappiamo essere serializzabile.
+
+Il risultato va restituito così com'è al client del servizio attraverso una istanza di CompletedEnterResponse.
 
 #### <a name="Prenota_un_posto"></a>Prenota un posto
 
@@ -262,27 +284,6 @@ Il servente dovrà copiare `memory` nella sua memoria come istanza di `CoordGnod
 associata al livello `lvl`.
 
 La risposta è una istanza di ReplicaResponse, che non ha membri.
-
-#### <a name="Confermato_ingresso"></a>Confermato ingresso in altra rete
-
-Una richiesta/segnalazione *r* di tipo CompletedEnterRequest fatta al nodo Coordinator di *g* dal singolo nodo *n*
-(il client del servizio) indica che sono state completate le operazioni di ingresso del g-nodo *g* in una diversa rete.
-
-I membri di *r* sono:
-
-*   `lvl` = livello di *g*.
-*   `Object completed_enter_data` = un oggetto serializzabile la cui classe è nota al delegato ICompletedEnterHandler.  
-    Contiene informazioni che non sono di pertinenza del modulo Coordinator.
-
-Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordinator di *g*, perché esso
-era stato interpellata all'avvio delle operazioni (con la richiesta).
-
-Per rispondere, non essendo questa materia di competenza del modulo Coordinator, viene utilizzato
-un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia ICompletedEnterHandler
-che ha il metodo `completed_enter`.  
-Il metodo ha firma `void`.
-
-La risposta è una istanza di CompletedEnterResponse, che non ha membri.
 
 ### <a name="Records"></a>Contenuto della memoria condivisa di un g-nodo
 
@@ -389,27 +390,38 @@ In quello stesso momento gli vengono forniti:
 
 Fornisce metodi per:
 
-*   Valutare un ingresso in una nuova rete. Metodo `evaluate_enter`.  
+*   Valutare un ingresso in una nuova rete. Metodo `Object evaluate_enter(int lvl, Object evaluate_enter_data)`.  
     La logica per il rilevamento di un vicino appartenente ad una diversa rete e per l'ingresso
     in questa nuova rete è di pertinenza del modulo [Migrations](../ModuloMigrations/AnalisiFunzionale.md)
     e non del modulo Coordinator.  
-    Quello che fa questo metodo in realtà è permettere all'utilizzatore del modulo Coordinator di far eseguire una
+    Questo è un metodo proxy: permette all'utilizzatore del modulo Coordinator di far eseguire una
     certa operazione sul nodo Coordinator della rete. In particolare, l'utilizzatore del modulo
     Coordinator nel nodo *n* passa un oggetto al metodo `evaluate_enter` (su istruzione
     del modulo Migrations); questi fa pervenire questo oggetto al nodo Coordinator della
-    rete il quale lo passa al delegato `IEvaluateEnterHandler` (implementato dallo
-    stesso modulo Migrations) nel suo metodo `evaluate_enter`.  
-    L'esecuzione del metodo `IEvaluateEnterHandler.evaluate_enter` produce la decisione per il nodo *n* di tentare
-    o meno l'ingresso nella nuova rete e se sì a quale livello.
-*   Iniziare un ingresso in una nuova rete. Metodo `begin_enter`.  
+    rete il quale lo passa al delegato `IEvaluateEnterHandler` nel suo metodo `evaluate_enter`. Questi
+    chiama il metodo omonimo nel modulo Migrations.  
+    L'esecuzione del metodo `evaluate_enter` del modulo Migrations nel nodo Coordinator produce la
+    decisione per il nodo *n* di tentare o meno l'ingresso nella nuova rete e se sì a quale livello.
+*   Iniziare un ingresso in una nuova rete. Metodo `Object begin_enter(int lvl, Object begin_enter_data)`.  
     Anche in questo caso la logica di queste operazioni è di pertinenza del
     modulo [Migrations](../ModuloMigrations/AnalisiFunzionale.md)
     e non del modulo Coordinator.  
-    Questo metodo permette all'utilizzatore del modulo Coordinator (su istruzione
-    del modulo Migrations) di far eseguire l'operazione `begin_enter`
-    sul nodo Coordinator di un g-nodo *g* di livello *lvl*. Il delegato `IBeginEnterHandler.begin_enter`
-    sul nodo Coordinator di *g* (implementato dallo
-    stesso modulo Migrations) effettivamente autorizza/nega l'ingresso.
+    Questo è un metodo proxy: permette all'utilizzatore del modulo Coordinator (su istruzione
+    del modulo Migrations) di far eseguire il metodo `begin_enter` del modulo Migrations
+    sul nodo Coordinator di un g-nodo *g* di livello *lvl*. Questo attraverso
+    il delegato `IBeginEnterHandler.begin_enter`.  
+    L'esecuzione del metodo `begin_enter` del modulo Migrations nel nodo Coordinator autorizza
+    o nega l'ingresso.
+*   Completare un ingresso in una nuova rete. Metodo `Object completed_enter(int lvl, Object completed_enter_data)`.  
+    Anche in questo caso la logica di queste operazioni è di pertinenza del
+    modulo [Migrations](../ModuloMigrations/AnalisiFunzionale.md)
+    e non del modulo Coordinator.  
+    Questo è un metodo proxy: permette all'utilizzatore del modulo Coordinator (su istruzione
+    del modulo Migrations) di far eseguire il metodo `completed_enter` del modulo Migrations
+    sul nodo Coordinator di un g-nodo *g* di livello *lvl*. Questo attraverso
+    il delegato `ICompletedEnterHandler.completed_enter`.  
+    L'esecuzione del metodo `completed_enter` del modulo Migrations nel nodo Coordinator segnala
+    il completamento dell'ingresso.
 *   Prenotare un posto (se possibile *reale*, altrimenti *virtuale*) nel proprio g-nodo di livello
     *lvl*. Metodo `reserve(int lvl, int enter_id)`.  
     Il metodo, attraverso la classe client del servizio CoordinatorClient, invia una richiesta ReserveEnterRequest
@@ -426,63 +438,95 @@ Fornisce metodi per:
 Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `evaluate_enter` nel nodo Coordinator
 della rete *G*, richiama il metodo `evaluate_enter` del modulo Coordinator.
 
+Gli argomenti di questo metodo sono:
+
+*   `int lvl` - il livello del g-nodo il cui Coordinator deve essere interpellato.  
+    Per questo metodo specifico avremo sempre `lvl` = `levels`, ma questo è un dettaglio di pertinenza
+    del modulo Migrations, quindi lo passiamo al modulo Coordinator come argomento.
+*   `Object evaluate_enter_data` - la struttura dati serializzabile che contiene l'input del metodo
+    da eseguire nel nodo Coordinator.
+
 L'esecuzione di `evaluate_enter` del modulo Coordinator consiste in questo:
 
-Viene preparato un client del servizio Coordinator. Su questo viene chiamato il metodo `evaluate_enter`
-passandogli la stessa struttura dati ricevuta dal metodo `evaluate_enter` del modulo Coordinator. Tale
-struttura non è nota al modulo Coordinator, che sa solo che è un Object serializzabile.
+Viene preparato un client del servizio Coordinator. Cioè una istanza di CoordinatorClient.
 
-La classe client del servizio sa che questo metodo usa come chiave *k* con `k.lvl = levels`. Cioè va contattato
-il Coordinator dell'intera rete.
+Su questo CoordinatorClient viene chiamato il metodo `evaluate_enter` passando tutti gli argomenti ricevuti dal
+metodo `evaluate_enter` del modulo Coordinator.
 
-La classe client nel suo metodo `evaluate_enter` prepara una richiesta *r* = [EvaluateEnterRequest](#Valuta_ingresso)
-che comprende la struttura dati (ovvero l'istanza di Object serializzabile) di cui sopra.
+Il CoordinatorClient prepara una richiesta *r* = [EvaluateEnterRequest](#Valuta_ingresso)
+che comprende i dati di cui sopra: sia i dati di input, sia il livello cioè la chiave da usare nel
+database distribuito del servizio Coordinator.
 
-Poi invia la richiesta *r* e ottiene una risposta che è una istanza di EvaluateEnterResponse. Essa contiene
-esattamente i possibili risultati previsti dalla signature del metodo `evaluate_enter`.
+Poi il CoordinatorClient invia la richiesta *r* al servente per la chiave *lvl* e ottiene una risposta che è una istanza di
+EvaluateEnterResponse. Essa contiene:
 
-Quindi il metodo `evaluate_enter` del modulo Coordinator restituisce al chiamante:
+*   `Object evaluate_enter_result` - la struttura dati serializzabile che contiene l'output del metodo
+    eseguito nel nodo Coordinator.
 
-*   `int ret`. Oppure:
-*   Eccezione `AskAgainError`. Oppure:
-*   Eccezione `IgnoreNetworkError`.
+Questo Object serializzabile è quello che il metodo `evaluate_enter` del CoordinatorClient restituisce al chiamante.  
+Ed è quello che il metodo `evaluate_enter` del modulo Coordinator restituisce al chiamante.
 
 #### Metodo begin_enter
 
-Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `begin_enter(begin_enter_data)` nel nodo Coordinator
-del suo g-nodo *g* di livello *lvl*, richiama il metodo `begin_enter(lvl, begin_enter_data)` del modulo Coordinator.
+Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `begin_enter` nel nodo Coordinator
+del suo g-nodo *g* di livello *lvl*, richiama il metodo `begin_enter` del modulo Coordinator.
+
+Gli argomenti di questo metodo sono:
+
+*   `int lvl` - il livello del g-nodo il cui Coordinator deve essere interpellato.
+*   `Object begin_enter_data` - la struttura dati serializzabile che contiene l'input del metodo
+    da eseguire nel nodo Coordinator.
 
 L'esecuzione di `begin_enter` del modulo Coordinator consiste in questo:
 
-Viene preparato un client del servizio Coordinator. Su questo viene chiamato il metodo `begin_enter(lvl, begin_enter_data)`.
-Ricordiamo che la struttura dati `begin_enter_data` non è nota al modulo Coordinator, che sa solo che è un Object serializzabile.
+Viene preparato un client del servizio Coordinator. Cioè una istanza di CoordinatorClient.
 
-La classe client del servizio usa come chiave *k* con `k.lvl = lvl`. Prepara una richiesta *r* = [BeginEnterRequest](#Avvio_ingresso)
-che comprende il livello *lvl* e la struttura dati (ovvero l'istanza di Object serializzabile) di cui sopra.
+Su questo CoordinatorClient viene chiamato il metodo `begin_enter` passando tutti gli argomenti ricevuti dal
+metodo `begin_enter` del modulo Coordinator.
 
-Poi invia la richiesta *r* e ottiene una risposta che è una istanza di BeginEnterResponse. Essa contiene
-esattamente i possibili risultati previsti dalla signature del metodo `begin_enter`.
+Il CoordinatorClient prepara una richiesta *r* = [BeginEnterRequest](#Avvio_ingresso)
+che comprende i dati di cui sopra: sia i dati di input, sia il livello cioè la chiave da usare nel
+database distribuito del servizio Coordinator.
 
-Quindi il metodo `begin_enter` del modulo Coordinator restituisce al chiamante:
+Poi il CoordinatorClient invia la richiesta *r* al servente per la chiave *lvl* e ottiene una risposta che è una istanza di
+BeginEnterResponse. Essa contiene:
 
-*   `void`. Oppure:
-*   Eccezione `AlreadyEnteringError`.
+*   `Object begin_enter_result` - la struttura dati serializzabile che contiene l'output del metodo
+    eseguito nel nodo Coordinator.
+
+Questo Object serializzabile è quello che il metodo `begin_enter` del CoordinatorClient restituisce al chiamante.  
+Ed è quello che il metodo `begin_enter` del modulo Coordinator restituisce al chiamante.
 
 #### Metodo completed_enter
 
-Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `completed_enter(completed_enter_data)` nel nodo Coordinator
-del suo g-nodo *g* di livello *lvl*, richiama il metodo `completed_enter(lvl, completed_enter_data)` del modulo Coordinator.
+Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `completed_enter` nel nodo Coordinator
+del suo g-nodo *g* di livello *lvl*, richiama il metodo `completed_enter` del modulo Coordinator.
+
+Gli argomenti di questo metodo sono:
+
+*   `int lvl` - il livello del g-nodo il cui Coordinator deve essere interpellato.
+*   `Object completed_enter_data` - la struttura dati serializzabile che contiene l'input del metodo
+    da eseguire nel nodo Coordinator.
 
 L'esecuzione di `completed_enter` del modulo Coordinator consiste in questo:
 
-Viene preparato un client del servizio Coordinator. Su questo viene chiamato il metodo `completed_enter(lvl, completed_enter_data)`.
-Ricordiamo che la struttura dati `completed_enter_data` non è nota al modulo Coordinator, che sa solo che è un Object serializzabile.
+Viene preparato un client del servizio Coordinator. Cioè una istanza di CoordinatorClient.
 
-La classe client del servizio usa come chiave *k* con `k.lvl = lvl`. Prepara una richiesta *r* = [CompletedEnterRequest](#Confermato_ingresso)
-che comprende il livello *lvl* e la struttura dati (ovvero l'istanza di Object serializzabile) di cui sopra.
+Su questo CoordinatorClient viene chiamato il metodo `completed_enter` passando tutti gli argomenti ricevuti dal
+metodo `completed_enter` del modulo Coordinator.
 
-Poi invia la richiesta *r* e ottiene una risposta che è una istanza di CompletedEnterResponse, la quale
-non ha membri: infatti la signature del metodo è `void completed_enter`.
+Il CoordinatorClient prepara una richiesta *r* = [CompletedEnterRequest](#Confermato_ingresso)
+che comprende i dati di cui sopra: sia i dati di input, sia il livello cioè la chiave da usare nel
+database distribuito del servizio Coordinator.
+
+Poi il CoordinatorClient invia la richiesta *r* al servente per la chiave *lvl* e ottiene una risposta che è una istanza di
+CompletedEnterResponse. Essa contiene:
+
+*   `Object completed_enter_result` - la struttura dati serializzabile che contiene l'output del metodo
+    eseguito nel nodo Coordinator.
+
+Questo Object serializzabile è quello che il metodo `completed_enter` del CoordinatorClient restituisce al chiamante.  
+Ed è quello che il metodo `completed_enter` del modulo Coordinator restituisce al chiamante.
 
 ### <a name="Deliverables_service"></a>Implementazione di CoordinatorService e di CoordinatorClient
 
@@ -500,21 +544,12 @@ I metodi della classe CoordinatorClient sono:
 
 *   `int get_n_nodes()` - chiede al Coordinator della rete il numero di nodi in tutta la rete.  
     Vedi la relativa [richiesta](#Numero_nodi_nella_rete).
-*   `int evaluate_enter(Object evaluate_enter_data) throws AskAgainError, IgnoreNetworkError` -
-    chiede al Coordinator della rete di eseguire il delegato del metodo.  
-    Vedi la relativa [richiesta](#Valuta_ingresso).
-*   `void begin_enter(int lvl, Object begin_enter_data) throws AlreadyEnteringError` -
-    chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
-    Vedi la relativa [richiesta](#Avvio_ingresso).
 *   `void reserve_enter(int lvl, int enter_id, out int new_pos, out int new_eldership)` -
     chiede al Coordinator del g-nodo di livello *lvl* di riservare un posto.  
     Vedi la relativa [richiesta](#Prenota_un_posto).
 *   `void delete_reserve_enter(int lvl, int enter_id)` -
     chiede al Coordinator del g-nodo di livello *lvl* di eliminare la prenotazione di un posto.  
     Vedi la relativa [richiesta](#Cancella_prenotazione).
-*   `void completed_enter(int lvl, Object completed_enter_data)` -
-    chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
-    Vedi la relativa [richiesta](#Confermato_ingresso).
 *   `void make_replicas(int lvl)` - dopo aver apportato delle variazioni al contenuto della
     memoria condivisa del g-nodo di livello *lvl*, il nodo attuale Coordinator avvia una
     nuova tasklet e su questa chiama su una sua istanza di classe client questo metodo.  
@@ -522,6 +557,15 @@ I metodi della classe CoordinatorClient sono:
     PeerClient, come avviene per gli altri metodi di CoordinatorClient, bensì chiama
     i metodi `begin_replica` e `next_replica` del modulo PeerServices.
     Vedi la relativa [richiesta](#Replica).
+*   `Object evaluate_enter(int lvl, Object evaluate_enter_data)` -
+    chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
+    Vedi la relativa [richiesta](#Valuta_ingresso).
+*   `Object begin_enter(int lvl, Object begin_enter_data)` -
+    chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
+    Vedi la relativa [richiesta](#Avvio_ingresso).
+*   `Object completed_enter(int lvl, Object completed_enter_data)` -
+    chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
+    Vedi la relativa [richiesta](#Confermato_ingresso).
 
 ## <a name="Classi_e_interfacce"></a>Classi e interfacce
 
@@ -551,23 +595,33 @@ l'interfaccia ICoordinatorMap. Tramite essa il modulo può:
 ### <a name="Classi_Delegati">Delegati
 
 Una istanza di IEvaluateEnterHandler viene passata al modulo Coordinator. Tale istanza viene
-interrogata da parte del modulo quando si deve decidere sul fare ingresso in una nuova rete.
+usata dal modulo quando riceve una richiesta EvaluateEnterRequest. La risposta serve al modulo
+per produrre l'istanza di EvaluateEnterResponse da restituire.
 
 I metodi previsti dall'interfaccia IEvaluateEnterHandler sono:
 
-*   `int evaluate_enter(Object evaluate_enter_data)`  
-    Con questo metodo si richiama il metodo `evaluate_enter` del modulo Migrations. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).  
-    Può rilanciare l'eccezione `AskAgainError`.  
-    Può rilanciare l'eccezione `IgnoreNetworkError`.
+*   `Object evaluate_enter(int lvl, Object evaluate_enter_data)`  
+    Con questo metodo si richiama il metodo `evaluate_enter` del modulo Migrations. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).
 
 * * *
 
 Una istanza di IBeginEnterHandler viene passata al modulo Coordinator. Tale istanza viene
-interrogata da parte del modulo quando si deve autorizzare l'ingresso in una nuova rete.
+usata dal modulo quando riceve una richiesta BeginEnterRequest. La risposta serve al modulo
+per produrre l'istanza di BeginEnterResponse da restituire.
 
 I metodi previsti dall'interfaccia IBeginEnterHandler sono:
 
-*   `void begin_enter(int lvl, Object begin_enter_data)`  
-    Con questo metodo si richiama il metodo `begin_enter` del modulo Migrations. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).  
-    Può rilanciare l'eccezione `AlreadyEnteringError`.
+*   `Object begin_enter(int lvl, Object begin_enter_data)`  
+    Con questo metodo si richiama il metodo `begin_enter` del modulo Migrations. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).
+
+* * *
+
+Una istanza di ICompletedEnterHandler viene passata al modulo Coordinator. Tale istanza viene
+usata dal modulo quando riceve una richiesta CompletedEnterRequest. La risposta serve al modulo
+per produrre l'istanza di CompletedEnterResponse da restituire.
+
+I metodi previsti dall'interfaccia ICompletedEnterHandler sono:
+
+*   `Object completed_enter(int lvl, Object completed_enter_data)`  
+    Con questo metodo si richiama il metodo `completed_enter` del modulo Migrations. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).
 
