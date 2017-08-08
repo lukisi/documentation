@@ -38,6 +38,31 @@ che rappresenta un g-nodo, bisogna che il lettore faccia attenzione al contesto.
 di Coordinator di un g-nodo (dal livello 1 fino all'intera rete) ci riferiamo al servizio, cioè
 al nodo che al momento viene identificato come servente.
 
+### Collaborazione con il modulo Migrations
+
+Le operazioni di ingresso in una rete, che sono messe in atto quando due reti distinte si incontrano
+per mezzo di alcuni archi, non sono di pertinenza del modulo Coordinator, bensì del modulo Migrations.
+
+Però gli algoritmi del modulo Migrations per questi compiti hanno dei requisiti che possono essere soddisfatti
+attrtaverso una stretta collaborazione con il modulo Coordinator:
+
+1.  Il modulo Migrations in esecuzione in un qualsiasi singolo nodo (ad esempio un border-nodo che ha incontrato
+    un vicino di un'altra rete) vuole far eseguire alcuni suoi metodi nel nodo Coordinator di tutta la rete
+    o di un g-nodo.
+1.  Un metodo del modulo Migrations in esecuzione nel nodo Coordinator di tutta la rete (o di un g-nodo)
+    vuole accedere in lettura/scrittura alla memoria condivisa di tutta la rete (o di un g-nodo) per salvare
+    e recuperare alcune informazioni di sua pertinenza.
+
+Per il primo motivo esistono metodi del modulo Coordinator, relativi metodi nella classe client del
+servizio Coordinator, relativi classi di richieste e risposte (IPeersRequest e IPeersResponse) e delegati
+che la classe servente del servizio Coordinator (PeerService) può richiamare.  
+Di norma per ogni metodo del modulo Migrations (di quelli che vanno eseguiti nel nodo Coordinator su richiesta di
+un altro nodo) esiste una specifica istanza dei suddetti elementi.
+
+Per il secondo motivo, esiste una classe serializzabile implementata nel modulo Migrations tale che una sua
+istanza contiene tutta la memoria condivisa di tutta la rete (o di un g-nodo) relativamente a quanto è di pertinenza
+del modulo Migrations. Tale istanza viene salvata nel membro `Object? network_entering_memory` della classe `CoordGnodeMemory`.
+
 ## <a name="Servizio_coordinator"></a>Il servizio Coordinator
 
 Il servizio Coordinator è un servizio non opzionale, cioè tutti i nodi partecipano attivamente. Si tratta di un
@@ -328,25 +353,6 @@ di pertinenza di altri moduli.
 Verranno descritte ognuna con i suoi dettagli di seguito.
 
 #### Modulo Migrations
-
-Le operazioni di ingresso in una rete, che sono messe in atto quando due reti distinte si incontrano
-per mezzo di alcuni archi, non sono di pertinenza del modulo Coordinator, bensì del modulo Migrations.
-
-Però queste operazioni prevedono:
-
-1.  L'esecuzione di alcuni metodi del modulo Migrations nel nodo Coordinator (di tutta la rete o di un g-nodo) su richiesta che
-    viene dal modulo Migrations in un singolo nodo qualsiasi (ad esempio un border-nodo che ha incontrato un vicino di un'altra rete).
-1.  La memorizzazione e rilettura di alcune informazioni nella memoria condivisa di tutta la rete (o di un g-nodo).
-
-Per il primo motivo esistono metodi del modulo Coordinator, relativi metodi nella classe client del
-servizio Coordinator, relativi classi di richieste e risposte (IPeersRequest e IPeersResponse) e delegati
-che la classe servente del servizio Coordinator (PeerService) può richiamare.  
-Di norma per ogni metodo del modulo Migrations (di quelli che vanno eseguiti nel nodo Coordinator su richiesta di
-un altro nodo) esiste una specifica istanza dei suddetti elementi.
-
-Per il secondo motivo, esiste una classe serializzabile implementata nel modulo Migrations tale che una sua
-istanza contiene tutta la memoria condivisa di tutta la rete (o di un g-nodo) relativamente a quanto è di pertinenza
-del modulo Migrations. Tale istanza viene salvata nel membro `Object? network_entering_memory` della classe `CoordGnodeMemory`.
 
 Vediamo come avviene la scrittura e la rilettura della memoria condivisa di tutta la rete (o di un g-nodo) ad opera
 del modulo Migrations. Nella trattazione del modulo Migrations abbiamo detto che solo lo stesso nodo Coordinator (di tutta la rete o di un g-nodo)
