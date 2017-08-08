@@ -15,10 +15,38 @@
     1.  [Caratteristiche della migration-path](#Strategia_ingresso_Caratteristiche_migration_path)
     1.  [Algoritmo](#Strategia_ingresso_Algoritmo)
     1.  [Degradazione](#Strategia_ingresso_Degradazione)
+1.  [Risoluzione di uno split di g-nodo](#Split_gnodo)
 
 ## <a name="Ruolo_Migrations"></a>Il ruolo del modulo Migrations
 
-**TODO**
+Il ruolo del modulo Migrations è quello di trovare una migration-path e di coordinare
+la sua esecuzione.
+
+La ricerca di una migration-path ha come obiettivo la liberazione (se necessario) di una posizione
+*reale* in un g-nodo. La migration-path più corta può essere di lunghezza zero, se in effetti una
+posizione *reale* libera esiste già nel g-nodo.
+
+La motivazione che spinge alla ricerca di una migration-path è sempre l'ingresso di un g-nodo in
+una rete a cui non apparteneva. Questo può rendersi necessario a fronte di due situazioni:
+
+*   Una rete *J* incontra una rete distinta *G*. Le due reti si erano formate indipendentemente.
+*   Un g-nodo *g* di livello *l*, con *g* ∈ *G*, si è "splittato", cioè non è più internamente connesso.
+    Si sono quindi formate varie isole *g<sub>0</sub>*, *g<sub>1</sub>*, ..., *g<sub>n</sub>*. Questo
+    mentre il suo g-nodo di livello superiore *h* risulta ancora internamente connesso. Allora
+    ogni isola *g<sub>i</sub>* che non contiene il nodo più anziano deve considerarsi come una distinta
+    rete *J* (composta da un solo g-nodo di livello *l*) che incontra *G*.
+
+Nelle varie fasi delle sue operazioni, il modulo Migrations si avvale della collaborazione del
+modulo Coordinator, pur non avendo una diretta dipendenza sul modulo Coordinator. Questo è reso
+possibile dal coordinamento dell'utilizzatore di questi due moduli.
+
+In pratica questa collaborazione consiste in questo: il modulo Migrations
+in alcuni dei suoi algoritmi in esecuzione in un singolo nodo *n*  ∈ *g* ha bisogno
+di provocare l'esecuzione di altri suoi algoritmi in uno specifico nodo
+*n<sub>0</sub>* ∈ *g* che sia sempre quello.  
+Si sceglie di assegnare al nodo Coordinator del g-nodo *g* questo ruolo. Quando questa esecuzione
+si rende necessaria il modulo Coordinator farà da proxy fra il generico singolo nodo *n*  ∈ *g*
+e il nodo Coordinator di *g*.
 
 ## <a name="Fusione_reti"></a>Incontro e fusione di due reti distinte
 
@@ -773,4 +801,8 @@ Se il tentativo al livello desiderato (inizialmente `max_lvl`) fallisce non rest
 uno il livello e riprovare. Si cerca in questo modo di fare entrare *G* in *J* anche gradualmente. Ovviamente
 esiste anche il caso limite in cui tutto lo spazio degli indirizzi validi è stato occupato in *J*, quindi nessun
 ulteriore singolo nodo può entrare in *J*.
+
+## <a name="Split_gnodo"></a>Risoluzione di uno split di g-nodo
+
+**TODO**
 

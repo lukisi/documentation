@@ -11,16 +11,12 @@
         1.  [Replica memoria condivisa](#Replica)
         1.  [Confermato ingresso in altra rete](#Confermato_ingresso)
     1.  [Contenuto della memoria condivisa di un g-nodo](#Records)
-1.  [Richieste al diretto vicino di accesso al servizio Coordinator](#Richieste_al_diretto_vicino)
-    1.  [Ingresso in diversa rete](#Per_ingresso)
-    1.  [Ingresso come risoluzione di uno split di g-nodo](#Per_split)
 1.  [Requisiti](#Requisiti)
 1.  [Deliverables](#Deliverables)
     1.  [CoordinatorManager](#Deliverables_manager)
     1.  [CoordinatorService e CoordinatorClient](#Deliverables_service)
-### <a name=""></a>
-### <a name=""></a>
 1.  [Classi e interfacce](#Classi_e_interfacce)
+    1.  [Delegati](#Classi_Delegati)
 
 ## <a name="Ruolo_coordinator"></a>Il ruolo del modulo Coordinator
 
@@ -371,89 +367,6 @@ era il nodo stesso.
 Poi il servente restituisce l'oggetto che è nel membro `network_entering_memory` dell'istanza di `CoordGnodeMemory`
 associata alla chiave `k`.
 
-## <a name="Richieste_al_diretto_vicino"></a>Richieste al diretto vicino di accesso al servizio Coordinator
-
-In alcuni casi un nodo *n* può voler chiedere ad un suo diretto vicino di accedere al servizio peer-to-peer
-del Coordinator.
-
-### <a name="Per_ingresso"></a>Ingresso in diversa rete
-
-Si consideri un nodo *n* che appartiene alla rete *G* e un suo diretto vicino nodo
-*v* che appartiene alla rete *J*.  
-Supponiamo che - con le modalità viste in "[ingresso in altra rete](#Collaborazioni_ingresso)" - il
-nodo *n* riceva dal Coordinator della rete *G* il compito di richiedere l'ingresso del suo g-nodo *g*
-di livello *l* dentro *J* tramite il suo arco con *v*.
-
-Ora il nodo *n* comunica direttamente con il servizio Coordinator del livello *l*, cioè di *g*. Il
-Coordinator di *g* accetta questa soluzione (vedi la richiesta [avvio-ingresso](#Avvio_ingresso)). Questa operazione consta di alcune parti:
-
-*   Il Coordinator di *g* acquisisce un blocco. Cioè, se erano in coda altre operazioni che collidono
-    con questa (ad esempio un'altra operazione di ingresso, *o altro da valutare*) allora attende prima
-    di procedere.
-*   Acquisito il blocco il Coordinator di *g* avvia una nuova tasklet per fare altre operazioni, ma
-    intanto risponde positivamente al nodo *n*.
-*   Nella tasklet avviata il Coordinator di *g* aspetta un certo tempo ...
-
-Quando *n* riceve la risposta positiva dal Coordinator di *g*, subito chiede a *v* di trovare un posto per *g* in *J*.
-
-Per rispondere a questa richiesta, il nodo *v* contatta il Coordinator del *suo* g-nodo di
-livello *l* + 1, chiamiamolo *h*, chiedendogli di prenotare un posto (vedi la richiesta
-[prenota-un-posto](#Prenota_un_posto)). Se ciò non fosse possibile
-il Coordinator di *h* risponderebbe con una eccezione a *v* e ci sarebbero altre operazioni da fare
-per la ricerca di una migration path; ma in questo esempio assumiamo che il
-g-nodo *h* abbia un posto libero per un g-nodo di livello *l*. Allora il Coordinator di *h* prenota
-il posto e lo comunica al nodo *v*. Il nodo *v* lo comunica al nodo *n*.
-
-Quello che si voleva evidenziare qui, è che il modulo Coordinator in *n* comunica con il modulo
-Coordinator del diretto vicino *v*. Prima di rispondere, il modulo Coordinator in *v* usa il client
-del servizio Coordinator per comunicare, non con un diretto vicino, bensì tramite i servizi del
-modulo PeerServices, con il Coordinator del suo g-nodo di livello *l* + 1, cioè *h*.
-
-In questo modo il nodo *n*, dialogando con il diretto vicino *v*, è come se avesse dialogato con
-l'intero g-nodo *h* come entità unitaria. Inoltre avendo prima il nodo *n* preso accordo con
-il Coordinator di *g*, è come se i g-nodi *g* e *h* come entità unitarie avessero dialogato tra loro.
-
-Ora che *n* ha ricevuto la prenotazione, di nuovo comunica con il Coordinator di *g* per informarlo
-(vedi la richiesta/segnalazione [confermato-ingresso](#Confermato_ingresso)). Cioè
-gli comunica che ogni singolo nodo in *g* dovrà presto attivarsi per formare una nuova identità che
-prende posto in *h* (come g-nodo isomorfo di *g*).  
-La propagazione delle informazioni necessarie ad ogni singolo nodo avverrà attraverso un diverso
-modulo. (*Da valutare* Ogni singolo nodo potrebbe chiedere conferma al Coordinator di *g* dell'esattezza
-delle suddette informazioni, ma questo comporterebbe un enorme traffico su *g*).  
-Le informazioni suddette che pervengono ad ogni singolo nodo permettono al contempo la trasformazione
-del g-nodo *g* in un g-nodo *di connettività* in *G*.
-
-Ricevuta questa segnalazione, il Coordinator di *g*:
-
-*   Il Coordinator di *g* controlla se la richiesta ha l'identificativo del blocco che era
-    stato acquisito su *g* ed era in corso.
-*   Memorizza le informazioni, rilascia il blocco ed avvia una nuova tasklet per fare altre operazioni, ma
-    intanto risponde positivamente al nodo *n*.
-*   Nella tasklet avviata il Coordinator di *g* aspetta un certo tempo ...
-
-### <a name="Per_split"></a>Ingresso come risoluzione di uno split di g-nodo
-
-Si consideri un nodo *n* che fa parte di un g-nodo *g* di livello *l*. Il g-nodo *g* fa a sua volta parte di
-un g-nodo *h* di livello *l* + 1. Supponiamo che il g-nodo *g* diventi disconnesso, cioè avviene lo split del
-g-nodo, mentre *h* è ancora connesso. Supponiamo che l'isola in cui si trova *n* (chiamiamola *g1*) sia una di quelle che non
-contengono il nodo più anziano. Supponiamo che *n* abbia un vicino *v* che appartiene a *h* ma non appartiene
-a *g*. Per questo il nodo *n* riceve da *v* l'informazione che tutta la sua isola (di livello *l*) deve
-cambiare indirizzo.
-
-In questo momento nessun nodo all'interno dell'isola *g1* ha un indirizzo valido in *h*. Quindi
-non può comunicare con il server del servizio Coordinator del suo g-nodo di livello *l* + 1, o superiori.
-Però si forma automaticamente un nuovo server del servizio Coordinator per *g1*.
-
-Ci troviamo di nuovo in una situazione simile alla precedente. Il nodo *n* comunica direttamente
-con il servizio Coordinator di *g1* proponendo un ingresso facilitato dal nodo diretto vicino *v*. Il
-Coordinator di *g1* accetta questa soluzione.
-
-A questo punto *n* chiede a *v* di trovare un posto per *g1* in *G*. Per questa richiesta il nodo *v* comunica
-con il servizio Coordinator del *suo* g-nodo di livello *l* + 1, che è l'originale g-nodo *h*.
-
-L'obiettivo finale di queste comunicazioni (possono essere necessarie più di una) con il server
-del servizio Coordinator sarà ovviamente la prenotazione di un posto di livello *l* in *G*.
-
 ## <a name="Requisiti"></a>Requisiti
 
 Il nodo quando crea una identità (la prima per avviare il sistema o le successive a seguito di ingressi
@@ -635,7 +548,7 @@ l'interfaccia ICoordinatorMap. Tramite essa il modulo può:
     informazione è quella che si basa sulla mappa del nodo corrente, senza contattare il Coordinator
     attuale che ha la conoscenza autoritativa delle prenotazioni pendenti.
 
-### Delegati
+### <a name="Classi_Delegati">Delegati
 
 Una istanza di IEvaluateEnterHandler viene passata al modulo Coordinator. Tale istanza viene
 interrogata da parte del modulo quando si deve decidere sul fare ingresso in una nuova rete.
