@@ -206,14 +206,17 @@ struttura dati con il termine *valutazione*.
 Ogni *valutazione* può trovarsi in un particolare stato, anche questo memorizzato nella suddetta struttura
 dati nel membro `status`. Lo stato in cui viene inizializzata questa valutazione è "*pending*".
 
-Questa valutazione deve essere memorizzata nella memoria condivisa di tutta la rete *G*.  
+Questa valutazione deve essere memorizzata nella memoria condivisa di tutta la rete *G*.
+
+#### <a name="Accesso_memoria_condivisa"></a>Accesso alla memoria condivisa
+
 Abbiamo già detto che il modulo Migrations può fare in modo che venga richiamato un metodo nel modulo Coordinator, pur non
 avendo una dipendenza diretta sul modulo Coordinator. In particolare avremo una coppia di metodi
-`get_network_entering_memory` e `set_network_entering_memory`
-(vedi [qui](../ModuloCoordinator/AnalisiFunzionale.md#Deliverables)) con i quali si recupera e si salva
+`get_migrations_memory` e `set_migrations_memory`
+(vedi [qui](../ModuloCoordinator/AnalisiFunzionale.md#Deliverables_manager)) con i quali si recupera e si salva
 una istanza di Object (perché il modulo Coordinator non conosce i dati del modulo Migrations) che costituisce
 l'intera base dati (cioè la memoria condivisa della rete) relativa agli aspetti gestiti dal modulo Migrations.
-In particolare il metodo `set_network_entering_memory` provvede anche ad avviare in una nuova tasklet
+In particolare il metodo `set_migrations_memory` provvede anche ad avviare in una nuova tasklet
 le operazioni di replica.  
 Il modulo Migrations nel nodo Coordinator di *G* recupera l'intera base dati corrente e la integra con
 l'aggiunta di questa nuova *valutazione*. Poi immediatamente salva l'intera base dati. Questa
@@ -221,9 +224,16 @@ sequenza di operazioni si può a buon diritto considerare come atomica, in quant
 uso dei meccanismi dei servizi peer-to-peer (modulo PeerServices) il solo nodo che ha diritto
 a fare le richieste relative a questi metodi è lo stesso nodo Coordinator di tutta la rete,
 quindi non dovrà essere fatta alcuna operazione bloccante di trasmissione in rete.  
+In realtà esiste la possibilità (alquanto remota) che il nodo Coordinator di *G* sia ancora
+non esaustivo rispetto alla chiave di sua pertinenza e che quindi l'operazione di lettura avvii
+delle operazioni di trasmissione in rete. Ma la sequenza può essere considerata comunque atomica
+grazie alle strategie adottate per garantire la coerenza dei dati nei servizi peer-to-peer
+che gestiscono un database distribuito.  
 In seguito ci riferiremo a questa sequenza di operazioni semplicemente dicendo che
 il modulo Migrations nel nodo Coordinator di *G* accede e/o aggiorna la memoria condivisa di tutta la rete con delle
 informazioni di sua pertinenza.
+
+* * *
 
 Ora il modulo Migrations nel nodo Coordinator di *G* risponde al client *n* con una eccezione AskAgainError.
 
@@ -232,8 +242,6 @@ istruisce il modulo Migrations di ripetere la stessa richiesta (con le stesse in
 tra cui lo stesso `evaluate_enter_id`) dopo aver atteso alcuni istanti.  
 Questa attesa deve essere più piccola (almeno 3 o 4 volte) di quella calcolata come `global_timeout`,
 che come abbiamo detto può essere calcolata dal modulo Migrations esclusivamente sulla base del numero di singoli nodi presenti in *G*.
-
-* * *
 
 Supponiamo che nel frattempo giunga al Coordinator della rete *G* una richiesta simile dal nodo *q*
 relativa alla rete *J*. Eseguendo il metodo `evaluate_enter` del modulo Migrations per la richiesta pervenuta
@@ -387,7 +395,7 @@ Vediamo cosa avviene nel metodo `begin_enter` del modulo Migrations eseguito sul
 Analogamente a quanto detto per il modulo Migrations nel nodo Coordinator di tutta la rete *G*, anche il modulo Migrations nel nodo
 Coordinator del g-nodo *g* ha bisogno di poter accedere in lettura e scrittura alla memoria condivisa del
 g-nodo *g* relativa agli aspetti gestiti dal modulo Migrations.  
-Lo fa stimolando la chiamata dei metodi `get_network_entering_memory` e `set_network_entering_memory` nel modulo
+Lo fa stimolando la chiamata dei metodi `get_migrations_memory` e `set_migrations_memory` nel modulo
 Coordinator. Anche qui le operazioni possono essere considerate atomiche, cioè non comportano
 alcuna operazione bloccante di trasmissione in rete.  
 In seguito ci riferiremo a questa sequenza di operazioni semplicemente dicendo che

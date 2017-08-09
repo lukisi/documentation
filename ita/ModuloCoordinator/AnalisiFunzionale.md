@@ -9,6 +9,8 @@
         1.  [Confermato ingresso in altra rete](#Confermato_ingresso)
         1.  [Prenota un posto](#Prenota_un_posto)
         1.  [Cancella prenotazione](#Cancella_prenotazione)
+        1.  [Lettura memoria di pertinenza del modulo Migrations](#Get_migrations_memory)
+        1.  [Scrittura memoria di pertinenza del modulo Migrations](#Set_migrations_memory)
         1.  [Replica memoria condivisa](#Replica)
     1.  [Contenuto della memoria condivisa di un g-nodo](#Records)
 1.  [Requisiti](#Requisiti)
@@ -61,7 +63,7 @@ un altro nodo) esiste una specifica istanza dei suddetti elementi.
 
 Per il secondo motivo, esiste una classe serializzabile implementata nel modulo Migrations tale che una sua
 istanza contiene tutta la memoria condivisa di tutta la rete (o di un g-nodo) relativamente a quanto è di pertinenza
-del modulo Migrations. Tale istanza viene salvata nel membro `Object? network_entering_memory` della classe `CoordGnodeMemory`.
+del modulo Migrations. Tale istanza viene salvata nel membro `Object? migrations_memory` della classe `CoordGnodeMemory`.
 
 ## <a name="Servizio_coordinator"></a>Il servizio Coordinator
 
@@ -290,6 +292,41 @@ sappiamo comporta l'avvio di una tasklet che si occupi di replicare la scrittura
 L'avvenuta rimozione (anche nel caso non si fosse trovata affatto la prenotazione pendente) viene
 comunicata al client del servizio attraverso una istanza di DeleteReserveEnterResponse, che è vuota.
 
+#### <a name="Get_migrations_memory"></a>Lettura memoria di pertinenza del modulo Migrations
+
+Una richiesta *r* di tipo GetMigrationsMemoryRequest fatta al nodo Coordinator di *g* indica che il singolo nodo *n*
+(il client del servizio) chiede la porzione di pertinenza del modulo Migrations della memoria condivisa di *g*.
+
+*   `int lvl` = livello di *g*.
+
+Il nodo servente deve recuperare la risposta dal membro `migrations_memory` dell'istanza di `CoordGnodeMemory`
+associata al livello `lvl`.
+
+La risposta viene comunicata al client del servizio attraverso una istanza di GetMigrationsMemoryResponse, che ha
+il membro:
+
+*   `Object migrations_memory`
+
+#### <a name="Set_migrations_memory"></a>Scrittura memoria di pertinenza del modulo Migrations
+
+Una richiesta *r* di tipo SetMigrationsMemoryRequest fatta al nodo Coordinator di *g* indica che il singolo nodo *n*
+(il client del servizio) vuole scrivere sulla porzione di pertinenza del modulo Migrations della memoria condivisa di *g*.
+
+*   `int lvl` = livello di *g*.
+*   `Object migrations_memory`
+
+Il nodo servente scrive nel membro `migrations_memory` dell'istanza di `CoordGnodeMemory` associata al livello `lvl`.
+
+Questa operazione dovrebbe essere richiesta solo dallo stesso nodo Coordinator. Sebbene il servente potrebbe
+essere un altro nodo se quello è ancora non esaustivo.  
+Perciò (si vorrebbe fare in modo che) il nodo servente prima di operare verifica che la richiesta
+viene da (se stesso o) un nodo che ha indirizzo più prossimo del suo a quello hash-node della chiave `lvl`.
+Questo può farlo (**TODO verificare**) tramite un metodo pubblico del modulo PeerServices.
+
+Questo come sappiamo comporta l'avvio di una tasklet che si occupi di replicare la scrittura nei nodi replica.
+
+L'avvenuta scrittura viene comunicata al client del servizio attraverso una istanza di SetMigrationsMemoryResponse, che è vuota.
+
 #### <a name="Replica"></a>Replica memoria condivisa
 
 Una richiesta *r* di tipo ReplicaRequest con livello *lvl* che giunge a un nodo servente del servizio Coordinator,
@@ -303,7 +340,10 @@ La classe ReplicaRequest contiene:
 
 In realtà, come in tutte le repliche, il nodo client in questo caso è il nodo con indirizzo
 attualmente più prossimo alla tupla del Coordinator di *g*, mentre il nodo servente è uno dei nodi
-che potrebbero trovarsi in sua assenza a rispondere alle future richieste.
+che potrebbero trovarsi in sua assenza a rispondere alle future richieste.  
+Perciò (si vorrebbe fare in modo che) il nodo servente prima di operare verifica che la richiesta
+viene da (se stesso o) un nodo che ha indirizzo più prossimo del suo a quello hash-node della chiave `lvl`.
+Questo può farlo (**TODO verificare**) tramite un metodo pubblico del modulo PeerServices.
 
 Il servente dovrà copiare `memory` nella sua memoria come istanza di `CoordGnodeMemory`
 associata al livello `lvl`.
@@ -343,7 +383,6 @@ Fra queste abbiamo:
 *   `int n_nodes` e `Timer? n_nodes_timeout` - Solo per il Coordinator di tutta la rete. Numero di nodi nella rete,
     come risposto nella precedente richiesta e timeout da aspettare prima di guardare di nuovo alla conoscenza
     acquisita dal modulo Qspn.
-*   **TODO**
 
 #### Contenuto di pertinenza di altri moduli
 
@@ -352,27 +391,35 @@ di pertinenza di altri moduli.
 
 Verranno descritte ognuna con i suoi dettagli di seguito.
 
-#### Modulo Migrations
+#### <a name="Records_modulo_migrations"></a>Modulo Migrations
 
 Vediamo come avviene la scrittura e la rilettura della memoria condivisa di tutta la rete (o di un g-nodo) ad opera
-del modulo Migrations. Nella trattazione del modulo Migrations abbiamo detto che solo lo stesso nodo Coordinator (di tutta la rete o di un g-nodo)
+del modulo Migrations. Nella trattazione del modulo Migrations abbiamo detto
+(vedi [qui](../ModuloMigrations/AnalisiFunzionale.md#Accesso_memoria_condivisa))
+che solo lo stesso nodo Coordinator (di tutta la rete o di un g-nodo)
 può essere nella posizione di scrivere/leggere in questa memoria.  
-Quando viene chiamato nel modulo Coordinator il metodo `set_network_entering_memory(Object data, int level)` questi avvia il
+Quando viene chiamato nel modulo Coordinator il metodo `set_migrations_memory` o il metodo
+`get_migrations_memory` questi verifica di essere in esecuzione proprio sul nodo Coordinator
+del livello richiesto. Altrimenti rilancia l'eccezione NotCoordinatorNodeError. Questo può farlo (**TODO verificare**)
+tramite un metodo pubblico del modulo PeerServices.  
+Quando viene chiamato nel modulo Coordinator il metodo `set_migrations_memory(Object data, int level)`
+(dopo che ha verificato di essere in esecuzione sul nodo Coordinator) questo crea una istanza
+del CoordinatorClient sulla quale chiama l'omonimo metodo. Questi avvia il
+contatto con il servizio Coordinator per la chiave `k.lvl = level`.  
+Quando viene contattato con tale richiesta, il servente mette l'argomento ricevuto nel membro `migrations_memory`
+dell'istanza di `CoordGnodeMemory` associata alla chiave `k`.  
+Poi in una nuova tasklet avvia le operazioni di replica.  
+Quando viene chiamato nel modulo Coordinator il metodo `get_migrations_memory(int level)`
+(dopo che ha verificato di essere in esecuzione sul nodo Coordinator) questo crea una istanza
+del CoordinatorClient sulla quale chiama l'omonimo metodo. Questi avvia il
 contatto con il servizio Coordinator per la chiave `k.lvl = level`. Quando viene contattato con tale richiesta,
-il servente Coordinator verifica (pena la terminazione della tasklet che esegue la risposta) che il chiamante
-era il nodo stesso.  
-Poi il servente mette l'argomento ricevuto nel membro `network_entering_memory` dell'istanza di `CoordGnodeMemory`
-associata alla chiave `k`.  
-Poi in una nuova tasklet avvia le operazioni di replica. Quando viene contattato un nodo con la richiesta
-di replica, esso verifica (pena la terminazione della tasklet che esegue la risposta) che il chiamante era più
-prossimo di lui all'indirizzo del servente Coordinator.
-**Nota questo è di pertinenza del codice messo a fattor comune nel modulo PeerService. Verificare.**  
-Quando viene chiamato nel modulo Coordinator il metodo `get_network_entering_memory(int level)` questi avvia il
-contatto con il servizio Coordinator per la chiave `k.lvl = level`. Quando viene contattato con tale richiesta,
-il servente Coordinator verifica (pena la terminazione della tasklet che esegue la risposta) che il chiamante
-era il nodo stesso.  
-Poi il servente restituisce l'oggetto che è nel membro `network_entering_memory` dell'istanza di `CoordGnodeMemory`
+il servente restituisce l'oggetto che è nel membro `migrations_memory` dell'istanza di `CoordGnodeMemory`
 associata alla chiave `k`.
+
+Abbiamo detto che i metodi `set_migrations_memory` e `get_migrations_memory` possono essere eseguiti
+solo nello stesso nodo Coordinator. Però l'accesso alla memoria condivisa del g-nodo deve avvenire
+comunque attraverso i meccanismi del modulo PeerServices, di modo che venga richiamato
+il metodo `fixed_keys_db_on_request` e venga garantita la coerenza dei dati.
 
 ## <a name="Requisiti"></a>Requisiti
 
@@ -437,7 +484,10 @@ Fornisce metodi per:
     *   La topologia della rete.
     *   Le posizioni dei livelli maggiori di `lvl`.
     *   Le anzianità dei livelli maggiori di `lvl`.
-*   Metodi `get_network_entering_memory` e `set_network_entering_memory`. **TODO**
+*   Accedere alla memoria condivisa di pertinenza del modulo Migrations.  
+    Metodi `Object get_migrations_memory(int lvl) throws NotCoordinatorNodeError`  
+    e `void set_migrations_memory(int lvl, Object data) throws NotCoordinatorNodeError`.  
+    Si vedano i commenti [qui](#Records_modulo_migrations).
 
 #### Metodo evaluate_enter
 
@@ -556,6 +606,12 @@ I metodi della classe CoordinatorClient sono:
 *   `void delete_reserve_enter(int lvl, int enter_id)` -
     chiede al Coordinator del g-nodo di livello *lvl* di eliminare la prenotazione di un posto.  
     Vedi la relativa [richiesta](#Cancella_prenotazione).
+*   `void set_migrations_memory(Object data, int lvl)` - salva la porzione di dati di pertinenza
+    del modulo Migrations nella memoria condivisa del g-nodo di livello *lvl*.  
+    Vedi la relativa [richiesta](#Set_migrations_memory).
+*   `Object get_migrations_memory(int lvl)` - recupera la porzione di dati di pertinenza
+    del modulo Migrations nella memoria condivisa del g-nodo di livello *lvl*.  
+    Vedi la relativa [richiesta](#Get_migrations_memory).
 *   `void make_replicas(int lvl)` - dopo aver apportato delle variazioni al contenuto della
     memoria condivisa del g-nodo di livello *lvl*, il nodo attuale Coordinator avvia una
     nuova tasklet e su questa chiama su una sua istanza di classe client questo metodo.  
