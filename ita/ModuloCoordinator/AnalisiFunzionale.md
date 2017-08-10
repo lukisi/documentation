@@ -55,13 +55,13 @@ attrtaverso una stretta collaborazione con il modulo Coordinator:
     vuole accedere in lettura/scrittura alla memoria condivisa di tutta la rete (o di un g-nodo) per salvare
     e recuperare alcune informazioni di sua pertinenza.
 
-Per il primo motivo esistono metodi del modulo Coordinator, relativi metodi nella classe client del
-servizio Coordinator, relativi classi di richieste e risposte (IPeersRequest e IPeersResponse) e delegati
+Per il primo requisito esistono metodi del modulo Coordinator, relativi metodi nella classe client del
+servizio Coordinator, relative classi di richieste e risposte (IPeersRequest e IPeersResponse) e delegati
 che la classe servente del servizio Coordinator (PeerService) può richiamare.  
 Di norma per ogni metodo del modulo Migrations (di quelli che vanno eseguiti nel nodo Coordinator su richiesta di
 un altro nodo) esiste una specifica istanza dei suddetti elementi.
 
-Per il secondo motivo, esiste una classe serializzabile implementata nel modulo Migrations tale che una sua
+Per il secondo requisito, esiste una classe serializzabile implementata nel modulo Migrations tale che una sua
 istanza contiene tutta la memoria condivisa di tutta la rete (o di un g-nodo) relativamente a quanto è di pertinenza
 del modulo Migrations. Tale istanza viene salvata nel membro `Object? migrations_memory` della classe `CoordGnodeMemory`.
 
@@ -104,6 +104,11 @@ Elenchiamo tutte le richieste che si possono fare al Coordinator.
 Una richiesta *r* di tipo NumberOfNodesRequest fatta al Coordinator dell'intera rete *G* indica che
 il client del servizio (avendo incontrata una diversa rete di dimensioni simili a questa) vuole
 chiedere alla rete (come entità atomica) quanti sono i suoi nodi.  
+Questa richiesta non è di tipo *read-only*, bensì di tipo *update*. In seguito si capirà perché.  
+Vedi la nota relativa sui
+[requisiti comuni](../ModuloPeers/DettagliTecnici.md#Mantenimento_database_distribuito_Requisiti_comuni)
+di un servizio che mantiene un database distribuito.
+
 La classe della richiesta non ha alcun membro.
 
 Il motivo per cui viene fatta questa richiesta al Coordinator di *G* è perché i singoli nodi
@@ -139,7 +144,9 @@ La classe ha un solo membro:
 #### <a name="Valuta_ingresso"></a>Valuta un ingresso
 
 Una richiesta *r* di tipo EvaluateEnterRequest fatta al Coordinator dell'intera rete indica che è stata incontrata una diversa rete *J*
-sulla quale il singolo nodo *n* (il client del servizio) suggerisce di fare ingresso.
+sulla quale il singolo nodo *n* (il client del servizio) suggerisce di fare ingresso.  
+Questa richiesta non è di nessuno dei tipi classici: *insert*, *read-only*, *update*, *replica-valore*,
+*replica-cancellazione*.
 
 I membri di *r* contengono informazioni che non sono di pertinenza del modulo Coordinator.
 Il contenuto della richiesta può essere semplicemente:
@@ -165,7 +172,9 @@ Il risultato va restituito così com'è al client del servizio attraverso una is
 
 Una richiesta *r* di tipo BeginEnterRequest fatta al nodo Coordinator di *g* indica che il singolo nodo *n*
 (il client del servizio) vuole essere autorizzato ad avviare le operazioni di ingresso del g-nodo *g* in
-una diversa rete *J*.
+una diversa rete *J*.  
+Questa richiesta non è di nessuno dei tipi classici: *insert*, *read-only*, *update*, *replica-valore*,
+*replica-cancellazione*.
 
 I membri di *r* sono:
 
@@ -188,7 +197,9 @@ Il risultato va restituito così com'è al client del servizio attraverso una is
 #### <a name="Confermato_ingresso"></a>Confermato ingresso in altra rete
 
 Una richiesta/segnalazione *r* di tipo CompletedEnterRequest fatta al nodo Coordinator di *g* dal singolo nodo *n*
-(il client del servizio) indica che sono state completate le operazioni di ingresso del g-nodo *g* in una diversa rete.
+(il client del servizio) indica che sono state completate le operazioni di ingresso del g-nodo *g* in una diversa rete.  
+Questa richiesta non è di nessuno dei tipi classici: *insert*, *read-only*, *update*, *replica-valore*,
+*replica-cancellazione*.
 
 I membri di *r* sono:
 
@@ -207,6 +218,61 @@ La risposta ottenuta dal delegato contiene informazioni che non sono di pertinen
 Si tratta di una istanza di Object che sappiamo essere serializzabile.
 
 Il risultato va restituito così com'è al client del servizio attraverso una istanza di CompletedEnterResponse.
+
+#### <a name="Get_migrations_memory"></a>Lettura memoria di pertinenza del modulo Migrations
+
+Le richieste esposte sopra (EvaluateEnter, BeginEnter, CompletedEnter) fanno sì che il modulo Migrations in
+esecuzione in un qualsiasi singolo nodo possa far eseguire alcuni suoi metodi nel nodo Coordinator di tutta la rete
+o di un g-nodo.  
+L'altro requisito è che tali metodi in esecuzione nel nodo Coordinator possano accedere in lettura/scrittura
+alla memoria condivisa di tutta la rete, per alcune informazioni di pertinenza del modulo Migrations.  
+A questo servono le due richieste che ora esponiamo, GetMigrationsMemory e SetMigrationsMemory.
+
+Queste richieste possono essere avviate solo dallo stesso nodo Coordinator. Infatti le richieste viste sopra
+(EvaluateEnter, BeginEnter, CompletedEnter) non coinvolgono mai il reperimento di un record: cioè non sono
+di tipo *insert*, *read-only*, *update*, *replica-valore* o *replica-cancellazione*. Quindi non saranno demandate
+ad altri nodi, nemmeno nel caso in cui il Coordinator non è ancora esaustivo.
+
+Quindi molto probabilmente le richieste GetMigrationsMemory e SetMigrationsMemory non comporteranno alcuna
+operazione bloccante di trasmissione in rete. Ma queste richieste invece sono di tipo *update*, quindi se
+il Coordinator non è ancora esaustivo esse comporteranno operazioni di trasmissione in rete e saranno
+servite da un altro nodo.
+
+Una richiesta *r* di tipo GetMigrationsMemoryRequest fatta sul g-nodo *g* indica che il client del servizio
+(in questo caso lo stesso nodo Coordinator di *g*) chiede la porzione di pertinenza del modulo Migrations
+della memoria condivisa di *g*.
+
+*   `int lvl` = livello di *g*.
+
+Il nodo servente deve recuperare la risposta dal membro `migrations_memory` dell'istanza di `CoordGnodeMemory`
+associata al livello `lvl`.
+
+La risposta viene comunicata al client del servizio attraverso una istanza di GetMigrationsMemoryResponse, che ha
+il membro:
+
+*   `Object migrations_memory`
+
+#### <a name="Set_migrations_memory"></a>Scrittura memoria di pertinenza del modulo Migrations
+
+Una richiesta *r* di tipo SetMigrationsMemoryRequest fatta sul g-nodo *g* indica che il client del servizio
+(in questo caso lo stesso nodo Coordinator di *g*) vuole scrivere sulla porzione di pertinenza del modulo Migrations
+della memoria condivisa di *g*.
+
+*   `int lvl` = livello di *g*.
+*   `Object migrations_memory`
+
+Il nodo servente scrive nel membro `migrations_memory` dell'istanza di `CoordGnodeMemory` associata al livello `lvl`.
+
+Questo come sappiamo comporta l'avvio di una tasklet che si occupi di replicare la scrittura nei nodi replica.
+
+La richiesta SetMigrationsMemoryRequest dovrebbe essere avviata solo dallo stesso nodo Coordinator. E la risposta,
+sebbene sia possibile che prima di processarla siano state fatte le operazioni di reperimento del record, dovrebbe
+provenire dallo stesso nodo.  
+Perciò, prima di operare, il nodo servente verifica che la richiesta venga da se stesso. Questo può farlo
+guardando l'argomento `Gee.List<int> client_tuple` che riceve in quanto richiamato dal metodo astratto
+`exec` di PeerService. Esso dovrebbe essere vuoto.
+
+L'avvenuta scrittura viene comunicata al client del servizio attraverso una istanza di SetMigrationsMemoryResponse, che è vuota.
 
 #### <a name="Prenota_un_posto"></a>Prenota un posto
 
@@ -292,46 +358,12 @@ sappiamo comporta l'avvio di una tasklet che si occupi di replicare la scrittura
 L'avvenuta rimozione (anche nel caso non si fosse trovata affatto la prenotazione pendente) viene
 comunicata al client del servizio attraverso una istanza di DeleteReserveEnterResponse, che è vuota.
 
-#### <a name="Get_migrations_memory"></a>Lettura memoria di pertinenza del modulo Migrations
-
-Una richiesta *r* di tipo GetMigrationsMemoryRequest fatta al nodo Coordinator di *g* indica che il singolo nodo *n*
-(il client del servizio) chiede la porzione di pertinenza del modulo Migrations della memoria condivisa di *g*.
-
-*   `int lvl` = livello di *g*.
-
-Il nodo servente deve recuperare la risposta dal membro `migrations_memory` dell'istanza di `CoordGnodeMemory`
-associata al livello `lvl`.
-
-La risposta viene comunicata al client del servizio attraverso una istanza di GetMigrationsMemoryResponse, che ha
-il membro:
-
-*   `Object migrations_memory`
-
-#### <a name="Set_migrations_memory"></a>Scrittura memoria di pertinenza del modulo Migrations
-
-Una richiesta *r* di tipo SetMigrationsMemoryRequest fatta al nodo Coordinator di *g* indica che il singolo nodo *n*
-(il client del servizio) vuole scrivere sulla porzione di pertinenza del modulo Migrations della memoria condivisa di *g*.
-
-*   `int lvl` = livello di *g*.
-*   `Object migrations_memory`
-
-Il nodo servente scrive nel membro `migrations_memory` dell'istanza di `CoordGnodeMemory` associata al livello `lvl`.
-
-Questa operazione dovrebbe essere richiesta solo dallo stesso nodo Coordinator. Sebbene il servente potrebbe
-essere un altro nodo se quello è ancora non esaustivo.  
-Perciò (si vorrebbe fare in modo che) il nodo servente prima di operare verifica che la richiesta
-viene da (se stesso o) un nodo che ha indirizzo più prossimo del suo a quello hash-node della chiave `lvl`.
-Questo può farlo (**TODO verificare**) tramite un metodo pubblico del modulo PeerServices.
-
-Questo come sappiamo comporta l'avvio di una tasklet che si occupi di replicare la scrittura nei nodi replica.
-
-L'avvenuta scrittura viene comunicata al client del servizio attraverso una istanza di SetMigrationsMemoryResponse, che è vuota.
-
 #### <a name="Replica"></a>Replica memoria condivisa
 
 Una richiesta *r* di tipo ReplicaRequest con livello *lvl* che giunge a un nodo servente del servizio Coordinator,
 il quale appartiene al g-nodo *g* di livello *lvl*, indica che il nodo client della richiesta
-chiede la replica di un record nella memoria condivisa di *g*.
+chiede la replica di un record nella memoria condivisa di *g*.  
+Questa richiesta è di tipo *replica-valore*.
 
 La classe ReplicaRequest contiene:
 
@@ -340,10 +372,7 @@ La classe ReplicaRequest contiene:
 
 In realtà, come in tutte le repliche, il nodo client in questo caso è il nodo con indirizzo
 attualmente più prossimo alla tupla del Coordinator di *g*, mentre il nodo servente è uno dei nodi
-che potrebbero trovarsi in sua assenza a rispondere alle future richieste.  
-Perciò (si vorrebbe fare in modo che) il nodo servente prima di operare verifica che la richiesta
-viene da (se stesso o) un nodo che ha indirizzo più prossimo del suo a quello hash-node della chiave `lvl`.
-Questo può farlo (**TODO verificare**) tramite un metodo pubblico del modulo PeerServices.
+che potrebbero trovarsi in sua assenza a rispondere alle future richieste.
 
 Il servente dovrà copiare `memory` nella sua memoria come istanza di `CoordGnodeMemory`
 associata al livello `lvl`.
@@ -400,8 +429,9 @@ che solo lo stesso nodo Coordinator (di tutta la rete o di un g-nodo)
 può essere nella posizione di scrivere/leggere in questa memoria.  
 Quando viene chiamato nel modulo Coordinator il metodo `set_migrations_memory` o il metodo
 `get_migrations_memory` questi verifica di essere in esecuzione proprio sul nodo Coordinator
-del livello richiesto. Altrimenti rilancia l'eccezione NotCoordinatorNodeError. Questo può farlo (**TODO verificare**)
-tramite un metodo pubblico del modulo PeerServices.  
+del livello richiesto. Può fare questo controllo con il metodo pubblico `am_i_servant_for(k)`
+della classe base PeerClient ereditato da CoordinatorClient.
+Altrimenti rilancia l'eccezione NotCoordinatorNodeError.  
 Quando viene chiamato nel modulo Coordinator il metodo `set_migrations_memory(Object data, int level)`
 (dopo che ha verificato di essere in esecuzione sul nodo Coordinator) questo crea una istanza
 del CoordinatorClient sulla quale chiama l'omonimo metodo. Questi avvia il
