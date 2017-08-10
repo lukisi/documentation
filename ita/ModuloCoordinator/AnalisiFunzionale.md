@@ -8,10 +8,10 @@
         1.  [Valuta un ingresso](#Valuta_ingresso)
         1.  [Avvio ingresso in altra rete](#Avvio_ingresso)
         1.  [Confermato ingresso in altra rete](#Confermato_ingresso)
-        1.  [Prenota un posto](#Prenota_un_posto)
-        1.  [Cancella prenotazione](#Cancella_prenotazione)
         1.  [Lettura memoria di pertinenza del modulo Migrations](#Get_migrations_memory)
         1.  [Scrittura memoria di pertinenza del modulo Migrations](#Set_migrations_memory)
+        1.  [Prenota un posto](#Prenota_un_posto)
+        1.  [Cancella prenotazione](#Cancella_prenotazione)
         1.  [Replica memoria condivisa](#Replica)
 1.  [Requisiti](#Requisiti)
 1.  [Deliverables](#Deliverables)
@@ -55,7 +55,7 @@ attrtaverso una stretta collaborazione con il modulo Coordinator:
     vuole accedere in lettura/scrittura alla memoria condivisa di tutta la rete (o di un g-nodo) per salvare
     e recuperare alcune informazioni di sua pertinenza.
 
-Per il primo requisito esistono metodi del modulo Coordinator, relativi metodi nella classe client del
+Per il primo requisito esistono metodi proxy del modulo Coordinator, relativi metodi nella classe client del
 servizio Coordinator, relative classi di richieste e risposte (IPeersRequest e IPeersResponse) e delegati
 che la classe servente del servizio Coordinator (PeerService) può richiamare.  
 Di norma per ogni metodo del modulo Migrations (di quelli che vanno eseguiti nel nodo Coordinator su richiesta di
@@ -384,7 +384,7 @@ Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordina
 fare in modo che sia *g* come entità atomica a venire interpellata.
 
 Per prima cosa il nodo Coordinator di *g* accede alla memoria condivisa di *g*. Nel membro `reserve_list`
-dell'istanza di `CoordGnodeMemory` associata al livello `lvl` (come illustrato più sotto) vengono memorizzate
+dell'istanza di `CoordGnodeMemory` associata al livello `lvl` vengono memorizzate
 in una lista di Booking le prenotazioni pendenti con la scadenza associata. Le prenotazioni scadute vengono adesso
 rimosse.
 
@@ -435,7 +435,7 @@ direttamente fornite dal nodo *n* che già le conosce. Queste sono:
 *   Le posizioni dei livelli maggiori di `lvl`.
 *   Le anzianità dei livelli maggiori di `lvl`.
 
-Si veda [sotto](#Deliverables) il metodo `reserve`.
+Si veda [sotto](#Deliverables_manager) il metodo `reserve`.
 
 #### <a name="Cancella_prenotazione"></a>Cancella prenotazione
 
@@ -498,53 +498,29 @@ In quello stesso momento gli vengono forniti:
 
 ### <a name="Deliverables_manager"></a>Implementazione di CoordinatorManager
 
-Fornisce metodi per:
+Il modulo Coordinator fornisce metodi proxy per la sua collaborazione con il modulo Migrations.  
+Il loro utilizzo è questo: l'utilizzatore del modulo
+Coordinator nel nodo *n* passa un oggetto al metodo `xyz` (su istruzione
+del modulo Migrations); questi fa pervenire questo oggetto al nodo Coordinator della
+rete il quale lo passa ad un particolare delegato per il metodo `xyz`. Questo delegato
+implementato dall'utilizzatore del modulo richiama il metodo `xyz` nel modulo Migrations.
 
-*   Valutare un ingresso in una nuova rete. Metodo `Object evaluate_enter(int lvl, Object evaluate_enter_data)`.  
-    La logica per il rilevamento di un vicino appartenente ad una diversa rete e per l'ingresso
-    in questa nuova rete è di pertinenza del modulo [Migrations](../ModuloMigrations/AnalisiFunzionale.md)
-    e non del modulo Coordinator.  
-    Questo è un metodo proxy: permette all'utilizzatore del modulo Coordinator di far eseguire una
-    certa operazione sul nodo Coordinator della rete. In particolare, l'utilizzatore del modulo
-    Coordinator nel nodo *n* passa un oggetto al metodo `evaluate_enter` (su istruzione
-    del modulo Migrations); questi fa pervenire questo oggetto al nodo Coordinator della
-    rete il quale lo passa al delegato `IEvaluateEnterHandler` nel suo metodo `evaluate_enter`. Questi
-    chiama il metodo omonimo nel modulo Migrations.  
+*   `Object evaluate_enter(int lvl, Object evaluate_enter_data)`.  
     L'esecuzione del metodo `evaluate_enter` del modulo Migrations nel nodo Coordinator produce la
     decisione per il nodo *n* di tentare o meno l'ingresso nella nuova rete e se sì a quale livello.
-*   Iniziare un ingresso in una nuova rete. Metodo `Object begin_enter(int lvl, Object begin_enter_data)`.  
-    Anche in questo caso la logica di queste operazioni è di pertinenza del
-    modulo [Migrations](../ModuloMigrations/AnalisiFunzionale.md)
-    e non del modulo Coordinator.  
-    Questo è un metodo proxy: permette all'utilizzatore del modulo Coordinator (su istruzione
-    del modulo Migrations) di far eseguire il metodo `begin_enter` del modulo Migrations
-    sul nodo Coordinator di un g-nodo *g* di livello *lvl*. Questo attraverso
-    il delegato `IBeginEnterHandler.begin_enter`.  
+*   `Object begin_enter(int lvl, Object begin_enter_data)`.  
     L'esecuzione del metodo `begin_enter` del modulo Migrations nel nodo Coordinator autorizza
     o nega l'ingresso.
-*   Completare un ingresso in una nuova rete. Metodo `Object completed_enter(int lvl, Object completed_enter_data)`.  
-    Anche in questo caso la logica di queste operazioni è di pertinenza del
-    modulo [Migrations](../ModuloMigrations/AnalisiFunzionale.md)
-    e non del modulo Coordinator.  
-    Questo è un metodo proxy: permette all'utilizzatore del modulo Coordinator (su istruzione
-    del modulo Migrations) di far eseguire il metodo `completed_enter` del modulo Migrations
-    sul nodo Coordinator di un g-nodo *g* di livello *lvl*. Questo attraverso
-    il delegato `ICompletedEnterHandler.completed_enter`.  
+*   `Object completed_enter(int lvl, Object completed_enter_data)`.  
     L'esecuzione del metodo `completed_enter` del modulo Migrations nel nodo Coordinator segnala
     il completamento dell'ingresso.
-*   Prenotare un posto (se possibile *reale*, altrimenti *virtuale*) nel proprio g-nodo di livello
-    *lvl*. Metodo `reserve(int lvl, int enter_id)`.  
-    Il metodo, attraverso la classe client del servizio CoordinatorClient, invia una richiesta ReserveEnterRequest
-    al nodo Coordinator del g-nodo *g* di livello *lvl*. La risposta è una istanza di ReserveEnterResponse
-    che contiene `int new_pos` e `int new_eldership`.  
-    A questa risposta il metodo `reserve` aggiunge:
-    *   La topologia della rete.
-    *   Le posizioni dei livelli maggiori di `lvl`.
-    *   Le anzianità dei livelli maggiori di `lvl`.
-*   Accedere alla memoria condivisa di pertinenza del modulo Migrations.  
-    Metodi `Object get_migrations_memory(int lvl) throws NotCoordinatorNodeError`  
-    e `void set_migrations_memory(int lvl, Object data) throws NotCoordinatorNodeError`.  
-    Si vedano i commenti [qui](#Records_modulo_migrations).
+
+Il modulo Coordinator fornisce inoltre i seguenti metodi:
+
+*   `reserve(int lvl, int enter_id)`.  
+    Per riservare un posto nel proprio g-nodo.
+*   `get_migrations_memory` e `set_migrations_memory`.  
+    Per accedere alla memoria condivisa di pertinenza del modulo Migrations.
 
 #### Metodo evaluate_enter
 
@@ -640,6 +616,42 @@ CompletedEnterResponse. Essa contiene:
 
 Questo Object serializzabile è quello che il metodo `completed_enter` del CoordinatorClient restituisce al chiamante.  
 Ed è quello che il metodo `completed_enter` del modulo Coordinator restituisce al chiamante.
+
+#### Metodo reserve
+
+Il metodo `reserve` del modulo Coordinator viene chiamato per prenotare un posto (se possibile *reale*, altrimenti *virtuale*)
+nel proprio g-nodo di livello *lvl*.
+
+Gli argomenti di questo metodo sono:
+
+*   `int lvl` - il livello del g-nodo in cui prenotare un posto.
+*   `int enter_id` - l'identificativo della richiesta di prenotazione.
+
+Il metodo, attraverso la classe client del servizio CoordinatorClient, invia una richiesta
+[ReserveEnterRequest](#Prenota_un_posto) al nodo Coordinator del g-nodo *g* di livello *lvl*.
+La risposta è una istanza di ReserveEnterResponse che contiene `int new_pos` e `int new_eldership`.
+
+A questa risposta il metodo `reserve` aggiunge:
+
+*   La topologia della rete.
+*   Le posizioni dei livelli maggiori di `lvl`.
+*   Le anzianità dei livelli maggiori di `lvl`.
+
+L'oggetto restituito dal metodo è quindi di una classe Reservation che contiene queste informazioni:
+
+*   La topologia della rete.
+*   Le posizioni dei livelli maggiori di `lvl-1`.
+*   Le anzianità dei livelli maggiori di `lvl-1`.
+
+#### Metodi get_migrations_memory e set_migrations_memory
+
+Il metodo `Object get_migrations_memory(int lvl)` e il metodo `void set_migrations_memory(int lvl, Object data)`
+del modulo Coordinator vengono chiamati per accedere alla memoria condivisa del proprio g-nodo
+di livello *lvl* di pertinenza del modulo Migrations.  
+Come detto sopra, possono essere richiamati solo nel nodo Coordinator, quindi prevedono l'eccezione
+NotCoordinatorNodeError.
+
+Si vedano i commenti [qui](#Records_modulo_migrations).
 
 ### <a name="Deliverables_service"></a>Implementazione di CoordinatorService e di CoordinatorClient
 
