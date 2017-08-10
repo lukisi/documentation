@@ -465,14 +465,20 @@ che può anche essere vuota: significa che il richiedente e il servente coincido
 
 La classe PeerClient deve essere derivata per implementare il client di un servizio, sia esso opzionale o non opzionale.
 
+La classe che deriva PeerClient deve fornire alla classe base (nel suo costruttore)
+la conoscenza della topologia della rete, cioè il numero  di livelli e per ognuno la gsize. Inoltre
+l'identificativo del servizio e un riferimento all'istanza di PeersManager.  
+Tramite queste conoscenze la classe base fornisce l'implementazione di due metodi importanti:
+
+*   `call` - chiamando il metodo *internal* `contact_peer`, instrada una richiesta e riceve la risposta.
+*   `am_i_servant_for(k)` - dice se lo stesso nodo corrente è il servente per una data chiave. Questo
+    sulla base del solo indirizzo, a prescindere dall'eventualità di nodi che non intendono rispondere
+    ad esempio perché non esaustivi. Può risultare utile.
+
 La classe derivata, per ogni tipo di richiesta che è prevista dal servizio, ha il compito di produrre l'oggetto
-IPeersRequest che rappresenta la richiesta, di specificare quale sia il tempo massimo di attesa per l'esecuzione, di
-interpretare l'istanza di IPeersResponse ricevuta come risposta.
-
-La classe base PeerClient ha la conoscenza della topologia della rete, cioè il numero  di livelli e per ognuno la gsize. Oltre
-a ciò non necessita di  conoscere le posizioni del nodo corrente. Ha inoltre conoscenza dell'identificativo del servizio.
-
-La classe base ha un riferimeno all'istanza di PeersManager che usa per contattare l'hash node (metodo `contact_peer`).
+IPeersRequest che rappresenta la richiesta, di specificare quale sia il tempo massimo di attesa per l'esecuzione,
+di chiamare il metodo `call` con i relativi argomenti per instradare la richiesta e ricevere la risposta,
+di interpretare l'istanza di IPeersResponse ricevuta come risposta.
 
 Nella classe derivata va definito il calcolo di *h<sub>p</sub>*. La funzione *h<sub>p</sub>* deve associare ad una
 chiave *k* un indirizzo in *S*, cioè una tupla *x̄* = *x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>l-1</sub>* le cui componenti
