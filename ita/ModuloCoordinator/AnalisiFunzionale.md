@@ -2,6 +2,7 @@
 
 1.  [Il ruolo del modulo Coordinator](#Ruolo_coordinator)
 1.  [Il servizio Coordinator](#Servizio_coordinator)
+    1.  [Contenuto della memoria condivisa di un g-nodo](#Records)
     1.  [Richieste previste](#Richieste_previste)
         1.  [Numero di nodi nella rete](#Numero_nodi_nella_rete)
         1.  [Valuta un ingresso](#Valuta_ingresso)
@@ -12,7 +13,6 @@
         1.  [Lettura memoria di pertinenza del modulo Migrations](#Get_migrations_memory)
         1.  [Scrittura memoria di pertinenza del modulo Migrations](#Set_migrations_memory)
         1.  [Replica memoria condivisa](#Replica)
-    1.  [Contenuto della memoria condivisa di un g-nodo](#Records)
 1.  [Requisiti](#Requisiti)
 1.  [Deliverables](#Deliverables)
     1.  [CoordinatorManager](#Deliverables_manager)
@@ -33,7 +33,7 @@ diretti vicini.
 
 Il modulo fa uso diretto delle classi e dei servizi forniti dal modulo [PeerServices](../ModuloPeers/AnalisiFunzionale.md).
 In particolare, esso realizza un servizio peer-to-peer, chiamato appunto Coordinator, per mezzo del quale svolge
-alcuni dei suoi compiti.
+alcuni dei suoi compiti. Lo analizzeremo fra breve.
 
 Siccome chiamiamo con lo stesso nome Coordinator sia il modulo presente su ogni nodo sia il servizio peer-to-peer
 che rappresenta un g-nodo, bisogna che il lettore faccia attenzione al contesto. Di solito se parliamo
@@ -63,7 +63,10 @@ un altro nodo) esiste una specifica istanza dei suddetti elementi.
 
 Per il secondo requisito, esiste una classe serializzabile implementata nel modulo Migrations tale che una sua
 istanza contiene tutta la memoria condivisa di tutta la rete (o di un g-nodo) relativamente a quanto è di pertinenza
-del modulo Migrations. Tale istanza viene salvata nel membro `Object? migrations_memory` della classe `CoordGnodeMemory`.
+del modulo Migrations. Tale istanza viene salvata in un apposito membro della classe usata per contenere
+i record del database distribuito realizzato dal servizio Coordinator.  
+Il modulo Coordinator quindi mette a disposizione dei metodi per leggere o scrivere in questa memoria
+garantendo la coerenza del dato nel database distribuito.
 
 ## <a name="Servizio_coordinator"></a>Il servizio Coordinator
 
@@ -83,6 +86,87 @@ Lo spazio delle chiavi definito dal servizio Coordinator è appunto l'insieme de
 La funzione *h<sub>p</sub>* è definita dal servizio in modo da dare ai dati la visibilità locale circoscritta al
 g-nodo in esame. In altre parole, il nodo corrente può contattare solo il Coordinator di uno dei suoi g-nodi; sia
 l'hash-node che il nodo che risponde si trovano all'interno del g-nodo stesso.
+
+### <a name="Records"></a>Contenuto della memoria condivisa di un g-nodo
+
+Come abbiamo detto, il servizio Coordinator realizza una sorta di memoria condivisa di un g-nodo *g*. Per far questo
+esso mantiene un database distribuito della tipologia a chiavi fisse in cui la chiave è il livello del g-nodo
+in esame e i dati hanno visibilità locale circoscritta allo stesso g-nodo.
+
+Questo significa che il contenuto di tutta la memoria condivisa di un g-nodo deve essere rappresentabile
+interamente con l'istanza di un oggetto serializzabile. La classe definita nel modulo Coordinator usata per
+memorizzare e trasmettere il contenuto della memoria condivisa è `CoordGnodeMemory`.
+
+Si tratta di una classe serializzabile. Il significato di alcuni dei suoi membri è noto al modulo Coordinator.
+Altri membri invece contengono strutture dati che il modulo Coordinator non è tenuto a conoscere. Questi membri sono di
+tipo Object nullable e il modulo Coordinator sa solo che se sono valorizzati sono a loro volta oggetti serializzabili.
+
+#### Contenuto di pertinenza del modulo Coordinator
+
+Alcune informazioni che si devono poter memorizzare e leggere nella memoria condivisa di un g-nodo sono
+di pertinenza del modulo Coordinator stesso.
+
+Queste sono memorizzate nei seguenti membri della classe `CoordGnodeMemory`:
+
+*   `List<Booking> reserve_list` - Elenco delle prenotazioni pendenti.  
+    Ogni istanza di Booking contiene:
+    *   `int enter_id`
+    *   `int new_pos`
+    *   `int new_eldership`
+    *   `Timer timeout`
+*   `int max_virtual_pos` - Massimo valore *virtuale* di `pos` assegnato ad un g-nodo al nostro interno.
+*   `int max_eldership` - Massimo valore di eldership assegnato ad un g-nodo al nostro interno. Maggiore è questo valore
+    e più giovane è il g-nodo.
+*   `int n_nodes` e `Timer? n_nodes_timeout` - Solo per il Coordinator di tutta la rete. Numero di nodi nella rete,
+    come risposto nella precedente richiesta e timeout da aspettare prima di guardare di nuovo alla conoscenza
+    acquisita dal modulo Qspn.
+
+#### Contenuto di pertinenza di altri moduli
+
+Alcune informazioni che si devono poter memorizzare e leggere nella memoria condivisa di un g-nodo sono
+di pertinenza di altri moduli.
+
+Verranno descritte ognuna con i suoi dettagli di seguito.
+
+#### <a name="Records_modulo_migrations"></a>Modulo Migrations
+
+Le informazioni di pertinenza del modulo Migrations sono memorizzate nel seguente membro della classe `CoordGnodeMemory`:
+
+*   `Object? migrations_memory`.
+
+Vediamo come avviene la scrittura e la rilettura della memoria condivisa di tutta la rete (o di un g-nodo) ad opera
+del modulo Migrations. Nella trattazione del modulo Migrations abbiamo detto
+(vedi [qui](../ModuloMigrations/AnalisiFunzionale.md#Accesso_memoria_condivisa))
+che solo lo stesso nodo Coordinator (di tutta la rete o di un g-nodo)
+può essere nella posizione di scrivere/leggere in questa memoria.  
+Quando viene chiamato nel modulo Coordinator il metodo `set_migrations_memory` o il metodo
+`get_migrations_memory` questi verifica di essere in esecuzione proprio sul nodo Coordinator
+del livello richiesto. Può fare questo controllo con il metodo pubblico `am_i_servant_for(k)`
+della classe base PeerClient ereditato da CoordinatorClient.
+Altrimenti rilancia l'eccezione NotCoordinatorNodeError.  
+Quando viene chiamato nel modulo Coordinator il metodo `set_migrations_memory(Object data, int level)`
+(dopo che ha verificato di essere in esecuzione sul nodo Coordinator) questo crea una istanza
+del CoordinatorClient sulla quale chiama l'omonimo metodo. Questi avvia il
+contatto con il servizio Coordinator per la chiave `k.lvl = level`.  
+Quando viene contattato con tale richiesta, il servente mette l'argomento ricevuto nel membro `migrations_memory`
+dell'istanza di `CoordGnodeMemory` associata alla chiave `k`.  
+Poi in una nuova tasklet avvia le operazioni di replica.  
+Quando viene chiamato nel modulo Coordinator il metodo `get_migrations_memory(int level)`
+(dopo che ha verificato di essere in esecuzione sul nodo Coordinator) questo crea una istanza
+del CoordinatorClient sulla quale chiama l'omonimo metodo. Questi avvia il
+contatto con il servizio Coordinator per la chiave `k.lvl = level`. Quando viene contattato con tale richiesta,
+il servente restituisce l'oggetto che è nel membro `migrations_memory` dell'istanza di `CoordGnodeMemory`
+associata alla chiave `k`.
+
+Abbiamo detto che i metodi `set_migrations_memory` e `get_migrations_memory` possono essere eseguiti
+solo nello stesso nodo Coordinator. Però l'accesso alla memoria condivisa del g-nodo deve avvenire
+comunque attraverso i meccanismi del modulo PeerServices, di modo che venga richiamato
+il metodo `fixed_keys_db_on_request` e venga garantita la coerenza dei dati.  
+Non è compito del modulo Coordinator, ma bensì del modulo Migrations, garantire l'atomicità delle
+sue operazioni. Ad esempio se vuole fare operazioni che prevedono la lettura e la successiva elaborazione
+e scrittura di questa memoria, esso può acquisire dei *lock* su tutte le parti del codice adibite
+a questo accesso. È sufficiente, poiché il nodo che fa queste operazioni è solo uno e il modulo che le esegue
+è solo il modulo Migrations.
 
 ### <a name="Richieste_previste"></a>Richieste previste
 
@@ -134,7 +218,7 @@ In ogni caso, il nodo Coordinator prima di rispondere accede in scrittura (con r
 tasklet che si occupa delle repliche) alla memoria condivisa di *G* per salvare la risposta che
 sta per dare, con un relativo timeout di scadenza.
 
-Si vedano più sotto i membri `n_nodes` e `n_nodes_timeout` della classe CoordGnodeMemory.
+Sono i dati memorizzati nei membri `n_nodes` e `n_nodes_timeout` della classe CoordGnodeMemory.
 
 La risposta va restituita al client del servizio attraverso una istanza di NumberOfNodesResponse.  
 La classe ha un solo membro:
@@ -166,7 +250,10 @@ che ha il metodo `evaluate_enter`.
 La risposta ottenuta dal delegato contiene informazioni che non sono di pertinenza del modulo Coordinator.
 Si tratta di una istanza di Object che sappiamo essere serializzabile.
 
-Il risultato va restituito così com'è al client del servizio attraverso una istanza di EvaluateEnterResponse.
+Il risultato va restituito così com'è al client del servizio attraverso una istanza di EvaluateEnterResponse.  
+Essa ha il solo membro:
+
+*   `Object evaluate_enter_result`.
 
 #### <a name="Avvio_ingresso"></a>Avvio ingresso in altra rete
 
@@ -192,7 +279,10 @@ che ha il metodo `begin_enter`.
 La risposta ottenuta dal delegato contiene informazioni che non sono di pertinenza del modulo Coordinator.
 Si tratta di una istanza di Object che sappiamo essere serializzabile.
 
-Il risultato va restituito così com'è al client del servizio attraverso una istanza di BeginEnterResponse.
+Il risultato va restituito così com'è al client del servizio attraverso una istanza di BeginEnterResponse.  
+Essa ha il solo membro:
+
+*   `Object begin_enter_result`.
 
 #### <a name="Confermato_ingresso"></a>Confermato ingresso in altra rete
 
@@ -217,7 +307,10 @@ che ha il metodo `completed_enter`.
 La risposta ottenuta dal delegato contiene informazioni che non sono di pertinenza del modulo Coordinator.
 Si tratta di una istanza di Object che sappiamo essere serializzabile.
 
-Il risultato va restituito così com'è al client del servizio attraverso una istanza di CompletedEnterResponse.
+Il risultato va restituito così com'è al client del servizio attraverso una istanza di CompletedEnterResponse.  
+Essa ha il solo membro:
+
+*   `Object completed_enter_result`.
 
 #### <a name="Get_migrations_memory"></a>Lettura memoria di pertinenza del modulo Migrations
 
@@ -233,14 +326,17 @@ Queste richieste possono essere avviate solo dallo stesso nodo Coordinator. Infa
 di tipo *insert*, *read-only*, *update*, *replica-valore* o *replica-cancellazione*. Quindi non saranno demandate
 ad altri nodi, nemmeno nel caso in cui il Coordinator non è ancora esaustivo.
 
-Quindi molto probabilmente le richieste GetMigrationsMemory e SetMigrationsMemory non comporteranno alcuna
-operazione bloccante di trasmissione in rete. Ma queste richieste invece sono di tipo *update*, quindi se
-il Coordinator non è ancora esaustivo esse comporteranno operazioni di trasmissione in rete e saranno
-servite da un altro nodo.
+Invece le richieste GetMigrationsMemory e SetMigrationsMemory sono una di tipo *read-only* e l'altra di tipo
+*update*. Quindi è possibile (sebbene molto raramente, solo nel caso in cui il nodo Coordinator appena raggiunto
+dalla richiesta sia ancora non esaustivo) che esse comportino operazioni di trasmissione in rete.  
+In questo caso abbiamo che l'operazione GetMigrationsMemory potrebbe essere servita da un altro nodo. Mentre
+per l'operazione SetMigrationsMemory essa potrebbe essere servita dal nodo Coordinator ma solo dopo che
+ha espletato le operazioni di recupero del record.
 
 Una richiesta *r* di tipo GetMigrationsMemoryRequest fatta sul g-nodo *g* indica che il client del servizio
 (in questo caso lo stesso nodo Coordinator di *g*) chiede la porzione di pertinenza del modulo Migrations
-della memoria condivisa di *g*.
+della memoria condivisa di *g*.  
+Questa richiesta è di tipo *read-only*.
 
 *   `int lvl` = livello di *g*.
 
@@ -256,7 +352,8 @@ il membro:
 
 Una richiesta *r* di tipo SetMigrationsMemoryRequest fatta sul g-nodo *g* indica che il client del servizio
 (in questo caso lo stesso nodo Coordinator di *g*) vuole scrivere sulla porzione di pertinenza del modulo Migrations
-della memoria condivisa di *g*.
+della memoria condivisa di *g*.  
+Questa richiesta è di tipo *update*.
 
 *   `int lvl` = livello di *g*.
 *   `Object migrations_memory`
@@ -277,7 +374,8 @@ L'avvenuta scrittura viene comunicata al client del servizio attraverso una ista
 #### <a name="Prenota_un_posto"></a>Prenota un posto
 
 Una richiesta *r* di tipo ReserveEnterRequest fatta al nodo Coordinator di *g* indica che il singolo nodo *n*
-(il client del servizio) chiede la prenotazione di un posto in *g*.
+(il client del servizio) chiede la prenotazione di un posto in *g*.  
+Questa richiesta è di tipo *update*.
 
 *   `int lvl` = livello di *g*.
 *   `int enter_id` = un identificativo di questa prenotazione.
@@ -342,7 +440,8 @@ Si veda [sotto](#Deliverables) il metodo `reserve`.
 #### <a name="Cancella_prenotazione"></a>Cancella prenotazione
 
 Una richiesta *r* di tipo DeleteReserveEnterRequest fatta al nodo Coordinator di *g* indica che il singolo nodo *n*
-(il client del servizio) chiede la rimozione di una prenotazione pendente in *g*.
+(il client del servizio) chiede la rimozione di una prenotazione pendente in *g*.  
+Questa richiesta è di tipo *update*.
 
 *   `int lvl` = livello di *g*.
 *   `int enter_id` = l'identificativo della prenotazione pendente da rimuovere.
@@ -378,78 +477,6 @@ Il servente dovrà copiare `memory` nella sua memoria come istanza di `CoordGnod
 associata al livello `lvl`.
 
 La risposta è una istanza di ReplicaResponse, che non ha membri.
-
-### <a name="Records"></a>Contenuto della memoria condivisa di un g-nodo
-
-Come abbiamo detto, il servizio Coordinator realizza una sorta di memoria condivisa di un g-nodo *g*. Per far questo
-esso mantiene un database distribuito della tipologia a chiavi fisse in cui la chiave è il livello del g-nodo
-in esame e i dati hanno visibilità locale circoscritta allo stesso g-nodo.
-
-Questo significa che il contenuto di tutta la memoria condivisa di un g-nodo deve essere rappresentabile
-interamente con l'istanza di un oggetto serializzabile. La classe definita nel modulo Coordinator usata per
-memorizzare e trasmettere il contenuto della memoria condivisa è `CoordGnodeMemory`.
-
-Si tratta di una classe serializzabile. Il significato di alcuni dei suoi membri è noto al modulo Coordinator.
-Altri membri invece contengono strutture dati che il modulo Coordinator non è tenuto a conoscere. Questi membri sono di
-tipo Object nullable e il modulo Coordinator sa solo che se sono valorizzati sono a loro volta oggetti serializzabili.
-
-#### Contenuto di pertinenza del modulo Coordinator
-
-Alcune informazioni che si devono poter memorizzare e leggere nella memoria condivisa di un g-nodo sono
-di pertinenza del modulo Coordinator stesso.
-
-Fra queste abbiamo:
-
-*   `List<Booking> reserve_list` - Elenco delle prenotazioni pendenti.  
-    Ogni istanza di Booking contiene:
-    *   `int enter_id`
-    *   `int new_pos`
-    *   `int new_eldership`
-    *   `Timer timeout`
-*   `int max_virtual_pos` - Massimo valore *virtuale* di `pos` assegnato ad un g-nodo al nostro interno.
-*   `int max_eldership` - Massimo valore di eldership assegnato ad un g-nodo al nostro interno. Maggiore è questo valore
-    e più giovane è il g-nodo.
-*   `int n_nodes` e `Timer? n_nodes_timeout` - Solo per il Coordinator di tutta la rete. Numero di nodi nella rete,
-    come risposto nella precedente richiesta e timeout da aspettare prima di guardare di nuovo alla conoscenza
-    acquisita dal modulo Qspn.
-
-#### Contenuto di pertinenza di altri moduli
-
-Alcune informazioni che si devono poter memorizzare e leggere nella memoria condivisa di un g-nodo sono
-di pertinenza di altri moduli.
-
-Verranno descritte ognuna con i suoi dettagli di seguito.
-
-#### <a name="Records_modulo_migrations"></a>Modulo Migrations
-
-Vediamo come avviene la scrittura e la rilettura della memoria condivisa di tutta la rete (o di un g-nodo) ad opera
-del modulo Migrations. Nella trattazione del modulo Migrations abbiamo detto
-(vedi [qui](../ModuloMigrations/AnalisiFunzionale.md#Accesso_memoria_condivisa))
-che solo lo stesso nodo Coordinator (di tutta la rete o di un g-nodo)
-può essere nella posizione di scrivere/leggere in questa memoria.  
-Quando viene chiamato nel modulo Coordinator il metodo `set_migrations_memory` o il metodo
-`get_migrations_memory` questi verifica di essere in esecuzione proprio sul nodo Coordinator
-del livello richiesto. Può fare questo controllo con il metodo pubblico `am_i_servant_for(k)`
-della classe base PeerClient ereditato da CoordinatorClient.
-Altrimenti rilancia l'eccezione NotCoordinatorNodeError.  
-Quando viene chiamato nel modulo Coordinator il metodo `set_migrations_memory(Object data, int level)`
-(dopo che ha verificato di essere in esecuzione sul nodo Coordinator) questo crea una istanza
-del CoordinatorClient sulla quale chiama l'omonimo metodo. Questi avvia il
-contatto con il servizio Coordinator per la chiave `k.lvl = level`.  
-Quando viene contattato con tale richiesta, il servente mette l'argomento ricevuto nel membro `migrations_memory`
-dell'istanza di `CoordGnodeMemory` associata alla chiave `k`.  
-Poi in una nuova tasklet avvia le operazioni di replica.  
-Quando viene chiamato nel modulo Coordinator il metodo `get_migrations_memory(int level)`
-(dopo che ha verificato di essere in esecuzione sul nodo Coordinator) questo crea una istanza
-del CoordinatorClient sulla quale chiama l'omonimo metodo. Questi avvia il
-contatto con il servizio Coordinator per la chiave `k.lvl = level`. Quando viene contattato con tale richiesta,
-il servente restituisce l'oggetto che è nel membro `migrations_memory` dell'istanza di `CoordGnodeMemory`
-associata alla chiave `k`.
-
-Abbiamo detto che i metodi `set_migrations_memory` e `get_migrations_memory` possono essere eseguiti
-solo nello stesso nodo Coordinator. Però l'accesso alla memoria condivisa del g-nodo deve avvenire
-comunque attraverso i meccanismi del modulo PeerServices, di modo che venga richiamato
-il metodo `fixed_keys_db_on_request` e venga garantita la coerenza dei dati.
 
 ## <a name="Requisiti"></a>Requisiti
 
