@@ -164,9 +164,9 @@ comunque attraverso i meccanismi del modulo PeerServices, di modo che venga rich
 il metodo `fixed_keys_db_on_request` e venga garantita la coerenza dei dati.  
 Non è compito del modulo Coordinator, ma bensì del modulo Migrations, garantire l'atomicità delle
 sue operazioni. Ad esempio se vuole fare operazioni che prevedono la lettura e la successiva elaborazione
-e scrittura di questa memoria, esso può acquisire dei *lock* su tutte le parti del codice adibite
-a questo accesso. È sufficiente, poiché il nodo che fa queste operazioni è solo uno e il modulo che le esegue
-è solo il modulo Migrations.
+e scrittura di questa memoria, esso può acquisire dei *lock* su tutte le parti del suo codice che accedono
+a questa memoria. Questo dovrebbe essere sufficiente: infatti il nodo che fa queste operazioni è solo uno
+e il modulo che le esegue è solo il modulo Migrations.
 
 ### <a name="Richieste_previste"></a>Richieste previste
 
@@ -189,9 +189,9 @@ Una richiesta *r* di tipo NumberOfNodesRequest fatta al Coordinator dell'intera 
 il client del servizio (avendo incontrata una diversa rete di dimensioni simili a questa) vuole
 chiedere alla rete (come entità atomica) quanti sono i suoi nodi.  
 Questa richiesta non è di tipo *read-only*, bensì di tipo *update*. In seguito si capirà perché.  
-Vedi la nota relativa sui
+Si vedano i tipi descritti sulla sezione
 [requisiti comuni](../ModuloPeers/DettagliTecnici.md#Mantenimento_database_distribuito_Requisiti_comuni)
-di un servizio che mantiene un database distribuito.
+del documento del modulo PeerServices, che descrive un servizio che mantiene un database distribuito.
 
 La classe della richiesta non ha alcun membro.
 
@@ -330,8 +330,8 @@ Invece le richieste GetMigrationsMemory e SetMigrationsMemory sono una di tipo *
 *update*. Quindi è possibile (sebbene molto raramente, solo nel caso in cui il nodo Coordinator appena raggiunto
 dalla richiesta sia ancora non esaustivo) che esse comportino operazioni di trasmissione in rete.  
 In questo caso abbiamo che l'operazione GetMigrationsMemory potrebbe essere servita da un altro nodo. Mentre
-per l'operazione SetMigrationsMemory essa potrebbe essere servita dal nodo Coordinator ma solo dopo che
-ha espletato le operazioni di recupero del record.
+per l'operazione SetMigrationsMemory essa sarà servita dal nodo Coordinator ma questi potrebbe potrebbe avere
+la necessità di espletare prima le operazioni di recupero del record.
 
 Una richiesta *r* di tipo GetMigrationsMemoryRequest fatta sul g-nodo *g* indica che il client del servizio
 (in questo caso lo stesso nodo Coordinator di *g*) chiede la porzione di pertinenza del modulo Migrations
@@ -360,14 +360,15 @@ Questa richiesta è di tipo *update*.
 
 Il nodo servente scrive nel membro `migrations_memory` dell'istanza di `CoordGnodeMemory` associata al livello `lvl`.
 
-Questo come sappiamo comporta l'avvio di una tasklet che si occupi di replicare la scrittura nei nodi replica.
-
 La richiesta SetMigrationsMemoryRequest dovrebbe essere avviata solo dallo stesso nodo Coordinator. E la risposta,
 sebbene sia possibile che prima di processarla siano state fatte le operazioni di reperimento del record, dovrebbe
 provenire dallo stesso nodo.  
 Perciò, prima di operare, il nodo servente verifica che la richiesta venga da se stesso. Questo può farlo
 guardando l'argomento `Gee.List<int> client_tuple` che riceve in quanto richiamato dal metodo astratto
 `exec` di PeerService. Esso dovrebbe essere vuoto.
+
+Dopo aver effettuato la scrittura, prima di rispondere al client, come sempre il servente deve avviare
+una tasklet che si occupi di replicare la scrittura nei nodi replica.
 
 L'avvenuta scrittura viene comunicata al client del servizio attraverso una istanza di SetMigrationsMemoryResponse, che è vuota.
 
@@ -498,7 +499,7 @@ In quello stesso momento gli vengono forniti:
 
 ### <a name="Deliverables_manager"></a>Implementazione di CoordinatorManager
 
-Il modulo Coordinator fornisce metodi proxy per la sua collaborazione con il modulo Migrations.  
+Il modulo Coordinator fornisce nella classe CoordinatorManager metodi proxy per la sua collaborazione con il modulo Migrations.  
 Il loro utilizzo è questo: l'utilizzatore del modulo
 Coordinator nel nodo *n* passa un oggetto al metodo `xyz` (su istruzione
 del modulo Migrations); questi fa pervenire questo oggetto al nodo Coordinator della
@@ -655,7 +656,7 @@ Si vedano i commenti [qui](#Records_modulo_migrations).
 
 ### <a name="Deliverables_service"></a>Implementazione di CoordinatorService e di CoordinatorClient
 
-Implementa il servizio Coordinator derivando la classe CoordinatorService dalla classe base PeerService.
+Il modulo Coordinator implementa il servizio Coordinator derivando la classe CoordinatorService dalla classe base PeerService.
 
 Il modulo Coordinator si occupa di registrare con il PeersManager l'implementazione del servizio Coordinator
 e di usare gli algoritmi forniti dal modulo PeerServices per il mantenimento del relativo database a chiavi
@@ -663,31 +664,12 @@ fisse. Cioè, esso crea una istanza della classe CoordinatorService.DatabaseDesc
 IFixedKeysDatabaseDescriptor. Con questa istanza come parametro, al bisogno, chiama i metodi
 `fixed_keys_db_on_startup` e `fixed_keys_db_on_request` di PeersManager.
 
-Deriva la classe CoordinatorClient dalla classe base PeerClient per avviare il contatto del Coordinator
+Il modulo Coordinator deriva la classe CoordinatorClient dalla classe base PeerClient per avviare il contatto del Coordinator
 di un suo g-nodo e richiederne i servizi.  
 I metodi della classe CoordinatorClient sono:
 
 *   `int get_n_nodes()` - chiede al Coordinator della rete il numero di nodi in tutta la rete.  
     Vedi la relativa [richiesta](#Numero_nodi_nella_rete).
-*   `void reserve_enter(int lvl, int enter_id, out int new_pos, out int new_eldership)` -
-    chiede al Coordinator del g-nodo di livello *lvl* di riservare un posto.  
-    Vedi la relativa [richiesta](#Prenota_un_posto).
-*   `void delete_reserve_enter(int lvl, int enter_id)` -
-    chiede al Coordinator del g-nodo di livello *lvl* di eliminare la prenotazione di un posto.  
-    Vedi la relativa [richiesta](#Cancella_prenotazione).
-*   `void set_migrations_memory(Object data, int lvl)` - salva la porzione di dati di pertinenza
-    del modulo Migrations nella memoria condivisa del g-nodo di livello *lvl*.  
-    Vedi la relativa [richiesta](#Set_migrations_memory).
-*   `Object get_migrations_memory(int lvl)` - recupera la porzione di dati di pertinenza
-    del modulo Migrations nella memoria condivisa del g-nodo di livello *lvl*.  
-    Vedi la relativa [richiesta](#Get_migrations_memory).
-*   `void make_replicas(int lvl)` - dopo aver apportato delle variazioni al contenuto della
-    memoria condivisa del g-nodo di livello *lvl*, il nodo attuale Coordinator avvia una
-    nuova tasklet e su questa chiama su una sua istanza di classe client questo metodo.  
-    L'implementazione di questo metodo non chiama il metodo protetto `call` della classe base
-    PeerClient, come avviene per gli altri metodi di CoordinatorClient, bensì chiama
-    i metodi `begin_replica` e `next_replica` del modulo PeerServices.
-    Vedi la relativa [richiesta](#Replica).
 *   `Object evaluate_enter(int lvl, Object evaluate_enter_data)` -
     chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
     Vedi la relativa [richiesta](#Valuta_ingresso).
@@ -697,6 +679,25 @@ I metodi della classe CoordinatorClient sono:
 *   `Object completed_enter(int lvl, Object completed_enter_data)` -
     chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
     Vedi la relativa [richiesta](#Confermato_ingresso).
+*   `Object get_migrations_memory(int lvl)` - recupera la porzione di dati di pertinenza
+    del modulo Migrations nella memoria condivisa del g-nodo di livello *lvl*.  
+    Vedi la relativa [richiesta](#Get_migrations_memory).
+*   `void set_migrations_memory(Object data, int lvl)` - modifica la porzione di dati di pertinenza
+    del modulo Migrations nella memoria condivisa del g-nodo di livello *lvl*.  
+    Vedi la relativa [richiesta](#Set_migrations_memory).
+*   `void reserve_enter(int lvl, int enter_id, out int new_pos, out int new_eldership)` -
+    chiede al Coordinator del g-nodo di livello *lvl* di riservare un posto.  
+    Vedi la relativa [richiesta](#Prenota_un_posto).
+*   `void delete_reserve_enter(int lvl, int enter_id)` -
+    chiede al Coordinator del g-nodo di livello *lvl* di eliminare la prenotazione di un posto.  
+    Vedi la relativa [richiesta](#Cancella_prenotazione).
+*   `void make_replicas(int lvl)` - dopo aver apportato delle variazioni al contenuto della
+    memoria condivisa del g-nodo di livello *lvl*, il nodo attuale Coordinator avvia una
+    nuova tasklet e su questa chiama su una sua istanza di classe client questo metodo.  
+    L'implementazione di questo metodo non chiama il metodo protetto `call` della classe base
+    PeerClient, come avviene per gli altri metodi di CoordinatorClient, bensì chiama
+    i metodi `begin_replica` e `next_replica` del modulo PeerServices.
+    Vedi la relativa [richiesta](#Replica).
 
 ## <a name="Classi_e_interfacce"></a>Classi e interfacce
 
@@ -725,9 +726,10 @@ l'interfaccia ICoordinatorMap. Tramite essa il modulo può:
 
 ### <a name="Classi_Delegati">Delegati
 
-Una istanza di IEvaluateEnterHandler viene passata al modulo Coordinator. Tale istanza viene
-usata dal modulo quando riceve una richiesta EvaluateEnterRequest. La risposta serve al modulo
-per produrre l'istanza di EvaluateEnterResponse da restituire.
+L'interfaccia IEvaluateEnterHandler è definita dal modulo Coordinator.  
+Una istanza di tale interfaccia viene passata al modulo Coordinator nel costruttore. Di tale istanza viene
+usato il metodo `evaluate_enter` quando si riceve una richiesta EvaluateEnterRequest. L'oggetto restituito
+dal metodo serve al modulo per produrre l'istanza di EvaluateEnterResponse da restituire.
 
 I metodi previsti dall'interfaccia IEvaluateEnterHandler sono:
 
@@ -736,9 +738,10 @@ I metodi previsti dall'interfaccia IEvaluateEnterHandler sono:
 
 * * *
 
-Una istanza di IBeginEnterHandler viene passata al modulo Coordinator. Tale istanza viene
-usata dal modulo quando riceve una richiesta BeginEnterRequest. La risposta serve al modulo
-per produrre l'istanza di BeginEnterResponse da restituire.
+L'interfaccia IBeginEnterHandler è definita dal modulo Coordinator.  
+Una istanza di tale interfaccia viene passata al modulo Coordinator nel costruttore. Di tale istanza viene
+usato il metodo `begin_enter` quando si riceve una richiesta BeginEnterRequest. L'oggetto restituito
+dal metodo serve al modulo per produrre l'istanza di BeginEnterResponse da restituire.
 
 I metodi previsti dall'interfaccia IBeginEnterHandler sono:
 
@@ -747,9 +750,10 @@ I metodi previsti dall'interfaccia IBeginEnterHandler sono:
 
 * * *
 
-Una istanza di ICompletedEnterHandler viene passata al modulo Coordinator. Tale istanza viene
-usata dal modulo quando riceve una richiesta CompletedEnterRequest. La risposta serve al modulo
-per produrre l'istanza di CompletedEnterResponse da restituire.
+L'interfaccia ICompletedEnterHandler è definita dal modulo Coordinator.  
+Una istanza di tale interfaccia viene passata al modulo Coordinator nel costruttore. Di tale istanza viene
+usato il metodo `completed_enter` quando si riceve una richiesta CompletedEnterRequest. L'oggetto restituito
+dal metodo serve al modulo per produrre l'istanza di CompletedEnterResponse da restituire.
 
 I metodi previsti dall'interfaccia ICompletedEnterHandler sono:
 
