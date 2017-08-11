@@ -145,7 +145,7 @@ L'istanza `evaluate_enter_data` andrà passata ad un metodo del modulo Migration
 Ora il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator (dal suo utilizzatore diretto, poiché
 non è detto che il modulo Migrations abbia una dipendenza diretta sul modulo Coordinator) il
 metodo proxy `evaluate_enter` (vedi [qui](../ModuloCoordinator/AnalisiFunzionale.md#Collaborazione_migrations)).  
-A questo metodo viene passato un `Object evaluate_enter_data`.  
+A questo metodo viene passato il livello *levels* un `Object evaluate_enter_data`.  
 La reale classe che implementa questa struttura dati non è infatti nota al modulo Coordinator. Questi sa solo
 che è serializzabile.
 
@@ -237,8 +237,9 @@ informazioni di sua pertinenza.
 
 Ora il modulo Migrations nel nodo Coordinator di *G* risponde al client *n* con una eccezione AskAgainError.
 
-L'eccezione AskAgainError ricevuta sulla chiamata del metodo `evaluate_enter` sul modulo Coordinator
-istruisce il modulo Migrations di ripetere la stessa richiesta (con le stesse informazioni
+L'eccezione AskAgainError, ricevuta come abbiamo detto sottoforma di una particolare istanza della
+classe serializzabile `EvaluateEnterResult` dalla chiamata del metodo `evaluate_enter` sul modulo Coordinator,
+istruisce il modulo Migrations nel nodo *n* di ripetere la stessa richiesta (con le stesse informazioni
 tra cui lo stesso `evaluate_enter_id`) dopo aver atteso alcuni istanti.  
 Questa attesa deve essere più piccola (almeno 3 o 4 volte) di quella calcolata come `global_timeout`,
 che come abbiamo detto può essere calcolata dal modulo Migrations esclusivamente sulla base del numero di singoli nodi presenti in *G*.
@@ -354,7 +355,8 @@ Altrimenti, se `v` è nello stato *scartata, da comunicare* il modulo Migrations
 *   Aggiorna la memoria condivisa di tutta la rete.
 *   Risponde alla richiesta del client con l'eccezione IgnoreNetworkError.
 
-L'eccezione IgnoreNetworkError ricevuta sulla chiamata del metodo `evaluate_enter` sul modulo Coordinator
+L'eccezione IgnoreNetworkError, ricevuta come abbiamo detto sottoforma di una particolare istanza della
+classe serializzabile `EvaluateEnterResult` dalla chiamata del metodo `evaluate_enter` sul modulo Coordinator,
 istruisce il modulo Migrations nel nodo *n* di non prendere alcuna iniziativa e di evitare ulteriori valutazioni di ingresso nella
 rete tramite il diretto vicino *v* per un certo tempo.  
 Questo tempo potrebbe essere un multiplo (diciamo 20 volte tanto) di quello calcolato come `global_timeout`,
@@ -364,60 +366,63 @@ che come abbiamo detto può essere calcolata dal modulo Migrations esclusivament
 
 La quinta fase inizia quando un singolo nodo di *G*, assumiamo sia il nodo *n*, riceve l'autorizzazione
 dal Coordinator di *G* di tentare l'ingresso in *J* tramite il suo vicino *v* con il suo g-nodo *g* di livello
-*lvl*.
-
-A ricevere questa autorizzazione è il modulo Migrations nel nodo *n*, che aveva chiamato `evaluate_enter` nel modulo Coordinator.
+*lvl*. Anche qui, il valore *lvl* è ricevuto dal nodo *n* come membro di una istanza di `EvaluateEnterResult` dalla chiamata
+del metodo `evaluate_enter` sul modulo Coordinator.
 
 Ora il modulo Migrations nel nodo *n* vuole chiamare il metodo `begin_enter` del modulo Migrations nel nodo Coordinator del
 g-nodo *g*.
 
-Prima il modulo Migrations del nodo *n* prepara una nuova struttura dati con le informazioni che servono al metodo `begin_enter`
-del modulo Migrations nel nodo Coordinator del g-nodo *g*. Tale struttura è `BeginEnterData begin_enter_data`. I membri di questa
-classe sono:
+Prima il modulo Migrations del nodo *n* prepara una nuova struttura dati con le informazioni che servono
+a questo metodo istanziando un `BeginEnterData begin_enter_data`.  
+La classe BeginEnterData è definita nel modulo Migrations. Si tratta di una classe serializzabile. I membri
+di questa classe sono:
 
 *   nessuno?
 
 Poi il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
-metodo `begin_enter` (vedi [qui](../ModuloCoordinator/AnalisiFunzionale.md#Deliverables)).  
-A questo metodo viene passato un `Object begin_enter_data` e il livello *lvl*.
+metodo proxy `begin_enter`.  
+A questo metodo viene passato il livello *lvl* e un `Object begin_enter_data`.
+La reale classe che implementa questa struttura dati non è infatti nota al modulo Coordinator. Questi sa solo
+che è serializzabile.
 
-Grazie ai meccanismi del modulo Coordinator (di cui è trattato nella relativa documentazione) ora
-nel nodo Coordinator del g-nodo *g* viene chiamato dallo stesso modulo Coordinator (a cui era
-stato passato come delegato nel suo costruttore) il metodo `begin_enter` del modulo Migrations.  
-Di fatto il modulo Coordinator chiama il metodo `begin_enter` dell'interfaccia IBeginEnterHandler
-e questi chiamerà il metodo `begin_enter` del modulo Migrations.  
-Va considerato che, sempre grazie ai meccanismi del modulo Coordinator, oltre alla struttura dati
-`begin_enter_data` il metodo `begin_enter` eseguito sul nodo Coordinator del g-nodo *g* riceve
-come argomento anche l'indirizzo di *n*, `List<int> client_address`.
+Grazie ai meccanismi del modulo Coordinator ora nel nodo Coordinator del g-nodo *g* viene chiamato
+dallo stesso modulo Coordinator il metodo `begin_enter` del modulo Migrations. E questi riceve come argomento,
+oltre alla struttura dati `begin_enter_data`, anche l'indirizzo di *n*, `List<int> client_address`.
+
+Il valore che verrà restituito dal metodo `begin_enter` del modulo Migrations è una istanza della classe
+serializzabile `BeginEnterResult` definita nel modulo Migrations.  
+La classe `BeginEnterResult` è in grado di rappresentare i possibili esiti del metodo, cioè
+`void` oppure `AlreadyEnteringError`.
 
 Vediamo cosa avviene nel metodo `begin_enter` del modulo Migrations eseguito sul nodo Coordinator del g-nodo *g*.
 
 Analogamente a quanto detto per il modulo Migrations nel nodo Coordinator di tutta la rete *G*, anche il modulo Migrations nel nodo
 Coordinator del g-nodo *g* ha bisogno di poter accedere in lettura e scrittura alla memoria condivisa del
 g-nodo *g* relativa agli aspetti gestiti dal modulo Migrations.  
-Lo fa stimolando la chiamata dei metodi `get_migrations_memory` e `set_migrations_memory` nel modulo
-Coordinator. Anche qui le operazioni possono essere considerate atomiche, cioè non comportano
-alcuna operazione bloccante di trasmissione in rete.  
+Anche in questo caso, lo fa stimolando la chiamata dei metodi `get_migrations_memory` e `set_migrations_memory` nel modulo
+Coordinator. E le operazioni possono essere considerate atomiche se il modulo Migrations si occupa di acquisire
+un *lock* nel nodo corrente nei punti del suo codice che accedono a questa memoria condivisa.  
 In seguito ci riferiremo a questa sequenza di operazioni semplicemente dicendo che
 il modulo Migrations nel nodo Coordinator del g-nodo *g* accede e/o aggiorna la memoria condivisa di *g* con delle
 informazioni di sua pertinenza.
 
-Il modulo Migrations nel nodo Coordinator di *g* acquisisce un *lock*. Cioè, accedendo alla memoria condivisa di *g*
+Il modulo Migrations nel nodo Coordinator di *g* vuole ora accertarsi che ci sia un solo
+nodo che porta avanti l'ingresso di *g* in blocco in una nuova rete.
+
+Il modulo Migrations nel nodo Coordinator di *g* accede alla memoria condivisa di *g* e
 verifica che non sia in corso un'altra operazione di ingresso di *g* in un'altra rete; e allo stesso
 tempo memorizza che ora è in corso questa operazione.  
+Chiamiamo questa operazione "autorizzazione esclusiva a procedere".
 Nella memorizzazione deve essere incluso un timer. Scaduto questo timer l'operazione va considerata abortita.
 
-Se l'acquisizione del lock non riesce, allora il metodo `begin_enter` del modulo Migrations nel nodo Coordinator
-del g-nodo *g* fa in modo che venga ricevuta una eccezione AlreadyEnteringError dal modulo Migrations nel nodo
-*n* che aveva fatto richiamare il metodo `begin_enter` nel modulo Coordinator.  
-Questo avviene proprio lanciando una eccezione dal metodo `begin_enter` del modulo Migrations. Il delegato noto al
-modulo Coordinator `IBeginEnterHandler.begin_enter` prevede questa eccezione e il modulo Coordinator
-la gestisce preparando una istanza di BeginEnterResponse che sarà tradotta nel metodo `begin_enter` del
-modulo Coordinator nel nodo *n*.
+Se l'autorizzazione esclusiva non riesce, allora il metodo `begin_enter` del modulo Migrations
+rilancia l'eccezione AlreadyEnteringError (attraverso una apposita istanza di BeginEnterResult)
+che dovrà essere gestita nel nodo *n*.
 
-Se, invece, l'acquisizione del lock riesce, allora il metodo `begin_enter` del modulo Migrations nel nodo Coordinator
-del g-nodo *g* avvia una tasklet su cui procedere, mentre risponde positivamente al client permettendogli di
-proseguire con le operazioni di ingresso di *g* in *J*.
+Se, invece, l'autorizzazione esclusiva riesce, allora il metodo `begin_enter` del modulo Migrations nel nodo
+Coordinator del g-nodo *g* avvia una tasklet su cui procedere, mentre risponde positivamente al nodo *n*
+(attraverso una apposita istanza di BeginEnterResult) permettendogli di proseguire con le operazioni di
+ingresso di *g* in *J*.
 
 Nella nuova tasklet... **TODO**
 
