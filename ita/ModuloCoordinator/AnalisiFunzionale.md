@@ -118,7 +118,7 @@ Queste sono memorizzate nei seguenti membri della classe `CoordGnodeMemory`:
 *   `int max_eldership` - Massimo valore di eldership assegnato ad un g-nodo al nostro interno. Maggiore è questo valore
     e più giovane è il g-nodo.
 *   `int n_nodes` e `Timer? n_nodes_timeout` - Solo per il Coordinator di tutta la rete. Numero di nodi nella rete,
-    come risposto nella precedente richiesta e timeout da aspettare prima di guardare di nuovo alla conoscenza
+    come risposto nella precedente richiesta e timer da aspettare prima di guardare di nuovo alla conoscenza
     acquisita dal modulo Qspn.
 
 #### Contenuto di pertinenza di altri moduli
@@ -216,7 +216,7 @@ precedente richiesta e in questo caso risponde con lo stesso valore di prima.
 
 In ogni caso, il nodo Coordinator prima di rispondere accede in scrittura (con relativa nuova
 tasklet che si occupa delle repliche) alla memoria condivisa di *G* per salvare la risposta che
-sta per dare, con un relativo timeout di scadenza.
+sta per dare, con un relativo timer di scadenza.
 
 Sono i dati memorizzati nei membri `n_nodes` e `n_nodes_timeout` della classe CoordGnodeMemory.
 
@@ -395,7 +395,7 @@ questo caso gli stessi valori `new_pos` e `new_eldership` saranno restituiti al 
 Il nodo Coordinator di *g* accede alla propria mappa di percorsi, per vedere quali g-nodi
 di livello `lvl` - 1 (oltre a quello a cui esso stesso appartiene) dentro al suo g-nodo di livello
 `lvl` sono già presenti come destinazioni, quindi esistenti nella rete e non assegnabili alla
-nuova richiesta.
+nuova richiesta. Cioè usa il metodo `get_free_pos` di ICoordinatorMap.
 
 Questo non basta: il Coordinator di *g* guarda ancora le prenotazioni pendenti nella memoria condivisa
 di *g*, quelle cioè assegnate in precedenza anche se ancora nessun ETP ha fatto
@@ -427,16 +427,8 @@ restituito al client del servizio attraverso una istanza di ReserveEnterResponse
 Il nodo client del servizio è un nodo *n* che già appartiene al g-nodo *g*. Questi richiede la prenotazione di
 un nuovo posto per conto di un altro nodo suo vicino, *m*, il quale non è ancora in *g* o perfino non è ancora
 nella rete.  
-Ricevuta la risposta dal nodo Coordinator, *n* la comunica al vicino *m*.
-
-Altre informazioni di cui il nodo *m* necessita per fare ingresso in *g* (e eventualmente nella rete) sono
-direttamente fornite dal nodo *n* che già le conosce. Queste sono:
-
-*   La topologia della rete.
-*   Le posizioni dei livelli maggiori di `lvl`.
-*   Le anzianità dei livelli maggiori di `lvl`.
-
-Si veda [sotto](#Deliverables_manager) il metodo `reserve`.
+Ricevuta la risposta dal nodo Coordinator, *n* la comunica al vicino *m*. Ma di questo si occupa il
+modulo Migrations.
 
 #### <a name="Cancella_prenotazione"></a>Cancella prenotazione
 
@@ -632,17 +624,7 @@ Il metodo, attraverso la classe client del servizio CoordinatorClient, invia una
 [ReserveEnterRequest](#Prenota_un_posto) al nodo Coordinator del g-nodo *g* di livello *lvl*.
 La risposta è una istanza di ReserveEnterResponse che contiene `int new_pos` e `int new_eldership`.
 
-A questa risposta il metodo `reserve` aggiunge:
-
-*   La topologia della rete.
-*   Le posizioni dei livelli maggiori di `lvl`.
-*   Le anzianità dei livelli maggiori di `lvl`.
-
-L'oggetto restituito dal metodo è quindi di una classe Reservation che contiene queste informazioni:
-
-*   La topologia della rete.
-*   Le posizioni dei livelli maggiori di `lvl-1`.
-*   Le anzianità dei livelli maggiori di `lvl-1`.
+L'oggetto restituito dal metodo è quindi di una classe Reservation che contiene queste informazioni.
 
 #### Metodi get_migrations_memory e set_migrations_memory
 
@@ -701,28 +683,21 @@ I metodi della classe CoordinatorClient sono:
 
 ## <a name="Classi_e_interfacce"></a>Classi e interfacce
 
-La mappa delle posizioni libere/occupate ai vari livelli è un oggetto di cui il modulo conosce
+La mappa delle posizioni *reali* libere ai vari livelli è un oggetto di cui il modulo conosce
 l'interfaccia ICoordinatorMap. Tramite essa il modulo può:
 
-*   Leggere un `int64` che rappresenta l'identificativo della rete (metodo `get_netid`).
 *   Leggere il numero *l* dei livelli della topologia (metodo `get_levels`).
 *   Leggere la gsize di ogni livello *i* da 0 a *l* - 1 (metodo `get_gsize`).  
     Precisiamo il significato di questo indice, restando coerenti con quanto stabilito nella
     trattazione del modulo QSPN sebbene i due moduli siano indipendenti.  
     Per ogni *i* da 0 a *l* - 1, *gsize(i)* è il numero massimo di g-nodi di livello *i* in un
     g-nodo di livello *i* + 1.
-*   Leggere l'anzianità del mio g-nodo ad ogni livello *i* da 0 a *l* - 1 (metodo `get_eldership`).  
-    L'anzianità di un g-nodo è un numero progressivo che viene assegnato al g-nodo. Nel confronto
-    tra due g-nodi di pari livello *i* entrambi appartenenti allo stesso g-nodo di livello *i* + 1,
-    un valore più alto significa che il g-nodo è arrivato dopo, cioè esso è più giovane.
-*   Leggere il numero approssimativo di singoli nodi contenuti nel mio g-nodo ad ogni livello *i*
-    da 0 a *l* - 1 (metodo `get_n_nodes`).  
-*   Leggere la posizione del nodo, cioè la posizione del mio g-nodo ad ogni livello *i* da 0
-    a *l* - 1 (metodo `get_my_pos`).
-*   Leggere l'elenco delle posizioni libere in ogni livello *i* da 0 a *l* - 1 (metodo `get_free_pos`).  
+*   Leggere il numero approssimativo di singoli nodi nella rete secondo le conoscenze acquisite
+    dal nodo corrente tramite il Qspn (metodo `get_n_nodes`).  
+*   Leggere l'elenco delle posizioni *reali* libere in ogni livello *i* da 0 a *l* - 1 (metodo `get_free_pos`).  
     Cioè le posizioni nel livello *i* che sono libere nel nostro g-nodo di livello *i* + 1. Questa
-    informazione è quella che si basa sulla mappa del nodo corrente, senza contattare il Coordinator
-    attuale che ha la conoscenza autoritativa delle prenotazioni pendenti.
+    informazione è quella che si basa sulla mappa del nodo corrente, senza considerare
+    le prenotazioni pendenti.
 
 ### <a name="Classi_Delegati">Delegati
 
@@ -759,4 +734,22 @@ I metodi previsti dall'interfaccia ICompletedEnterHandler sono:
 
 *   `Object completed_enter(int lvl, Object completed_enter_data)`  
     Con questo metodo si richiama il metodo `completed_enter` del modulo Migrations. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).
+
+### <a name="Classi_Strutture">Strutture dati
+
+La classe Reservation è definita per contenere le informazioni restituite dal metodo `reserve` fornito nella
+classe CoordinatorManager.
+
+Essa contiene:
+
+*   `int new_pos` - la posizione del g-nodo appena riservato nel suo g-nodo superiore.  
+    Considerato che il metodo `reserve` ha come argomento `lvl`, il valore di `new_pos`
+    è la posizione al livello `lvl`-1.
+*   `int new_eldership` - l'anzianità del g-nodo appena riservato nel suo g-nodo superiore.
+
+Non è necessario che questo oggetto sia serializzabile. Infatti il metodo viene richiamato dall'utilizzatore
+del modulo Coordinator nel nodo stesso. Questi, attraverso qualche meccanismo, sarà stato provocato
+dal modulo Migrations che poi riceverà questo oggetto. Se dovrà, come si suppone, passare ad un altro
+nodo le informazioni necessarie per fare un ingresso, si preoccuperà esso stesso di mettere
+tutti i dati necessari (questi e altri) in un oggetto serializzabile.
 
