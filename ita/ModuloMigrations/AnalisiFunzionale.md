@@ -137,26 +137,31 @@ Inoltre sceglie un identificativo univoco random per questa richiesta, `int eval
 
 Ora il modulo Migrations del nodo *n* prepara una nuova struttura dati con le informazioni di cui sopra
 istanziando un `EvaluateEnterData evaluate_enter_data`.  
-La classe EvaluateEnterData è nota al modulo Migrations. Si tratta di una classe serializzabile. I membri di questa classe sono:
+La classe EvaluateEnterData è definita nel modulo Migrations. Si tratta di una classe serializzabile. I membri di questa classe sono:
 `int64 netid`, `List<int> gsizes`, `List<int> neighbor_n_nodes`, `List<int> neighbor_pos`, `List<int> neighbor_n_free_pos`,
 `int min_lvl`, `int evaluate_enter_id`.  
 L'istanza `evaluate_enter_data` andrà passata ad un metodo del modulo Migrations nel nodo Coordinator della rete.
 
 Ora il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator (dal suo utilizzatore diretto, poiché
 non è detto che il modulo Migrations abbia una dipendenza diretta sul modulo Coordinator) il
-metodo `evaluate_enter` (vedi [qui](../ModuloCoordinator/AnalisiFunzionale.md#Deliverables)).  
+metodo proxy `evaluate_enter` (vedi [qui](../ModuloCoordinator/AnalisiFunzionale.md#Collaborazione_migrations)).  
 A questo metodo viene passato un `Object evaluate_enter_data`.  
 La reale classe che implementa questa struttura dati non è infatti nota al modulo Coordinator. Questi sa solo
 che è serializzabile.
 
 Grazie ai meccanismi del modulo Coordinator (di cui è trattato nella relativa documentazione) ora
-nel nodo Coordinator della rete *G* viene chiamato dallo stesso modulo Coordinator (a cui era
-stato passato come delegato nel suo costruttore) il metodo `evaluate_enter` del modulo Migrations.  
-Di fatto il modulo Coordinator chiama il metodo `evaluate_enter` dell'interfaccia IEvaluateEnterHandler
-e questi chiamerà il metodo `evaluate_enter` del modulo Migrations.  
+nel nodo Coordinator della rete *G* viene chiamato dallo stesso modulo Coordinator (tramite un
+delegato che ha ricevuto nel suo costruttore) il metodo `evaluate_enter` del modulo Migrations.  
 Va considerato che, sempre grazie ai meccanismi del modulo Coordinator, oltre alla struttura dati
 `evaluate_enter_data` il metodo `evaluate_enter` eseguito sul nodo Coordinator di *G* riceve
 come argomento anche l'indirizzo di *n*, `List<int> client_address`.
+
+Prima di vedere cosa fa il metodo `evaluate_enter` del modulo Migrations specifichiamo quale sarà il
+suo output. Il valore restituito da questo metodo è una istanza della classe serializzabile `EvaluateEnterResult`
+definita nel modulo Migrations. Anche qui diciamo che la classe non è nota al modulo Coordinator, che
+lo riceve come un generico Object, sapendo solo che è serializzabile.  
+La classe `EvaluateEnterResult` è in grado di rappresentare i possibili esiti del metodo, cioè
+`int retval` oppure `AskAgainError` oppure `IgnoreNetworkError`.
 
 Vediamo cosa avviene nel metodo `evaluate_enter` del modulo Migrations eseguito sul nodo Coordinator di *G*.
 
@@ -166,10 +171,11 @@ un tempo per verificare la possibilità di fare ingresso sfruttando il punto di 
 fra le due reti.  
 Questo tempo si calcola esclusivamente sulla base del numero di singoli nodi presenti in *G*. È lecito infatti
 presumere che *G* sia la rete più piccola, poiché vuole entrare nell'altra. E lo scopo di questa attesa è
-dare il tempo agli altri singoli nodi di *G*, che potrebbero essere venuti in contatto con l'altra rete quasi
-simultaneamente, di raggiungere il nodo Coordinator di *G* con la loro proposta.
+dare il tempo agli altri singoli nodi di *G*, che potrebbero venire in contatto a breve con l'altra rete
+in altri punti, di raggiungere il nodo Coordinator di *G* con la loro proposta.
 
-Oltre alle informazioni ricevute, il nodo Coordinator della rete *G* conosce il livello più basso `int max_lvl`
+Oltre alle informazioni ricevute dal nodo *n*, il nodo Coordinator della rete *G* (sempre riferendoci
+al codice in esecuzione nel modulo Migrations) conosce il livello più basso `int max_lvl`
 tale che la rete *G* è composta da un solo g-nodo a quel livello. Questo valore è utile, perché
 se si raggiunge la prenotazione di una posizione a questo livello, l'intera rete *G* può entrare in *J*
 in blocco. Non è quindi necessario chiedere di più.
@@ -215,20 +221,14 @@ avendo una dipendenza diretta sul modulo Coordinator. In particolare avremo una 
 `get_migrations_memory` e `set_migrations_memory`
 (vedi [qui](../ModuloCoordinator/AnalisiFunzionale.md#Deliverables_manager)) con i quali si recupera e si salva
 una istanza di Object (perché il modulo Coordinator non conosce i dati del modulo Migrations) che costituisce
-l'intera base dati (cioè la memoria condivisa della rete) relativa agli aspetti gestiti dal modulo Migrations.
-In particolare il metodo `set_migrations_memory` provvede anche ad avviare in una nuova tasklet
-le operazioni di replica.  
+l'intera base dati (cioè la memoria condivisa della rete) relativa agli aspetti gestiti dal modulo Migrations.  
 Il modulo Migrations nel nodo Coordinator di *G* recupera l'intera base dati corrente e la integra con
-l'aggiunta di questa nuova *valutazione*. Poi immediatamente salva l'intera base dati. Questa
-sequenza di operazioni si può a buon diritto considerare come atomica, in quanto seppure facciamo
-uso dei meccanismi dei servizi peer-to-peer (modulo PeerServices) il solo nodo che ha diritto
-a fare le richieste relative a questi metodi è lo stesso nodo Coordinator di tutta la rete,
-quindi non dovrà essere fatta alcuna operazione bloccante di trasmissione in rete.  
-In realtà esiste la possibilità (alquanto remota) che il nodo Coordinator di *G* sia ancora
-non esaustivo rispetto alla chiave di sua pertinenza e che quindi l'operazione di lettura avvii
-delle operazioni di trasmissione in rete. Ma la sequenza può essere considerata comunque atomica
-grazie alle strategie adottate per garantire la coerenza dei dati nei servizi peer-to-peer
-che gestiscono un database distribuito.  
+l'aggiunta di questa nuova *valutazione*. Poi immediatamente salva l'intera base dati.  
+Abbiamo detto nella trattazione del modulo Coordinator che questi garantisce l'affidabilità e
+la coerenza del dato. Ma sta al modulo Migrations, che è l'unico che accede a questi dati, garantire
+l'atomicità di queste operazioni. Sarà sufficiente acquisire un *lock* **nel nodo corrente**
+in tutti i punti del suo codice dove si accede a questa memoria: cioè l'uso del modulo Coordinator
+fa sì che non sia necessario un meccanismo di lock su diversi nodi.  
 In seguito ci riferiremo a questa sequenza di operazioni semplicemente dicendo che
 il modulo Migrations nel nodo Coordinator di *G* accede e/o aggiorna la memoria condivisa di tutta la rete con delle
 informazioni di sua pertinenza.

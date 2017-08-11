@@ -1,6 +1,7 @@
 # Modulo Coordinator - Analisi Funzionale
 
 1.  [Il ruolo del modulo Coordinator](#Ruolo_coordinator)
+    1.  [Collaborazione con il modulo Migrations](#Collaborazione_migrations)
 1.  [Il servizio Coordinator](#Servizio_coordinator)
     1.  [Contenuto della memoria condivisa di un g-nodo](#Records)
     1.  [Richieste previste](#Richieste_previste)
@@ -18,7 +19,9 @@
     1.  [CoordinatorManager](#Deliverables_manager)
     1.  [CoordinatorService e CoordinatorClient](#Deliverables_service)
 1.  [Classi e interfacce](#Classi_e_interfacce)
+    1.  [Interfacce](#Classi_Interfacce)
     1.  [Delegati](#Classi_Delegati)
+    1.  [Strutture dati](#Classi_Strutture)
 
 ## <a name="Ruolo_coordinator"></a>Il ruolo del modulo Coordinator
 
@@ -40,7 +43,7 @@ che rappresenta un g-nodo, bisogna che il lettore faccia attenzione al contesto.
 di Coordinator di un g-nodo (dal livello 1 fino all'intera rete) ci riferiamo al servizio, cioè
 al nodo che al momento viene identificato come servente.
 
-### Collaborazione con il modulo Migrations
+### <a name="Collaborazione_migrations"></a>Collaborazione con il modulo Migrations
 
 Le operazioni di ingresso in una rete, che sono messe in atto quando due reti distinte si incontrano
 per mezzo di alcuni archi, non sono di pertinenza del modulo Coordinator, bensì del modulo Migrations.
@@ -683,8 +686,11 @@ I metodi della classe CoordinatorClient sono:
 
 ## <a name="Classi_e_interfacce"></a>Classi e interfacce
 
-La mappa delle posizioni *reali* libere ai vari livelli è un oggetto di cui il modulo conosce
-l'interfaccia ICoordinatorMap. Tramite essa il modulo può:
+### <a name="Classi_Interfacce">Interfacce
+
+La mappa delle posizioni *reali* libere ai vari livelli è un oggetto fornito dall'utilizzatore del
+modulo Coordinator. Di questo oggetto il modulo conosce l'interfaccia ICoordinatorMap. Tramite essa
+il modulo può:
 
 *   Leggere il numero *l* dei livelli della topologia (metodo `get_levels`).
 *   Leggere la gsize di ogni livello *i* da 0 a *l* - 1 (metodo `get_gsize`).  
