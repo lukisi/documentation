@@ -8,7 +8,9 @@
     1.  [Quarta fase - comunicazione della elezione](#Fusione_reti_fase4)
     1.  [Quinta fase - comunicazione con il g-nodo entrante](#Fusione_reti_fase5)
     1.  [Sesta fase - richiesta della prenotazione di un posto](#Fusione_reti_fase6)
-    1.  [Settima fase - ingresso](#Fusione_reti_fase7)
+    1.  [Prenotazione riuscita: Settima fase - ingresso](#Fusione_reti_fase7a)
+    1.  [Prenotazione riuscita: Ottava fase - TODO](#Fusione_reti_fase8a)
+    1.  [Prenotazione fallita: Settima fase - annullamento al g-nodo entrante](#Fusione_reti_fase7b)
 1.  [Strategia di ingresso](#Strategia_ingresso)
     1.  [Definizione della migration-path](#Strategia_ingresso_Definizione_migration_path)
     1.  [Uso della migration-path](#Strategia_ingresso_Uso_migration_path)
@@ -197,6 +199,10 @@ assumendo che il fatto di cercare di far entrare *G* dentro *J* sia dato per buo
 a quale livello compreso tra `min_lvl` e `max_lvl` andrebbe tentato l'ingresso di (una parte di) *G* in *J*?
 
 **TODO** Inserire qui ogni idea su some rispondere alla domanda.
+
+**Nota 1** Quando due reti si incontrano e la rete più piccola *G* decide di entrare in *J* il primo tentativo
+dovrebbe essere quello di entrare in blocco. Cioè con il livello più piccolo tale che *G* è costituita da un solo
+g-nodo. Quello che abbiamo chiamato `max_lvl`.
 
 Diciamo che la risposta alla domanda sia *lvl_0*.
 
@@ -438,10 +444,12 @@ di *v* di livello *lvl+1* o superiore.
 Il modulo Migrations nel nodo *v* cerca la shortest migration-path come descritto [qui](#Strategia_ingresso).
 
 Se il nodo *v* trova che non esiste una migration-path a livello *lvl* lo comunica a *n*. Questi
-potrà decidere di degradare, cioè tentare ingresso con un g-nodo di livello inferiore.  
-Dovrà ripartire dalla comunicazione con il g-nodo entrante. Cioè prima comunicare al modulo Migrations nel nodo
-Coordinator di *g* che questo ingresso è abortito. Poi chiamare il metodo `begin_enter` del modulo Migrations nel
-nodo Coordinator di *g'* (di livello inferiore) e quindi fare la richiesta di nuovo a *v*.
+dovrà comunicare al modulo Migrations nel nodo Coordinator di *g* che questo ingresso è abortito.
+Questo processo sarà dettagliato nel paragrafo [Prenotazione fallita](#Fusione_reti_fase7b).  
+Poi il modulo Migrations nel nodo *n* potrà decidere di degradare, cioè tentare ingresso con un
+g-nodo di livello inferiore. Dovrà ripartire dalla comunicazione con il nuovo g-nodo entrante. Cioè
+chiamare il metodo `begin_enter` del modulo Migrations nel nodo Coordinator di *g'* (di livello inferiore)
+e quindi fare la richiesta di nuovo a *v*.
 
 Altrimenti il nodo *v* trova un set di soluzioni e giudica quale sia la migliore e la esegue.
 Cioè coordina l'effettiva esecuzione di tutte le migrazioni necessarie; di modo che in uno dei g-nodi di *v*
@@ -470,15 +478,19 @@ Il nodo *v* comunica al nodo *n* i dettagli per fare ingresso nel suo g-nodo nel
 *   `List<int> pos` - Posizioni ai livelli da `host_gnode_level` - 1 a `levels`.
 *   `List<int> elderships` - Anzianità ai livelli da `host_gnode_level` - 1 a `levels`.
 
-### <a name="Fusione_reti_fase7"></a>Settima fase - ingresso
+### <a name="Fusione_reti_fase7a"></a>Prenotazione riuscita: Settima fase - ingresso
 
 **TODO** dettagli
 
-## <a name="Strategia_ingresso"></a>Strategia di ingresso
+### <a name="Fusione_reti_fase8a"></a>Prenotazione riuscita: Ottava fase - TODO
 
-Quando due reti si incontrano e la rete più piccola *G* decide di entrare in *J* il primo tentativo
-è quello di entrare in blocco. Cioè con il livello più piccolo tale che *G* è costituita da un solo
-g-nodo. Quello che abbiamo chiamato `max_lvl`.
+**TODO**
+
+### <a name="Fusione_reti_fase7b"></a>Prenotazione fallita: Settima fase - annullamento al g-nodo entrante
+
+**TODO**
+
+## <a name="Strategia_ingresso"></a>Strategia di ingresso
 
 Assumiamo che il nodo *n* di *G* vuole usare il nodo diretto vicino *v* di *J* per far entrare il suo g-nodo *g* di livello *l*
 in blocco dentro *J*.
