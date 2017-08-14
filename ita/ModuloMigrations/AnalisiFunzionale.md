@@ -33,9 +33,9 @@ una rete a cui non apparteneva. Questo può rendersi necessario a fronte di due 
 
 *   Una rete *J* incontra una rete distinta *G*. Le due reti si erano formate indipendentemente.
 *   Un g-nodo *g* di livello *l*, con *g* ∈ *G*, si è "splittato", cioè non è più internamente connesso.
-    Si sono quindi formate varie isole *g<sub>0</sub>*, *g<sub>1</sub>*, ..., *g<sub>n</sub>*. Questo
+    Si sono quindi formate varie isole *g'*, *g''*, eccetera. Questo
     mentre il suo g-nodo di livello superiore *h* risulta ancora internamente connesso. Allora
-    ogni isola *g<sub>i</sub>* che non contiene il nodo più anziano deve considerarsi come una distinta
+    ogni isola che non contiene il nodo più anziano deve considerarsi come una distinta
     rete *J* (composta da un solo g-nodo di livello *l*) che incontra *G*.
 
 Nelle varie fasi delle sue operazioni, il modulo Migrations si avvale della collaborazione del
@@ -49,6 +49,72 @@ di provocare l'esecuzione di altri suoi algoritmi in uno specifico nodo
 Si sceglie di assegnare al nodo Coordinator del g-nodo *g* questo ruolo. Quando questa esecuzione
 si rende necessaria il modulo Coordinator farà da proxy fra il generico singolo nodo *n*  ∈ *g*
 e il nodo Coordinator di *g*.
+
+### Terminologia e notazioni
+
+#### La rete con i suoi vertici
+
+Indichiamo con *G = (V, E)* il grafo di una rete con i suoi vertici e archi, cioè i suoi singoli nodi
+e i collegamenti fra di essi.
+
+La rete ha una topologia gerarchica. Indichiamo con *levels* il numero di livelli di questa gerarchia
+e con *gsizes(i)* il numero di posizioni *reali* dentro il livello *i*, con 0 ≤ *i* ﹤ *levels*.
+
+Sappiamo che un nodo *x* ha indirizzo *x<sub>0</sub>·x<sub>1</sub>·...·x<sub>levels-1</sub>*.
+
+I nodi *x* e *y* appartengono allo stesso g-nodo di livello *l* se hanno un *l*-suffisso uguale, cioè i
+valori nelle posizioni dalla *l* fino alla *levels-1*.
+
+Lo denotiamo scrivendo *x* ~<sub>l</sub> *y*, come una relazione di equivalenza.
+
+In particolare, *x* ~<sub>0</sub> *y* significa che *x* = *y*, cioè hanno lo stesso indirizzo.
+
+Mentre *x* ~<sub>levels</sub> *y* significa solo che appartengono alla stessa rete, possono avere diversa
+anche l'ultima posizone.
+
+Con il simbolo *[x]<sub>l</sub>* indichiamo la classe dei nodi accomunati al nodo *x* tramite tale equivalenza.
+Cioè tutti i nodi che hanno un indirizzo nella forma *\*·x<sub>l</sub>·...·x<sub>levels-1</sub>*.
+
+In particolare, *[x]<sub>0</sub>* = {*x*}.
+
+Mentre, *[x]<sub>levels</sub>* = *V*, cioè tutti i vertici del grafo *G*, tutta la rete.
+
+#### G-nodi
+
+Quando parliamo di un g-nodo, ad esempio il g-nodo di livello *l* a cui appartiene il nodo *x*, facciamo riferimento
+ad un particolare grafo. Lo indichiamo con *g<sub>l</sub>(x)*.
+
+Esso si ottiene considerando solo i nodi della classe *[x]<sub>l</sub>* e contraendo tutti i nodi che hanno lo
+stesso *(l-1)*-suffisso, considerandoli come singoli vertici.
+
+Ad esempio, *g<sub>levels</sub>(x)* è il grafo di tutta la rete a cui appartiene *x* costituito dai g-nodi (contratti)
+di livello *levels-1*.
+
+All'altro estremo, *g<sub>1</sub>(x)* è il grafo dei singoli nodi (livello 0) che appartengono allo stesso g-nodo di
+livello 1 di *x*.
+
+Continuiamo a chiamare (impropriamente) *nodi* questi vertici e chiamiamo *singoli nodi* i vertici del grafo originale *G*.
+
+Se prendiamo tutti i g-nodi di livello *l* del grafo originale *G* e li consideriamo come singoli vertici, otteniamo
+un altro grafo che rappresenta tutta la rete come composta da vertici di livello *l*. Questo grafo lo indichiamo
+così: *[G]<sub>l</sub>*.
+
+Sia *g* un g-nodo di livello *l*. Indichiamo con *𝛤<sub>l</sub>(g)* l'insieme dei vicini (vertici direttamente
+collegati) di *g* nel grafo *[G]<sub>l</sub>*.
+
+Indichiamo con *size<sub>m</sub>(g)*, dove *m* < *l*, il numero di g-nodi di livello *m* dentro *g*. Questa definizione
+va precisata, tenendo in considerazione il fatto che un g-nodo può assumere un indirizzo *virtuale* come descritto nella
+trattazione del modulo Qspn. Quindi un g-nodo di livello *m* dentro *g* può avere uno o più identificativi *virtuali* ai
+livelli da *m* a *l-1* inclusi. Precisiamo dunque che includiamo nel computo di *size<sub>m</sub>(g)* solo i g-nodi che
+non hanno identificativi *virtuali* ai livelli da *m* a *l-1* inclusi.
+
+Ricordando che *g* è un g-nodo di livello *l*, se abbiamo che *size<sub>l-1</sub>(g)* = *gsizes(l-1)* diciamo che il
+g-nodo *g* è *saturo*: cioè non esistono dentro *g* g-nodi di livello *l-1* non allocati. Va notato che ogni singolo
+nodo *x* appartenente a *g* è in grado autonomamente (tramite le sole conoscenze della sua mappa) di calcolare tale valore.
+
+Se invece abbiamo *size<sub>0</sub>(g) = gsizes(0) \* gsizes(1) \* ... \* gsizes(l-1)* diciamo che il g-nodo *g* è *pieno*:
+cioè non ci sono più dentro *g* indirizzi liberi. Va notato che un singolo nodo *x* appartenente a *g* non è in grado
+autonomamente di calcolare tale valore, se non nel caso in cui *l* = 1.
 
 ## <a name="Fusione_reti"></a>Incontro e fusione di due reti distinte
 
@@ -453,7 +519,11 @@ e quindi fare la richiesta di nuovo a *v*.
 
 Altrimenti il nodo *v* trova un set di soluzioni e giudica quale sia la migliore e la esegue.
 Cioè coordina l'effettiva esecuzione di tutte le migrazioni necessarie; di modo che in uno dei g-nodi di *v*
-ci sarà un posto riservato per l'ingresso di *g*.
+ci sarà un posto riservato per l'ingresso di *g*.  
+Per tutte le altre soluzioni scartate, invece, il nodo *v* avvia l'instradamento di un messaggio che
+dovrà giungere ad un nodo nel g-nodo in cui era stata fatta una prenotazione di una posizione *reale*,
+cioè l'ultimo passo della migration-path. Questo nodo chiederà al Coordinator di cancellare la prenotazione
+fatta per questa ricerca di migration-path.
 
 La migration-path scelta da *v* conteneva, riguardo ai g-nodi di appartenenza di *v*, queste informazioni:
 
@@ -495,38 +565,64 @@ Il nodo *v* comunica al nodo *n* i dettagli per fare ingresso nel suo g-nodo nel
 Assumiamo che il nodo *n* di *G* vuole usare il nodo diretto vicino *v* di *J* per far entrare il suo g-nodo *g* di livello *l*
 in blocco dentro *J*.
 
-Il nodo *n* e il nodo *v* devono essere entrambi identità *principali* con indirizzi completamente *reali*.  
-Il nodo *n* per prima cosa richiede a *v* di far entrare *g* in uno dei suoi *attuali* g-nodi,
-in blocco come g-nodo di livello *l*.
+Il nodo *n* e il nodo *v* devono essere entrambi identità *principali* con indirizzi completamente *reali*.
 
-Abbiamo detto un *attuale* g-nodo di *v*, perché *v* è attualmente una identità principale
+Il nodo *n* potrebbe semplicemente chiedere al nodo *v* se ci sono posti liberi in uno dei suoi g-nodi di livello maggiore di *l*.
+
+Il g-nodo *g*, grazie all'arco tra i nodi *n* e *v*, può entrare immediatamente nella rete e assegnarsi un indirizzo
+valido se uno dei g-nodi di livello maggiore di *l* a cui il suo vicino *v* appartiene è *non saturo*. Se un tale
+g-nodo non esiste, allora *g* non può entrare immediatamente nella rete.
+
+Descriviamo in termini rigorosi il caso problematico. Supponiamo che *size<sub>l</sub>(g<sub>l+1</sub>(v))* = *gsizes(l)*.
+Cioè il g-nodo di livello *l* + 1 a cui appartiene *v* è *saturo*.
+
+Continuando, per ogni *i* da *l*+2 a *levels*, supponiamo che *size<sub>i-1</sub>(g<sub>i</sub>(v))* = *gsizes(i-1)*.
+Cioè tutti i g-nodi di livello maggiore di *l* a cui appartiene *v* sono *saturi*.
+
+Allora il g-nodo *g* non può entrare, cioè non è possibile assegnargli un indirizzo libero, in nessuno dei g-nodi di *v*.
+
+A meno di trovare un meccanismo (meno invasivo possibile per la rete *J*) che porti alla liberazione di uno dei posti ora
+occupati dentro il g-nodo di livello *l* + 1 a cui appartiene *v*.
+
+Quindi correggiamo il tiro. La richiesta che il nodo *n* fa al nodo *v* è la seguente: trova, se possibile, un meccanismo
+che permetta di liberare un posto nel tuo attuale g-nodo di livello *l* + 1 o superiore.
+
+Abbiamo detto "se possibile". Infatti è possibile che in tutta la rete *J* tutti gli indirizzi possibili per un g-nodo
+di livello *l* siano stati occupati.  
+In termini rigorosi: *size<sub>l</sub>(g<sub>levels</sub>(v)) = gsizes(l) \* gsizes(l+1) \* ... \* gsizes(levels-1)*.  
+Notare che questo, abbiamo detto sopra, non è possibile per il nodo *v* determinarlo autonomamente. Vedremo a breve come
+il nodo *v* possa determinare questa situazione.  
+In questo caso il nodo *v* comunicherà a *n* questa impossibilità e questi potrà decidere di tentare di far entrare
+gradualmente *G* in *J* riprovando con un livello inferiore.
+
+Abbiamo detto "nel tuo *attuale* g-nodo", perché *v* è attualmente una identità principale
 in *J*, ma l'esito della richiesta potrebbe essere che lo stesso nodo *v* migra lasciando nel suo *attuale* posto
 una identità *di connettività* come link per *g*.
 
-Il nodo *v* tenterà di riservare una posizione per un g-nodo di livello *l* in un g-nodo esistente
-in *J* di livello *l* + 1 o superiore. Se questo non fosse possibile il nodo *v* lo comunicherà a *n*
-e questi potrà decidere di tentare di far entrare gradualmente *G* in *J* riprovando con un livello inferiore.
+Come risponde il nodo *v* a questa richiesta?
 
 Indichiamo con *h* l'attuale g-nodo di livello *l* + 1 di *v*.  
-Il nodo *v* per riservare una posizione per *g* cerca la shortest migration-path
-che libera un posto in *h* o in un suo g-nodo superiore.
+Il nodo *v* per riservare una posizione per *g* cerca la *shortest migration-path* che libera un posto in *h* o in
+un suo g-nodo superiore.
 
-Specifichiamo rigorosamente cosa si intende per migration-path.
+Specifichiamo rigorosamente cosa si intende per *migration-path*.
 
 ### <a name="Strategia_ingresso_Definizione_migration_path"></a>Definizione della migration-path
 
-Usiamo alcune notazioni che sono spiegate nel documento delle migrazioni.
+Sia *h* un g-nodo di livello *l* + 1, con *l* da 0 a *levels* - 1. È possibile che sia
+*size<sub>l</sub>(h)* = *gsizes(l)*. Cioè *h* può essere saturo.
 
-Sia *h* un g-nodo di livello *l* + 1, con *l* da 0 a *levels* - 1. È possibile che sia *size<sub>l</sub>(h)* = *gsizes(l)*. Cioè *h* può essere saturo.
-
-Definiamo *P* una migration path a livello *l* che parte dal g-nodo *h* (di livello *l* + 1) se *P* è una lista di g-nodi che soddisfa questi requisiti:
+Definiamo *P* una migration path a livello *l* che parte dal g-nodo *h* (di livello *l* + 1) se *P* è una
+lista di g-nodi che soddisfa questi requisiti:
 
 *   *P* = (*p<sub>1</sub>*, *p<sub>2</sub>*, ... *p<sub>m</sub>*).
-*   *p<sub>1</sub>* = *h*. Se *m* = 1, quindi *p<sub>1</sub>* = *p<sub>m</sub>*, allora *p<sub>1</sub>* può essere *h* o un g-nodo di livello maggiore che contiene *h*.
+*   *p<sub>1</sub>* = *h*. Se *m* = 1, quindi *p<sub>1</sub>* = *p<sub>m</sub>*, allora *p<sub>1</sub>* può essere
+    *h* o un g-nodo di livello maggiore che contiene *h*.
 *   Per ogni *i* da 1 a *m* - 1:
     *   **Nota** può essere *m* = 1, quindi questo ciclo non viene mai valutato.
     *   *lvl(p<sub>i</sub>)* = *lvl(h)* = *l* + 1.
-    *   *p<sub>i+1</sub>* ∈ *𝛤<sub>l+1</sub>(p<sub>i</sub>)*, cioè *p<sub>i+1</sub>* è direttamente collegato a *p<sub>i</sub>* nel grafo *[G]<sub>l+1</sub>*.
+    *   *p<sub>i+1</sub>* ∈ *𝛤<sub>l+1</sub>(p<sub>i</sub>)*, cioè *p<sub>i+1</sub>* è direttamente collegato a
+        *p<sub>i</sub>* nel grafo *[G]<sub>l+1</sub>*.
     *   *size<sub>l</sub>(p<sub>i</sub>)* = *gsizes(l)*, cioè *p<sub>i</sub>* è saturo.
 *   *lvl(p<sub>m</sub>)* = *k* ≥ *lvl(h)* = *l* + 1. Indichiamo con *k* il livello di *p<sub>m</sub>*.
 *   *size<sub>k-1</sub>(p<sub>m</sub>)* `<` *gsizes(k-1)*, cioè *p<sub>m</sub>* non è saturo.
@@ -548,7 +644,7 @@ della lista *P*, il quale non era saturo, ma anche poteva essere di livello magg
 
 ### <a name="Strategia_ingresso_Caratteristiche_migration_path"></a>Caratteristiche della migration-path
 
-Una migration-path a livello *l* può essere descritta da 2 principali caratteristiche:
+Una migration-path a livello *l* ha 2 caratteristiche importanti:
 
 *   *d* - distanza, cioè numero di migrazioni (di g-nodi di livello *l*) necessarie, con *d* ≥ 0.
 *   *hl* - host g-node level, cioè il livello dell'ultimo g-nodo della lista, con *levels* ≥ *hl* > *l*.
@@ -573,7 +669,7 @@ quindi può, senza obbligare a nessuna migrazione, occupare un nuovo g-nodo di l
 livello 5 che diventa saturo. E così via, con pochi nodi si rende saturo un g-nodo di alto livello
 e si forma una rete poco bilanciata.  
 Si potrebbe pensare che sarebbe conveniente quando il delta supera un certo *𝜀* investigare per
-cercare una migration-path che, sebbene non sia la più breve come *d* faccia occupare un nuovo posto
+cercare una migration-path che, sebbene non sia la più breve come *d*, faccia occupare un nuovo posto
 all'interno di un g-nodo di livello *hl* non troppo alto.  
 Ad esempio un nuovo nodo si aggiunge e ha un solo link con il g-nodo di livello 2 saturo; che è dentro un
 g-nodo di livello 3 saturo; sebbene questo sia dentro un g-nodo di livello 4 che non è saturo
@@ -643,6 +739,7 @@ TupleGNode v = make_tuple_from_level(ask_lvl + 1, levels)
 int max_host_lvl = levels
 List<Solution> solutions = []
 int enter_id = random
+int prev_sol_distance = -1
 
 S = new Set<TupleGNode>
 Q = new Queue<SolutionStep>
@@ -676,22 +773,22 @@ Mentre Q is not empty:
           Restituisci esito=GOAL, host_lvl, pos, eldership
         max_host_lvl = host_lvl - 1
         // Naturalmente di conseguenza esce dal ciclo.
-    Set<TupleGNode> set_adjacent = new Set<TupleGNode>
+    Set<Pair<TupleGNode,int>> set_adjacent = new Set<Pair<TupleGNode,int>>
     Per i = ask_lvl + 1 to levels - 1:
       // Vede quali g-nodi di livello i sono adiacenti al mio g-nodo di livello ask_lvl + 1
-      Set<HCoord> adjacent_hc_set = adj_to_me(i, ask_lvl + 1)
+      Set<Pair<HCoord,int>> adjacent_hc_set = adj_to_me(i, ask_lvl + 1)
       Se i = ask_lvl + 1:
-        Per ogni HCoord hc in adjacent_hc_set:
+        Per ogni HCoord hc, int mig_pos in adjacent_hc_set:
           TupleGNode adj = make_tuple_from_hc(hc, levels)
-          set_adjacent.add(adj)
+          set_adjacent.add(Pair(adj, mig_pos))
       Altrimenti:
-        Per ogni HCoord hc in adjacent_hc_set:
+        Per ogni HCoord hc, int mig_pos in adjacent_hc_set:
           // Contatta un singolo nodo in `hc`. Comunica `ask_lvl + 1`.
           // La risposta sarà il TupleGNode di livello `ask_lvl + 1` a cui
           // appartiene il singolo nodo incontrato per primo in `hc`, cioè
           // quello che lui ottiene con make_tuple_from_level(ask_lvl + 1, levels).
           TupleGNode adj = ask_tuple(hc, ask_lvl + 1)
-          set_adjacent.add(adj)
+          set_adjacent.add(Pair(adj, mig_pos))
     Se pos ﹤ gsizes(host_lvl - 1)
       Restituisci esito=SOLUTION, host_lvl, pos, eldership, max_host_lvl, set_adjacent, middle_pos, middle_eldership
     Altrimenti:
@@ -703,12 +800,16 @@ Mentre Q is not empty:
   Se esito = SOLUTION:
     Solution sol = new Solution(current, host_lvl, pos, eldership)
     solutions.add(sol)
+    prev_sol_distance = sol.get_distance()
   Per ogni TupleGNode n in set_adjacent:
     // Notare che n è una tupla di livello `ask_lvl + 1`.
     Se n is not in S:
       S.add(n)
       SolutionStep n_step = new SolutionStep(gnode=n, parent=current, middle_pos, middle_eldership)
-      Q.enqueue(n_step)
+      Se prev_sol_distance = -1 OR
+         prev_sol_distance + 5 > n_step.get_distance() OR
+         prev_sol_distance * 1.3 > n_step.get_distance():
+          Q.enqueue(n_step)
 Restituisci solutions.
 ```
 
@@ -789,13 +890,22 @@ suo g-nodo di livello `ask_lvl + 1`.
 Il nodo *w* sa quali sono i g-nodi di livello `ask_lvl + 1` interni al suo g-nodo di livello `ask_lvl + 2`,
 cioè quali HCoord di livello `ask_lvl + 1` sono presenti nella sua mappa dei percorsi.
 Tra questi sa dire quali (se ce ne sono) siano anche adiacenti al suo g-nodo di livello `ask_lvl + 1`: infatti esiste
-un percorso verso essi che non contiene hops intermedi di livello `ask_lvl + 1`.
+un percorso verso essi che non contiene passi intermedi di livello `ask_lvl + 1`. È anche necessario
+che l'ultimo passo intermedio di livello `ask_lvl` sia un HCoord con posizione *reale* a quel livello. Se non
+esiste un passo intermedio di livello `ask_lvl`, allora è necessario che lo stesso nodo *w* abbia
+una posizione *reale* a quel livello.
 
 Generalizzando, il nodo *w* sa quali HCoord di livello `i` (con `i` da `ask_lvl + 1` fino a `levels-1`)
 sono adiacenti al suo g-nodo di livello `ask_lvl + 1`: infatti esiste
-un percorso verso essi che non contiene hops intermedi di livello tra `ask_lvl + 1` e `i`.
+un percorso verso essi che non contiene passi intermedi di livello tra `ask_lvl + 1` e `i`
+e nel quale l'ultimo passo intermedio di livello `ask_lvl` (o lo stesso nodo *w*) abbia
+una posizione *reale* a quel livello.
 
-Questo è quanto realizzato dalla chiamata reiterata della funzione `adj_to_me`.
+Questo è quanto realizzato dalla chiamata della funzione `adj_to_me`.  
+Essa viene reiterata per i valori di `i` da `ask_lvl + 1` fino a `levels-1`. Per ogni chiamata
+produce un set di coppie, di cui il primo elemento è un HCoord di livello `i` adiacente al
+g-nodo di livello `ask_lvl + 1` di *w*, e il secondo è la posizione (*reale*) del border-g-nodo
+di livello `ask_lvl` del g-nodo di livello `ask_lvl + 1` di *w*.
 
 Per gli HCoord di livello `ask_lvl + 1` il nodo *w* sa produrre la tupla completa del g-nodo
 di livello `ask_lvl + 1`. Per ognuno di quelli di livello superiore, invece,
