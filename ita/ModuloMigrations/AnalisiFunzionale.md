@@ -15,7 +15,8 @@
     1.  [Definizione della migration-path](#Strategia_ingresso_Definizione_migration_path)
     1.  [Uso della migration-path](#Strategia_ingresso_Uso_migration_path)
     1.  [Caratteristiche della migration-path](#Strategia_ingresso_Caratteristiche_migration_path)
-    1.  [Algoritmo](#Strategia_ingresso_Algoritmo)
+    1.  [Algoritmo di ricerca](#Strategia_ingresso_Algoritmo_ricerca)
+    1.  [Esecuzione della migration-path](#Strategia_ingresso_Esecuzione_migration_path)
     1.  [Degradazione](#Strategia_ingresso_Degradazione)
 1.  [Risoluzione di uno split di g-nodo](#Split_gnodo)
 
@@ -704,7 +705,7 @@ se *d<sub>i+1</sub>* `<` *d<sub>i</sub>* x 1.3.
 
 Vediamo in dettaglio l'algoritmo di questa ricerca.
 
-### <a name="Strategia_ingresso_Algoritmo"></a>Algoritmo
+### <a name="Strategia_ingresso_Algoritmo_ricerca"></a>Algoritmo di ricerca
 
 Si definiscono le seguenti strutture dati serializzabili:
 
@@ -750,6 +751,10 @@ Q.enqueue(root)
 
 Mentre Q is not empty:
   SolutionStep current = Q.dequeue().
+  Se prev_sol_distance ≠ -1 AND
+     prev_sol_distance + 5 ≤ n_step.get_distance() AND
+     prev_sol_distance * 1.3 ≤ n_step.get_distance():
+       Esci dal ciclo.
   // Contatta un singolo nodo in `current.gnode`. Comunica `ask_lvl`, `max_host_lvl`, `enter_id`, `𝜀 ≥ 1`.
   // La risposta sarà una tupla composta di:
   // `esito`, `host_lvl`, `pos`, `eldership`, `max_host_lvl`, `set_adjacent`, `middle_pos`, `middle_eldership`.
@@ -806,10 +811,7 @@ Mentre Q is not empty:
     Se n is not in S:
       S.add(n)
       SolutionStep n_step = new SolutionStep(gnode=n, parent=current, middle_pos, middle_eldership)
-      Se prev_sol_distance = -1 OR
-         prev_sol_distance + 5 > n_step.get_distance() OR
-         prev_sol_distance * 1.3 > n_step.get_distance():
-          Q.enqueue(n_step)
+      Q.enqueue(n_step)
 Restituisci solutions.
 ```
 
@@ -921,8 +923,18 @@ al suo, identifica comunque quanti ne servono per permettere l'esplorazione grad
 
 Infine il nodo *w* restituisce al nodo *v* la tupla composta di
 `esito`, `host_lvl`, `pos`, `eldership`, `max_host_lvl`, `set_adjacent`, `middle_pos`, `middle_eldership`
-e questi prosegue con l'algoritmo di ricerca in ampiezza fino a trovare la shortest migration-path
-che soddisfa il criterio di un delta minore di `𝜀`.
+e questi prosegue con l'algoritmo di ricerca in ampiezza.
+
+La ricerca si interrompe quando si trova una migration-path che soddisfa il criterio di un delta minore di `𝜀`,
+oppure quando dopo l'ultima migration-path trovata (sebbene con un delta maggiore) sono stati fatti
+troppi passi ulteriori senza trovarne una con delta inferiore.
+
+Quando l'algoritmo di ricerca si interrompe, se qualche soluzione è stata trovata allora l'ultima
+è quella da preferire.
+
+### <a name="Strategia_ingresso_Esecuzione_migration_path"></a>Esecuzione della migration-path
+
+Dopo aver scelto la soluzione migliore, il nodo *v* deve coordinare la sua esecuzione.
 
 **TODO**
 
