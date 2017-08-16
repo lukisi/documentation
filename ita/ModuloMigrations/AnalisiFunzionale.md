@@ -613,7 +613,7 @@ Specifichiamo rigorosamente cosa si intende per *migration-path*.
 Sia *h* un g-nodo di livello *l* + 1, con *l* da 0 a *levels* - 1. È possibile che sia
 *size<sub>l</sub>(h)* = *gsizes(l)*. Cioè *h* può essere saturo.
 
-Definiamo *P* una migration path a livello *l* che parte dal g-nodo *h* (di livello *l* + 1) se *P* è una
+Definiamo *P* una migration-path a livello *l* che parte dal g-nodo *h* (di livello *l* + 1) se *P* è una
 lista di g-nodi che soddisfa questi requisiti:
 
 *   *P* = (*p<sub>1</sub>*, *p<sub>2</sub>*, ... *p<sub>m</sub>*).
@@ -674,7 +674,7 @@ cercare una migration-path che, sebbene non sia la più breve come *d*, faccia o
 all'interno di un g-nodo di livello *hl* non troppo alto.  
 Ad esempio un nuovo nodo si aggiunge e ha un solo link con il g-nodo di livello 2 saturo; che è dentro un
 g-nodo di livello 3 saturo; sebbene questo sia dentro un g-nodo di livello 4 che non è saturo
-si preferisce cercare una diversa migration path e si trova che facendo migrare un singolo nodo da un g-nodo
+si preferisce cercare una diversa migration-path e si trova che facendo migrare un singolo nodo da un g-nodo
 di livello 1 dentro un altro g-nodo esistente sempre di livello 1 si libera un posto per il nuovo nodo.
 
 Quindi, quando si sceglie la topologia di una rete Netsukuku si sceglie anche un *𝜀* (ad esempio 5 se la
@@ -688,10 +688,10 @@ più restrittivi di sicuro avremmo un risultato la cui distanza *d* non può mig
 Quindi dalla prima ricerca otteniamo una migration-path con distanza *d<sub>0</sub>* e con livello del g-nodo
 non saturo *hl<sub>0</sub>*. Se *hl<sub>0</sub>* risulta soddisfacente (cioè `hl0 - l < 𝜀`) ci fermiamo. Altrimenti riavviamo una nuova ricerca
 ponendo un limite superiore a *hl* di *hl<sub>0</sub>-1*. Se la ricerca non trova
-una migration-path ci fermiamo; se invece trova una migration path avremo distanza *d<sub>1</sub>* e livello ospite *hl<sub>1</sub>*.
+una migration-path ci fermiamo; se invece trova una migration-path avremo distanza *d<sub>1</sub>* e livello ospite *hl<sub>1</sub>*.
 Di nuovo, se *hl<sub>1</sub>* risulta soddisfacente ci fermiamo. Altrimenti riavviamo una nuova ricerca
 ponendo un limite superiore a *hl* di *hl<sub>1</sub>-1*. Se la ricerca non trova
-una migration-path ci fermiamo; se invece trova una migration path avremo distanza *d<sub>2</sub>* e livello ospite *hl<sub>2</sub>*.
+una migration-path ci fermiamo; se invece trova una migration-path avremo distanza *d<sub>2</sub>* e livello ospite *hl<sub>2</sub>*.
 E così via fino a quando non ci fermiamo perché il delta è minore di *𝜀* o perché non esistono
 migration-path con il delta minore dell'ultimo *hl*.
 
@@ -716,9 +716,10 @@ TupleGNode:
 
 SolutionStep:
   TupleGNode gnode
-  SolutionStep? parent
+  int? mig_pos
   int? middle_pos
   int? middle_eldership
+  SolutionStep? parent
 
 Solution:
   SolutionStep leaf
@@ -746,7 +747,7 @@ S = new Set<TupleGNode>
 Q = new Queue<SolutionStep>
 
 S.add(v)
-SolutionStep root = new SolutionStep(gnode=v, parent=NIL, middle_pos=NIL, middle_eldership=NIL)
+SolutionStep root = new SolutionStep(gnode=v, mig_pos=NIL, middle_pos=NIL, middle_eldership=NIL, parent=NIL)
 Q.enqueue(root)
 
 Mentre Q is not empty:
@@ -806,11 +807,11 @@ Mentre Q is not empty:
     Solution sol = new Solution(current, host_lvl, pos, eldership)
     solutions.add(sol)
     prev_sol_distance = sol.get_distance()
-  Per ogni TupleGNode n in set_adjacent:
+  Per ogni TupleGNode n, int mig_pos in set_adjacent:
     // Notare che n è una tupla di livello `ask_lvl + 1`.
     Se n is not in S:
       S.add(n)
-      SolutionStep n_step = new SolutionStep(gnode=n, parent=current, middle_pos, middle_eldership)
+      SolutionStep n_step = new SolutionStep(gnode=n, mig_pos, middle_pos, middle_eldership, parent=current)
       Q.enqueue(n_step)
 Restituisci solutions.
 ```
@@ -935,6 +936,81 @@ Quando l'algoritmo di ricerca si interrompe, se qualche soluzione è stata trova
 ### <a name="Strategia_ingresso_Esecuzione_migration_path"></a>Esecuzione della migration-path
 
 Dopo aver scelto la soluzione migliore, il nodo *v* deve coordinare la sua esecuzione.
+
+Una migration-path di lunghezza zero è *impropria* e non ha bisogno di alcuna esecuzione. Semplicemente
+il nodo *v* comunica al richiedente la posizione *reale* che è stata riservata e il livello
+del g-nodo ospitante, che è uno dei suoi g-nodi di livello maggiore di *l*.
+
+Si consideri invece la migration-path *P* = (*p<sub>1</sub>*, *p<sub>2</sub>*, ... *p<sub>m</sub>*) a
+livello *l*. Con 0 ≤ *l* ﹤ *levels* - 1 e *m* > 1.
+
+La sua esecuzione va fatta in questo ordine:
+
+Un border-g-nodo di livello *l* migra da *p<sub>1</sub>* a *p<sub>2</sub>*. Poi uno da *p<sub>2</sub>*
+a *p<sub>3</sub>*, e così via fino a quello che migra da *p<sub>m-1</sub>* a *p<sub>m</sub>*.
+
+Bisogna seguire questo ordine anziché l'inverso. Altrimenti si rischia che quando un g-nodo *g0* di livello
+*l* migra da *p<sub>i</sub>* a *p<sub>i+1</sub>* il g-nodo che migra sia proprio quello che era
+di contatto tra *p<sub>i-1</sub>* e *p<sub>i</sub>*.  
+Il g-nodo *di connettività* che resterebbe in *p<sub>i</sub>* potrebbe venire presto dismesso,
+se *p<sub>i</sub>* risulta ancora internamente connesso.  
+Inoltre, anche supponendo che il g-nodo *g0* *di connettività* sopravviva a lungo, il suo indirizzo
+è *virtuale* renderebbe impossibile la comunicazione tra un suo nodo e il Coordinator di *p<sub>i</sub>*.
+
+Però seguendo questo ordine abbiamo un altro problema: quando un g-nodo di livello
+*l* migra da *p<sub>i</sub>* a *p<sub>i+1</sub>* non c'è un posto *reale* libero in *p<sub>i+1</sub>*,
+se non nell'ultimo passo. Quindi ogni singola migrazione si compone di questi passaggi:
+
+Un border-g-nodo *g* di livello *l* deve migrare da *p<sub>i</sub>* a *p<sub>i+1</sub>* e
+inoltre abbiamo *m* > *i*+1.  
+La posizione di *g* in *p<sub>i</sub>* è *pos1*, ed è *reale*. Essa è stata salvata nel membro
+`mig_pos` di SolutionStep.  
+Sappiamo anche che è stato riservato un posto *virtuale* *pos2* in *p<sub>i</sub>*. Esso è stato
+salvato nel membro `middle_pos` di SolutionStep.  
+Sappiamo anche che in seguito un border-g-nodo di livello *l* dovrà migrare da *p<sub>i+1</sub>*
+a *p<sub>i+2</sub>* e che la sua posizione in *p<sub>i+1</sub>* è *pos_next*, ed è *reale*.
+Essa è stata salvata nel membro `mig_pos` di SolutionStep riferita al passo successivo.  
+Viene riservato un posto *pos3* in *p<sub>i+1</sub>*. Probabilmente esso risulterà *virtuale*, in quanto
+è per questo che la ricerca ha prodotto una migration-path che contiene *p<sub>i+2</sub>*.  
+Il g-nodo *g* si duplica: viene creato il g-nodo isomorfo *g'* che entra in *p<sub>i+1</sub>*
+con la posizione *pos3*. Invece il vecchio *g* diventa un g-nodo *di connettività*
+in *p<sub>i</sub>* assumendo la posizione *virtuale* *pos2*.  
+Si attende il propagamento delle informazioni ETP che aggiornano localmente la rete su
+questi cambiamenti.  
+Dopo si ritiene effettivamente libera la posizione *pos1* in *p<sub>i</sub>*. Questo fatto viene
+segnalato al nodo che stava coordinando il passo precedente della migration-path *P*.  
+Nell'eventualità che la posizione *pos3* riservata prima in *p<sub>i+1</sub>* fosse stata una
+posizione *reale* (cioè nel frattempo una posizione si era liberata per delle variazioni alla rete)
+questo ci esonera dal proseguire con i passi successivi.  
+Viene dato ordine di iniziare la migrazione al border-g-nodo che dovrà migrare da *p<sub>i+1</sub>*
+a *p<sub>i+2</sub>*. Si attende da questo la segnalazione che è stata effettivamente liberata
+la posizione *pos_next* in *p<sub>i+1</sub>*.  
+Il g-nodo *g'* adesso può assumere la posizione *reale* *pos_next* in *p<sub>i+1</sub>*.
+
+Nell'ultimo passo abbiamo una versione leggermente semplificata: un border-g-nodo *g* di livello *l*
+deve migrare da *p<sub>m-1</sub>* a *p<sub>m</sub>*.  
+La posizione di *g* in *p<sub>m-1</sub>* è *pos1*, ed è *reale*. Essa è stata salvata nel membro
+`mig_pos` di SolutionStep.  
+Sappiamo anche che è stato riservato un posto *virtuale* *pos2* in *p<sub>m-1</sub>*. Esso è stato
+salvato nel membro `middle_pos` di SolutionStep.  
+Sappiamo anche che nel g-nodo *p<sub>m</sub>* di livello *k*, con *k* ≥ *l* + 1, è stato
+riservato un posto *reale* *pos3*. Il valore di *k* è stato salvato nel membro `host_lvl` di Solution.
+Il valore di *pos3* è stato salvato nel membro `new_pos` di Solution.  
+Il g-nodo *g* si duplica: viene creato il g-nodo isomorfo *g'* che entra in *p<sub>m</sub>*
+con la posizione *pos3*. Invece il vecchio *g* diventa un g-nodo *di connettività*
+in *p<sub>m-1</sub>* assumendo la posizione *virtuale* *pos2*.  
+Si attende il propagamento delle informazioni ETP che aggiornano localmente la rete su
+questi cambiamenti.  
+Dopo si ritiene effettivamente libera la posizione *pos1* in *p<sub>i</sub>*. Questo fatto viene
+segnalato al nodo che stava coordinando il passo precedente della migration-path *P*.
+
+### <a name="Strategia_ingresso_Algoritmo_esecuzione"></a>Algoritmo di esecuzione
+
+Il nodo *v* coordina l'esecuzione del primo passo in *p<sub>1</sub>*. Poi invia un messaggio al primo nodo che
+incontra in *p<sub>2</sub>*, chiamiamolo *w*. Sarà compito di *w* coordinare il secondo passo e anche
+proseguire l'instradamento del messaggio al primo nodo che incontra in *p<sub>3</sub>*. E così via.
+
+
 
 **TODO**
 
