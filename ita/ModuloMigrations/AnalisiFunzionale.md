@@ -505,7 +505,7 @@ La sesta fase inizia quando il nodo *n*, riceve l'autorizzazione dal Coordinator
 suo vicino *v* la prenotazione di un posto per *g* in *J*.
 
 Il modulo Migrations nel nodo *n* chiede al modulo Migrations nel nodo *v* di trovare una migration-path e di riservare
-un posto per *g* (cioè per il g-nodo di livello *lvl* a cui appartiente *n*) dentro *l'attuale* g-nodo
+un posto per *g* (cioè per il g-nodo di livello *lvl* a cui appartiente *n*, con 0 ≤ *lvl* ﹤ *levels*) dentro *l'attuale* g-nodo
 di *v* di livello *lvl+1* o superiore.
 
 Il modulo Migrations nel nodo *v* cerca la shortest migration-path come descritto [qui](#Strategia_ingresso).
@@ -564,7 +564,7 @@ Il nodo *v* comunica al nodo *n* i dettagli per fare ingresso nel suo g-nodo nel
 ## <a name="Strategia_ingresso"></a>Strategia di ingresso
 
 Assumiamo che il nodo *n* di *G* vuole usare il nodo diretto vicino *v* di *J* per far entrare il suo g-nodo *g* di livello *l*
-in blocco dentro *J*.
+in blocco dentro *J*. In questa richiesta possiamo avere 0 ≤ *l* ﹤ *levels*.
 
 Il nodo *n* e il nodo *v* devono essere entrambi identità *principali* con indirizzi completamente *reali*.
 
@@ -574,16 +574,16 @@ Il g-nodo *g*, grazie all'arco tra i nodi *n* e *v*, può entrare immediatamente
 valido se uno dei g-nodi di livello maggiore di *l* a cui il suo vicino *v* appartiene è *non saturo*. Se un tale
 g-nodo non esiste, allora *g* non può entrare immediatamente nella rete.
 
-Descriviamo in termini rigorosi il caso problematico. Supponiamo che *size<sub>l</sub>(g<sub>l+1</sub>(v))* = *gsizes(l)*.
-Cioè il g-nodo di livello *l* + 1 a cui appartiene *v* è *saturo*.
+Descriviamo in termini rigorosi il caso problematico.
 
-Continuando, per ogni *i* da *l*+2 a *levels*, supponiamo che *size<sub>i-1</sub>(g<sub>i</sub>(v))* = *gsizes(i-1)*.
+Per ogni *i* da *l*+1 a *levels*, supponiamo che *size<sub>i-1</sub>(g<sub>i</sub>(v))* = *gsizes(i-1)*.
 Cioè tutti i g-nodi di livello maggiore di *l* a cui appartiene *v* sono *saturi*.
 
 Allora il g-nodo *g* non può entrare, cioè non è possibile assegnargli un indirizzo libero, in nessuno dei g-nodi di *v*.
 
 A meno di trovare un meccanismo (meno invasivo possibile per la rete *J*) che porti alla liberazione di uno dei posti ora
-occupati dentro il g-nodo di livello *l* + 1 a cui appartiene *v*.
+occupati dentro il g-nodo di livello *l* + 1 a cui appartiene *v*. Questa seconda possibilità vale solo se
+*l* ﹤ *levels* - 1.
 
 Quindi correggiamo il tiro. La richiesta che il nodo *n* fa al nodo *v* è la seguente: trova, se possibile, un meccanismo
 che permetta di liberare un posto nel tuo attuale g-nodo di livello *l* + 1 o superiore.
@@ -610,7 +610,7 @@ Specifichiamo rigorosamente cosa si intende per *migration-path*.
 
 ### <a name="Strategia_ingresso_Definizione_migration_path"></a>Definizione della migration-path
 
-Sia *h* un g-nodo di livello *l* + 1, con *l* da 0 a *levels* - 1. È possibile che sia
+Sia *h* un g-nodo di livello *l* + 1, con *l* da 0 a *levels* - 2. È possibile che sia
 *size<sub>l</sub>(h)* = *gsizes(l)*. Cioè *h* può essere saturo.
 
 Definiamo *P* una migration-path a livello *l* che parte dal g-nodo *h* (di livello *l* + 1) se *P* è una
@@ -939,7 +939,9 @@ Dopo aver scelto la soluzione migliore, il nodo *v* deve coordinare la sua esecu
 
 Una migration-path di lunghezza zero è *impropria* e non ha bisogno di alcuna esecuzione. Semplicemente
 il nodo *v* comunica al richiedente la posizione *reale* che è stata riservata e il livello
-del g-nodo ospitante, che è uno dei suoi g-nodi di livello maggiore di *l*.
+del g-nodo ospitante, che è uno dei suoi g-nodi di livello maggiore di *l*.  
+Ricordiamo che questo caso è l'unica soluzione possibile se si sta tentando di ottenere un posto
+nella rete per un g-nodo di livello *l* = *levels* - 1.
 
 Si consideri invece la migration-path *P* = (*p<sub>1</sub>*, *p<sub>2</sub>*, ... *p<sub>m</sub>*) a
 livello *l*. Con 0 ≤ *l* ﹤ *levels* - 1 e *m* > 1.
