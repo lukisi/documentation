@@ -17,6 +17,7 @@
     1.  [Caratteristiche della migration-path](#Strategia_ingresso_Caratteristiche_migration_path)
     1.  [Algoritmo di ricerca](#Strategia_ingresso_Algoritmo_ricerca)
     1.  [Esecuzione della migration-path](#Strategia_ingresso_Esecuzione_migration_path)
+    1.  [Algoritmo di esecuzione](#Strategia_ingresso_Algoritmo_esecuzione)
     1.  [Degradazione](#Strategia_ingresso_Degradazione)
 1.  [Risoluzione di uno split di g-nodo](#Split_gnodo)
 
@@ -647,8 +648,10 @@ della lista *P*, il quale non era saturo, ma anche poteva essere di livello magg
 
 Una migration-path a livello *l* ha 2 caratteristiche importanti:
 
-*   *d* - distanza, cioè numero di migrazioni (di g-nodi di livello *l*) necessarie, con *d* ≥ 0.
-*   *hl* - host g-node level, cioè il livello dell'ultimo g-nodo della lista, con *levels* ≥ *hl* > *l*.
+*   *d* = *m* - 1  
+    distanza, cioè numero di migrazioni (di g-nodi di livello *l*) necessarie, con *d* ≥ 0.
+*   *hl*  
+    host g-node level, cioè il livello dell'ultimo g-nodo della lista, con *levels* ≥ *hl* > *l*.
 
 Da un lato dello spettro abbiamo il caso ottimale: *d* = 0 e *hl* = *l* + 1. Cioè per far entrare il g-nodo
 *g* non occorre nessuna migrazione e basta occupare una nuova posizione che era libera in un g-nodo esistente
@@ -957,15 +960,15 @@ di contatto tra *p<sub>i-1</sub>* e *p<sub>i</sub>*.
 Il g-nodo *di connettività* che resterebbe in *p<sub>i</sub>* potrebbe venire presto dismesso,
 se *p<sub>i</sub>* risulta ancora internamente connesso.  
 Inoltre, anche supponendo che il g-nodo *g0* *di connettività* sopravviva a lungo, il suo indirizzo
-è *virtuale* renderebbe impossibile la comunicazione tra un suo nodo e il Coordinator di *p<sub>i</sub>*.
+è *virtuale* e renderebbe impossibile la comunicazione tra un suo nodo e il Coordinator di *p<sub>i</sub>*.
 
 Però seguendo questo ordine abbiamo un altro problema: quando un g-nodo di livello
 *l* migra da *p<sub>i</sub>* a *p<sub>i+1</sub>* non c'è un posto *reale* libero in *p<sub>i+1</sub>*,
 se non nell'ultimo passo. Quindi ogni singola migrazione si compone di questi passaggi:
 
 Un border-g-nodo *g* di livello *l* deve migrare da *p<sub>i</sub>* a *p<sub>i+1</sub>* e
-inoltre abbiamo *m* > *i*+1.  
-La posizione di *g* in *p<sub>i</sub>* è *pos1*, ed è *reale*. Essa è stata salvata nel membro
+inoltre abbiamo *m* > *i* + 1.  
+Conosciamo *pos1*, la posizione di *g* in *p<sub>i</sub>*, che è *reale*. Essa è stata salvata nel membro
 `mig_pos` di SolutionStep.  
 Sappiamo anche che è stato riservato un posto *virtuale* *pos2* in *p<sub>i</sub>*. Esso è stato
 salvato nel membro `middle_pos` di SolutionStep.  
