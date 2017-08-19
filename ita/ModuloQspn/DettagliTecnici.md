@@ -190,18 +190,6 @@ poi le informazioni necessarie all'ingresso saranno state propagate a tutti i no
 i nodi di *w* verrà dato l'ordine di completare l'ingresso. Tutto questo sempre attraverso modalità che sono
 descritte nella documentazione del modulo Migrations.
 
-**TODO spostare in Migrations** Come avviene la propagazione. Il nodo *n<sub>0</sub>* ha ottenuto i dati per fare
-ingresso. Allora *n<sub>0</sub>* genera un identificativo di migrazione *migration_id* e propaga questi
-dati a tutto il g-nodo *w* attraverso una collaborazione con il modulo Coordinator, che chiamiamo "propagazione
-con ritorno".
-Questa collaborazione gli permette di chiamare un metodo in ogni nodo del suo g-nodo di livello *k*
-e ottenere una risposta soltanto dopo che tutti i nodi di quel g-nodo hanno eseguito il metodo.
-Dopo aver ottenuto questa risposta *n<sub>0</sub>* propaga l'ordine di effettuare la duplicazione-con-migrazione
-a tutto il g-nodo *w* attraverso una collaborazione con il modulo Coordinator, che chiamiamo "propagazione
-senza ritorno".
-Questa collaborazione gli permette di chiamare un metodo in ogni nodo del suo g-nodo di livello *k*
-senza attendere una risposta.
-
 In questo secondo scenario quando il nodo *n* riceve l'ordine di fare l'ingresso (o se è stato esso stesso
 a avviare la sua propagazione) il demone *ntkd* crea una nuova identità *n’* duplicando *n* con l'ausilio del modulo
 Identities. Per la nuova identità *n’*, il demone *ntkd* crea una istanza di QspnManager basata sulla precedente istanza

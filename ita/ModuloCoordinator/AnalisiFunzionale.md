@@ -71,6 +71,23 @@ i record del database distribuito realizzato dal servizio Coordinator.
 Il modulo Coordinator quindi mette a disposizione dei metodi per leggere o scrivere in questa memoria
 garantendo la coerenza del dato nel database distribuito.
 
+Esistono anche altri due tipi di operazioni necessarie al modulo Migrations che possono avvalersi della
+collaborazione del modulo Coordinator. In queste il modulo Migrations in esecuzione in un qualsiasi singolo
+nodo (ad esempio ...)
+vuole far eseguire alcuni suoi metodi in tutti i singoli nodi di un g-nodo.  
+Queste esecuzioni possono essere di due tipi:
+
+*   *Propagazione con ritorno.* Si vuole provocare l'esecuzione di un metodo in ogni nodo del proprio g-nodo
+    di livello *k* e ottenere una risposta soltanto dopo che tutti i nodi di quel g-nodo hanno eseguito il metodo.
+*   *Propagazione senza ritorno.* Si vuole provocare l'esecuzione di un metodo in ogni nodo del proprio g-nodo
+    di livello *k* senza attendere una risposta.
+
+Per queste necessità esistono metodi del modulo Coordinator che iniziano la propagazione, relativi metodi
+remoti per la propagazione, e relativi delegati da chiamare (una volta) su ogni singolo nodo.  
+Ogni singolo metodo di questi ha direttamente codificata in sé la tipologia, cioè se *con* o
+*senza* ritorno e in quest'ultimo caso come trattare il valore restituito da ogni singolo nodo e combinarlo
+col valore restituito dal delegato in questo nodo.
+
 ## <a name="Servizio_coordinator"></a>Il servizio Coordinator
 
 Il servizio Coordinator è un servizio non opzionale, cioè tutti i nodi partecipano attivamente. Si tratta di un

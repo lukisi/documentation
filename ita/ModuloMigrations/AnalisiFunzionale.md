@@ -52,6 +52,10 @@ Si sceglie di assegnare al nodo Coordinator del g-nodo *g* questo ruolo. Quando 
 si rende necessaria il modulo Coordinator farà da proxy fra il generico singolo nodo *n*  ∈ *g*
 e il nodo Coordinator di *g*.
 
+In altri algoritmi, invece, sempre in esecuzione in un singolo nodo *n*  ∈ *g*, ha bisogno
+di provocare l'esecuzione di altri suoi algoritmi in tutti i singoli nodi di *g*.  
+In questo caso il modulo Coordinator coordinerà l'esecuzione su tutti i nodi.
+
 ### Terminologia e notazioni
 
 #### La rete con i suoi vertici
@@ -1015,7 +1019,19 @@ Il nodo *v* coordina l'esecuzione del primo passo in *p<sub>1</sub>*. Poi invia 
 incontra in *p<sub>2</sub>*, chiamiamolo *w*. Sarà compito di *w* coordinare il secondo passo e anche
 proseguire l'instradamento del messaggio al primo nodo che incontra in *p<sub>3</sub>*. E così via.
 
+Il nodo *v* inventa un identificativo *migration_id* per il primo passo in *p<sub>1</sub>*.
+Poi il modulo Migrations del nodo *v* fa in modo che venga richiamato nel modulo Coordinator il
+metodo a *propagazione con ritorno* `prepare_migration` indicando il livello di *p<sub>1</sub>*
+e tutte le informazioni necessarie alla migrazione.
 
+Ogni singolo nodo *n* di *p<sub>1</sub>*, nel metodo `prepare_migration` del modulo Migrations
+riceve queste informazioni.
+
+**TODO**
+
+Dopo aver ottenuto questa risposta, il nodo *v* fa in modo che venga richiamato nel modulo Coordinator il
+metodo a *propagazione senza ritorno* `finish_migration` indicando il livello di *p<sub>1</sub>*
+e l'identificativo *migration_id* inventato e propagato prima.
 
 **TODO**
 
