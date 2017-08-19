@@ -5,7 +5,8 @@
 1.  [Requisiti e Deliverable](#Requisiti_deliverable)
     1.  [Avvio](#Avvio)
     1.  [Ingresso](#Ingresso)
-        1.  [Creazione di una identità nella rete G e dismissione della precedente](#Creazione_in_g_dismissione_precedente)
+        1.  [Creazione di una identità nella rete G](#Creazione_in_g)
+        1.  [Dismissione della precedente identità](#Dismissione_precedente)
     1.  [Migrazione](#Migrazione)
         1.  [Creazione di una identità in h](#Creazione_in_h)
         1.  [Modifica della precedente identità in g in una identità di connettività](#Modifica_precedente)
@@ -74,27 +75,32 @@ Esaminiamo nel dettaglio i requisiti (forniti dal demone *ntkd*) e i deliverable
     Il demone *ntkd* crea una istanza di QspnManager specificando che si tratta di questo scenario. In questo
     caso al costruttore viene passato un indirizzo *reale* generato in modo del tutto arbitrario.
 *   **Ingresso** (di un singolo nodo del grafo o di un g-nodo) in una diversa rete preesistente.  
-    Se si tratta di un singolo nodo del grafo allora il demone *ntkd* individua l'istanza di QspnManager che
-    ad esso si riferisce.  
-    Se si tratta di un g-nodo allora il demone *ntkd* individua una o più istanze di QspnManager che si riferiscono
-    a nodi del grafo appartenenti al dato g-nodo.  
-    Per ogni istanza di QspnManager individuata, il demone *ntkd* :
-    *   Crea una nuova istanza di QspnManager specificando che si tratta di questo scenario e indicando la
-        precedente istanza. In questo caso al costruttore viene passato un nuovo indirizzo valido nella nuova
-        rete. Questa identità sarà di tipo analogo (*principale* o *di connettività*) a ciò che era la precedente identità.
-    *   Dismette la precedente istanza di QspnManager.
-*   **Migrazione** (di un singolo nodo del grafo o di un g-nodo) da un g-nodo di livello *i* ad un altro
-    g-nodo (sempre di livello *i*) il quale appartiene a g-nodi distinti da quelli del primo fino al livello *j*.  
-    Di nuovo, se si tratta di un singolo nodo del grafo allora il demone *ntkd* individua l'istanza di
-    QspnManager che ad esso si riferisce.  
-    Se si tratta di un g-nodo allora il demone *ntkd* individua una o più istanze di QspnManager che si
-    riferiscono a nodi del grafo appartenenti al dato g-nodo.  
-    Per ogni istanza di QspnManager individuata, il demone *ntkd* :
-    *   Crea una nuova istanza di QspnManager specificando che si tratta di questo scenario e indicando la
-        precedente istanza. In questo caso al costruttore viene passato un nuovo indirizzo valido nel nuovo
-        g-nodo. Questa identità sarà di tipo analogo (*principale* o *di connettività*) a ciò che era la precedente identità.
-    *   Modifica la precedente istanza di QspnManager che ora detiene un indirizzo *virtuale* al livello
-        *i* - 1 e diventa una identità *di connettività* ai livelli da *i* a *j*.
+    Ricordiamo che in un sistema possono esserci più di una identità, ognuna con il suo indirizzo Netsukuku
+    che la situa in precisi g-nodi di una rete.  
+    Il demone *ntkd* decide che una sua identità deve fare ingresso in un'altra rete, in blocco insieme
+    ad un suo g-nodo di un certo livello. Ha conoscenze per sapere quali posizioni assume il g-nodo
+    nella nuova rete.  
+    Il demone *ntkd*:
+    *   Duplica la sua identità. L'identità duplicata sarà di tipo analogo (*principale* o *di connettività*) a
+        ciò che era la precedente identità.
+    *   Per l'identità duplicata, crea una nuova istanza di QspnManager specificando che si tratta di questo scenario e
+        indicando l'istanza di QspnManager relativa alla precedente identità. In questo caso al costruttore viene passato
+        un nuovo indirizzo valido nella nuova rete.
+    *   Per la precedente identità, dismette la relativa istanza di QspnManager.
+*   **Migrazione** (di un singolo nodo del grafo o di un g-nodo di livello *k*) da un g-nodo di livello *k* + 1 ad un altro
+    g-nodo di livello *hl* il quale appartiene a g-nodi distinti da quelli del primo fino al livello *j*.  
+    Il demone *ntkd* decide che una sua identità deve migrare da un g-nodo ad un altro, in blocco insieme
+    ad un suo g-nodo di un certo livello. Ha conoscenze per sapere quali posizioni assume il g-nodo
+    nella nuova posizione.  
+    Il demone *ntkd*:
+    *   Duplica la sua identità. L'identità duplicata sarà di tipo analogo (*principale* o *di connettività*) a
+        ciò che era la precedente identità.
+    *   Per l'identità duplicata, crea una nuova istanza di QspnManager specificando che si tratta di questo scenario e
+        indicando l'istanza di QspnManager relativa alla precedente identità. In questo caso al costruttore viene passato
+        un nuovo indirizzo valido nel nuovo g-nodo.
+    *   La precedente identità diventa una identità *di connettività* ai livelli da *k* + 1 a *j*. Per essa
+        il demone *ntkd* comunica alla relativa istanza di QspnManager che ora detiene un indirizzo *virtuale*
+        al livello *k*.
 
 ### <a name="Avvio"></a>Avvio
 
@@ -129,8 +135,8 @@ mio sistema segnala le variazioni sugli archi all'istanza di QspnManager di *n* 
 *   `arc_remove (IQspnArc removed_arc)`.
 
 Quando il QspnManager memorizza i suoi archi, per ognuno genera un *identificativo di arco*, cioè un intero random
-in uno spazio grande. Memorizza in una lista gli archi, accertandosi che non ci siano archi ripetuti. Memorizza e
-gestisce inoltre un dizionario (HashMap) che associa identificativi e archi.
+in uno spazio grande. Memorizza in una lista le istanze di IQspnArc, accertandosi che non ci siano archi ripetuti. Memorizza e
+gestisce inoltre un dizionario (HashMap) che associa l'identificativo di arco all'istanza di IQspnArc.
 
 Inoltre il modulo non assume che anche il suo utilizzatore mantenga le istanze degli archi. Questo significa che
 il QspnManager per vedere se un arco è nella sua lista si basa sul metodo *i_qspn_equals* fornito dall'interfaccia
@@ -140,110 +146,114 @@ su tutte le istanze della classe NodePath.
 
 ### <a name="Ingresso"></a>Ingresso
 
-Supponiamo che il g-nodo *w* (a cui appartiene il nodo del grafo *n* che vive nel nostro sistema) fa il suo ingresso
+Supponiamo che il g-nodo *w* di livello *k* (a cui appartiene il nodo del grafo *n* che vive nel nostro sistema) fa il suo ingresso
 in una rete *G*. In questa trattazione è incluso il caso in cui *w* equivale a *n*.
 
 Per l'esattezza, dire che un g-nodo *w* fa ingresso in una rete *G* significa che prenota un posto in un g-nodo *g* ∈ *G* tale che:
 
-*   Il livello di *g* è maggiore del livello di *w*.
-*   Il g-nodo *g* non è saturo.
+*   Il livello di *g*, indichiamolo con *hl*, è maggiore del livello di *w*. Cioè *hl* ≥ *k* + 1.
+*   Il g-nodo *g* non è saturo. Oppure può diventare non saturo a fronte di una *migration-path*; in questo
+    caso abbiamo anche che *hl* = *k* + 1.
 *   Il g-nodo *w* ha almeno un arco diretto verso *g*.
 
 A fronte di diversi g-nodi che potrebbero soddisfare questi requisiti, la strategia che si adotta per la scelta
-del g-nodo non è di competenza del modulo QSPN. Viene descritta nel documento del modulo Migrations. **TODO**: collegare. In
-quel documento si vedrà anche che nella fase iniziale almeno un nodo 𝛼 di *w* deve avere un arco-identità con un nodo 𝛽
-di *g* e questi nodi devono avere queste caratteristiche:
+del g-nodo non è di competenza del modulo QSPN. Viene descritta nel documento del
+modulo [Migrations](../ModuloMigrations/AnalisiFunzionale.md).
 
-*   𝛼 deve essere l'identità *principale* del sistema in cui vive e deve avere indirizzo Netsukuku *reale*.
-*   𝛽 deve essere l'identità *principale* del sistema in cui vive e deve avere indirizzo Netsukuku *reale*.
+In quel documento si vedrà anche che nella fase iniziale avremo che:
 
-In seguito però, le operazioni della *migration path* possono portare al fatto che l'identità 𝛽
-diventi una identità *di connettività* per il g-nodo *g* e/o che l'identità 𝛼 assuma temporaneamente
-un indirizzo *virtuale* in *g*.
+*   Un nodo *𝛼* di *w* deve avere un arco-identità con un nodo *𝛽* di *g* e questi nodi devono essere
+    entrambi *identità principali* ed avere entrambi indirizzo Netsukuku completamente *reale*.
+*   Riguardo il generico nodo *n* di *w* sappiamo solo che il suo indirizzo Netsukuku è *reale*
+    dal livello *k* in su.
 
-Se si tratta di un singolo nodo del grafo *n* che vuole entrare nel g-nodo *g* ∈ *G* — deve trattarsi dell'identità
-principale del suo sistema — lo stesso nodo *n* chiede ad un suo diretto vicino in *g*, chiamiamolo *g<sub>0</sub>*,
-i dati che servono all'ingresso. Questa richiesta da *n* a *g<sub>0</sub>* viene fatta con i metodi remoti di un
-modulo *di identità*. Per rispondere, *g<sub>0</sub>* inizia un dialogo con il Coordinator di *g*. Dopo che *n* ha
-ricevuto la risposta, il demone *ntkd* crea una nuova istanza di QspnManager basata sulla precedente *n* che
-diventa l'identità *principale* del sistema in *g*.
+In seguito però, se c'è stato bisogno di una *migration-path* avremo che:
+
+*   Il nodo *n’* (duplicato da *n*) assume temporaneamente un indirizzo *virtuale* in *g* ∈ *G* al livello *k*.
+*   Il nodo *𝛽* e tutto il suo g-nodo *𝜑* di livello *k* potrebbe essere il g-nodo che migra da *g*. In questo
+    caso un g-nodo isomorfo viene costituito nella nuova posizione, mentre la *vecchia identità* di *𝜑* resta
+    in *g* come g-nodo di connettività: cioè il nodo *𝛽* si è duplicato ed ora
+    quella identità è una *identità di connettività* dentro *g* ed ha indirizzo *virtuale* al livello *k*.
+
+Se si tratta di un singolo nodo del grafo *n* che vuole entrare nel g-nodo *g* ∈ *G* — deve trattarsi
+dell'identità principale del suo sistema — lo stesso nodo *n* ha pattuito con un suo diretto vicino
+in *g* le informazioni necessarie all'ingresso, secondo le modalità trattate come detto prima nel
+documento del modulo Migrations. Dopo che *n* ha ricevuto la risposta, il demone *ntkd* crea una nuova
+identità *n’* duplicando *n* con l'ausilio del modulo [Identities](../ModuloIdentities/AnalisiFunzionale.md).
+Come sappiamo (dalla documentazione di tale modulo) *n’* diventa l'identità *principale* del sistema in *g*.
+Per la nuova identità *n’*, il demone *ntkd* crea una istanza di QspnManager basata sulla precedente istanza
+associata a *n*.
 
 Se si tratta di un g-nodo *w* che contiene diversi nodi del grafo e che vuole entrare in blocco nel g-nodo *g* ∈ *G*,
-in qualche modo si è eletto un suo nodo *n<sub>0</sub>* — che deve essere l'identità principale del suo sistema — a
-chiedere ad un suo diretto vicino *g<sub>0</sub>* in *g* i dati che servono all'ingresso. Di nuovo, la richiesta da
-*n<sub>0</sub>* a *g<sub>0</sub>* viene fatta con i metodi remoti di un modulo *di identità* e, per rispondere,
-*g<sub>0</sub>* inizia un dialogo con il Coordinator di *g*. Poi *n<sub>0</sub>* genera un identificativo di
-migrazione *migration_id* e propaga questi dati a tutto il g-nodo *w*, anche qui attraverso chiamate a metodo
-remoto fatte con un modulo *di identità*. Infine *n<sub>0</sub>* riceve conferma che tutti i nodi del grafo
-appartenenti al g-nodo *w* sono stati portati a conoscenza dei dati e del *migration_id*. A questo
-punto *n<sub>0</sub>* propaga analogamente a tutto il g-nodo *w* l'ordine di completare la migrazione.
+le operazioni trattate nel documento del modulo Migrations saranno state fatte in uno dei nodi di *w*,
+poi le informazioni necessarie all'ingresso saranno state propagate a tutti i nodi di *w* e infine a tutti
+i nodi di *w* verrà dato l'ordine di completare l'ingresso. Tutto questo sempre attraverso modalità che sono
+descritte nella documentazione del modulo Migrations.
 
-In questo secondo scenario dobbiamo esaminare cosa avviene in ogni sistema in cui vivono dei nodi del grafo che
-appartengono a *w*. In particolare in ogni sistema possono vivere una o più istanze di QspnManager (cioè nodi
-del grafo) che appartengono a *w* e quindi il demone *ntkd* farà alcune operazioni per ognuna di esse.
+**TODO spostare in Migrations** Come avviene la propagazione. Il nodo *n<sub>0</sub>* ha ottenuto i dati per fare
+ingresso. Allora *n<sub>0</sub>* genera un identificativo di migrazione *migration_id* e propaga questi
+dati a tutto il g-nodo *w* attraverso una collaborazione con il modulo Coordinator, che chiamiamo "propagazione
+con ritorno".
+Questa collaborazione gli permette di chiamare un metodo in ogni nodo del suo g-nodo di livello *k*
+e ottenere una risposta soltanto dopo che tutti i nodi di quel g-nodo hanno eseguito il metodo.
+Dopo aver ottenuto questa risposta *n<sub>0</sub>* propaga l'ordine di effettuare la duplicazione-con-migrazione
+a tutto il g-nodo *w* attraverso una collaborazione con il modulo Coordinator, che chiamiamo "propagazione
+senza ritorno".
+Questa collaborazione gli permette di chiamare un metodo in ogni nodo del suo g-nodo di livello *k*
+senza attendere una risposta.
 
-Per ogni istanza *n* di QspnManager che apparteneva a *w* il demone *ntkd* crea una nuova istanza di QspnManager
-basata sulla precedente *n* che detiene un indirizzo in *g*. Questa nuova identità è di tipo analogo (*principale*
-o *di connettività*) a ciò che era *n* in *w*.
+In questo secondo scenario quando il nodo *n* riceve l'ordine di fare l'ingresso (o se è stato esso stesso
+a avviare la sua propagazione) il demone *ntkd* crea una nuova identità *n’* duplicando *n* con l'ausilio del modulo
+Identities. Per la nuova identità *n’*, il demone *ntkd* crea una istanza di QspnManager basata sulla precedente istanza
+associata a *n*. Questa nuova identità è di tipo analogo (*principale* o *di connettività*) a ciò che era *n* in *w*.
 
-In questo modo si produce di fatto un g-nodo *w’* all'interno del g-nodo *g* ∈ *G* che è isomorfo al g-nodo *w* come esisteva prima.
+In questo modo si produce di fatto un g-nodo *w’* all'interno del g-nodo *g* ∈ *G* che è isomorfo al g-nodo *w*
+come esisteva prima nella rete precedente.
 
+In una operazione di ingresso viene data massima importanza alla stabilità della rete in cui si fa ingresso e
+nessuna importanza a quello che rimane della rete precedente. Per questo, diversamente da quanto come
+vedremo in seguito accade in una operazione di migrazione, non ci interessa che il vecchio g-nodo *w* rimanga
+come g-nodo *di connettività* ai livelli da *k* + 1 a *j*.  
 Notiamo che ci può essere il caso di un sistema in cui una istanza *n* di QspnManager è una identità *di connettività* in *w*,
 mentre l'identità *principale* del sistema non è in *w* ma in un diverso g-nodo della stessa rete. In questo
 caso se *w* entra in blocco in *G* mentre altri g-nodi della vecchia rete non lo hanno ancora fatto, il sistema
 in questione ha la sua identità *principale* in una rete distinta da *G* e una sua identità *di connettività* dentro *G*.
 
-#### <a name="Creazione_in_g_dismissione_precedente"></a>Creazione di una identità nella rete G e dismissione della precedente
+Inoltre il demone *ntkd*, se l'indirizzo assegnato a *n’* era temporaneamente *virtuale*, verrà avvisato dal
+modulo Migrations tra breve che un altro indirizzo *reale* è diventato disponibile in *h*. In quel momento
+esso modifica l'indirizzo detenuto da *n’*, interagendo con la relativa istanza di QspnManager.
 
-I dati che ogni identità *n* riceve in relazione a questo ingresso nel g-nodo *g* di livello *i* in *G* sono:
+#### <a name="Creazione_in_g"></a>Creazione di una identità nella rete G
+
+I dati che ogni identità *n* riceve in relazione a questo ingresso nel g-nodo *g* di livello *hl* in *G* sono:
 
 *   L'identificativo di migrazione *migration_id*. Si tratta di un identificativo univoco (un numero random) reso
     noto a tutti i partecipanti alla migrazione.
 *   L'indirizzo Netsukuku di *g* ∈ *G* e la sua anzianità e quella dei g-nodi superiori in *G*.
-*   La posizione riservata al nuovo g-nodo *w’* in *g* al livello *i* - 1 e la sua anzianità.
+*   La posizione riservata al nuovo g-nodo *w’* in *g* al livello *hl* - 1 e la sua anzianità.  
+    La posizione può essere *reale* o temporaneamente *virtuale*.
 
-Abbiamo già detto che tali informazioni giungono ad una precisa identità *n* che vive nel sistema. Il demone
-*ntkd* per ogni identità *n* crea una nuova identità *n’*.
+Abbiamo già detto come tali informazioni giungono ad un nodo *n* di *w*: il modulo *Migrations*
+si occupa di ottenere queste informazioni e di propagarle. Il demone *ntkd* si avvale del modulo
+*Identities* per duplicare *n* in *n’*: qui viene usato il *migration_id*.
 
-Questa operazione di creazione di una nuova identità viene realizzata dal demone *ntkd* avvalendosi del modulo
-*Identities*. Rimandiamo al relativo [documento](../ModuloIdentities/AnalisiFunzionale.md) se si vuole approfondire.
-Qui ricordiamo solo che l'operazione avviene in due fasi, con il metodo *prepare_add_identity* e il metodo
-*add_identity*. Questi metodi richiedono due dati: l'identificativo di migrazione *migration_id* e l'identità *n*
-da duplicare.
+Ora il demone *ntkd* ha il compito di preparare una istanza di QspnManager per la nuova identità *n’*.
 
-Durante le operazioni (che in questo documento non vengono dettagliate) che portano alla propagazione
-in tutto il g-nodo *w* partendo da *n<sub>0</sub>* (con avviso di completamento) delle suddette informazioni, il demone *ntkd*
-riguardo ogni generica identità *n* in *w* esegue (solo una volta) il primo metodo. In modo tale che quando
-*n<sub>0</sub>* riceve la conferma che tutto il g-nodo *w* è stato informato, esso
-sa con certezza che tutti i nodi hanno completato il primo metodo. A questo punto lo stesso
-*n<sub>0</sub>* inizierà la propagazione (senza avviso di completamento) a tutto *w* dell'ordine di completare la migrazione.
-
-Dopo un certo tempo, quindi, la generica identità *n* riceve l'ordine di completare la migrazione. A questo punto il demone *ntkd*
-riguardo l'identità *n* esegue il secondo metodo e realizza così la creazione di *n’*. Così facendo gli *archi-identità*
-sono stati correttamente duplicati da *n* a *n’*.
-
-Ora il demone *ntkd* procede con le successive operazioni usando le altre informazioni ricevute.
-
-Il g-nodo *g* di livello *i* è quello che è stato trovato non saturo in *G* e dove è stato riservato un posto per
-il g-nodo *w’*, o il singolo nodo *n’*.
-
-Naturalmente *i* è maggiore del livello *k* del g-nodo *w* (*k* vale 0 se l'ingresso è di un singolo nodo *n*).
-
-A queste informazioni il demone *ntkd* aggiunge le altre che già aveva nella sua identità *n* dal livello 0 fino al
-livello *k* - 1. Il demone *ntkd* infatti conosce l'indirizzo Netsukuku e il fingerprint a livello 0 dell'identità *n*,
-con tutti i valori delle anzianità fino al livello *k* - 1.
+Alle informazioni sopra elencate, il demone *ntkd* aggiunge le altre che già aveva nella sua identità *n*.
+In particolare le posizioni dell'indirizzo Netsukuku dal livello 0 fino al livello *hl* - 1 escluso,
+il fingerprint a livello 0, le anzianità dal livello 0 fino al livello *k* escluso.
 
 Il demone *ntkd* costruisce un indirizzo Netsukuku valido in *g* e il fingerprint a livello 0 per la nuova identità
 *n’* in *G*. Per l'identificativo del fingerprint a livello 0, usa lo stesso che aveva prima. Per le posizioni
 dell'indirizzo Netsukuku:
 
-*   Per i livelli maggiori o uguali a *i* - 1 usa le posizioni che gli sono state comunicate ora.
-*   Per i livelli minori di *i* - 1 usa le posizioni che aveva l'indirizzo dell'identità *n*.
+*   Per i livelli maggiori o uguali a *hl* - 1 usa le posizioni che gli sono state comunicate ora.
+*   Per i livelli minori di *hl* - 1 usa le posizioni che aveva l'indirizzo dell'identità *n*.
 
 Per le anzianità del fingerprint:
 
-*   Per i livelli maggiori o uguali a *i* - 1 usa le anzianità che gli sono state comunicate ora.
-*   Per i livelli maggiori o uguali a *k* e minori di *i* - 1 usa zero (nel senso che è il primo g-nodo).
+*   Per i livelli maggiori o uguali a *hl* - 1 usa le anzianità che gli sono state comunicate ora.
+*   Per i livelli maggiori o uguali a *k* e minori di *hl* - 1 usa zero (nel senso che è il primo g-nodo).
 *   Per i livelli minori di *k* usa le anzianità che erano dei g-nodi a cui apparteneva l'identità *n*.
 
 Poi il demone *ntkd* costruisce le istanze degli archi (IQspnArc) basandosi sugli *archi-identità* duplicati prima.
@@ -284,14 +294,14 @@ Il demone *ntkd* costruisce una istanza di QspnManager fornendo:
     interne a *w* conosciute da *n*. Vedere sotto la spiegazione per l'argomento `previous_identity`.
 *   `IQspnStubFactory stub_factory` - La stub factory per le comunicazioni con i vicini.
 *   `int hooking_gnode_level` - Il livello *k* del g-nodo *w* che sta facendo il suo ingresso in *G*, 0 se era il singolo nodo *n*.
-*   `int into_gnode_level` - Il livello *i* del g-nodo *g* in cui *w* sta facendo ingresso.
+*   `int into_gnode_level` - Il livello *hl* del g-nodo *g* in cui *w* sta facendo ingresso.
 *   `QspnManager previous_identity` - Il manager precedente. La nuova istanza di QspnManager copia da esso
     nella mappa i percorsi noti verso i g-nodi di livello inferiore a *k* (perché sono in *w*).  
     Grazie a questi percorsi la nuova istanza calcola i fingerprint dal livello 1 al livello *k* (se *k* è maggiore di 0).  
     Inoltre la nuova istanza di QspnManager copia da esso il tipo dell'identità: *principale* o *di connettività* ai livelli
     da *i<sub>0</sub>* a *j<sub>0</sub>*.
 
-Una istanza di QspnManager costruita in questo modo entra in una fase di bootstrap ai livelli da *k* a *i* - 1.
+Una istanza di QspnManager costruita in questo modo entra in una fase di bootstrap al livello *k*.
 In seguito alcuni nodi di *w’* riceveranno degli ETP completi dai loro diretti vicini esterni a *w’* ma interni
 a *g*. Poi propagheranno le nuove conoscenze (cioè percorsi verso g-nodi esterni a *w’*) trasmettendo degli ETP
 ai nodi del grafo interni a *w’*. Alla fine ogni nuovo nodo in *w’* riceve queste nuove
@@ -304,6 +314,21 @@ Anche ad una istanza di QspnManager costruita in questo modo, il demone *ntkd* s
 *   `arc_is_changed (IQspnArc changed_arc)`.
 *   `arc_remove (IQspnArc removed_arc)`.
 
+Abbiamo detto che la posizione riservata al nuovo g-nodo *w’* in *g* al livello *hl* - 1 può essere
+*reale* oppure temporaneamente *virtuale*. Se inizialmente è *virtuale*, nel momento in cui si libera la posizione *reale*
+il demone *ntkd* viene avvisato. Allora esso chiama su questa istanza di QspnManager il metodo *make_real*.  
+Questa chiamata può arrivare anche prima che *n’* abbia completato la sua fase di bootstrap. In questo caso non serve
+alcun ETP.  
+Se invece *n’* ha già completato la sua fase di bootstrap, questo metodo provocherà immediatamente la
+trasmissione di un ETP a tutti i vicini di *n’* esterni a *w’*. In esso la lista dei percorsi è vuota, perché va segnalato
+soltanto il nuovo percorso verso il nuovo identificativo *reale* di *w’* al livello *hl* - 1.
+
+Siccome a cambiare indirizzo Netsukuku sono tutti i membri del g-nodo *w’*, tutti i vicini di *n’* interni a *w’* hanno
+cambiato il proprio. Poiché il modulo permette di vedere l'indirizzo Netsukuku del vicino collegato ad un dato arco
+(con il metodo *get_naddr_for_arc*) questa informazione va aggiornata nella memoria del modulo.
+
+#### <a name="Dismissione_precedente"></a>Dismissione della precedente identità
+
 Una volta costruita la nuova istanza, il demone *ntkd* potrà dismettere (rimuovere ogni riferimento che deteneva) la
 vecchia istanza di QspnManager che gestisce l'identità *n*, la quale adesso sicuramente non è la *principale*.
 
@@ -312,41 +337,40 @@ Prima di farlo, il demone *ntkd* chiama su di essa il metodo *destroy* per segna
 
 ### <a name="Migrazione"></a>Migrazione
 
-Supponiamo che il g-nodo *w* (a cui appartiene il nodo del grafo *n* che vive nel nostro sistema) migra da un g-nodo
-*g* di livello *i* ad un diverso g-nodo *h* (sempre di livello *i*) il quale appartiene a g-nodi distinti da quelli
-di *g* fino al livello *j*. In questa trattazione è incluso il caso in cui *w* equivale a *n*.
+Supponiamo che il g-nodo *w* di livello *k* (a cui appartiene il nodo del grafo *n* che vive nel nostro sistema) migra
+da un g-nodo *g* di livello *k* + 1 ad un diverso g-nodo *h* di livello *hl*, con *hl* ≥ *k* + 1, il quale appartiene
+a g-nodi distinti da quelli di *g* fino al livello *j*, con *j* ≥ *hl*.
+In questa trattazione è incluso il caso in cui *w* equivale a *n*.
 
-In qualche modo si è eletto un nodo *n<sub>0</sub>* in *w* — che deve essere l'identità principale del suo sistema — che
-ha un arco verso *h* a coordinare la migrazione. L'identità *n<sub>0</sub>* chiede ad un suo diretto vicino in *h*,
-chiamiamolo *h<sub>0</sub>*, i dati che servono all'ingresso. Questa richiesta da *n<sub>0</sub>* a *h<sub>0</sub>*
-viene fatta con i metodi remoti di un modulo *di identità*. Per rispondere, *h<sub>0</sub>* inizia un dialogo con il
-Coordinator di *h*. Inoltre l'identità *n<sub>0</sub>* inizia un dialogo con il Coordinator di *g* per ottenere la
-prenotazione di un identificativo *virtuale* al livello *i* - 1 in *g* e la sua anzianità. Poi l'identità *n<sub>0</sub>*
-genera un identificativo di migrazione *migration_id* e propaga questi dati a tutto il g-nodo *w*, anche qui attraverso
-chiamate a metodo remoto fatte con un modulo *di identità*. Infine *n<sub>0</sub>* riceve conferma che tutti i nodi del
-grafo appartenenti al g-nodo *w* sono stati portati a conoscenza dei dati e del *migration_id*. A questo punto
-*n<sub>0</sub>* propaga analogamente a tutto il g-nodo *w* l'ordine di completare la migrazione.
+Queste migrazioni avvengono sempre all'interno di una migration-path che è stata coordinata dal modulo Migrations
+per permettere l'ingresso di un g-nodo in una rete a cui non apparteneva. In questo scenario rientra anche il
+caso di uno split di g-nodo.
 
-Dobbiamo esaminare cosa avviene in ogni sistema in cui vivono dei nodi del grafo che appartengono a *w*. In particolare
-in ogni sistema possono vivere una o più istanze *n* di QspnManager (cioè nodi del grafo) che appartengono a *w*. Ogni
-identità *n* in *w* poteva essere l'identità *principale* o una *di connettività* in g-nodi interni a *w*.<sup>1</sup>
-Non sicuramente un'identità *di connettività* in g-nodi di livello superiore a *w*, in quanto il g-nodo *w* che migra
-(considerato nel suo insieme come singolo vertice nel grafo *[G]<sub>i-1</sub>*) è sicuramente un g-nodo *reale*. Nel
-senso che il suo Netsukuku address, che è composto da identificativi dal livello *i*-1 in su, non ha alcun componente *virtuale*.
+Come detto prima in riferimento alle operazioni di ingresso, anche per la migrazione abbiamo che:
 
-Per ogni istanza *n* di QspnManager che apparteneva a *w* il demone *ntkd* crea una nuova istanza di QspnManager *n’*
-basata su *n* che è una identità in *h* di tipo analogo (*principale* o *di connettività*) a ciò che era *n* in *w*.
+*   Riguardo il generico nodo *n* di *w*, il suo indirizzo Netsukuku è *reale* dal livello *k* in su.
+*   Se questo non è l'ultimo passo della migration-path, il nodo *n’* (duplicato da *n*) assume temporaneamente
+    un indirizzo *virtuale* in *h* al livello *k*.
 
-In questo modo si produce di fatto un g-nodo *w’* all'interno del g-nodo *h* che è isomorfo al g-nodo *w* all'interno del g-nodo *g*.
+Se *k* = 0, sempre come detto prima in riferimento alle operazioni di ingresso, il nodo *n* nel modulo Migrations
+ha ricevuto le informazioni per questa migrazione direttamente dal nodo che ha operato la migrazione precedente
+nella migration-path.  
+Altrimenti il nodo *n* le ha ricevute ugualmente nel modulo Migrations attraverso una propagazione
+che ha interessato tutto il g-nodo *w*.  
+Comunque, il demone *ntkd* con l'ausilio del modulo Identities duplica *n* in *n’* e poi prepara per quest'ultimo
+una istanza di QspnManager.
 
-Inoltre viene modificato l'indirizzo detenuto da *n* in uno *di connettività* ai livelli da *i* a *j*.
+In questo modo si produce di fatto un g-nodo *w’* all'interno del g-nodo *h* che è isomorfo al g-nodo *w*
+all'interno del g-nodo *g*.
 
-* * *
+Inoltre il demone *ntkd* modifica l'indirizzo detenuto da *n*, interagendo con la relativa istanza di
+QspnManager, in uno *di connettività* ai livelli da *k* + 1 a *j*.
 
-**Nota 1:** Quando diciamo che un nodo del grafo (o una identità) *n*, con *n* ∈ *w*, è *di connettività* in g-nodi
-interni a *w* intendiamo dire che l'identità *n* è *di connettività* ai livelli da
-*i<sub>0</sub>* a *j<sub>0</sub>*, dove *i<sub>0</sub>* è strettamente minore del livello di *w*. Non si fa alcuna
-assunzione invece sul valore *j<sub>0</sub>*.
+In questo modo il g-nodo *w* diventa *di connettività* ai livelli da *k* + 1 a *j*.
+
+Inoltre il demone *ntkd*, se l'indirizzo assegnato a *n’* era temporaneamente *virtuale*, verrà avvisato dal
+modulo Migrations tra breve che un altro indirizzo *reale* è diventato disponibile in *h*. In quel momento
+esso modifica l'indirizzo detenuto da *n’*, interagendo con la relativa istanza di QspnManager.
 
 #### <a name="Creazione_in_h"></a>Creazione di una identità in h
 
@@ -354,22 +378,20 @@ I dati che ogni identità *n* riceve in relazione a questa migrazione da *g* in 
 
 *   L'identificativo di migrazione *migration_id*. Si tratta di un identificativo univoco (un numero random) reso
     noto a tutti i partecipanti alla migrazione.
-*   L'indirizzo Netsukuku di *h* e la sua anzianità e quella dei suoi g-nodi superiori ai livelli da *i* a *j*.
-*   Un identificativo *reale* libero al livello *i* - 1 in *h*, oppure uno *virtuale* e la prenotazione di uno reale
+*   L'indirizzo Netsukuku di *h* e la sua anzianità e quella dei suoi g-nodi superiori ai livelli da *hl* in su.
+*   Un identificativo *reale* libero al livello *hl* - 1 in *h*, oppure uno *virtuale* e la prenotazione di uno reale
     che verrà presto liberato.
-*   L'anzianità del nuovo g-nodo al livello *i* - 1 in *h*.
-*   Un identificativo *virtuale* al livello *i* - 1 in *g*, il primo libero.
+*   L'anzianità del nuovo g-nodo al livello *hl* - 1 in *h*.
+*   Un identificativo *virtuale* al livello *k* in *g*, il primo libero.
 *   L'anzianità del nuovo identificativo in *g*.
 
 Abbiamo già detto che tali informazioni giungono ad una precisa identità *n* che vive nel sistema. Il demone *ntkd* per
 ogni identità *n* crea una nuova identità *n’*.
 
 Questa operazione di creazione di una nuova identità viene realizzata dal demone *ntkd* avvalendosi del modulo
-*Identities*, come esposto sopra nella trattazione dell'ingresso in diversa rete.
+*Identities*: qui viene usato il *migration_id*.
 
 Dopo il demone *ntkd* procede con le successive operazioni usando le altre informazioni ricevute.
-
-Naturalmente *i* è maggiore del livello *k* del g-nodo *w* (*k* vale 0 se la migrazione è di un singolo nodo *n*).
 
 A queste informazioni il demone *ntkd* aggiunge le altre che già aveva nella sua identità *n* dal livello 0 fino al
 livello *k* - 1. Il demone *ntkd* infatti conosce l'indirizzo Netsukuku e il fingerprint a livello 0 dell'identità *n*,
@@ -379,15 +401,13 @@ Il demone *ntkd* costruisce un indirizzo Netsukuku valido in *h* e il fingerprin
 *n’* in *h*. Per l'identificativo del fingerprint a livello 0, usa lo stesso che aveva prima. Per le posizioni
 dell'indirizzo Netsukuku:
 
-*   Per i livelli maggiori di *j* usa le posizioni che aveva l'indirizzo dell'identità *n*.
-*   Per i livelli maggiori o uguali a *i* - 1 e minori o uguali a *j* usa le posizioni che gli sono state comunicate ora.
-*   Per i livelli minori di *i* - 1 usa le posizioni che aveva l'indirizzo dell'identità *n*.
+*   Per i livelli maggiori o uguali a *hl* - 1 usa le posizioni che gli sono state comunicate ora.
+*   Per i livelli minori di *hl* - 1 usa le posizioni che aveva l'indirizzo dell'identità *n*.
 
 Per le anzianità del fingerprint:
 
-*   Per i livelli maggiori di *j* usa le anzianità che aveva l'indirizzo dell'identità *n*.
-*   Per i livelli maggiori o uguali a *i* - 1 e minori o uguali a *j* usa le anzianità che gli sono state comunicate ora.
-*   Per i livelli maggiori o uguali a *k* e minori di *i* - 1 usa zero (nel senso che è il primo g-nodo).
+*   Per i livelli maggiori o uguali a *hl* - 1 usa le anzianità che gli sono state comunicate ora.
+*   Per i livelli maggiori o uguali a *k* e minori di *hl* - 1 usa zero (nel senso che è il primo g-nodo).
 *   Per i livelli minori di *k* usa le anzianità che erano dei g-nodi a cui apparteneva l'identità *n*.
 
 Notiamo che il fatto di usare per la nuova identità di *n* lo stesso identificativo di fingerprint a livello 0 che si usava
@@ -397,7 +417,7 @@ nella vecchia identità è necessario e non comporta alcun problema.
     interni a *w*. Questi verranno copiati nella nuova identità.
 *   Non comporta alcun problema riguardo l'assegnazione dell'identificativo di fingerprint ai g-nodi di livello maggiore
     di *k*. Infatti il g-nodo *w* in *g* avrà lo stesso identificativo di fingerprint del g-nodo isomorfo *w’* in *h*. Ma il
-    g-nodo *w* in *g* avrà ora una componente *virtuale* al livello *i*-1 e un valore di anzianità maggiore (significa che
+    g-nodo *w* in *g* avrà ora una componente *virtuale* al livello *k* e un valore di anzianità maggiore (significa che
     è meno anziano) degli altri g-nodi in *g*. Quindi è impossibile che il g-nodo *g* e il g-nodo *h* ottengano per questo
     un identificativo di fingerprint identico.
 
@@ -436,14 +456,14 @@ Costruisce una istanza di QspnManager fornendo:
     interne a *w* conosciute da *n*. Vedere sotto la spiegazione per l'argomento `previous_identity`.
 *   `IQspnStubFactory stub_factory` - La stub factory per le comunicazioni con i vicini.
 *   `int hooking_gnode_level` - Il livello *k* del g-nodo *w* che sta facendo la migrazione, 0 se era il singolo nodo *n*.
-*   `int into_gnode_level` - Il livello *i* del g-nodo *g* in cui *w* sta facendo ingresso.
+*   `int into_gnode_level` - Il livello *hl* del g-nodo *h* in cui *w* sta migrando.
 *   `QspnManager previous_identity` - Il manager precedente. La nuova istanza di QspnManager copia da esso
     nella mappa i percorsi noti verso i g-nodi di livello inferiore a *k* (perché sono in *w*).  
     Grazie a questi percorsi la nuova istanza calcola i fingerprint dal livello 1 al livello *k* (se *k* è maggiore di 0).  
     Inoltre la nuova istanza di QspnManager copia da esso il tipo dell'identità: *principale* o *di connettività* ai livelli
     da *i<sub>0</sub>* a *j<sub>0</sub>*.
 
-Una istanza di QspnManager costruita in questo modo entra in una fase di bootstrap ai livelli da *k* a *i* - 1.
+Una istanza di QspnManager costruita in questo modo entra in una fase di bootstrap al livello *k*.
 In seguito alcuni nodi di *w’* riceveranno degli ETP completi dai loro diretti vicini esterni a *w’* ma interni
 a *g*. Poi propagheranno le nuove conoscenze (cioè percorsi verso g-nodi esterni a *w’*) trasmettendo degli ETP
 ai nodi del grafo interni a *w’*. Alla fine ogni nuovo nodo in *w’* riceve queste nuove
@@ -465,14 +485,14 @@ Anche ad una istanza di QspnManager costruita in questo modo, il demone *ntkd* s
 *   `arc_is_changed (IQspnArc changed_arc)`.
 *   `arc_remove (IQspnArc removed_arc)`.
 
-Abbiamo detto che tra i dati di cui è in possesso l'identità *n’* riguardanti questa migrazione c'è un identificativo
-*reale* libero al livello *i* - 1 in *h*, oppure uno *virtuale* e la prenotazione di uno reale che verrà presto liberato.
-Nel momento in cui l'identità *n’* può trasformare l'identificativo *virtuale* al livello *i* - 1 in uno *reale*, il
-demone *ntkd* chiama su questa istanza di QspnManager il metodo *make_real*.
-
-Per la chiamata di tale metodo, solo se *n’* ha già completato la sua fase di bootstrap, verrà avviata immediatamente la
+Abbiamo detto che la posizione riservata al nuovo g-nodo *w’* in *h* al livello *hl* - 1 può essere
+*reale* oppure temporaneamente *virtuale*. Se inizialmente è *virtuale*, nel momento in cui si libera la posizione *reale*
+il demone *ntkd* viene avvisato. Allora esso chiama su questa istanza di QspnManager il metodo *make_real*.  
+Questa chiamata può arrivare anche prima che *n’* abbia completato la sua fase di bootstrap. In questo caso non serve
+alcun ETP.  
+Se invece *n’* ha già completato la sua fase di bootstrap, questo metodo provocherà immediatamente la
 trasmissione di un ETP a tutti i vicini di *n’* esterni a *w’*. In esso la lista dei percorsi è vuota, perché va segnalato
-soltanto il nuovo percorso verso il nuovo identificativo *reale* di *w’* al livello *i* - 1.
+soltanto il nuovo percorso verso il nuovo identificativo *reale* di *w’* al livello *hl* - 1.
 
 Siccome a cambiare indirizzo Netsukuku sono tutti i membri del g-nodo *w’*, tutti i vicini di *n’* interni a *w’* hanno
 cambiato il proprio. Poiché il modulo permette di vedere l'indirizzo Netsukuku del vicino collegato ad un dato arco
@@ -483,29 +503,30 @@ cambiato il proprio. Poiché il modulo permette di vedere l'indirizzo Netsukuku 
 Con i dati suddetti relativi alla migrazione il demone *ntkd* sull'istanza di QspnManager *n* chiama il metodo
 *make_connectivity*. Con questa chiamata segnala al modulo che questa diventa una identità *di connettività*. Gli argomenti passati sono:
 
-*   Il livello *i* della migrazione.
-*   Il livello *j* della migrazione.
+*   Il livello *hl* della migrazione. Cioè il livello del g-nodo ospitante.
+*   Il livello *j* della migrazione. Cioè il livello del massimo distinto g-nodo fra la nuova posizione
+    dentro il g-nodo ospitante e la vecchia posizione che ora è di connettività.
 *   Una callback per modificare il proprio indirizzo Netsukuku e quelli dei vicini interni a *w*.  
     Cambia l'indirizzo Netsukuku di *n*. In realtà l'unica cosa che cambia in esso è il nuovo identificativo *virtuale* al
-    livello *i* - 1, cioè dentro *g*. Ma questo dato nella classe dell'indirizzo non è accessibile in scrittura al modulo
+    livello *k*, cioè dentro *g*. Ma questo dato nella classe dell'indirizzo non è accessibile in scrittura al modulo
     QSPN, quindi con questa callback viene generata una istanza di IQspnMyNaddr che il modulo considera nuova.  
     Cambiano analogamente gli indirizzi Netsukuku dei vicini che erano interni a *w*. Poiché il modulo permette di vedere
     l'indirizzo Netsukuku del vicino collegato ad un dato arco (con il metodo *get_naddr_for_arc*)
     anche questa informazione va aggiornata nella memoria del modulo.
 *   Una callback per modificare il proprio fingerprint di nodo (a livello 0) e i fingerprint dei g-nodi destinazione che
     conosce interni a *w*.  
-    Cambia, infatti, per tutti i nodi all'interno di *w*, l'anzianità del proprio g-nodo di livello *i* - 1, cioè l'anzianità
+    Cambia, infatti, per tutti i nodi all'interno di *w*, l'anzianità del proprio g-nodo di livello *k*, cioè l'anzianità
     di *w* dentro *g*.
 
 Verrà avviata tra pochi istanti la trasmissione di un ETP a tutti i vicini di *n* esterni a *w*. In esso va segnalata
-soltanto la rimozione del percorso verso il vecchio identificativo *reale* di *w* al livello *i* - 1.
+soltanto la rimozione del percorso verso il vecchio identificativo *reale* di *w* al livello *k*.
 
 Questo ETP non deve raggiungere altri nodi che fanno parte della migrazione, che potrebbero aver avviato anch'essi le
 operazioni di *make_connectivity* oppure ancora no. In questo caso infatti questo ETP
 produrrebbe in essi una confusione. Quindi vogliamo che non solo l'ETP venga trasmesso da *n*
 ai soli suoi vicini che non sono in *w*, ma anche che questo ETP non venga propagato in qualche modo che possa
 rientrare in *w*. Dobbiamo cioè preparare questo ETP di modo che abbia da subito nella lista di hop percorsi
-sia l'identitificativo nuovo virtuale al livello *i* - 1, sia l'identificativo vecchio reale al livello *i* - 1.
+sia l'identitificativo nuovo virtuale al livello *k*, sia l'identificativo vecchio reale al livello *k*.
 
 Il demone *ntkd* sull'istanza di QspnManager *n* deve registrare un ascoltatore sul segnale *remove_identity*. Infatti
 solo uno dei membri di *w* verifica in prima persona se il g-nodo *w* può essere dismesso. Gli altri si propagano l'ordine
@@ -517,7 +538,7 @@ In seguito il demone *ntkd* sull'istanza di QspnManager *n* può chiamare questi
     Chiede al modulo di rimuovere gli archi che collegano a g-nodi di livello maggiore di *j*.
 *   *check_connectivity*  
     Il demone *ntkd* chiama questo metodo periodicamente sull'istanza di QspnManager *n*. Con esso chiede al modulo
-    di controllare se la connettività interna dei g-nodi di livello da *i* a *j* è garantita anche senza il g-nodo *w*.  
+    di controllare se la connettività interna dei g-nodi di livello da *k*+1 a *j* è garantita anche senza il g-nodo *w*.  
     Se il livello del g-nodo *w* è maggiore di 0, cioè se effettivamente era un g-nodo a migrare, vorremmo che fosse
     solo un singolo nodo in *w* a fare periodicamente queste operazioni di verifica. **TODO** investigare su come fare.  
     Vorremmo evitare di fare questa operazione più volte per un g-nodo perché, lo ricordiamo, prima di chiamare
