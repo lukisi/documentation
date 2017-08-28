@@ -145,13 +145,16 @@ sfruttando il punto di contatto migliore.
 
 ### <a name="Fusione_reti_fase1"></a>Prima fase - valutazione del singolo nodo
 
-Diciamo subito che il modulo Migrations opera solo nella *identità principale* di un nodo. Quindi *n* e *v* non
-sono identità *di connettività*.  
-Sebbene siano identità principali potrebbero in teoria essere in
-una fase temporanea in cui il loro indirizzo non ha tutte le componenti *reali*.
-Però il modulo Migrations del nodo *n*, avendo rilevato la presenza del vicino *v* di altra rete, inizia questa prima
-fase (cioè valuta se *G* dovrebbe entrare in *J*) solo se *n* e *v* hanno entrambi un indirizzo completamente
-*reale*.
+Diciamo subito che il modulo Migrations è un modulo *di identità*, cioè viene creata una istanza
+per ogni identità nel sistema. Ma esso opera attivamente solo nella *identità principale* del sistema.
+Nelle altre identità si limita a rispondere alle richieste dei vicini con una eccezione NotPrincipalError.
+
+Inoltre diciamo che tale modulo opera attivamente solo se l'identità ha un indirizzo completamente *reale*.
+Infatti ricordiamo che l'identità principale di un sistema potrebbe essere in
+una fase temporanea in cui il suo indirizzo non ha tutte le componenti *reali*.
+Anche in questi casi il modulo si limita a rispondere alle richieste dei vicini con una eccezione VirtualAddressError.
+
+Quindi nella nostra trattazione *n* e *v* hanno entrambi un indirizzo completamente *reale*.
 
 Il modulo Migrations del nodo *n* prepara una struttura dati che descrive *G* come è vista da *n*. Poi contatta il nodo *v*,
 gli fornisce questa struttura e gli chiede al contempo di ricevere una struttura dati che descrive *J* come è vista da *v*.  

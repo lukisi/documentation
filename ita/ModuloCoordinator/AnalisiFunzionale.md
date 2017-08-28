@@ -530,6 +530,8 @@ implementato dall'utilizzatore del modulo richiama il metodo `xyz` nel modulo Mi
 
 Il modulo Coordinator fornisce inoltre i seguenti metodi:
 
+*   `get_n_nodes()`.  
+    Per chiedere al Coordinator della rete il numero di singoli nodi.
 *   `reserve(int lvl, int enter_id)`.  
     Per riservare un posto nel proprio g-nodo.
 *   `get_migrations_memory` e `set_migrations_memory`.  
@@ -629,6 +631,14 @@ CompletedEnterResponse. Essa contiene:
 
 Questo Object serializzabile è quello che il metodo `completed_enter` del CoordinatorClient restituisce al chiamante.  
 Ed è quello che il metodo `completed_enter` del modulo Coordinator restituisce al chiamante.
+
+#### Metodo get_n_nodes
+
+Il metodo `get_n_nodes` del modulo Coordinator viene chiamato per chiedere al nodo Coordinator della rete il numero
+di singoli nodi in essa.
+
+Il metodo, attraverso la classe client del servizio CoordinatorClient, invia una richiesta
+[NumberOfNodesRequest](#Numero_nodi_nella_rete) al nodo Coordinator di *G*. La risposta è un intero.
 
 #### Metodo reserve
 
