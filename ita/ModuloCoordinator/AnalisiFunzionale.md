@@ -49,7 +49,11 @@ Le operazioni di ingresso in una rete, che sono messe in atto quando due reti di
 per mezzo di alcuni archi, non sono di pertinenza del modulo Coordinator, bensì del modulo Migrations.
 
 Però gli algoritmi del modulo Migrations per questi compiti hanno dei requisiti che possono essere soddisfatti
-attrtaverso una stretta collaborazione con il modulo Coordinator:
+attrtaverso una stretta collaborazione con il modulo Coordinator.
+
+#### Esecuzioni sul nodo Coordinator di un g-nodo
+
+In alcuni casi un g-nodo deve comportarsi come una unica entità. In questi casi abbiamo questi requisiti:
 
 1.  Il modulo Migrations in esecuzione in un qualsiasi singolo nodo (ad esempio un border-nodo che ha incontrato
     un vicino di un'altra rete) vuole far eseguire alcuni suoi metodi nel nodo Coordinator di tutta la rete
@@ -71,8 +75,12 @@ i record del database distribuito realizzato dal servizio Coordinator.
 Il modulo Coordinator quindi mette a disposizione dei metodi per leggere o scrivere in questa memoria
 garantendo la coerenza del dato nel database distribuito.
 
-Esistono anche altri due tipi di operazioni necessarie al modulo Migrations che possono avvalersi della
-collaborazione del modulo Coordinator. In queste il modulo Migrations in esecuzione in un qualsiasi singolo
+Si vedranno nella trattazione i metodi `evaluate_enter`, `begin_enter`, `completed_enter`,
+`get_migrations_memory` e `set_migrations_memory`.
+
+#### Esecuzioni su tutti i nodi di un g-nodo
+
+In alcuni casi il modulo Migrations in esecuzione in un qualsiasi singolo
 nodo (ad esempio ...)
 vuole far eseguire alcuni suoi metodi in tutti i singoli nodi di un g-nodo.  
 Queste esecuzioni possono essere di due tipi:
@@ -85,8 +93,21 @@ Queste esecuzioni possono essere di due tipi:
 Per queste necessità esistono metodi del modulo Coordinator che iniziano la propagazione, relativi metodi
 remoti per la propagazione, e relativi delegati da chiamare (una volta) su ogni singolo nodo.  
 Ogni singolo metodo di questi ha direttamente codificata in sé la tipologia, cioè se *con* o
-*senza* ritorno e in quest'ultimo caso come trattare il valore restituito da ogni singolo nodo e combinarlo
+*senza* ritorno e nel primo caso come trattare il valore restituito da ogni singolo nodo e combinarlo
 col valore restituito dal delegato in questo nodo.
+
+Si vedranno nella trattazione i metodi `...`, `...`.
+
+#### Altre collaborazioni
+
+Una importante funzione del modulo Coordinator è quella di riservare un posto in un g-nodo. Anche
+questa si può vedere come una fondamentale collaborazione del modulo Coordinator per le esigenze
+del modulo Migrations.
+
+Un altro caso di collaborazione richiesta dal modulo Migrations è un metodo che il modulo Coordinator
+mette a disposizione per chiedere al nodo Coordinator della rete il numero di singoli nodi in essa.
+
+Si vedranno nella trattazione i metodi `reserve`, `get_n_nodes`.
 
 ## <a name="Servizio_coordinator"></a>Il servizio Coordinator
 
