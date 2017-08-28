@@ -96,7 +96,7 @@ Ogni singolo metodo di questi ha direttamente codificata in sé la tipologia, ci
 *senza* ritorno e nel primo caso come trattare il valore restituito da ogni singolo nodo e combinarlo
 col valore restituito dal delegato in questo nodo.
 
-Si vedranno nella trattazione i metodi `...`, `...`.
+Si vedranno nella trattazione i metodi `prepare_migration`, `finish_migration`.
 
 #### Altre collaborazioni
 

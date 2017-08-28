@@ -42,7 +42,12 @@ una rete a cui non apparteneva. Questo può rendersi necessario a fronte di due 
 
 Nelle varie fasi delle sue operazioni, il modulo Migrations si avvale della collaborazione del
 modulo Coordinator, pur non avendo una diretta dipendenza sul modulo Coordinator. Questo è reso
-possibile dal coordinamento dell'utilizzatore di questi due moduli.
+possibile dall'utilizzatore di questi due moduli, cioè il demone *ntkd*, attraverso l'implementazione
+di precise interfacce o delegati.
+
+Le diverse modalità di questa collaborazione sono dettagliate nel documento di analisi del
+modulo Coordinator ([qui](../ModuloCoordinator/AnalisiFunzionale.md#Collaborazione_migrations))
+e comunque verranno illustrate nel resto del presente documento dove necessario.
 
 In pratica questa collaborazione consiste in questo: il modulo Migrations
 in alcuni dei suoi algoritmi in esecuzione in un singolo nodo *n*  ∈ *g* ha bisogno
@@ -192,7 +197,8 @@ nodo *n* procede come vedremo nel seguito. Se è vero il contrario, invece, il n
 il nodo *v* di sua iniziativa a fare le operazioni.
 
 Se invece il nodo *n* vede che la differenza non è molta, allora riparte: chiede l'informazione
-*numero di singoli nodi in G* al nodo Coordinator di *G*. Poi comunica la struttura di cui sopra al
+*numero di singoli nodi in G* al nodo Coordinator di *G*. Qui abbiamo una collaborazione col modulo Coordinator,
+quella relativa al suo metodo `get_n_nodes`. Poi comunica la struttura di cui sopra al
 nodo *v* indicandogli di rispondere con la medesima struttura, ma solo dopo aver chiesto l'informazione
 *numero di singoli nodi in J* al nodo Coordinator di *J*.  
 A questo punto anche se la differenza fosse piccola entrambi i nodi *n* e *v* sanno se proseguire o meno.
@@ -219,10 +225,8 @@ La classe EvaluateEnterData è definita nel modulo Migrations. Si tratta di una 
 `int min_lvl`, `int evaluate_enter_id`.  
 L'istanza `evaluate_enter_data` andrà passata ad un metodo del modulo Migrations nel nodo Coordinator della rete.
 
-Ora il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator (dal suo utilizzatore diretto, poiché
-non è detto che il modulo Migrations abbia una dipendenza diretta sul modulo Coordinator) il
-metodo proxy `evaluate_enter` (vedi [qui](../ModuloCoordinator/AnalisiFunzionale.md#Collaborazione_migrations)).  
-A questo metodo viene passato il livello *levels* un `Object evaluate_enter_data`.  
+Ora il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
+metodo proxy `evaluate_enter`. A questo metodo viene passato il livello *levels* e un `Object evaluate_enter_data`.  
 La reale classe che implementa questa struttura dati non è infatti nota al modulo Coordinator. Questi sa solo
 che è serializzabile.
 
@@ -849,12 +853,39 @@ ogni volta che, durante questa ricerca, verrà chiesto al Coordinator di un g-no
 Nell'algoritmo abbiamo detto che il nodo *v* contatta un singolo nodo in `current.gnode`. Questo contatto avviene
 inviando un pacchetto da trasmettere con meccanismi simili al PeerServices. Ma non viene instradato il
 pacchetto (attraverso il miglior gateway) direttamente al g-nodo `current.gnode`, bensì attraverso
-il percorso indicato in `current.parent.parent....`.  
-Sia ad esempio `current.gnode` il g-nodo D, mentre nella traccia dei parent il percorso
-è composto da A, B, C, allora prima si instrada il pacchetto verso A. Quando si raggiunge il primo singolo
-nodo appartenente a A si instrada il pacchetto verso B. Poi verso C e infine verso D. Tutti questi passi
-sono TupleGNode di livello `ask_lvl + 1` che dovrebbero risultare l'uno adiacente all'altro. Infine il primo singolo nodo
-che si incontra dentro D avvia una comunicazione TCP con *v* tramite indirizzi
+il percorso indicato in `current.parent.parent....`.
+
+Supponiamo ad esempio che `current` si riferisce al g-nodo D che è adiacente al g-nodo C, adiacente
+al g-nodo B, adiacente al g-nodo A, adiacente al g-nodo S a cui appartiene *v*. Tutti questi sono g-nodi
+di livello `ask_lvl + 1`. Supponiamo inoltre che il g-nodo di livello `ask_lvl` dentro S diretto vicino
+del g-nodo A abbia posizione *reale* al livello `ask_lvl` uguale a *p<sub>A</sub>*. Poi il g-nodo di
+livello `ask_lvl` dentro A diretto vicino del g-nodo B abbia posizione *reale* al livello `ask_lvl` uguale
+a *p<sub>B</sub>*. Lo stesso per *p<sub>C</sub>* e per *p<sub>D</sub>*. Questi dati sono stati precedentemente raccolti dentro
+`current`.
+
+*   `current.gnode` = D
+*   `current.mig_pos` = *p<sub>D</sub>*
+*   `current.parent.gnode` = C
+*   `current.parent.mig_pos` = *p<sub>C</sub>*
+*   `current.parent.parent.gnode` = B
+*   `current.parent.parent.mig_pos` = *p<sub>B</sub>*
+*   `current.parent.parent.parent.gnode` = A
+*   `current.parent.parent.parent.mig_pos` = *p<sub>A</sub>*
+*   `current.parent.parent.parent.parent.gnode` = S
+*   `current.parent.parent.parent.parent.mig_pos` = *null*
+*   `current.parent.parent.parent.parent.parent` = *null*
+
+Prima si instrada il pacchetto verso A. Quando si raggiunge il primo singolo nodo appartenente al g-nodo A
+si verifica anche che il singolo nodo subito precedente era del g-nodo S e aveva posizione *p<sub>A</sub>*
+al livello `ask_lvl`.  
+Poi si instrada il pacchetto verso B. Poi verso C e infine verso D.
+
+Se durante il percorso questo requisito non è soddisfatto (cioè ad esempio non si raggiunge A avendo
+*p<sub>A</sub>* dentro S come diretto vicino, o non si raggiunge B avendo
+*p<sub>B</sub>* dentro A come diretto vicino, eccetera) allora il g-nodo `current.gnode` non viene
+affatto considerato. Cioè, è come se avesse restituito `esito=NO_SOLUTION` con `set_adjacent` vuoto.
+
+Infine il primo singolo nodo che si incontra dentro D avvia una comunicazione TCP con *v* tramite indirizzi
 IP interni al loro minimo comune g-nodo. Per questo nel pacchetto viene indicato l'indirizzo del mittente come lista
 di posizioni interne al minimo comune g-nodo con `current.gnode`.
 
@@ -872,9 +903,8 @@ memorizza (in `middle_pos` e `middle_eldership`) e restituisce le informazioni n
 alla migration-path, cioè i posti *virtuali* al livello `ask_lvl + 1`.
 
 Per sapere se c'è un posto al livello `host_lvl` viene usata la funzione `coord_reserve`, la quale è un delegato
-che chiama nel modulo Coordinator il metodo `reserve` (vedi [qui](../ModuloCoordinator/AnalisiFunzionale.md#Deliverables)).
-La funzione `coord_reserve(host_lvl, enter_id)` invia la richiesta ReserveEnterRequest
-([prenota un posto](../ModuloCoordinator/AnalisiFunzionale.md#Prenota_un_posto))
+che chiama nel modulo Coordinator il metodo `reserve(host_lvl, enter_id)`. Questo metodo
+invia la richiesta ReserveEnterRequest ([prenota un posto](../ModuloCoordinator/AnalisiFunzionale.md#Prenota_un_posto))
 al servizio Coordinator usando come chiave `host_lvl`. Come descritto nel relativo documento,
 questo serve a prenotare un posto. Dalla posizione prenotata si deduce se il g-nodo aveva a
 disposizione una posizione *reale* oppure no.
