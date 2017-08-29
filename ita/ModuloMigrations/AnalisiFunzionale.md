@@ -866,19 +866,19 @@ il percorso indicato in `current.parent.parent....`.
 Supponiamo ad esempio che `current` si riferisce al g-nodo D che è adiacente al g-nodo C, adiacente
 al g-nodo B, adiacente al g-nodo A, adiacente al g-nodo S a cui appartiene *v*. Tutti questi sono g-nodi
 di livello `ask_lvl + 1`. Supponiamo inoltre che il g-nodo di livello `ask_lvl` dentro S diretto vicino
-del g-nodo A abbia posizione *reale* al livello `ask_lvl` uguale a *p<sub>A</sub>*. Poi il g-nodo di
+del g-nodo A abbia posizione *reale* al livello `ask_lvl` uguale a *w<sub>A</sub>*. Poi il g-nodo di
 livello `ask_lvl` dentro A diretto vicino del g-nodo B abbia posizione *reale* al livello `ask_lvl` uguale
-a *p<sub>B</sub>*. Lo stesso per *p<sub>C</sub>* e per *p<sub>D</sub>*. Questi dati sono stati precedentemente
+a *w<sub>B</sub>*. Lo stesso per *w<sub>C</sub>* e per *w<sub>D</sub>*. Questi dati sono stati precedentemente
 raccolti dentro l'istanza `current`, con modalità che vedremo dopo. Quindi in `current` abbiamo questa situazione:
 
 *   `current.gnode` = D
-*   `current.mig_pos` = *p<sub>D</sub>*
+*   `current.mig_pos` = *w<sub>D</sub>*
 *   `current.parent.gnode` = C
-*   `current.parent.mig_pos` = *p<sub>C</sub>*
+*   `current.parent.mig_pos` = *w<sub>C</sub>*
 *   `current.parent.parent.gnode` = B
-*   `current.parent.parent.mig_pos` = *p<sub>B</sub>*
+*   `current.parent.parent.mig_pos` = *w<sub>B</sub>*
 *   `current.parent.parent.parent.gnode` = A
-*   `current.parent.parent.parent.mig_pos` = *p<sub>A</sub>*
+*   `current.parent.parent.parent.mig_pos` = *w<sub>A</sub>*
 *   `current.parent.parent.parent.parent.gnode` = S
 *   `current.parent.parent.parent.parent.mig_pos` = *null*
 *   `current.parent.parent.parent.parent.parent` = *null*
@@ -888,10 +888,10 @@ Prima si instrada il pacchetto verso A, poi verso B, poi verso C e infine verso 
 È importante verificare durante il percorso che non ci siano incongruenze con quanto era memorizzato
 in `current`. Vediamo come:  
 Una volta raggiunto il primo singolo nodo dentro il g-nodo A, questi deve verificare che il passo precedente era
-*p<sub>A</sub>* dentro S. Per questo nell'instradamento ogni nodo, oltre al pacchetto, indica il proprio
+*w<sub>A</sub>* dentro S. Per questo nell'instradamento ogni nodo, oltre al pacchetto, indica il proprio
 indirizzo completo.  
 Allo stesso modo, una volta raggiunto il primo singolo nodo dentro il g-nodo B, questi deve verificare che
-il passo precedente era *p<sub>B</sub>* dentro A, e così via.  
+il passo precedente era *w<sub>B</sub>* dentro A, e così via.  
 Se un nodo scopre una incongruenza, allora il fatto viene comunicato al nodo mittente *v* dal nodo
 che lo ha scoperto con una comunicazione TCP. Per questo nel pacchetto viene indicato l'indirizzo completo
 del nodo mittente *v*.  
