@@ -813,6 +813,9 @@ Mentre Q is not empty:
       Restituisci esito=SOLUTION, host_lvl, pos, eldership, max_host_lvl, set_adjacent, middle_pos, middle_eldership
     Altrimenti:
       Restituisci esito=NO_SOLUTION, max_host_lvl, set_adjacent, middle_pos, middle_eldership
+  Su eccezione InvalidPathError:
+    S.remove(current.gnode)
+    Continue (prossima iterazione)
   Se esito = GOAL:
     Solution sol = new Solution(current, host_lvl, pos, eldership)
     solutions.add(sol)
@@ -851,8 +854,13 @@ ogni volta che, durante questa ricerca, verrà chiesto al Coordinator di un g-no
 ##### Contatta il g-nodo da interrogare
 
 Nell'algoritmo abbiamo detto che il nodo *v* contatta un singolo nodo in `current.gnode`. Questo contatto avviene
-inviando un pacchetto da trasmettere con meccanismi simili al PeerServices. Ma non viene instradato il
-pacchetto (attraverso il miglior gateway) direttamente al g-nodo `current.gnode`, bensì attraverso
+inviando un pacchetto da trasmettere con meccanismi simili al PeerServices.  
+Il pachetto contiene l'indirizzo Netsukuku completo di *v*, cioè la lista delle sue posizioni,
+dal livello 0 fino al livello `levels` - 1.  
+Oltre a ciò, ogni nodo che inoltra il pacchetto al diretto vicino successivo (cioè al miglior gateway
+verso l'attuale destinazione) specifica il suo indirizzo Netsukuku completo.
+
+Bisogna aggiungere che il pacchetto non viene instradato direttamente al g-nodo `current.gnode`, bensì attraverso
 il percorso indicato in `current.parent.parent....`.
 
 Supponiamo ad esempio che `current` si riferisce al g-nodo D che è adiacente al g-nodo C, adiacente
@@ -860,8 +868,8 @@ al g-nodo B, adiacente al g-nodo A, adiacente al g-nodo S a cui appartiene *v*. 
 di livello `ask_lvl + 1`. Supponiamo inoltre che il g-nodo di livello `ask_lvl` dentro S diretto vicino
 del g-nodo A abbia posizione *reale* al livello `ask_lvl` uguale a *p<sub>A</sub>*. Poi il g-nodo di
 livello `ask_lvl` dentro A diretto vicino del g-nodo B abbia posizione *reale* al livello `ask_lvl` uguale
-a *p<sub>B</sub>*. Lo stesso per *p<sub>C</sub>* e per *p<sub>D</sub>*. Questi dati sono stati precedentemente raccolti dentro
-`current`.
+a *p<sub>B</sub>*. Lo stesso per *p<sub>C</sub>* e per *p<sub>D</sub>*. Questi dati sono stati precedentemente
+raccolti dentro l'istanza `current`, con modalità che vedremo dopo. Quindi in `current` abbiamo questa situazione:
 
 *   `current.gnode` = D
 *   `current.mig_pos` = *p<sub>D</sub>*
@@ -875,22 +883,27 @@ a *p<sub>B</sub>*. Lo stesso per *p<sub>C</sub>* e per *p<sub>D</sub>*. Questi d
 *   `current.parent.parent.parent.parent.mig_pos` = *null*
 *   `current.parent.parent.parent.parent.parent` = *null*
 
-Prima si instrada il pacchetto verso A. Quando si raggiunge il primo singolo nodo appartenente al g-nodo A
-si verifica anche che il singolo nodo subito precedente era del g-nodo S e aveva posizione *p<sub>A</sub>*
-al livello `ask_lvl`.  
-Poi si instrada il pacchetto verso B. Poi verso C e infine verso D.
+Prima si instrada il pacchetto verso A, poi verso B, poi verso C e infine verso D.
 
-Se durante il percorso questo requisito non è soddisfatto (cioè ad esempio non si raggiunge A avendo
-*p<sub>A</sub>* dentro S come diretto vicino, o non si raggiunge B avendo
-*p<sub>B</sub>* dentro A come diretto vicino, eccetera) allora il g-nodo `current.gnode` non viene
-affatto considerato. Cioè, è come se avesse restituito `esito=NO_SOLUTION` con `set_adjacent` vuoto.
+È importante verificare durante il percorso che non ci siano incongruenze con quanto era memorizzato
+in `current`. Vediamo come:  
+Una volta raggiunto il primo singolo nodo dentro il g-nodo A, questi deve verificare che il passo precedente era
+*p<sub>A</sub>* dentro S. Per questo nell'instradamento ogni nodo, oltre al pacchetto, indica il proprio
+indirizzo completo.  
+Allo stesso modo, una volta raggiunto il primo singolo nodo dentro il g-nodo B, questi deve verificare che
+il passo precedente era *p<sub>B</sub>* dentro A, e così via.  
+Se un nodo scopre una incongruenza, allora il fatto viene comunicato al nodo mittente *v* dal nodo
+che lo ha scoperto con una comunicazione TCP. Per questo nel pacchetto viene indicato l'indirizzo completo
+del nodo mittente *v*.  
+In questo caso, indicato nell'algoritmo con l'eccezione InvalidPathError,
+il nodo *v* stralcia completamente la path indicata da `current`, come se
+avesse restituito `esito=NO_SOLUTION` con `set_adjacent` vuoto. Ma al contempo ora considera
+il g-nodo finale `current.gnode` come non ancora visitato: cioè potrebbe visitarlo in seguito
+attraverso altre path.
 
-Infine il primo singolo nodo che si incontra dentro D avvia una comunicazione TCP con *v* tramite indirizzi
-IP interni al loro minimo comune g-nodo. Per questo nel pacchetto viene indicato l'indirizzo del mittente come lista
-di posizioni interne al minimo comune g-nodo con `current.gnode`.
-
-Indichiamo per semplicità con *w* il primo singolo nodo che si è incontrato in `current.gnode`.
-Nella comunicazione TCP tra *v* e *w*, il nodo *v* comunica `ask_lvl`, `max_host_lvl`, `enter_id`, `𝜀 ≥ 1`.
+Proseguiamo ipotizzando che il percorso invece non contiene incongruenze.  
+Indichiamo con *w* il primo singolo nodo che si è incontrato in `current.gnode`.  
+Il nodo *w* avvia una comunicazione TCP con *v*. In essa il nodo *v* comunica `ask_lvl`, `max_host_lvl`, `enter_id`, `𝜀 ≥ 1`.
 Poi il nodo *w* prosegue con l'algoritmo descritto sopra prima di restituire la tupla composta di
 `esito`, `host_lvl`, `pos`, `eldership`, `max_host_lvl`, `set_adjacent`, `middle_pos`, `middle_eldership`.
 
