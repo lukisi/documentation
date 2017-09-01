@@ -854,7 +854,7 @@ ogni volta che, durante questa ricerca, verrà chiesto al Coordinator di un g-no
 ##### Contatta il g-nodo da interrogare
 
 Nell'algoritmo abbiamo detto che il nodo *v* contatta un singolo nodo in `current.gnode`. Questo contatto avviene
-inviando un pacchetto da trasmettere con meccanismi simili al PeerServices.  
+inviando un pacchetto da instradare con meccanismi simili al PeerServices.  
 Il pachetto contiene l'indirizzo Netsukuku completo di *v*, cioè la lista delle sue posizioni,
 dal livello 0 fino al livello `levels` - 1.  
 Oltre a ciò, ogni nodo che inoltra il pacchetto al diretto vicino successivo (cioè al miglior gateway
@@ -965,7 +965,7 @@ di livello `ask_lvl` del g-nodo di livello `ask_lvl + 1` di *w*.
 
 Per gli HCoord di livello `ask_lvl + 1` il nodo *w* sa produrre la tupla completa del g-nodo
 di livello `ask_lvl + 1`. Per ognuno di quelli di livello superiore, invece,
-il nodo *w* invia un pacchetto (da trasmettere con meccanismi simili al PeerServices) per attivare una comunicazione
+il nodo *w* invia un pacchetto (da instradare con meccanismi simili al PeerServices) per attivare una comunicazione
 TCP (tramite indirizzi IP interni al minimo comune g-nodo) e così chiedere al primo singolo nodo che incontra
 in essi la tupla completa del g-nodo di livello `ask_lvl + 1`. In conclusione il nodo *w* ottiene un set di tuple
 del livello desiderato.
@@ -993,93 +993,224 @@ Dopo aver scelto la soluzione migliore, il nodo *v* deve coordinare la sua esecu
 Una migration-path di lunghezza zero è *impropria* e non ha bisogno di alcuna esecuzione. Semplicemente
 il nodo *v* comunica al richiedente la posizione *reale* che è stata riservata e il livello
 del g-nodo ospitante, che è uno dei suoi g-nodi di livello maggiore di *l*.  
-Ricordiamo che questo caso è l'unica soluzione possibile se si sta tentando di ottenere un posto
+Notiamo che una migration-path di lunghezza zero è l'unica soluzione possibile se si sta tentando di ottenere un posto
 nella rete per un g-nodo di livello *l* = *levels* - 1.
 
 Si consideri invece la migration-path *P* = (*p<sub>1</sub>*, *p<sub>2</sub>*, ... *p<sub>m</sub>*) a
-livello *l*. Con 0 ≤ *l* ﹤ *levels* - 1 e *m* > 1.
+livello *l*. Con 0 ≤ *l* ﹤ *levels* - 1 e *m* > 1. Vediamo come essa viene eseguita.
 
-La sua esecuzione va fatta in questo ordine:
+Ai fini delle comunicazioni che andranno fatte a singoli nodi dentro specifici g-nodi per eseguire la
+migration-path, ricordiamo alcune cose:
 
-Un border-g-nodo di livello *l* migra da *p<sub>1</sub>* a *p<sub>2</sub>*. Poi uno da *p<sub>2</sub>*
-a *p<sub>3</sub>*, e così via fino a quello che migra da *p<sub>m-1</sub>* a *p<sub>m</sub>*.
+**1**. Nel generico passo *i* i g-nodi di livello *l* + 1 *p<sub>i</sub>* e *p<sub>i+1</sub>* hanno tutte
+posizioni *reali*, da *l* + 1 a *levels* - 1.
 
-Bisogna seguire questo ordine anziché l'inverso. Altrimenti si rischia che quando un g-nodo *g0* di livello
-*l* migra da *p<sub>i</sub>* a *p<sub>i+1</sub>* il g-nodo che migra sia proprio quello che era
-di contatto tra *p<sub>i-1</sub>* e *p<sub>i</sub>*.  
-Il g-nodo *di connettività* che resterebbe in *p<sub>i</sub>* potrebbe venire presto dismesso,
-se *p<sub>i</sub>* risulta ancora internamente connesso.  
-Inoltre, anche supponendo che il g-nodo *g0* *di connettività* sopravviva a lungo, il suo indirizzo
-è *virtuale* e renderebbe impossibile la comunicazione tra un suo nodo e il Coordinator di *p<sub>i</sub>*.
+**2**. Nel generico passo *i* un border g-nodo *𝛽<sub>i</sub>* di livello *l* deve migrare da *p<sub>i</sub>* in
+*p<sub>i+1</sub>*.  
+Il g-nodo *𝛽<sub>i</sub>* è adiacente ad un g-nodo *𝛼<sub>i+1</sub>* di livello *l* dentro *p<sub>i+1</sub>*.
 
-Però seguendo questo ordine abbiamo un altro problema: quando un g-nodo di livello
-*l* migra da *p<sub>i</sub>* a *p<sub>i+1</sub>* non c'è un posto *reale* libero in *p<sub>i+1</sub>*,
-se non nell'ultimo passo. Quindi ogni singola migrazione si compone di questi passaggi:
+**3**. Il g-nodo *𝛽<sub>i</sub>* ha posizione *reale* al livello *l*. Ovviamente anche a quelle superiori
+come detto sopra riguardo *p<sub>i</sub>*.  
+Il primo singolo nodo che si incontra in *𝛽<sub>i</sub>* potrebbe avere posizioni *virtuali* ai livelli inferiori.  
+Lo stesso vale per il singolo nodo che è in diretto contatto con *𝛼<sub>i+1</sub>*.
 
-Un border-g-nodo *g* di livello *l* deve migrare da *p<sub>i</sub>* a *p<sub>i+1</sub>* e
-inoltre abbiamo *m* > *i* + 1.  
-Conosciamo *pos1*, la posizione di *g* in *p<sub>i</sub>*, che è *reale*. Essa è stata salvata nel membro
+**4**. Il g-nodo *𝛼<sub>i+1</sub>* potrebbe avere posizione *virtuale* al livello *l*.
+
+**5**. Nel primo passo (*i* = 1) abbiamo un nodo *v* che ha fatto la ricerca della migration-path. Esso si
+trova nel g-nodo di livello *l* + 1 *p<sub>1</sub>*.  
+Tale nodo ha posizioni *reali* dal livello 0  a *levels* - 1.
+
+Il nodo *v* è in una posizione vantaggiosa: sappiamo che ha tutte posizioni *reali*. Questo gli
+permette di essere contattato, quindi decidiamo che sia lui a coordinare tutte le operazioni.  
+Inoltre faremo in modo che il passo che porta alla migrazione di *𝛽<sub>1</sub>* da *p<sub>1</sub>* in
+*p<sub>2</sub>* venga eseguito per ultimo, perché vi è la possibilità che *v* appartiene a *𝛽<sub>1</sub>*
+e in questo caso *v* assumerebbe in quel momento un indirizzo con posizioni *virtuali*.
+
+Prima di proseguire con la descrizione della modalità di esecuzione della migration-path,
+vediamo come viene realizzata una comunicazione tra *v*
+e un dato g-nodo *𝛽<sub>i</sub>*. Il nodo *v* contatta un singolo nodo *𝛽0<sub>i</sub>*
+in *𝛽<sub>i</sub>*. Questo contatto avviene inviando un pacchetto da instradare con meccanismi simili al PeerServices.  
+Non è necessario in questo caso seguire un determinato percorso. Basta infatti giungere ad un qualsiasi singolo
+nodo dentro *𝛽<sub>i</sub>*.  
+Il pachetto contiene tutte le informazioni che *v* vuole passare a *𝛽<sub>i</sub>*. Infatti se il singolo
+nodo *𝛽0<sub>i</sub>* avesse qualche posizione *virtuale* esso non sarebbe in grado di aprire una connessione
+TCP con *v* per prendere le informazioni.  
+Il pachetto contiene l'indirizzo Netsukuku completo di *v*, cioè la lista delle sue posizioni,
+dal livello 0 fino al livello `levels` - 1. Questo perché comunque il singolo nodo *𝛽0<sub>i</sub>*
+dovrà comunicare a *v* l'esito delle sue operazioni. Non potendo con certezza aprire una connessione
+TCP, stabiliamo che il singolo nodo *𝛽0<sub>i</sub>* trasmetterà l'esito a *v* con un singolo pacchetto
+da instradare verso l'indirizzo Netsukuku completo di *v* con meccanismi simili al PeerServices.  
+Prima di trasmettere l'esito il singolo nodo *𝛽0<sub>i</sub>* può fare uso della collaborazione con
+il modulo Coordinator per avviare una *propagazione* a tutto il suo g-nodo, *con* o *senza* ritorno.
+
+Per prima cosa il nodo *v* per ogni passo della migration-path (cioè per *i* da 1 fino a *m* - 1)
+inventa un identificativo *migration_id* e lo associa a *𝛽<sub>i</sub>*.
+
+Partendo da *i* = *m* - 1 e scendendo fino a 1, il nodo *v* contatta un singolo nodo *𝛽0<sub>i</sub>*
+in *𝛽<sub>i</sub>*. Notiamo che nell'ultimo passo, cioè con *i* = 1, è possibile che
+lo stesso *v* sia *𝛽0<sub>i</sub>*.  
+Il nodo *v* passa al nodo *𝛽0<sub>i</sub>* il suo *migration_id*.  
+Il nodo *𝛽0<sub>i</sub>* attraverso una *propagazione con ritorno* fa in modo che
+tutti i singoli nodi di *𝛽<sub>i</sub>* avviano la prima parte delle operazioni di duplicazione
+dell'identità. Quando questa è stata eseguita, *𝛽0<sub>i</sub>* lo comunica al nodo *v* che
+prosegue con il prossimo valore di *i*.
+
+Ora il nodo *v* contatta un singolo nodo *𝛽0<sub>m-1</sub>* in *𝛽<sub>m-1</sub>*. Se *m* = 2, è possibile che
+lo stesso *v* sia *𝛽0<sub>m-1</sub>*.  
+Conosciamo *pos1*, la posizione di *𝛽<sub>m-1</sub>* in *p<sub>m-1</sub>*, che è *reale*. Essa è stata salvata nel membro
 `mig_pos` di SolutionStep.  
-Sappiamo anche che è stato riservato un posto *virtuale* *pos2* in *p<sub>i</sub>*. Esso è stato
-salvato nel membro `middle_pos` di SolutionStep.  
-Sappiamo anche che in seguito un border-g-nodo di livello *l* dovrà migrare da *p<sub>i+1</sub>*
-a *p<sub>i+2</sub>* e che la sua posizione in *p<sub>i+1</sub>* è *pos_next*, ed è *reale*.
-Essa è stata salvata nel membro `mig_pos` di SolutionStep riferita al passo successivo.  
-Viene riservato un posto *pos3* in *p<sub>i+1</sub>*. Probabilmente esso risulterà *virtuale*, in quanto
-è per questo che la ricerca ha prodotto una migration-path che contiene *p<sub>i+2</sub>*.  
-Il g-nodo *g* si duplica: viene creato il g-nodo isomorfo *g'* che entra in *p<sub>i+1</sub>*
-con la posizione *pos3*. Invece il vecchio *g* diventa un g-nodo *di connettività*
-in *p<sub>i</sub>* assumendo la posizione *virtuale* *pos2*.  
-Si attende il propagamento delle informazioni ETP che aggiornano localmente la rete su
-questi cambiamenti.  
-Dopo si ritiene effettivamente libera la posizione *pos1* in *p<sub>i</sub>*. Questo fatto viene
-segnalato al nodo che stava coordinando il passo precedente della migration-path *P*.  
-Nell'eventualità che la posizione *pos3* riservata prima in *p<sub>i+1</sub>* fosse stata una
-posizione *reale* (cioè nel frattempo una posizione si era liberata per delle variazioni alla rete)
-questo ci esonera dal proseguire con i passi successivi.  
-Viene dato ordine di iniziare la migrazione al border-g-nodo che dovrà migrare da *p<sub>i+1</sub>*
-a *p<sub>i+2</sub>*. Si attende da questo la segnalazione che è stata effettivamente liberata
-la posizione *pos_next* in *p<sub>i+1</sub>*.  
-Il g-nodo *g'* adesso può assumere la posizione *reale* *pos_next* in *p<sub>i+1</sub>*.
-
-Nell'ultimo passo abbiamo una versione leggermente semplificata: un border-g-nodo *g* di livello *l*
-deve migrare da *p<sub>m-1</sub>* a *p<sub>m</sub>*.  
-La posizione di *g* in *p<sub>m-1</sub>* è *pos1*, ed è *reale*. Essa è stata salvata nel membro
-`mig_pos` di SolutionStep.  
-Sappiamo anche che è stato riservato un posto *virtuale* *pos2* in *p<sub>m-1</sub>*. Esso è stato
+Sappiamo anche che è stato riservato un posto *virtuale* *pos2* in *p<sub>m-1</sub>* che verrà assegnato
+all'identità *di connettività* che *𝛽<sub>m-1</sub>* assume in *p<sub>m-1</sub>*. Esso è stato
 salvato nel membro `middle_pos` di SolutionStep.  
 Sappiamo anche che nel g-nodo *p<sub>m</sub>* di livello *k*, con *k* ≥ *l* + 1, è stato
-riservato un posto *reale* *pos3*. Il valore di *k* è stato salvato nel membro `host_lvl` di Solution.
-Il valore di *pos3* è stato salvato nel membro `new_pos` di Solution.  
-Il g-nodo *g* si duplica: viene creato il g-nodo isomorfo *g'* che entra in *p<sub>m</sub>*
-con la posizione *pos3*. Invece il vecchio *g* diventa un g-nodo *di connettività*
+riservato un posto *reale* *pos_next*. Il valore di *k* è stato salvato nel membro `host_lvl` di Solution.
+Il valore di *pos_next* è stato salvato nel membro `new_pos` di Solution.  
+Il nodo *v* passa al nodo *𝛽0<sub>m-1</sub>* queste informazioni e il suo *migration_id*.  
+Il nodo *𝛽0<sub>m-1</sub>* attraverso una *propagazione senza ritorno* fa in modo che
+queste informazioni giungano a tutti i singoli nodi di *𝛽<sub>m-1</sub>*. Questi avviano la seconda
+parte delle operazioni di duplicazione dell'identità.  
+Il g-nodo *𝛽<sub>m-1</sub>* si duplica: viene creato il g-nodo isomorfo *𝛽'<sub>m-1</sub>* che entra in *p<sub>m</sub>*
+con la posizione *pos_next*. Invece il vecchio *𝛽<sub>m-1</sub>* diventa un g-nodo *di connettività*
 in *p<sub>m-1</sub>* assumendo la posizione *virtuale* *pos2*.  
-Si attende il propagamento delle informazioni ETP che aggiornano localmente la rete su
-questi cambiamenti.  
-Dopo si ritiene effettivamente libera la posizione *pos1* in *p<sub>i</sub>*. Questo fatto viene
-segnalato al nodo che stava coordinando il passo precedente della migration-path *P*.
+Il g-nodo *di connettività* *𝛽<sub>m-1</sub>* che assume *pos2* in *p<sub>m-1</sub>* deve garantire di restare in vita
+e di non rimuovere nemmeno gli archi esterni ai livelli di connettività per un certo tempo necessario al corretto
+svolgimento della migration-path. Si veda a tale riguardo il metodo `remove_identity_arc` dettagliato nella
+trattazione del modulo [Identities](../ModuloIdentities/DettagliTecnici.md), il segnale `presence_notified`
+dalla nuova identità e il metodo `remove_outer_arcs` sulla vecchia identità nella
+trattazione del modulo [QSPN](../ModuloQspn/DettagliTecnici.md#Migrazione). In seguito rimuoverà gli archi
+esterni ed inizierà a verificare se c'è ancora bisogno di lui.  
+Dopo aver dato il via alla *propagazione senza ritorno* il nodo *𝛽0<sub>m-1</sub>* lo comunica al nodo *v*.
+
+Ora il nodo *v* riparte da *i* = *m* - 2 e scende fino a 1. Il nodo *v* contatta un singolo
+nodo *𝛽0<sub>i</sub>* in *𝛽<sub>i</sub>*. Se *i* = 1, è possibile che
+lo stesso *v* sia *𝛽0<sub>i</sub>*.  
+Conosciamo *pos1*, la posizione di *𝛽<sub>i</sub>* in *p<sub>i</sub>*, che è *reale*. Essa è stata salvata nel membro
+`mig_pos` di SolutionStep.  
+Sappiamo anche che è stato riservato un posto *virtuale* *pos2* in *p<sub>i</sub>* che verrà assegnato
+all'identità *di connettività* che *𝛽<sub>i</sub>* assume in *p<sub>i</sub>*. Esso è stato
+salvato nel membro `middle_pos` di SolutionStep.  
+Sappiamo anche che intanto un border-g-nodo di livello *l* sta migrando da *p<sub>i+1</sub>*
+a *p<sub>i+2</sub>* e che la posizione che aveva in *p<sub>i+1</sub>* è *pos_next*, ed è *reale*.
+Essa è stata salvata nel membro `mig_pos` di SolutionStep riferita al passo successivo.  
+Il nodo *v* passa al nodo *𝛽0<sub>i</sub>* queste informazioni e il suo *migration_id*.  
+Il nodo *𝛽0<sub>i</sub>* attraverso una *propagazione senza ritorno* fa in modo che
+queste informazioni giungano a tutti i singoli nodi di *𝛽<sub>i</sub>*. Questi avviano la seconda
+parte delle operazioni di duplicazione dell'identità.  
+Il g-nodo *𝛽<sub>i</sub>* si duplica: viene creato il g-nodo isomorfo *𝛽'<sub>i</sub>* che entra in
+*p<sub>i+1</sub>* con la posizione *pos_next*. Invece il vecchio *𝛽<sub>i</sub>* diventa un g-nodo *di connettività*
+in *p<sub>i</sub>* assumendo la posizione *virtuale* *pos2*: questi deve garantire di restare in vita
+con tutti i suoi archi per un certo tempo, come già detto prima.  
+Dopo aver dato il via alla *propagazione senza ritorno* il nodo *𝛽0<sub>i</sub>* lo comunica al nodo *v* che
+prosegue con il prossimo valore di *i*.
 
 ### <a name="Strategia_ingresso_Algoritmo_esecuzione"></a>Algoritmo di esecuzione
 
-Il nodo *v* coordina l'esecuzione del primo passo in *p<sub>1</sub>*. Poi invia un messaggio al primo nodo che
-incontra in *p<sub>2</sub>*, chiamiamolo *w*. Sarà compito di *w* coordinare il secondo passo e anche
-proseguire l'instradamento del messaggio al primo nodo che incontra in *p<sub>3</sub>*. E così via.
+Il nodo *v* ha tutte le informazioni necessarie ad ogni passo della migration-path codificate in una
+istanza di Solution, la quale contiene in modo ricorsivo *m* istanze di SolutionStep. E abbiamo già detto
+che non serve eseguire una migration-path di lunghezza zero, quindi *m* > 1.  
+Ora il nodo *v* prepara questi dati in una lista di *m* - 1 strutture dati `MigData`, che sono di più
+semplice gestione come oggetti serializzabili.
 
-Il nodo *v* inventa un identificativo *migration_id* per il primo passo in *p<sub>1</sub>*.
-Poi il modulo Migrations del nodo *v* fa in modo che venga richiamato nel modulo Coordinator il
-metodo a *propagazione con ritorno* `prepare_migration` indicando il livello di *p<sub>1</sub>*
-e tutte le informazioni necessarie alla migrazione.
+Ogni struttura contiene:
 
-Ogni singolo nodo *n* di *p<sub>1</sub>*, nel metodo `prepare_migration` del modulo Migrations
-riceve queste informazioni.
+```
+MigData:
+  TupleGNode gnode
+  int pos1
+  int migration_id
+  int pos2
+  int eld2
+  TupleGNode gnode_next
+  int? pos_next
+  int? host_lvl
+  int? new_pos
+  int? new_eldership
+```
 
-**TODO**
+Il significato dei vari membri per l'elemento *i*-esimo della lista, con 1 ≤ *i* ≤ *m* - 1, è il seguente:
 
-Dopo aver ottenuto questa risposta, il nodo *v* fa in modo che venga richiamato nel modulo Coordinator il
-metodo a *propagazione senza ritorno* `finish_migration` indicando il livello di *p<sub>1</sub>*
-e l'identificativo *migration_id* inventato e propagato prima.
+*   `gnode` indica il g-nodo *p<sub>i</sub>*, cioè il g-nodo da cui un g-nodo di livello *l*
+    dovrà migrare.
+*   `pos1` è la posizione a livello *l* del g-nodo *𝛽<sub>i</sub>* che
+    dovrà migrare. Sappiamo che `pos1` è una posizione *reale*.
+*   `migration_id` è l'identificativo associato alla migrazione di *𝛽<sub>i</sub>*.
+*   `pos2` e `eld2` sono posizione e anzianità riservate nel g-nodo *p<sub>i</sub>* per l'identità
+    *di connettività* con cui il g-nodo *𝛽<sub>i</sub>* resta in *p<sub>i</sub>*. Sappiamo che `pos2` è una
+    posizione *virtuale*.
+*   `gnode_next` indica il g-nodo *p<sub>i+1</sub>*, cioè il g-nodo in cui il g-nodo *𝛽<sub>i</sub>*
+    dovrà migrare.
+*   `pos_next` è *null* nell'ultimo elemento della lista.  
+    Negli altri elementi, esso è la posizione *reale* a livello *l* che il g-nodo *𝛽'<sub>i</sub>*
+    può assumere in *p<sub>i+1</sub>*.
+*   `host_lvl` è *null* in tutti gli elementi della lista tranne l'ultimo.  
+    Nell'ultimo elemento della lista, esso è il livello di *p<sub>m</sub>* in cui è stato riservato
+    un posto *reale* al livello `host_lvl - 1`.
+*   `new_pos` e `new_eldership` sono *null* in tutti gli elementi della lista tranne l'ultimo.  
+    Nell'ultimo elemento della lista, essi sono posizione e anzianità riservate nel g-nodo *p<sub>m</sub>*
+    per l'ultimo passo della migrazione. Sappiamo che `new_pos` è una posizione *reale*.
 
-**TODO**
+Per tradurre il contenuto dell'istanza di Solution nella lista di MigData l'algoritmo è il seguente:
+
+```
+Solution s;
+List<MigData> migs = [];
+
+Assert s.leaf.parent ≠ null
+bool last = True
+int? pos_next = null
+SolutionStep current = s.leaf
+Mentre current.parent ≠ null:
+  MigData mig = new MigData()
+  Se last:
+    mig.host_lvl = s.host_lvl
+    mig.new_pos = s.new_pos
+    mig.new_eldership = s.new_eldership
+  mig.gnode = current.parent.gnode
+  mig.pos1 = current.mig_pos
+  mig.migration_id = Random_int()
+  mig.pos2 = current.middle_pos
+  mig.eld2 = current.middle_eldership
+  mig.gnode_next = current.gnode
+  mig.pos_next = pos_next
+  migs.insert(0,mig)
+  last = False
+  pos_next = current.mig_pos
+  current = current.parent
+```
+
+Segue l'algoritmo che *v* usa per instradare un pacchetto verso il primo nodo dentro un
+preciso g-nodo. Lo stesso viene usato anche per instradare la risposta verso *v*.
+
+```
+nodo che avvia:
+TODO
+
+nodo che riceve e inoltra/esegue:
+TODO
+
+```
+
+Segue l'algortimo che *v* usa per eseguire la migration-path descritta in `List<MigData> migs`.
+
+```
+TODO
+```
+
+**TODO** dettagli sul metodo a *propagazione con ritorno* `prepare_migration` e sul
+metodo a *propagazione senza ritorno* `finish_migration`.
+
+Segue l'algoritmo che un singolo nodo *w* usa per espletare la prima parte della duplicazione.
+
+```
+TODO
+```
+
+Segue l'algoritmo che un singolo nodo *w* usa per espletare la seconda parte della duplicazione
+e la migrazione.
+
+```
+TODO
+```
 
 ### <a name="Strategia_ingresso_Degradazione"></a>Degradazione
 
