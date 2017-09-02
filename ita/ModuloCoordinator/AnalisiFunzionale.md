@@ -151,7 +151,7 @@ Queste sono memorizzate nei seguenti membri della classe `CoordGnodeMemory`:
 
 *   `List<Booking> reserve_list` - Elenco delle prenotazioni pendenti.  
     Ogni istanza di Booking contiene:
-    *   `int enter_id`
+    *   `int reserve_request_id`
     *   `int new_pos`
     *   `int new_eldership`
     *   `Timer timeout`
@@ -420,7 +420,7 @@ Una richiesta *r* di tipo ReserveEnterRequest fatta al nodo Coordinator di *g* i
 Questa richiesta è di tipo *update*.
 
 *   `int lvl` = livello di *g*.
-*   `int enter_id` = un identificativo di questa prenotazione.
+*   `int reserve_request_id` = un identificativo di questa prenotazione.
 
 Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordinator di *g*, per
 fare in modo che sia *g* come entità atomica a venire interpellata.
@@ -430,7 +430,7 @@ dell'istanza di `CoordGnodeMemory` associata al livello `lvl` vengono memorizzat
 in una lista di Booking le prenotazioni pendenti con la scadenza associata. Le prenotazioni scadute vengono adesso
 rimosse.
 
-Poi il nodo Coordinator di *g* guarda se esiste già una prenotazione con l'identificativo `enter_id`. In
+Poi il nodo Coordinator di *g* guarda se esiste già una prenotazione con l'identificativo `reserve_request_id`. In
 questo caso gli stessi valori `new_pos` e `new_eldership` saranno restituiti al client. Altrimenti si prosegue.
 
 Il nodo Coordinator di *g* accede alla propria mappa di percorsi, per vedere quali g-nodi
@@ -455,7 +455,7 @@ Avendo così scelto nuovi valori `new_pos` e `new_eldership` il nodo Coordinator
 istanza di Booking con la scadenza default. E la aggiunge alla lista `reserve_list`.
 
 Prima di rispondere al client, in entrambi i casi esaminati (cioè se esisteva già un Booking con
-l'identificativo `enter_id` oppure se è stata scelta una nuova posizione e quindi creata una nuova istanza
+l'identificativo `reserve_request_id` oppure se è stata scelta una nuova posizione e quindi creata una nuova istanza
 di Booking) il nodo Coordinator di *g* accede in scrittura alla memoria condivisa di *g*.  
 Questo come sappiamo comporta l'avvio di una tasklet che si occupi di replicare la scrittura nei nodi replica.
 
@@ -478,7 +478,7 @@ Una richiesta *r* di tipo DeleteReserveEnterRequest fatta al nodo Coordinator di
 Questa richiesta è di tipo *update*.
 
 *   `int lvl` = livello di *g*.
-*   `int enter_id` = l'identificativo della prenotazione pendente da rimuovere.
+*   `int reserve_request_id` = l'identificativo della prenotazione pendente da rimuovere.
 
 Il Coordinator di *g* accede alla memoria condivisa di *g*. Nel membro `reserve_list` dell'istanza
 di `CoordGnodeMemory` associata al livello `lvl` (come illustrato più sotto) vengono memorizzate
@@ -553,8 +553,10 @@ Il modulo Coordinator fornisce inoltre i seguenti metodi:
 
 *   `get_n_nodes()`.  
     Per chiedere al Coordinator della rete il numero di singoli nodi.
-*   `reserve(int lvl, int enter_id)`.  
+*   `reserve(int lvl, int reserve_request_id)`.  
     Per riservare un posto nel proprio g-nodo.
+*   `delete_reserve(int lvl, int reserve_request_id)`.  
+    Per cancellare la prenotazione di un posto nel proprio g-nodo.
 *   `get_migrations_memory` e `set_migrations_memory`.  
     Per accedere alla memoria condivisa di pertinenza del modulo Migrations.
 
@@ -669,13 +671,30 @@ nel proprio g-nodo di livello *lvl*.
 Gli argomenti di questo metodo sono:
 
 *   `int lvl` - il livello del g-nodo in cui prenotare un posto.
-*   `int enter_id` - l'identificativo della richiesta di prenotazione.
+*   `int reserve_request_id` - l'identificativo della richiesta di prenotazione.
 
 Il metodo, attraverso la classe client del servizio CoordinatorClient, invia una richiesta
 [ReserveEnterRequest](#Prenota_un_posto) al nodo Coordinator del g-nodo *g* di livello *lvl*.
 La risposta è una istanza di ReserveEnterResponse che contiene `int new_pos` e `int new_eldership`.
 
 L'oggetto restituito dal metodo è quindi di una classe Reservation che contiene queste informazioni.
+
+#### Metodo delete_reserve
+
+Il metodo `delete_reserve` del modulo Coordinator viene chiamato per cancellare la prenotazione di un posto
+nel proprio g-nodo di livello *lvl*. Viene usato solo per prenotazioni che avevano avuto come risultato
+un posto *reale*.
+
+Gli argomenti di questo metodo sono:
+
+*   `int lvl` - il livello del g-nodo in cui prenotare un posto.
+*   `int reserve_request_id` - l'identificativo della richiesta di prenotazione.
+
+Il metodo, attraverso la classe client del servizio CoordinatorClient, invia una richiesta
+[DeleteReserveEnterRequest](#Cancella_prenotazione) al nodo Coordinator del g-nodo *g* di livello *lvl*.
+La risposta è una istanza di DeleteReserveEnterResponse che non contiene membri.
+
+Il metodo restituisce `void`.
 
 #### Metodi get_migrations_memory e set_migrations_memory
 
@@ -718,10 +737,10 @@ I metodi della classe CoordinatorClient sono:
 *   `void set_migrations_memory(Object data, int lvl)` - modifica la porzione di dati di pertinenza
     del modulo Migrations nella memoria condivisa del g-nodo di livello *lvl*.  
     Vedi la relativa [richiesta](#Set_migrations_memory).
-*   `void reserve_enter(int lvl, int enter_id, out int new_pos, out int new_eldership)` -
+*   `void reserve(int lvl, int reserve_request_id, out int new_pos, out int new_eldership)` -
     chiede al Coordinator del g-nodo di livello *lvl* di riservare un posto.  
     Vedi la relativa [richiesta](#Prenota_un_posto).
-*   `void delete_reserve_enter(int lvl, int enter_id)` -
+*   `void delete_reserve(int lvl, int reserve_request_id)` -
     chiede al Coordinator del g-nodo di livello *lvl* di eliminare la prenotazione di un posto.  
     Vedi la relativa [richiesta](#Cancella_prenotazione).
 *   `void make_replicas(int lvl)` - dopo aver apportato delle variazioni al contenuto della
