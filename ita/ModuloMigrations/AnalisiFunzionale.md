@@ -853,15 +853,68 @@ ogni volta che, durante questa ricerca, verrà chiesto al Coordinator di un g-no
 
 ##### Contatta il g-nodo da interrogare
 
-Nell'algoritmo abbiamo detto che il nodo *v* contatta un singolo nodo in `current.gnode`. Questo contatto avviene
-inviando un pacchetto da instradare con meccanismi simili al PeerServices.  
-Il pachetto contiene l'indirizzo Netsukuku completo di *v*, cioè la lista delle sue posizioni,
-dal livello 0 fino al livello `levels` - 1.  
-Oltre a ciò, ogni nodo che inoltra il pacchetto al diretto vicino successivo (cioè al miglior gateway
-verso l'attuale destinazione) specifica il suo indirizzo Netsukuku completo.
+Nell'algoritmo abbiamo detto che il nodo *v* contatta un singolo nodo in `current.gnode`. Ora dobbiamo vedere
+nel dettaglio come si realizza questa comunicazione.  
+Va subito tenuto conto del fatto che il nodo *v* ha tutte posizioni *reali*. Ma il primo singolo nodo che
+si raggiunge in un dato g-nodo potrebbe avere posizioni *virtuali*, quindi è impossibile per esso stabilire
+una connessione TCP con il nodo *v*.
 
-Bisogna aggiungere che il pacchetto non viene instradato direttamente al g-nodo `current.gnode`, bensì attraverso
-il percorso indicato in `current.parent.parent....`.
+Il contatto tra *v* e un g-nodo viene avviato dal nodo *v*. Esso invia un *pacchetto di richiesta* da instradare con
+meccanismi simili al PeerServices. Ma il pacchetto contiene già tutti gli argomenti che servono
+alla richiesta, oltre all'indirizzo Netsukuku completo di *v*.  
+La comunicazione della risposta (o di un problema nell'instradamento) non avverrà aprendo una
+connessione TCP end-to-end (come avviene nel modulo PeerServices) ma con un pacchetto da
+instradare fino a *v*.
+
+Bisogna aggiungere che il pacchetto *di richiesta* non viene instradato direttamente al g-nodo `current.gnode`, bensì attraverso
+il percorso indicato in `current.parent.parent....`. Dobbiamo anche verificare durante il tragitto
+dal nodo *v* al g-nodo destinazione che tutti i g-nodi indicati nel percorso siano effettivamente
+adiacenti l'uno al successivo.  
+A questo fine sono necessarie due cose: una è che l'intero percorso venga descritto nel pacchetto
+stesso. L'altra è che ogni nodo che inoltra il pacchetto al diretto vicino successivo (cioè al miglior gateway
+verso l'attuale destinazione) specifichi il suo indirizzo Netsukuku completo.
+
+Il percorso da *v* verso `current.gnode` è indicato nell'istanza di SolutionStep `current` in modo ricorsivo.
+Ora il nodo *v* prepara questi dati in una lista di strutture dati `List<PathHop> path_hops`, che sono di più
+semplice gestione come oggetti serializzabili.
+
+Ogni struttura contiene:
+
+```
+PathHop:
+  TupleGNode gnode
+  int? mig_pos
+```
+
+Il significato dei vari membri per l'elemento *i*-esimo della lista è il seguente:
+
+*   `gnode` indica il g-nodo *p<sub>i</sub>* da raggiungere.  
+    Nel primo elemento della lista questo membro è il g-nodo a cui appartiene *v*.
+*   `mig_pos` è la posizione a livello *l* del g-nodo *𝛽<sub>i-1</sub>* nel g-nodo *p<sub>i-1</sub>*
+    che dovrebbe risultare adiacente al g-nodo *p<sub>i</sub>*.  
+    Nel primo elemento della lista questo membro è *null*.
+
+Il g-nodo indicato nell'elemento `path_hops[0].gnode` è quello a cui appartiene *v*, quindi
+non va "raggiunto".  
+Quando si raggiunge il g-nodo indicato nell'elemento `path_hops[1].gnode`, occorre verificare che
+il precedente singolo nodo sia del g-nodo `path_hops[0].gnode` e abbia posizione `path_hops[1].mig_pos`
+al livello `ask_lvl`. Ricordiamo che tutti i g-nodi della lista sono di livello `ask_lvl+1`.  
+E così via.
+
+Per tradurre il contenuto dell'istanza di SolutionStep nella lista di PathHop l'algoritmo è il seguente:
+
+```
+SolutionStep current;
+List<PathHop> path_hops = [];
+
+SolutionStep hop = current
+Mentre hop ≠ null:
+  PathHop path_hop = new PathHop()
+  path_hop.gnode = hop.gnode
+  path_hop.mig_pos = hop.mig_pos
+  path_hops.insert(0,path_hop)
+  hop = hop.parent
+```
 
 Supponiamo ad esempio che `current` si riferisce al g-nodo D che è adiacente al g-nodo C, adiacente
 al g-nodo B, adiacente al g-nodo A, adiacente al g-nodo S a cui appartiene *v*. Tutti questi sono g-nodi
@@ -883,18 +936,37 @@ raccolti dentro l'istanza `current`, con modalità che vedremo dopo. Quindi in `
 *   `current.parent.parent.parent.parent.mig_pos` = *null*
 *   `current.parent.parent.parent.parent.parent` = *null*
 
-Prima si instrada il pacchetto verso A, poi verso B, poi verso C e infine verso D.
+Quindi avremo:
+
+*   `path_hops[0].mig_pos` = *null*
+*   `path_hops[0].gnode` = S
+*   `path_hops[1].mig_pos` = *w<sub>A</sub>*
+*   `path_hops[1].gnode` = A
+*   `path_hops[2].mig_pos` = *w<sub>B</sub>*
+*   `path_hops[2].gnode` = B
+*   `path_hops[3].mig_pos` = *w<sub>C</sub>*
+*   `path_hops[3].gnode` = C
+*   `path_hops[4].mig_pos` = *w<sub>D</sub>*
+*   `path_hops[4].gnode` = D
+
+Prima si instrada il pacchetto *di richiesta* verso A, poi verso B, poi verso C e infine verso D.
 
 È importante verificare durante il percorso che non ci siano incongruenze con quanto era memorizzato
 in `current`. Vediamo come:  
+Il pacchetto *di richiesta* inizialmente contiene tutta la lista `path_hops` preparata prima. Ogni nodo che lo riceve verifica
+se fa parte del g-nodo corrente destinazione, cioè di `path_hops[1].gnode`, che all'inizio è A. Se non ne
+fa parte allora semplicemente instrada il pacchetto verso `path_hops[1].gnode`.  
 Una volta raggiunto il primo singolo nodo dentro il g-nodo A, questi deve verificare che il passo precedente era
 *w<sub>A</sub>* dentro S. Per questo nell'instradamento ogni nodo, oltre al pacchetto, indica il proprio
-indirizzo completo.  
+indirizzo completo. Questo indirizzo deve risultare in `path_hops[0].gnode` con posizione al livello `ask_lvl`
+uguale a `path_hops[1].mig_pos`. Se è così, allora il nodo toglie il primo elemento dalla lista e
+poi instrada il pacchetto *di richiesta* verso `path_hops[1].gnode`, che adesso è B.  
 Allo stesso modo, una volta raggiunto il primo singolo nodo dentro il g-nodo B, questi deve verificare che
 il passo precedente era *w<sub>B</sub>* dentro A, e così via.  
 Se un nodo scopre una incongruenza, allora il fatto viene comunicato al nodo mittente *v* dal nodo
-che lo ha scoperto con una comunicazione TCP. Per questo nel pacchetto viene indicato l'indirizzo completo
-del nodo mittente *v*.  
+che lo ha scoperto: questi prepara un pacchetto *di eccezione* da instradare verso *v*. Per questo nel
+pacchetto *di richiesta* viene indicato l'indirizzo *completo* del nodo mittente *v* e non solo le posizioni
+interne al g-nodo comune con la destinazione finale.  
 In questo caso, indicato nell'algoritmo con l'eccezione InvalidPathError,
 il nodo *v* stralcia completamente la path indicata da `current`, come se
 avesse restituito `esito=NO_SOLUTION` con `set_adjacent` vuoto. Ma al contempo ora considera
@@ -903,9 +975,36 @@ attraverso altre path.
 
 Proseguiamo ipotizzando che il percorso invece non contiene incongruenze.  
 Indichiamo con *w* il primo singolo nodo che si è incontrato in `current.gnode`.  
-Il nodo *w* avvia una comunicazione TCP con *v*. In essa il nodo *v* comunica `ask_lvl`, `max_host_lvl`, `enter_id`, `𝜀 ≥ 1`.
-Poi il nodo *w* prosegue con l'algoritmo descritto sopra prima di restituire la tupla composta di
-`esito`, `host_lvl`, `pos`, `eldership`, `max_host_lvl`, `set_adjacent`, `middle_pos`, `middle_eldership`.
+Il nodo *w* nel pacchetto *di richiesta* ha ricevuto `ask_lvl`, `max_host_lvl`, `enter_id`, `𝜀 ≥ 1`.
+Ora il nodo *w* prosegue con l'algoritmo descritto sopra. Poi prepara un pacchetto *di risposta*
+e lo instrada verso *v*. Esso contiene `esito`, `host_lvl`, `pos`, `eldership`,
+`max_host_lvl`, `set_adjacent`, `middle_pos`, `middle_eldership`.
+
+Riassumendo, i pacchetti contengono:
+
+```
+SearchMigrationPathRequest:
+  List<PathHop> path_hops
+  TupleGNode v
+  int ask_lvl
+  int max_host_lvl
+  int enter_id
+  int 𝜀
+
+SearchMigrationPathError:
+  TupleGNode v
+
+SearchMigrationPathResponse:
+  TupleGNode v
+  Esito esito
+  int host_lvl
+  int pos
+  int eldership
+  int max_host_lvl
+  Set<Pair<TupleGNode,int>> set_adjacent
+  int middle_pos
+  int middle_eldership
+```
 
 ##### Riserva un posto per la migrazione
 
