@@ -819,7 +819,7 @@ Mentre Q is not empty:
       Restituisci esito=SOLUTION, host_lvl, pos, eldership, max_host_lvl, set_adjacent, middle_pos, middle_eldership
     Altrimenti:
       Restituisci esito=NO_SOLUTION, max_host_lvl, set_adjacent, middle_pos, middle_eldership
-  Su eccezione InvalidPathError:
+  Su eccezione SearchMigrationPathError:
     S.remove(current.gnode)
     Continue (prossima iterazione)
   Se esito = GOAL:
@@ -915,16 +915,16 @@ E così via.
 Per tradurre il contenuto dell'istanza di SolutionStep nella lista di PathHop l'algoritmo è il seguente:
 
 ```
-SolutionStep current;
-List<PathHop> path_hops = [];
-
-SolutionStep hop = current
-Mentre hop ≠ null:
-  PathHop path_hop = new PathHop()
-  path_hop.gnode = hop.gnode
-  path_hop.mig_pos = hop.mig_pos
-  path_hops.insert(0,path_hop)
-  hop = hop.parent
+List<PathHop> get_path_hops(SolutionStep current):
+  List<PathHop> path_hops = [];
+  SolutionStep hop = current
+  Mentre hop ≠ null:
+    PathHop path_hop = new PathHop()
+    path_hop.gnode = hop.gnode
+    path_hop.mig_pos = hop.mig_pos
+    path_hops.insert(0,path_hop)
+    hop = hop.parent
+  Restituisci path_hops
 ```
 
 Supponiamo ad esempio che `current` si riferisce al g-nodo D che è adiacente al g-nodo C, adiacente
@@ -970,7 +970,7 @@ fa parte allora semplicemente instrada il pacchetto verso `path_hops[1].gnode`.
 Una volta raggiunto il primo singolo nodo dentro il g-nodo A, questi deve verificare che il passo precedente era
 *w<sub>A</sub>* dentro S. Per questo nell'instradamento *della richiesta* ogni nodo, oltre al pacchetto, indica il proprio
 indirizzo completo. Questo indirizzo deve risultare in `path_hops[0].gnode` con posizione al livello `ask_lvl`
-uguale a `path_hops[1].mig_pos`. Se è così, allora il nodo toglie il primo elemento dalla lista e
+uguale a `path_hops[1].mig_pos`. Se è così, allora il nodo toglie il primo elemento dalla lista `path_hops` e
 poi instrada il pacchetto *di richiesta* verso `path_hops[1].gnode`, che adesso è B.  
 Allo stesso modo, una volta raggiunto il primo singolo nodo dentro il g-nodo B, questi deve verificare che
 il passo precedente era *w<sub>B</sub>* dentro A, e così via.  
@@ -978,7 +978,7 @@ Se un nodo scopre una incongruenza, allora il fatto viene comunicato al nodo mit
 che lo ha scoperto: questi prepara un pacchetto *di eccezione* da instradare verso *v*. Per questo nel
 pacchetto *di richiesta* viene indicato l'indirizzo *completo* del nodo mittente *v* e non solo le posizioni
 interne al g-nodo comune con la destinazione finale.  
-In questo caso, indicato nell'algoritmo con l'eccezione InvalidPathError,
+In questo caso, indicato nell'algoritmo con l'eccezione SearchMigrationPathError,
 il nodo *v* stralcia completamente la path indicata da `current`, come se
 avesse restituito `esito=NO_SOLUTION` con `set_adjacent` vuoto. Ma al contempo ora considera
 il g-nodo finale `current.gnode` come non ancora visitato: cioè potrebbe visitarlo in seguito
@@ -987,7 +987,8 @@ attraverso altre path.
 Proseguiamo ipotizzando che il percorso invece non contiene incongruenze.  
 Indichiamo con *w* il primo singolo nodo che si è incontrato in `current.gnode`.  
 Il nodo *w* nel pacchetto *di richiesta* ha ricevuto `ask_lvl`, `max_host_lvl`, `reserve_request_id`, `𝜀 ≥ 1`.
-Ora il nodo *w* prosegue con l'algoritmo descritto sopra. Poi prepara un pacchetto *di risposta*
+Ora il nodo *w* prosegue con l'algoritmo, che spiegheremo a breve con maggiori dettagli.
+Intanto diciamo che alla fine il nodo *w* prepara un pacchetto *di risposta*
 e lo instrada verso *v*. Esso contiene `esito`, `host_lvl`, `pos`, `eldership`,
 `max_host_lvl`, `set_adjacent`, `middle_pos`, `middle_eldership`.
 
@@ -1017,6 +1018,14 @@ SearchMigrationPathResponse:
   int middle_eldership
 ```
 
+Per l'instradamento di questi pacchetti saranno previsti i metodi remoti:
+
+```
+route_search_request()
+route_search_error()
+route_search_response()
+```
+
 ##### Riserva un posto per la migrazione
 
 Il nodo *w*, agendo per conto dell'intero g-nodo `current.gnode` e collaborando con i Coordinator
@@ -1032,6 +1041,7 @@ al servizio Coordinator usando come chiave `host_lvl`. Come descritto nel relati
 questo serve a prenotare un posto. Dalla posizione prenotata si deduce se il g-nodo aveva a
 disposizione una posizione *reale* oppure no.
 
+**TODO Spostare (se non c'è già) nel documento del Coordinator.**
 Quando viene chiesto al Coordinator di un g-nodo di riservare un posto
 questi esegue la richiesta. Se non ci sono posti disponibili, comunque la prenotazione di un posto
 *virtuale* viene fatta.  
@@ -1043,15 +1053,21 @@ prenotazione viene considerata abortita. E di conseguenza se non è stato ricevu
 segnala la presenza del nuovo g-nodo, allora quel posto ridiventa disponibile.  
 Il fatto che una prenotazione viene richiesta e poi non viene effettivamente usata può accadere
 per diversi motivi. Ad esempio perché il nodo richiedente va in crash o viene staccato dalla
-rete. Può avvenire anche più semplicemente perché nell'insieme delle soluzioni trovate solo
-una viene adottata. Però si preferisce che in questo caso il richiedente inoltri al g-nodo
+rete.
+
+Quando il nodo *v* coordina la ricerca di una migration-path, esso ottiene un insieme di
+soluzioni e solo una di esse viene adottata. Tutte le altre soluzioni contengono la prenotazione
+di una posizione *reale* in un certo g-nodo.
+Vedremo in seguito che il nodo *v* per ogni soluzione scartata dovrà inoltrare al g-nodo
 interessato la richiesta di avvertire il proprio Coordinator che una certa prenotazione pendente
 (identificabile con `reserve_request_id`) va cancellata.
 
 ##### Recupera i g-nodi adiacenti per proseguire la ricerca in ampiezza
 
 Vediamo ora come fa il nodo *w* a dire quali g-nodi di livello `ask_lvl + 1` sono adiacenti al
-suo g-nodo di livello `ask_lvl + 1`.
+suo g-nodo di livello `ask_lvl + 1`.  
+Questo viene fatto solo se non è stato trovato qui un posto *reale* ad un livello con delta
+*soddisfacente*.
 
 Il nodo *w* sa quali sono i g-nodi di livello `ask_lvl + 1` interni al suo g-nodo di livello `ask_lvl + 2`,
 cioè quali HCoord di livello `ask_lvl + 1` sono presenti nella sua mappa dei percorsi.
@@ -1081,16 +1097,17 @@ la tupla completa del g-nodo di livello `ask_lvl + 1` in quanto il nodo *w* po
 tutte le componenti *reali*. In conclusione il nodo *w* ottiene un set di tuple
 il cui livello è maggiore o uguale a `ask_lvl + 1`.
 
-##### Prosegue l'algoritmo di ricerca in ampiezza della shortest migration-path
+##### Risposta al nodo richiedente
 
-Infine il nodo *w* instrada verso il nodo *v* in un pacchetto *di risposta* la tupla composta di
-`esito`, `host_lvl`, `pos`, `eldership`, `max_host_lvl`, `set_adjacent`, `middle_pos`, `middle_eldership`
-e questi prosegue con l'algoritmo di ricerca in ampiezza.
+Il nodo *w* instrada verso il nodo *v* in un pacchetto *di risposta* la tupla composta di
+`esito`, `host_lvl`, `pos`, `eldership`, `max_host_lvl`, `set_adjacent`, `middle_pos`, `middle_eldership`.
+
+##### I g-nodi adiacenti devono essere del livello richiesto
 
 Nel processare gli elementi della lista `set_adjacent` il nodo *v* (che ricordiamo ha un indirizzo
 con tutte le componenti *reali*) se si trova la tupla `n` di un g-nodo di livello maggiore di `ask_lvl + 1`
 instrada un *pacchetto di esplorazione* con meccanismi simili a quelli descritti per il *pacchetto di richiesta*
-per chiedere al primo singolo nodo che incontra in essi la tupla completa del g-nodo di livello `ask_lvl + 1`.  
+per chiedere al primo singolo nodo che incontra in essi la tupla completa del g-nodo di livello `requested_lvl = ask_lvl + 1`.  
 Anche qui è necessario seguire tutto il percorso indicato da `current` e poi instradare verso `n`. Non è
 invece necessario che durante il tragitto si verifichi anche l'adiacenza come visto prima.  
 Il nodo che risponde alla richiesta dovrà instradare il *pacchetto di risposta esplorazione* al
@@ -1099,6 +1116,35 @@ nodo *v*.
 Facciamo notare che questo comportamento del nodo *v* gli permette di visitare gradualmente tutti
 i g-nodi di livello `ask_lvl + 1` della rete, sebbene ogni singolo g-nodo che esso contatta non sia
 in grado da solo di identificare tutti i g-nodi di livello `ask_lvl + 1` adiacenti a sé.
+
+Anche qui si usa la struttura `PathHop` per garantire il corretto instradamento. Si usa sempre la funzione
+`get_path_hops(current)` per avere la lista di passi e poi si aggiunge in coda l'elemento con
+il membro `gnode` = `n`. Il membro `mig_pos` non serve.
+
+Riassumendo, i pacchetti contengono:
+
+```
+ExploreGNodeRequest:
+  List<PathHop> path_hops
+  TupleGNode v
+  int requested_lvl
+
+ExploreGNodeResponse:
+  TupleGNode v
+  TupleGNode response
+```
+
+Per l'instradamento di questi pacchetti saranno previsti i metodi remoti:
+
+```
+route_explore_request()
+route_explore_response()
+```
+
+##### Prosegue l'algoritmo di ricerca in ampiezza della shortest migration-path
+
+Il nodo *v*, ricevuta la risposta (ed eventualmente dopo aver ottenuto i g-nodi adiacenti nel
+livello richiesto) prosegue con l'algoritmo di ricerca in ampiezza.
 
 La ricerca si interrompe quando si trova una migration-path con un delta minore di `𝜀`,
 oppure quando dopo l'ultima migration-path trovata (sebbene con un delta *non soddisfacente*) sono stati fatti
@@ -1123,17 +1169,24 @@ g-nodo da contattare va aggiustato.
 Il nodo *v* inoltre conosce l'identificativo `reserve_request_id` che è stato usato per etichettare la
 richiesta di prenotazione di modo che potesse essere cancellata.
 
-Il nodo *v* prepara una *pacchetto di cancellazione* con queste informazioni:
+Il nodo *v* prepara una *pacchetto di cancellazione* e ne avvia l'instradamento verso il g-nodo interessato.
+
+Il pacchetto contiene:
 
 ```
 DeleteReservationRequest:
   TupleGNode gnode
   int reserve_request_id
+``
+
+Per l'instradamento di questo pacchetto sarà previsto il metodo remoto:
+
+```
+route_delete_reserve_request()
 ```
 
-Il nodo *v* avvia l'instradamento del pacchetto verso il g-nodo interessato. Non c'è bisogno di
-attendere una risposta. Il primo singolo nodo in esso chiama il metodo `delete_reserve` del modulo Coordinator per
-cancellare la prenotazione.
+Non c'è bisogno di attendere una risposta. Il primo singolo nodo in esso chiama il metodo `delete_reserve` del
+modulo Coordinator per cancellare la prenotazione.
 
 ### <a name="Strategia_ingresso_Esecuzione_migration_path"></a>Esecuzione della migration-path
 
