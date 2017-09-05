@@ -1177,7 +1177,7 @@ Il pacchetto contiene:
 DeleteReservationRequest:
   TupleGNode gnode
   int reserve_request_id
-``
+```
 
 Per l'instradamento di questo pacchetto sarà previsto il metodo remoto:
 
