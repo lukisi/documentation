@@ -1214,7 +1214,7 @@ Il g-nodo *𝛽<sub>i</sub>* è adiacente ad un g-nodo *𝛼<sub>i+1</sub>* di l
 **3**. Il g-nodo *𝛽<sub>i</sub>* ha posizione *reale* al livello *l*. Ovviamente anche a quelle superiori
 come detto sopra riguardo *p<sub>i</sub>*.  
 Il primo singolo nodo che si incontra in *𝛽<sub>i</sub>* potrebbe avere posizioni *virtuali* ai livelli inferiori.  
-Lo stesso vale per il singolo nodo che è in diretto contatto con *𝛼<sub>i+1</sub>*.
+Lo stesso vale per il singolo nodo in *𝛽<sub>i</sub>* che è in diretto contatto con *𝛼<sub>i+1</sub>*.
 
 **4**. Il g-nodo *𝛼<sub>i+1</sub>* potrebbe avere posizione *virtuale* al livello *l*.
 
