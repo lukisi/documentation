@@ -838,6 +838,8 @@ Mentre Q is not empty:
       n = ask_tuple(current, n, ask_lvl + 1)
         // Questo algoritmo è eseguito nel singolo nodo contattato in `n`.
         Restituisci make_tuple_from_level(requested_lvl)
+      Se ora n ha componenti non reali:
+        Continue (prossima iterazione)
     Se n is not in S:
       S.add(n)
       SolutionStep n_step = new SolutionStep(gnode=n, mig_pos, middle_pos, middle_eldership, parent=current)
@@ -1041,20 +1043,6 @@ al servizio Coordinator usando come chiave `host_lvl`. Come descritto nel relati
 questo serve a prenotare un posto. Dalla posizione prenotata si deduce se il g-nodo aveva a
 disposizione una posizione *reale* oppure no.
 
-**TODO Spostare (se non c'è già) nel documento del Coordinator.**
-Quando viene chiesto al Coordinator di un g-nodo di riservare un posto
-questi esegue la richiesta. Se non ci sono posti disponibili, comunque la prenotazione di un posto
-*virtuale* viene fatta.  
-Se viene prenotato un posto *virtuale*, anche se poi non fosse usato, questo non danneggia la
-rete in alcun modo. D'altra parte, se viene prenotato un posto *reale* e poi l'ingresso non viene
-completato la rete si viene a trovare privata di una risorsa inutilmente. Per questo il Coordinator
-associa ad ogni prenotazione pendente *reale* un timeout scaduto il quale la
-prenotazione viene considerata abortita. E di conseguenza se non è stato ricevuto un ETP che
-segnala la presenza del nuovo g-nodo, allora quel posto ridiventa disponibile.  
-Il fatto che una prenotazione viene richiesta e poi non viene effettivamente usata può accadere
-per diversi motivi. Ad esempio perché il nodo richiedente va in crash o viene staccato dalla
-rete.
-
 Quando il nodo *v* coordina la ricerca di una migration-path, esso ottiene un insieme di
 soluzioni e solo una di esse viene adottata. Tutte le altre soluzioni contengono la prenotazione
 di una posizione *reale* in un certo g-nodo.
@@ -1112,6 +1100,10 @@ Anche qui è necessario seguire tutto il percorso indicato da `current` e poi in
 invece necessario che durante il tragitto si verifichi anche l'adiacenza come visto prima.  
 Il nodo che risponde alla richiesta dovrà instradare il *pacchetto di risposta esplorazione* al
 nodo *v*.
+
+Se il nodo che risponde alla richiesta appartiene ad un g-nodo di livello `requested_lvl` che ha componenti
+non *reali* (è possibile ai livelli minori del livello della tupla `n` iniziale) allora il
+nodo *v* ignora questa tupla. Altrimenti la processa.
 
 Facciamo notare che questo comportamento del nodo *v* gli permette di visitare gradualmente tutti
 i g-nodi di livello `ask_lvl + 1` della rete, sebbene ogni singolo g-nodo che esso contatta non sia
