@@ -81,7 +81,7 @@ Si vedranno nella trattazione i metodi `evaluate_enter`, `begin_enter`, `complet
 #### Esecuzioni su tutti i nodi di un g-nodo
 
 In alcuni casi il modulo Migrations in esecuzione in un qualsiasi singolo
-nodo (ad esempio ...)
+nodo (ad esempio quello che riceve il compito di coordinare una migrazione)
 vuole far eseguire alcuni suoi metodi in tutti i singoli nodi di un g-nodo.  
 Queste esecuzioni possono essere di due tipi:
 
@@ -92,6 +92,11 @@ Queste esecuzioni possono essere di due tipi:
 
 Per queste necessità esistono metodi del modulo Coordinator che iniziano la propagazione, relativi metodi
 remoti per la propagazione, e relativi delegati da chiamare (una volta) su ogni singolo nodo.  
+Ogni singolo metodo ha il compito di scegliere le informazioni che servono alla propagazione: il metodo che
+inizia la propagazione deve raccogliere queste informazioni e metterle nel pacchetto da trasmettere (in
+broadcast oppure in unicast). Il metodo remoto che viene chiamato deve verificare sulla base delle
+informazioni se il messaggio è rivolto anche a lui, cioè in altre parole se esso fa parte del
+g-nodo in cui il messaggio va propagato.  
 Ogni singolo metodo di questi ha direttamente codificata in sé la tipologia, cioè se *con* o
 *senza* ritorno e nel primo caso come trattare il valore restituito da ogni singolo nodo e combinarlo
 col valore restituito dal delegato in questo nodo.
@@ -535,8 +540,8 @@ In quello stesso momento gli vengono forniti:
 Il modulo Coordinator fornisce nella classe CoordinatorManager metodi proxy per la sua collaborazione con il modulo Migrations.  
 Il loro utilizzo è questo: l'utilizzatore del modulo
 Coordinator nel nodo *n* passa un oggetto al metodo `xyz` (su istruzione
-del modulo Migrations); questi fa pervenire questo oggetto al nodo Coordinator della
-rete il quale lo passa ad un particolare delegato per il metodo `xyz`. Questo delegato
+del modulo Migrations); questi fa pervenire questo oggetto al nodo Coordinator (di tutta la
+rete o di un g-nodo) il quale lo passa ad un particolare delegato per il metodo `xyz`. Questo delegato
 implementato dall'utilizzatore del modulo richiama il metodo `xyz` nel modulo Migrations.
 
 *   `Object evaluate_enter(int lvl, Object evaluate_enter_data)`.  
@@ -549,7 +554,32 @@ implementato dall'utilizzatore del modulo richiama il metodo `xyz` nel modulo Mi
     L'esecuzione del metodo `completed_enter` del modulo Migrations nel nodo Coordinator segnala
     il completamento dell'ingresso.
 
-Il modulo Coordinator fornisce inoltre i seguenti metodi:
+Il modulo Coordinator fornisce inoltre nella classe CoordinatorManager metodi di accesso alla
+memoria condivisa di pertinenza del modulo Migrations.
+Questi sono usati solo nel nodo Coordinator (di tutta la rete o di un g-nodo) che sta eseguendo
+uno dei metodi visti prima.
+
+*   `get_migrations_memory` e `set_migrations_memory`.  
+    Per accedere alla memoria condivisa di pertinenza del modulo Migrations.
+
+Il modulo Coordinator fornisce inoltre nella classe CoordinatorManager metodi di propagazione per
+la sua collaborazione con il modulo Migrations.  
+Il loro utilizzo è questo: l'utilizzatore del modulo Coordinator nel nodo *n* chiama il metodo `xyz(l)`
+su istruzione del modulo Migrations. Questi raccoglie delle informazioni che servono a identificare
+i nodi che appartengono al suo stesso g-nodo di livello `l`, come ad esempio la tupla delle
+posizioni, l'identificativo del fingerprint, ecc. Poi chiama un omonimo metodo remoto su degli
+oggetti stub (diversi di tipo unicast oppure uno di tipo broadcast a seconda che sia prevista una
+risposta o meno). I metodi remoti nei nodi riceventi verificano sulla base delle suddette informazioni
+se fanno parte del g-nodo di propagazione. In caso positivo questi chiamano
+un particolare delegato per il metodo `xyz`. Questo delegato
+implementato dall'utilizzatore del modulo richiama il metodo `xyz` nel modulo Migrations.
+
+*   `prepare_migration()`.  
+    **TODO**.
+*   `finish_migration()`.  
+    **TODO**.
+
+Il modulo Coordinator fornisce inoltre nella classe CoordinatorManager i seguenti metodi:
 
 *   `get_n_nodes()`.  
     Per chiedere al Coordinator della rete il numero di singoli nodi.
@@ -557,8 +587,6 @@ Il modulo Coordinator fornisce inoltre i seguenti metodi:
     Per riservare un posto nel proprio g-nodo.
 *   `delete_reserve(int lvl, int reserve_request_id)`.  
     Per cancellare la prenotazione di un posto nel proprio g-nodo.
-*   `get_migrations_memory` e `set_migrations_memory`.  
-    Per accedere alla memoria condivisa di pertinenza del modulo Migrations.
 
 #### Metodo evaluate_enter
 
@@ -655,6 +683,24 @@ CompletedEnterResponse. Essa contiene:
 Questo Object serializzabile è quello che il metodo `completed_enter` del CoordinatorClient restituisce al chiamante.  
 Ed è quello che il metodo `completed_enter` del modulo Coordinator restituisce al chiamante.
 
+#### Metodi get_migrations_memory e set_migrations_memory
+
+Il metodo `Object get_migrations_memory(int lvl)` e il metodo `void set_migrations_memory(int lvl, Object data)`
+del modulo Coordinator vengono chiamati per accedere alla memoria condivisa del proprio g-nodo
+di livello *lvl* di pertinenza del modulo Migrations.  
+Come detto sopra, possono essere richiamati solo nel nodo Coordinator, quindi prevedono l'eccezione
+NotCoordinatorNodeError.
+
+Si vedano i commenti [qui](#Records_modulo_migrations).
+
+#### Metodo prepare_migration
+
+**TODO**
+
+#### Metodo finish_migration
+
+**TODO**
+
 #### Metodo get_n_nodes
 
 Il metodo `get_n_nodes` del modulo Coordinator viene chiamato per chiedere al nodo Coordinator della rete il numero
@@ -695,16 +741,6 @@ Il metodo, attraverso la classe client del servizio CoordinatorClient, invia una
 La risposta è una istanza di DeleteReserveEnterResponse che non contiene membri.
 
 Il metodo restituisce `void`.
-
-#### Metodi get_migrations_memory e set_migrations_memory
-
-Il metodo `Object get_migrations_memory(int lvl)` e il metodo `void set_migrations_memory(int lvl, Object data)`
-del modulo Coordinator vengono chiamati per accedere alla memoria condivisa del proprio g-nodo
-di livello *lvl* di pertinenza del modulo Migrations.  
-Come detto sopra, possono essere richiamati solo nel nodo Coordinator, quindi prevedono l'eccezione
-NotCoordinatorNodeError.
-
-Si vedano i commenti [qui](#Records_modulo_migrations).
 
 ### <a name="Deliverables_service"></a>Implementazione di CoordinatorService e di CoordinatorClient
 
