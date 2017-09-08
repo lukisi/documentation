@@ -1240,17 +1240,18 @@ il modulo Coordinator per avviare una *propagazione* a tutto il suo g-nodo, *con
 Per prima cosa il nodo *v* per ogni passo della migration-path (cioè per *i* da 1 fino a *m* - 1)
 inventa un identificativo *migration_id* e lo associa a *𝛽<sub>i</sub>*.
 
-Partendo da *i* = *m* - 1 e scendendo fino a 1, il nodo *v* contatta un singolo nodo *𝛽0<sub>i</sub>*
-in *𝛽<sub>i</sub>*. Notiamo che nell'ultimo passo, cioè con *i* = 1, è possibile che
-lo stesso *v* sia *𝛽0<sub>i</sub>*.  
+Partendo da *i* = *m* - 1 e scendendo fino a 1, il nodo *v* contatta un singolo nodo *𝛽0<sub>i</sub>*,
+che appartiene al g-nodo di livello *l* *𝛽<sub>i</sub>*, che appartiene al g-nodo di livello *l* + 1
+*p<sub>i</sub>*. Notiamo che nell'ultimo passo, cioè con *i* = 1, è possibile che lo stesso nodo
+*v* appartenga a *𝛽<sub>i</sub>*: in questo caso è lo stesso nodo *v* a fare le veci di *𝛽0<sub>i</sub>*.  
 Il nodo *v* passa al nodo *𝛽0<sub>i</sub>* il suo *migration_id*.  
 Il nodo *𝛽0<sub>i</sub>* attraverso una *propagazione con ritorno* fa in modo che
 tutti i singoli nodi di *𝛽<sub>i</sub>* avviano la prima parte delle operazioni di duplicazione
 dell'identità. Quando questa è stata eseguita, *𝛽0<sub>i</sub>* lo comunica al nodo *v* che
 prosegue con il prossimo valore di *i*.
 
-Ora il nodo *v* contatta un singolo nodo *𝛽0<sub>m-1</sub>* in *𝛽<sub>m-1</sub>*. Se *m* = 2, è possibile che
-lo stesso *v* sia *𝛽0<sub>m-1</sub>*.  
+Ora il nodo *v* contatta un singolo nodo *𝛽0<sub>m-1</sub>* in *𝛽<sub>m-1</sub>*, in *p<sub>m-1</sub>*.
+Se *m* = 2, è possibile che lo stesso *v* sia *𝛽0<sub>m-1</sub>*.  
 Conosciamo *pos1*, la posizione di *𝛽<sub>m-1</sub>* in *p<sub>m-1</sub>*, che è *reale*. Essa è stata salvata nel membro
 `mig_pos` di SolutionStep.  
 Sappiamo anche che è stato riservato un posto *virtuale* *pos2* in *p<sub>m-1</sub>* che verrà assegnato
@@ -1276,7 +1277,7 @@ esterni ed inizierà a verificare se c'è ancora bisogno di lui.
 Dopo aver dato il via alla *propagazione senza ritorno* il nodo *𝛽0<sub>m-1</sub>* lo comunica al nodo *v*.
 
 Ora il nodo *v* riparte da *i* = *m* - 2 e scende fino a 1. Il nodo *v* contatta un singolo
-nodo *𝛽0<sub>i</sub>* in *𝛽<sub>i</sub>*. Se *i* = 1, è possibile che
+nodo *𝛽0<sub>i</sub>* in *𝛽<sub>i</sub>*, in *p<sub>i</sub>*. Se *i* = 1, è possibile che
 lo stesso *v* sia *𝛽0<sub>i</sub>*.  
 Conosciamo *pos1*, la posizione di *𝛽<sub>i</sub>* in *p<sub>i</sub>*, che è *reale*. Essa è stata salvata nel membro
 `mig_pos` di SolutionStep.  
