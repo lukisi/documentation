@@ -1373,38 +1373,141 @@ Mentre current.parent ≠ null:
   current = current.parent
 ```
 
-Segue l'algoritmo che *v* usa per instradare un pacchetto verso il primo nodo dentro un
-preciso g-nodo. Lo stesso viene usato anche per instradare la risposta verso *v*.
+Segue l'algoritmo che *v* usa per instradare un pacchetto di richiesta verso il primo nodo dentro un
+preciso g-nodo `gnode` e ricevere una risposta.  
+L'algoritmo illustrato viene usato sia per la prima fase, in cui si comunica ad un g-nodo di avviare
+la prima fase della duplicazione, sia per la seconda, in cui si istruisce il g-nodo di completare la
+duplicazione e le altre operazioni della migrazione. Le istanze di `RequestPacket` possono contenere
+i dati che servono alla prima o alla seconda fase.  
+Il nodo *v* chiama il metodo `send_mig_request` dopo aver preparato il pacchetto del tipo voluto. Il
+metodo ritorna solo dopo che un singolo nodo nel g-nodo desiderato ha completato l'esecuzione del
+metodo `void execute_mig(RequestPacket p0)`.
 
 ```
-nodo che avvia:
-TODO
+void send_mig_request(TupleGNode gnode, RequestPacket p0):
+  p0.dest = gnode
+  Se my_pos in p0.dest:
+    execute_mig(RequestPacket p0)
+    Return
+  // prepare to receive response
+  p0.src = my_pos
+  p0.pkt_id = Random_int()
+  Channel ch = new Channel()
+  request_id_map[p0.pkt_id] = ch
+  // send request
+  Stub st = best_gw_to(p0.dest)
+  st.route_mig_request(p0)
+  // wait response
+  var v = ch.recv()
+  Return
 
-nodo che riceve e inoltra/esegue:
-TODO
+
+
+[Remote] void route_mig_request(RequestPacket p0):
+  Se my_pos in p0.dest:
+    ResponsePacket p1
+    p1.pkt_id = p0.pkt_id
+    p1.dest = p0.src
+    p1.src = my_pos
+    execute_mig(RequestPacket p0)
+    // send response
+    Stub st = best_gw_to(pq.dest)
+    st.route_mig_response(p1)
+  Altrimenti:
+    // route request
+    Stub st = best_gw_to(p0.dest)
+    st.route_mig_request(p0)
+
+
+
+void execute_mig(RequestPacket p0):
+  do_something(p0)
+
+
+
+[Remote] void route_mig_response(ResponsePacket p1):
+  Se my_pos in p1.dest:
+    Se NOT request_id_map.has_key(p1.pkt_id):
+      Return
+    Channel ch = request_id_map[p1.pkt_id]
+    ch.send(null)
+  Altrimenti:
+    // route response
+    Stub st = best_gw_to(p1.dest)
+    st.route_mig_response(p1)
+
+```
+
+Seguono i construttori della struttura dati `RequestPacket` che popolano i suoi membri
+sulla base di una istanza di `MigData` per i due momenti.
+
+```
+RequestPacket.fase1(MigData mig)
+  this.operation = RequestPacketType.PREPARE_MIGRATION
+  this.migration_id = mig.migration_id
+
+RequestPacket.fase2(MigData mig)
+  this.operation = RequestPacketType.FINISH_MIGRATION
+  this.migration_id = mig.migration_id
+  this.pos2 = mig.pos2
+  this.eld2 = mig.eld2
+  this.pos_next = mig.pos_next
+  this.host_lvl = mig.host_lvl
+  this.new_pos = mig.new_pos
+  this.new_eldership = mig.new_eldership
 
 ```
 
 Segue l'algortimo che *v* usa per eseguire la migration-path descritta in `List<MigData> migs`.
 
 ```
-TODO
-```
-
-**TODO** dettagli sul metodo a *propagazione con ritorno* `prepare_migration` e sul
-metodo a *propagazione senza ritorno* `finish_migration`.
-
-Segue l'algoritmo che un singolo nodo *w* usa per espletare la prima parte della duplicazione.
-
-```
-TODO
-```
-
-Segue l'algoritmo che un singolo nodo *w* usa per espletare la seconda parte della duplicazione
-e la migrazione.
+Per i = migs.size - 1 scende fino a 0:
+  MigData mig = migs[i]
+  RequestPacket p0 = new RequestPacket.fase1(mig)
+  send_mig_request(mig.gnode+mig.pos1, p0)
+Per i = migs.size - 1:
+  MigData mig = migs[i]
+  RequestPacket p0 = new RequestPacket.fase2(mig)
+  send_mig_request(mig.gnode+mig.pos1, p0)
+Per i = migs.size - 2 scende fino a 0:
+  MigData mig = migs[i]
+  RequestPacket p0 = new RequestPacket.fase2(mig)
+  send_mig_request(mig.gnode+mig.pos1, p0)
 
 ```
-TODO
+
+Segue l'algoritmo della funzione `execute_mig` che un singolo nodo *w* nel g-nodo destinazione
+esegue sulla richiesta di *v*. Esso si compone di due parti, una eseguita nella prima fase e
+l'altra nella seconda.
+
+```
+void execute_mig(RequestPacket p0):
+  Se p0.operation = RequestPacketType.PREPARE_MIGRATION:
+    int lvl = level(p0.dest)
+    Object prepare_migration_data = new PrepareMigrationData(p0.migration_id)
+    Coord.prepare_migration(lvl, prepare_migration_data)
+  Altrimenti-Se p0.operation = RequestPacketType.FINISH_MIGRATION:
+    ... TODO
+  Altrimenti:
+    Ignora pacchetto
+
+```
+
+Nell'algoritmo descritto qui sopra, il modulo Migrations richiama un metodo (`prepare_migration`
+oppure `finish_migration`) del modulo Coordinator. Il primo è un metodo a *propagazione con ritorno*,
+il secondo è un metodo a *propagazione senza ritorno*, il cui funzionamento è dettagliato
+[qui](../ModuloCoordinator/AnalisiFunzionale.md#Collaborazione_migrations) e
+[qui](../ModuloCoordinator/AnalisiFunzionale.md#Deliverables_manager)
+nella trattazione del modulo Coordinator. Essi provocano in tutti i singoli nodi del g-nodo destinazione
+l'invocazione dei metodi (`prepare_migration` e `finish_migration`) del modulo Migrations.  
+Seguono gli algoritmi dei suddetti metodi.
+
+```
+void prepare_migration(lvl, prepare_migration_data):
+  ... TODO
+
+void finish_migration(lvl, finish_migration_data):
+  ... TODO
 ```
 
 ### <a name="Strategia_ingresso_Degradazione"></a>Degradazione
