@@ -352,8 +352,8 @@ Per rappresentare gli indirizzi di nodi verrà definita la classe Naddr, che il 
 solo la sua interfaccia IQspnNaddr, come verrà dettagliato sotto.
 
 Il modulo QSPN in un nodo *n* conosce, per requisito, il suo indirizzo. Per il tramite di messaggi ETP, esso viene
-a conoscenza degli indirizzi dei suoi vicini e di altri g-nodi che può raggiungere, ma solo di g-nodi che hanno in
-comune il loro livello direttamente superiore con uno dei g-nodi di cui il nodo *n* è membro. Cioè, solo i g-nodi di
+a conoscenza degli indirizzi di altri g-nodi che può raggiungere tramite i suoi diretti vicini, ma solo di g-nodi che hanno
+come g-nodo di livello direttamente superiore il g-nodo di cui anche il nodo *n* è membro. Cioè, solo i g-nodi di
 livello *i* che appartengono allo stesso g-nodo di livello *i* + 1 a cui appartiene il nodo *n* saranno individuati
 e memorizzati. Per questo per rappresentare gli indirizzi di g-nodi il modulo QSPN usa la classe HCoord (coordinate gerarchiche).
 
