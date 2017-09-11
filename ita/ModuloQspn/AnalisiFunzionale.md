@@ -312,7 +312,7 @@ per ogni diverso fingerprint di *d* che gli viene segnalato attraverso gli ETP r
 
 ### <a name="Elementi_memorizzati_mappa"></a>Elementi memorizzati nella mappa
 
-Riassumendo, ogni g-nodo (non *virtuale*) nella topologia gerarchica del nodo corrente *n* è una possibile destinazione
+Riassumendo, ogni g-nodo (non *virtuale*)<sup>1</sup> nella topologia gerarchica del nodo corrente *n* è una possibile destinazione
 per il nodo *n*. La mappa del nodo *n*, per ogni sua possibile destinazione, mantiene queste informazioni:
 
 *   La destinazione, espressa come livello (*lvl*) e identificativo all'interno di quel livello
@@ -334,6 +334,10 @@ per il nodo *n*. La mappa del nodo *n*, per ogni sua possibile destinazione, man
 
     Si consideri che due percorsi di cui il nodo viene a conoscenza sono dal nodo considerati distinti se e solo se non
     riportano le stesse sequenze di passi e di archi.
+
+* * *
+
+<sub>Nota 1: I concetti di nodo e g-nodo *virtuale* e *di connettività* saranno chiariti a breve.</sub>
 
 ### <a name="Indirizzo_Netsukuku"></a>Indirizzo Netsukuku
 
