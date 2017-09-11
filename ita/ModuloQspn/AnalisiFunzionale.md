@@ -312,19 +312,20 @@ per ogni diverso fingerprint di *d* che gli viene segnalato attraverso gli ETP r
 
 ### <a name="Elementi_memorizzati_mappa"></a>Elementi memorizzati nella mappa
 
-Riassumendo, per ogni g-nodo (non virtuale) nella topologia gerarchica del nodo corrente, la mappa
-mantiene queste informazioni:
+Riassumendo, ogni g-nodo (non *virtuale*) nella topologia gerarchica del nodo corrente *n* è una possibile destinazione
+per il nodo *n*. La mappa del nodo *n*, per ogni sua possibile destinazione, mantiene queste informazioni:
 
-*   Livello (*lvl*) e identificativo all'interno di quel livello (*pos* : numero da 0 a *gsize(lvl)* - 1). Il modulo
+*   La destinazione, espressa come livello (*lvl*) e identificativo all'interno di quel livello
+    (*pos* : numero da 0 a *gsize(lvl)* - 1). Il modulo
     QSPN lo rappresenta con una istanza della classe [HCoord](#HCoord).  
-    Una istanza di HCoord in generale può rappresentare un g-nodo virtuale, cioè può avere come *pos* un numero maggiore
+    Una istanza di HCoord in generale può rappresentare un g-nodo *virtuale*, cioè può avere come *pos* un numero maggiore
     o uguale a *gsize(lvl)*, ma questi non sono mai una destinazione.
-*   Tutti i percorsi che il nodo sa di poter usare per raggiungere quel g-nodo. Il modulo li rappresenta con istanze
+*   Tutti i percorsi che il nodo sa di poter usare per raggiungere quella destinazione. Il modulo li rappresenta con istanze
     della classe [NodePath](#Path). Per ogni percorso vanno mantenute queste informazioni:
 
     *   L'arco verso il gateway.
-    *   Tutti i passi del percorso. Ogni passo è un g-nodo; sono inclusi eventuali g-nodi
-        *di connettività*. Ogni g-nodo è espresso con una istanza di HCoord.
+    *   Tutti i passi del percorso. Ogni passo è un g-nodo; sono inclusi eventuali g-nodi *virtuali* che esistono
+        con funzione *di connettività*. Ogni g-nodo è espresso con una istanza di HCoord.
     *   Tutti gli identificativi degli archi che collegano un passo al successivo, compreso l'identificativo dell'arco
         verso il gateway.
     *   Il costo del percorso.
