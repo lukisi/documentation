@@ -675,21 +675,21 @@ il crescere del delta *hl* - *l*, andiamo a fare operazioni che danneggiano ma
 Con il crescere di *d* cresce il numero di g-nodi che cambiano indirizzo, quindi è ovvio il danno.
 
 Più sottile è il danno con il crescere del delta *hl* - *l*, ma non indifferente. Partiamo ad esempio
-da un g-nodo di livello 2 saturo. Un nuovo nodo si aggiunge e questo può, senza obbligare a nessuna migrazione,
-occupare un nuovo g-nodo di livello 2 dentro il g-nodo di livello 3 che diventa saturo. Un nuovo nodo si
-aggiunge e ha un solo link con il g-nodo di livello 2 saturo; che è dentro un g-nodo di livello 3 saturo;
+da un g-nodo di livello 1 saturo. Un nuovo nodo si aggiunge e questo può, senza obbligare a nessuna migrazione,
+occupare un nuovo g-nodo di livello 1 dentro il g-nodo di livello 2 che diventa saturo. Un nuovo nodo si
+aggiunge e ha un solo link con il g-nodo di livello 1 saturo; che è dentro un g-nodo di livello 2 saturo;
+quindi può, senza obbligare a nessuna migrazione, occupare un nuovo g-nodo di livello 2 dentro il g-nodo di
+livello 3 che diventa saturo. Un nuovo nodo si aggiunge e ha un solo link con il g-nodo di livello 1 saturo;
+che è dentro un g-nodo di livello 2 saturo; che è dentro un g-nodo di livello 3 saturo;
 quindi può, senza obbligare a nessuna migrazione, occupare un nuovo g-nodo di livello 3 dentro il g-nodo di
-livello 4 che diventa saturo. Un nuovo nodo si aggiunge e ha un solo link con il g-nodo di livello 2 saturo;
-che è dentro un g-nodo di livello 3 saturo; che è dentro un g-nodo di livello 4 saturo;
-quindi può, senza obbligare a nessuna migrazione, occupare un nuovo g-nodo di livello 4 dentro il g-nodo di
-livello 5 che diventa saturo. E così via, con pochi nodi si rende saturo un g-nodo di alto livello
+livello 4 che diventa saturo. E così via, con pochi nodi si rende saturo un g-nodo di alto livello
 e si forma una rete poco bilanciata.  
 Si potrebbe pensare che sarebbe conveniente quando il delta supera un certo *𝜀* investigare per
 cercare una migration-path che, sebbene non sia la più breve come *d*, faccia occupare un nuovo posto
 all'interno di un g-nodo di livello *hl* non troppo alto.  
-Ad esempio un nuovo nodo si aggiunge e ha un solo link con il g-nodo di livello 2 saturo; che è dentro un
-g-nodo di livello 3 saturo; sebbene questo sia dentro un g-nodo di livello 4 che non è saturo
-si preferisce cercare una diversa migration-path e si trova che facendo migrare un singolo nodo da un g-nodo
+Ad esempio un nuovo nodo si aggiunge e ha un solo link con il g-nodo di livello 1 saturo; che è dentro un g-nodo di
+livello 2 saturo; che è dentro un g-nodo di livello 3 saturo; sebbene questo sia dentro un g-nodo di livello 4 che
+non è saturo si preferisce cercare una diversa migration-path e si trova che facendo migrare un singolo nodo da un g-nodo
 di livello 1 dentro un altro g-nodo esistente sempre di livello 1 si libera un posto per il nuovo nodo.
 
 Quindi, quando si sceglie la topologia di una rete Netsukuku si sceglie anche un *𝜀* (ad esempio 5 se la
@@ -724,19 +724,23 @@ Vediamo in dettaglio l'algoritmo di questa ricerca.
 
 Premettiamo la definizione di alcune strutture dati che utilizzeremo.
 
-Definiamo una struttura dati con la quale identificare un g-nodo con posizioni *reali*.  
-La struttura `TupleGNode` è serializzabile. In essa non è indicato il valore di `levels`,
+Definiamo una struttura dati con la quale identificare un g-nodo con posizioni *reali* e
+mantenere alcune informazioni relative.  
+La struttura `TupleGNode` è serializzabile.  
+Nel membro `pos` sono indicate tutte le posizioni dal livello del g-nodo fino al livello `levels` - 1.  
+Nella struttura non è indicato il valore di `levels`,
 cioè il numero di livelli della topologia, poiché si assume che i nodi con cui si entra in
-contatto durante la ricerca della migration-path sono tutti della stessa rete. Nel membro `pos`
-sono indicate tutte le posizioni dal livello del g-nodo fino al livello `levels` - 1.
+contatto durante la ricerca della migration-path sono tutti della stessa rete.  
+Nel membro `eld` sono indicate tutte le anzianità dal livello del g-nodo fino al livello `levels` - 1.
 
 ```
 TupleGNode:
   List<int> pos
+  List<int> eld
 ```
 
 Definiamo le seguenti strutture dati nelle quali il nodo *v* memorizza le informazioni
-raccolte durante la ricerca della migration-path. Queste non sono serializzabili.
+raccolte durante la ricerca della migration-path. Queste **non** sono serializzabili.
 
 ```
 SolutionStep:
@@ -813,9 +817,13 @@ Mentre Q is not empty:
     Set<Pair<TupleGNode,int>> set_adjacent = new Set<Pair<TupleGNode,int>>
     Per i = ask_lvl + 1 to levels - 1:
       // Vede quali g-nodi di livello i sono adiacenti al mio g-nodo di livello ask_lvl + 1
+      // e quale g-nodo di livello ask_lvl dentro il mio g-nodo di livello ask_lvl + 1 sia il
+      // relativo border-g-nodo.
       Set<Pair<HCoord,int>> adjacent_hc_set = adj_to_me(i, ask_lvl + 1)
       Per ogni HCoord hc, int mig_pos in adjacent_hc_set:
+        // Produce TupleGNode del g-nodo adiacente
         TupleGNode adj = make_tuple_from_hc(hc)
+        // Aggiunge a quello i dati del border-g-nodo
         set_adjacent.add(Pair(adj, mig_pos))
     Se pos ﹤ gsizes(host_lvl - 1)
       Restituisci esito=SOLUTION, host_lvl, pos, eldership, max_host_lvl, set_adjacent, middle_pos, middle_eldership
@@ -852,10 +860,13 @@ Restituisci solutions.
 #### Maggiori dettagli
 
 La funzione `make_tuple_from_level(l)` produce una istanza di `TupleGNode` che identifica il g-nodo
-di livello `l` a cui appartiene il nodo corrente.
+di livello `l` a cui appartiene il nodo corrente. Il nodo corrente conosce per definizione
+la posizione e l'anzianità dei suoi g-nodi.
 
 La funzione `make_tuple_from_hc(hc)` produce una istanza di `TupleGNode` che identifica
-il g-nodo che il nodo corrente vede nella sua mappa gerarchica con le coordinate `hc`.
+il g-nodo che il nodo corrente vede nella sua mappa gerarchica con le coordinate `hc`. Il nodo
+corrente nel modulo Migrations ha modo di vedere nella sua mappa gerarchica anche l'anzianità
+del g-nodo che conosce come `hc`.
 
 La funzione `level(n)` restituisce il livello del g-nodo identificato dalla tupla `n`.
 
@@ -1091,9 +1102,10 @@ produce un set di coppie, di cui il primo elemento è un HCoord di livello `i` a
 g-nodo di livello `ask_lvl + 1` di *w*, e il secondo è la posizione (*reale*) del border-g-nodo
 di livello `ask_lvl` del g-nodo di livello `ask_lvl + 1` di *w*.
 
-Per gli HCoord di livello `ask_lvl + 1` il nodo *w* sa produrre la tupla completa del g-nodo
-di livello `ask_lvl + 1`. Per ognuno di quelli di livello superiore, invece,
-il nodo *w* sa produrre solo la tupla completa del g-nodo di livello `i`. Inoltre non
+Dato un HCoord di livello `i`, il nodo *w* sa produrre l'istanza `TupleGNode` del g-nodo di
+livello `i` con il metodo `make_tuple_from_hc` visto sopra.  
+Per gli HCoord di livello `ask_lvl + 1` questo è quello che serve. Per quelli di livello
+superiore, invece, questa informazione non è sufficiente. Ma non
 possiamo affidare al nodo *w* il compito di contattare un singolo nodo in essi per scoprire
 la tupla completa del g-nodo di livello `ask_lvl + 1` in quanto il nodo *w* potrebbe non avere
 tutte le componenti *reali*. In conclusione il nodo *w* ottiene un set di tuple
@@ -1514,13 +1526,26 @@ il secondo è un metodo a *propagazione senza ritorno*, il cui funzionamento è 
 [qui](../ModuloCoordinator/AnalisiFunzionale.md#Deliverables_manager)
 nella trattazione del modulo Coordinator. Essi provocano in tutti i singoli nodi del g-nodo destinazione
 l'invocazione dei metodi (`prepare_migration` e `finish_migration`) del modulo Migrations.  
+Si ricorda che il metodo `prepare_migration` deve terminare rapidamente perché il suo completamento
+viene atteso. Invece il metodo `finish_migration` sarà eseguito in una nuova tasklet senza attendere
+il suo completamento.  
 Seguono gli algoritmi dei suddetti metodi.
 
 ```
 void prepare_migration(lvl, prepare_migration_data):
-  ... TODO
+  int migration_id = prepare_migration_data.migration_id
+  var old_id = Identities.get_identity_from_migrations(this)
+  Identities.prepare_add_identity(migration_id, old_id)
 
 void finish_migration(lvl, finish_migration_data):
+  int migration_id = prepare_migration_data.migration_id
+  var old_id = Identities.get_identity_from_migrations(this)
+  var new_id = Identities.add_identity(migration_id, old_id)
+  var old_qspn_mgr = Identities.get_identity_module(old_id, "qspn")
+  var new_qspn_mgr = new Qspn.migration(...)
+  Identities.set_identity_module(old_id, "qspn", new_qspn_mgr)
+  old_qspn_mgr.make_virtual(...)
+  
   ... TODO
 ```
 
