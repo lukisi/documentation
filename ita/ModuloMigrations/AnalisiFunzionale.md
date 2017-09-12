@@ -792,6 +792,8 @@ Mentre Q is not empty:
   (esito, host_lvl, pos, eldership, max_host_lvl, set_adjacent, middle_pos, middle_eldership) =
                                      ask_enter_net(current, ask_lvl, max_host_lvl, reserve_request_id, 𝜀)
     // Questo algoritmo è eseguito nel singolo nodo contattato in `current.gnode`.
+    Se real_pos_up_to(my_pos) ﹤ levels:
+      Instrada eccezione SearchMigrationPathError
     int host_lvl = ask_lvl + 1
     int ok_host_lvl = ask_lvl + 𝜀
     // richiesta al proprio nodo Coordinator di livello host_lvl
@@ -1029,6 +1031,18 @@ route_search_response()
 ```
 
 ##### Riserva un posto per la migrazione
+
+Il nodo *w* ora deve chiedere al Coordinator del suo g-nodo di livello `ask_lvl + 1` di riservare un posto. Ma per fare questo
+è necessario, a causa delle attuali limitazioni del modulo PeerServices, che il nodo *w* abbia tutte le
+componenti del suo indirizzo *reali*.  
+Durante le operazioni di ricerca della migration-path risulta difficile garantire che questo
+requisito sia soddisfatto. Forse in futuro una diversa implementazione del modulo PeerServices potrà
+ridurre queste limitazioni.  
+Per il momento adottiamo questa soluzione: se il nodo *w* contattato non ha tutte le componenti
+*reali*, allora prepara un pacchetto *di eccezione* `SearchMigrationPathError` da instradare verso *v*
+come abbiamo visto prima che poteva accadere durante l'instradamento. Questo consente al nodo
+originante *v* di ignorare il presente percorso e al contempo non escludere tutto il g-nodo
+dalla possibilità di essere visitato di nuovo.
 
 Il nodo *w*, agendo per conto dell'intero g-nodo `current.gnode` e collaborando con i Coordinator
 di quel g-nodo e dei suoi g-nodi superiori, ora vede se c'è un posto disponibile al livello
