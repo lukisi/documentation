@@ -487,14 +487,29 @@ modulo [Identities](../ModuloIdentities/AnalisiFunzionale.md), diciamo che:
 *   Ora all'identità *id<sub>1</sub>* si associano nuove istanze delle classi dei moduli *di identità*. Nell'esame
     del modulo QSPN diciamo che a *id<sub>1</sub>* si associa una nuova istanza di QspnManager.
 
-Il fingerprint di *id<sub>0</sub>* resta invariato. Il fingerprint di *id<sub>1</sub>* è una nuova istanza. Esso è
-identico al primo per quanto riguarda i valori di anzianità di livello inferiore al livello del g-nodo che migra (in
-questo caso, siccome prendiamo in esame un singolo nodo, non esistono livelli minori di 0) e quelli di livello
-superiore a *j*. Differisce per i valori di anzianità dal livello 0 (cioè il livello del g-nodo che migra) fino al
-livello *j*. È identico al primo anche per quanto riguarda l'identificativo di fingerprint a livello 0.
+Il fingerprint di *id<sub>1</sub>* è una nuova istanza. Nel costruirlo si usa come identificativo a livello 0 lo
+stesso che era l'identificativo a livello 0 di *id<sub>0</sub>*. Sono identici anche i valori di anzianità di livello
+inferiore al livello del g-nodo che migra (in questo caso, siccome prendiamo in esame un singolo nodo, non esistono
+livelli minori di 0) e quelli di livello superiore a *j*. Sono diversi invece i valori di anzianità dal livello 0
+(cioè il livello del g-nodo che migra) fino al livello *j*, perché sono quelli relativi al g-nodo *h*.
 
-Bisogna anche ricordare che nell'identità *id<sub>0</sub>* ora il numero approssimato di singoli nodi all'interno
-del g-nodo di livello 0 è 0.
+Il fingerprint di *id<sub>0</sub>* subisce una variazione. Il valore di anzianità del livello del g-nodo che migra
+(nel nostro esempio il livello 0) diventa *nullo*: cioè tale che confrontato con quello di qualunque altro g-nodo
+risulta più giovane. Il suo identificativo a livello 0 resta lo stesso, come restano identici tutti gli altri
+valori di anzianità. Questo significa che un nodo (o g-nodo) *di connettività* non darà mai il suo identificativo
+come identificativo ad un suo g-nodo di livello superiore.  
+Del resto dobbiamo ricordare che quando un nodo calcola il fingerprint del suo g-nodo di livello *i* lo fa tramite
+una operazione sui fingerprint dei g-nodi di livello *i* - 1 in esso contenuti. Questi sono i g-nodi che il
+nodo è venuto a conoscere come possibili destinazioni tramite la ricezione di ETP. Quindi per forza di cose questi
+sono tutti g-nodi che non sono *di connettività*.  
+In un certo senso potremmo dire che il concetto di anzianità perde di significato per un nodo (o g-nodo) *di connettività*.
+
+Un altro concetto che perde di significato per un g-nodo *di connettività* è il numero approssimato di singoli nodi
+al suo interno.  
+Possiamo dire che nell'identità *id<sub>0</sub>* ora il numero approssimato di singoli nodi all'interno
+del g-nodo di livello 0 è 0. Ma anche in questo caso si tratta di una specificazione superflua, poiché quando un
+nodo calcola il numero approssimato di singoli nodi all'interno del suo g-nodo di livello *i* si sommano
+i valori riportati dai g-nodi di livello *i* - 1 in esso contenuti, che sono tutti g-nodi che non sono *di connettività*.
 
 Il set di archi di *id<sub>0</sub>* resta invariato, ma ogni arco in esso subisce delle variazioni. Il set di archi
 di *id<sub>1</sub>* è un nuovo set che viene popolato.

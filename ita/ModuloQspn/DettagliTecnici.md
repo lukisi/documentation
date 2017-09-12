@@ -504,7 +504,7 @@ Con i dati suddetti relativi alla migrazione il demone *ntkd* sull'istanza di Qs
 *   Una callback per modificare il proprio fingerprint di nodo (a livello 0) e i fingerprint dei g-nodi destinazione che
     conosce interni a *w*.  
     Cambia, infatti, per tutti i nodi all'interno di *w*, l'anzianità del proprio g-nodo di livello *k*, cioè l'anzianità
-    di *w* dentro *g*.
+    di *w* dentro *g*. Essa diventa *nulla*, cioè tale che confrontata con quella di qualunque altro g-nodo risulta più giovane.
 
 Verrà avviata tra pochi istanti la trasmissione di un ETP a tutti i vicini di *n* esterni a *w*. In esso va segnalata
 soltanto la rimozione del percorso verso il vecchio identificativo *reale* di *w* al livello *k*.

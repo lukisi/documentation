@@ -464,11 +464,18 @@ l'identificativo `reserve_request_id` oppure se è stata scelta una nuova posizi
 di Booking) il nodo Coordinator di *g* accede in scrittura alla memoria condivisa di *g*.  
 Questo come sappiamo comporta l'avvio di una tasklet che si occupi di replicare la scrittura nei nodi replica.
 
-Il risultato della prenotazione è composto dalla nuova posizione e dalla sua anzianità. Esso viene
+Il risultato della prenotazione è composto da una nuova posizione e una nuova anzianità. Esso viene
 restituito al client del servizio attraverso una istanza di ReserveEnterResponse:
 
 *   `int new_pos`
 *   `int new_eldership`
+
+Il significato del risultato è diverso a seconda che il valore di `new_pos` sia una posizione *reale* oppure
+*virtuale*. Se la posizione è *reale* allora l'anzianità si riferisce proprio a quella posizione. Se invece
+abbiamo riservato una posizione *virtuale* dobbiamo considerare che un g-nodo *virtuale* ha sempre una
+anzianità *nulla*, cioè tale che confrontata con quella di qualunque altro g-nodo risulta più giovane. Quindi
+la nuova anzianità non serve alla nuova posizione. Essa sarà usata in un altro modo durante le operazioni
+della migration-path descritte nella trattazione del modulo Migrations.
 
 Il nodo client del servizio è un nodo *n* che già appartiene al g-nodo *g*. Questi richiede la prenotazione di
 un nuovo posto per conto di un altro nodo suo vicino, *m*, il quale non è ancora in *g* o perfino non è ancora
@@ -925,7 +932,9 @@ Essa contiene:
 *   `int new_pos` - la posizione del g-nodo appena riservato nel suo g-nodo superiore.  
     Considerato che il metodo `reserve` ha come argomento `lvl`, il valore di `new_pos`
     è la posizione al livello `lvl`-1.
-*   `int new_eldership` - l'anzianità del g-nodo appena riservato nel suo g-nodo superiore.
+*   `int new_eldership` - l'anzianità del g-nodo appena riservato nel suo g-nodo superiore.  
+    Oppure, se il g-nodo riservato è *virtuale*, una nuova anzianità nel g-nodo superiore che
+    il modulo Migrations potrà usare nelle sue operazioni.
 
 Non è necessario che questo oggetto sia serializzabile. Infatti il metodo viene richiamato dall'utilizzatore
 del modulo Coordinator nel nodo stesso. Questi, attraverso qualche meccanismo, sarà stato provocato
