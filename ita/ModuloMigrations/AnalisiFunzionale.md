@@ -731,12 +731,12 @@ Nel membro `pos` sono indicate tutte le posizioni dal livello del g-nodo fino al
 Nella struttura non è indicato il valore di `levels`,
 cioè il numero di livelli della topologia, poiché si assume che i nodi con cui si entra in
 contatto durante la ricerca della migration-path sono tutti della stessa rete.  
-Nel membro `eld` sono indicate tutte le anzianità dal livello del g-nodo fino al livello `levels` - 1.
+Nel membro `eldership` sono indicate tutte le anzianità dal livello del g-nodo fino al livello `levels` - 1.
 
 ```
 TupleGNode:
   List<int> pos
-  List<int> eld
+  List<int> eldership
 ```
 
 Definiamo le seguenti strutture dati nelle quali il nodo *v* memorizza le informazioni
@@ -744,17 +744,17 @@ raccolte durante la ricerca della migration-path. Queste **non** sono serializza
 
 ```
 SolutionStep:
-  TupleGNode gnode
-  int? mig_pos
-  int? middle_pos
-  int? middle_eldership
+  TupleGNode visiting_gnode
+  int? previous_gnode_border_real_pos
+  int? previous_gnode_new_conn_vir_pos
+  int? previous_gnode_new_eldership
   SolutionStep? parent
 
 Solution:
   SolutionStep leaf
   int host_lvl
-  int new_pos
-  int new_eldership
+  int real_new_pos
+  int real_new_eldership
 ```
 
 Prima di avviare l'algoritmo che restituirà una lista di soluzioni, il nodo *v* inventa un identificativo
@@ -780,7 +780,11 @@ S = new Set<TupleGNode>
 Q = new Queue<SolutionStep>
 
 S.add(v)
-SolutionStep root = new SolutionStep(gnode=v, mig_pos=NIL, middle_pos=NIL, middle_eldership=NIL, parent=NIL)
+SolutionStep root = new SolutionStep(visiting_gnode=v,
+                                     previous_gnode_border_real_pos=NIL,
+                                     previous_gnode_new_conn_vir_pos=NIL,
+                                     previous_gnode_new_eldership=NIL,
+                                     parent=NIL)
 Q.enqueue(root)
 
 Mentre Q is not empty:
@@ -789,13 +793,16 @@ Mentre Q is not empty:
      prev_sol_distance + 5 ≤ n_step.get_distance() AND
      prev_sol_distance * 1.3 ≤ n_step.get_distance():
        Esci dal ciclo.
-  // Contatta un singolo nodo in `current.gnode`. Comunica `ask_lvl`, `max_host_lvl`, `reserve_request_id`, `𝜀 ≥ 1`.
-  // La risposta sarà una tupla composta di:
-  // `esito`, `host_lvl`, `pos`, `eldership`, `max_host_lvl`, `set_adjacent`, `middle_pos`, `middle_eldership`.
-  `Esito esito`, `int host_lvl`, `int pos`, `int eldership`, `Set<TupleGNode> set_adjacent`.
-  (esito, host_lvl, pos, eldership, max_host_lvl, set_adjacent, middle_pos, middle_eldership) =
-                                     ask_enter_net(current, ask_lvl, max_host_lvl, reserve_request_id, 𝜀)
-    // Questo algoritmo è eseguito nel singolo nodo contattato in `current.gnode`.
+  // Contatta un singolo nodo in `current.visiting_gnode`.
+  // Passa una tupla composta di `ask_lvl`, `max_host_lvl`, `reserve_request_id`, `𝜀 ≥ 1`.
+  // La risposta sarà una tupla composta di: `esito`, `host_lvl`, `real_new_pos`, `real_new_eldership`,
+  // `max_host_lvl`, `set_adjacent`, `new_conn_vir_pos`, `new_eldership`.
+  Esito esito, int host_lvl, int real_new_pos, int real_new_eldership.
+  Set<Pair<TupleGNode,int>> set_adjacent, int new_conn_vir_pos, int new_eldership.
+  (esito, host_lvl, real_new_pos, real_new_eldership, max_host_lvl,
+        set_adjacent, new_conn_vir_pos, new_eldership) =
+        ask_enter_net(current, ask_lvl, max_host_lvl, reserve_request_id, 𝜀)
+    // Questo algoritmo è eseguito nel singolo nodo contattato in `current.visiting_gnode`.
     Se real_pos_up_to(my_pos) ﹤ levels:
       Instrada eccezione SearchMigrationPathError
     int host_lvl = ask_lvl + 1
@@ -804,8 +811,8 @@ Mentre Q is not empty:
     int pos, int eldership = coord_reserve(host_lvl, reserve_request_id)
     Se pos ﹤ gsizes(host_lvl - 1):
       Restituisci esito=GOAL, host_lvl, pos, eldership
-    int middle_pos = pos
-    int middle_eldership = eldership
+    int new_conn_vir_pos = pos
+    int new_eldership = eldership
     Mentre host_lvl ﹤ max_host_lvl:
       host_lvl++
       pos, eldership = coord_reserve(host_lvl, reserve_request_id)
@@ -820,39 +827,46 @@ Mentre Q is not empty:
       // e quale g-nodo di livello ask_lvl dentro il mio g-nodo di livello ask_lvl + 1 sia il
       // relativo border-g-nodo.
       Set<Pair<HCoord,int>> adjacent_hc_set = adj_to_me(i, ask_lvl + 1)
-      Per ogni HCoord hc, int mig_pos in adjacent_hc_set:
+      Per ogni HCoord hc, int border_real_pos in adjacent_hc_set:
         // Produce TupleGNode del g-nodo adiacente
         TupleGNode adj = make_tuple_from_hc(hc)
         // Aggiunge a quello i dati del border-g-nodo
-        set_adjacent.add(Pair(adj, mig_pos))
+        set_adjacent.add(Pair(adj, border_real_pos))
     Se pos ﹤ gsizes(host_lvl - 1)
-      Restituisci esito=SOLUTION, host_lvl, pos, eldership, max_host_lvl, set_adjacent, middle_pos, middle_eldership
+      Restituisci esito=SOLUTION, host_lvl, pos, eldership, max_host_lvl,
+                        set_adjacent, new_conn_vir_pos, new_eldership
     Altrimenti:
-      Restituisci esito=NO_SOLUTION, max_host_lvl, set_adjacent, middle_pos, middle_eldership
+      Restituisci esito=NO_SOLUTION, max_host_lvl,
+                        set_adjacent, new_conn_vir_pos, new_eldership
   Su eccezione SearchMigrationPathError:
-    S.remove(current.gnode)
+    S.remove(current.visiting_gnode)
     Continue (prossima iterazione)
   Se esito = GOAL:
-    Solution sol = new Solution(current, host_lvl, pos, eldership)
+    Solution sol = new Solution(current, host_lvl, real_new_pos, real_new_eldership)
     solutions.add(sol)
     Restituisci solutions.
   Se esito = SOLUTION:
-    Solution sol = new Solution(current, host_lvl, pos, eldership)
+    Solution sol = new Solution(current, host_lvl, real_new_pos, real_new_eldership)
     solutions.add(sol)
     prev_sol_distance = sol.get_distance()
-  Per ogni TupleGNode n, int mig_pos in set_adjacent:
+  Per ogni TupleGNode n, int border_real_pos in set_adjacent:
     // Notare che n è una tupla di livello maggiore o uguale a `ask_lvl + 1`.
     Se level(n) > ask_lvl + 1:
-      // Contatta un singolo nodo in `n` passando per il percorso in `current`. Comunica `requested_lvl = ask_lvl + 1`.
+      // Contatta un singolo nodo in `n` passando per il percorso in `current`.
+      // Passa `requested_lvl = ask_lvl + 1`.
       // La risposta sarà il TupleGNode di livello `requested_lvl` a cui esso appartiene.
-      n = ask_tuple(current, n, ask_lvl + 1)
+      n = ask_tuple(current, n, requested_lvl = ask_lvl + 1)
         // Questo algoritmo è eseguito nel singolo nodo contattato in `n`.
         Restituisci make_tuple_from_level(requested_lvl)
       Se ora n ha componenti non reali:
         Continue (prossima iterazione)
     Se n is not in S:
       S.add(n)
-      SolutionStep n_step = new SolutionStep(gnode=n, mig_pos, middle_pos, middle_eldership, parent=current)
+      SolutionStep n_step = new SolutionStep(visiting_gnode=n,
+                                             previous_gnode_border_real_pos=border_real_pos,
+                                             previous_gnode_new_conn_vir_pos=new_conn_vir_pos,
+                                             previous_gnode_new_eldership=new_eldership,
+                                             parent=current)
       Q.enqueue(n_step)
 Restituisci solutions.
 ```
@@ -879,7 +893,7 @@ Per questo motivo il nodo *v* pone inizialmente `max_host_lvl` = `levels`.
 
 ##### Contatta il g-nodo da interrogare
 
-Nell'algoritmo abbiamo detto che il nodo *v* contatta un singolo nodo in `current.gnode`. Ora dobbiamo vedere
+Nell'algoritmo abbiamo detto che il nodo *v* contatta un singolo nodo in `current.visiting_gnode`. Ora dobbiamo vedere
 nel dettaglio come si realizza questa comunicazione.  
 Va subito tenuto conto del fatto che il nodo *v* ha tutte posizioni *reali*. Ma il primo singolo nodo che
 si raggiunge in un dato g-nodo potrebbe avere posizioni *virtuali*, quindi è impossibile per esso stabilire
@@ -892,7 +906,7 @@ La comunicazione della risposta (o di un problema nell'instradamento) non avverr
 connessione TCP end-to-end (come avviene nel modulo PeerServices) ma con un pacchetto da
 instradare fino a *v*.
 
-Bisogna aggiungere che il pacchetto *di richiesta* non viene instradato direttamente al g-nodo `current.gnode`, bensì attraverso
+Bisogna aggiungere che il pacchetto *di richiesta* non viene instradato direttamente al g-nodo `current.visiting_gnode`, bensì attraverso
 il percorso indicato in `current.parent.parent....`. Dobbiamo anche verificare durante il tragitto
 dal nodo *v* al g-nodo destinazione che tutti i g-nodi indicati nel percorso siano effettivamente
 adiacenti l'uno al successivo.  
@@ -900,7 +914,7 @@ A questo fine sono necessarie due cose: una è che l'intero percorso venga descr
 stesso. L'altra è che ogni nodo che inoltra il pacchetto al diretto vicino successivo (cioè al miglior gateway
 verso l'attuale destinazione) specifichi il suo indirizzo Netsukuku completo.
 
-Il percorso da *v* verso `current.gnode` è indicato nell'istanza di SolutionStep `current` in modo ricorsivo.
+Il percorso da *v* verso `current.visiting_gnode` è indicato nell'istanza di SolutionStep `current` in modo ricorsivo.
 Ora il nodo *v* prepara questi dati in una lista di strutture dati `List<PathHop> path_hops`, che sono di più
 semplice gestione come oggetti serializzabili.
 
@@ -908,22 +922,22 @@ Ogni struttura contiene:
 
 ```
 PathHop:
-  TupleGNode gnode
-  int? mig_pos
+  TupleGNode visiting_gnode
+  int? previous_gnode_border_real_pos
 ```
 
 Il significato dei vari membri per l'elemento *i*-esimo della lista è il seguente:
 
-*   `gnode` indica il g-nodo *p<sub>i</sub>* da raggiungere.  
+*   `visiting_gnode` indica il g-nodo *p<sub>i</sub>* da raggiungere.  
     Nel primo elemento della lista questo membro è il g-nodo a cui appartiene *v*.
-*   `mig_pos` è la posizione a livello *l* del g-nodo *𝛽<sub>i-1</sub>* nel g-nodo *p<sub>i-1</sub>*
+*   `previous_gnode_border_real_pos` è la posizione a livello *l* del g-nodo *𝛽<sub>i-1</sub>* nel g-nodo *p<sub>i-1</sub>*
     che dovrebbe risultare adiacente al g-nodo *p<sub>i</sub>*.  
     Nel primo elemento della lista questo membro è *null*.
 
-Il g-nodo indicato nell'elemento `path_hops[0].gnode` è quello a cui appartiene *v*, quindi
+Il g-nodo indicato nell'elemento `path_hops[0].visiting_gnode` è quello a cui appartiene *v*, quindi
 non va "raggiunto".  
-Quando si raggiunge il g-nodo indicato nell'elemento `path_hops[1].gnode`, occorre verificare che
-il precedente singolo nodo sia del g-nodo `path_hops[0].gnode` e abbia posizione `path_hops[1].mig_pos`
+Quando si raggiunge il g-nodo indicato nell'elemento `path_hops[1].visiting_gnode`, occorre verificare che
+il precedente singolo nodo sia del g-nodo `path_hops[0].visiting_gnode` e abbia posizione `path_hops[1].previous_gnode_border_real_pos`
 al livello `ask_lvl`. Ricordiamo che tutti i g-nodi della lista sono di livello `ask_lvl + 1`.  
 E così via.
 
@@ -935,8 +949,8 @@ List<PathHop> get_path_hops(SolutionStep current):
   SolutionStep hop = current
   Mentre hop ≠ null:
     PathHop path_hop = new PathHop()
-    path_hop.gnode = hop.gnode
-    path_hop.mig_pos = hop.mig_pos
+    path_hop.visiting_gnode = hop.visiting_gnode
+    path_hop.previous_gnode_border_real_pos = hop.previous_gnode_border_real_pos
     path_hops.insert(0,path_hop)
     hop = hop.parent
   Restituisci path_hops
@@ -950,43 +964,43 @@ livello `ask_lvl` dentro A diretto vicino del g-nodo B abbia posizione *reale* a
 a *w<sub>B</sub>*. Lo stesso per *w<sub>C</sub>* e per *w<sub>D</sub>*. Questi dati sono stati precedentemente
 raccolti dentro l'istanza `current`, con modalità che vedremo dopo. Quindi in `current` abbiamo questa situazione:
 
-*   `current.gnode` = D
-*   `current.mig_pos` = *w<sub>D</sub>*
-*   `current.parent.gnode` = C
-*   `current.parent.mig_pos` = *w<sub>C</sub>*
-*   `current.parent.parent.gnode` = B
-*   `current.parent.parent.mig_pos` = *w<sub>B</sub>*
-*   `current.parent.parent.parent.gnode` = A
-*   `current.parent.parent.parent.mig_pos` = *w<sub>A</sub>*
-*   `current.parent.parent.parent.parent.gnode` = S
-*   `current.parent.parent.parent.parent.mig_pos` = *null*
+*   `current.visiting_gnode` = D
+*   `current.previous_gnode_border_real_pos` = *w<sub>D</sub>*
+*   `current.parent.visiting_gnode` = C
+*   `current.parent.previous_gnode_border_real_pos` = *w<sub>C</sub>*
+*   `current.parent.parent.visiting_gnode` = B
+*   `current.parent.parent.previous_gnode_border_real_pos` = *w<sub>B</sub>*
+*   `current.parent.parent.parent.visiting_gnode` = A
+*   `current.parent.parent.parent.previous_gnode_border_real_pos` = *w<sub>A</sub>*
+*   `current.parent.parent.parent.parent.visiting_gnode` = S
+*   `current.parent.parent.parent.parent.previous_gnode_border_real_pos` = *null*
 *   `current.parent.parent.parent.parent.parent` = *null*
 
 Quindi avremo:
 
-*   `path_hops[0].mig_pos` = *null*
-*   `path_hops[0].gnode` = S
-*   `path_hops[1].mig_pos` = *w<sub>A</sub>*
-*   `path_hops[1].gnode` = A
-*   `path_hops[2].mig_pos` = *w<sub>B</sub>*
-*   `path_hops[2].gnode` = B
-*   `path_hops[3].mig_pos` = *w<sub>C</sub>*
-*   `path_hops[3].gnode` = C
-*   `path_hops[4].mig_pos` = *w<sub>D</sub>*
-*   `path_hops[4].gnode` = D
+*   `path_hops[0].previous_gnode_border_real_pos` = *null*
+*   `path_hops[0].visiting_gnode` = S
+*   `path_hops[1].previous_gnode_border_real_pos` = *w<sub>A</sub>*
+*   `path_hops[1].visiting_gnode` = A
+*   `path_hops[2].previous_gnode_border_real_pos` = *w<sub>B</sub>*
+*   `path_hops[2].visiting_gnode` = B
+*   `path_hops[3].previous_gnode_border_real_pos` = *w<sub>C</sub>*
+*   `path_hops[3].visiting_gnode` = C
+*   `path_hops[4].previous_gnode_border_real_pos` = *w<sub>D</sub>*
+*   `path_hops[4].visiting_gnode` = D
 
 Prima si instrada il pacchetto *di richiesta* verso A, poi verso B, poi verso C e infine verso D.
 
 È importante verificare durante il percorso che non ci siano incongruenze con quanto era memorizzato
 in `current`. Vediamo come:  
 Il pacchetto *di richiesta* inizialmente contiene tutta la lista `path_hops` preparata prima. Ogni nodo che lo riceve verifica
-se fa parte del g-nodo corrente destinazione, cioè di `path_hops[1].gnode`, che all'inizio è A. Se non ne
-fa parte allora semplicemente instrada il pacchetto verso `path_hops[1].gnode`.  
+se fa parte del g-nodo corrente destinazione, cioè di `path_hops[1].visiting_gnode`, che all'inizio è A. Se non ne
+fa parte allora semplicemente instrada il pacchetto verso `path_hops[1].visiting_gnode`.  
 Una volta raggiunto il primo singolo nodo dentro il g-nodo A, questi deve verificare che il passo precedente era
 *w<sub>A</sub>* dentro S. Per questo nell'instradamento *della richiesta* ogni nodo, oltre al pacchetto, indica il proprio
-indirizzo completo. Questo indirizzo deve risultare in `path_hops[0].gnode` con posizione al livello `ask_lvl`
-uguale a `path_hops[1].mig_pos`. Se è così, allora il nodo toglie il primo elemento dalla lista `path_hops` e
-poi instrada il pacchetto *di richiesta* verso `path_hops[1].gnode`, che adesso è B.  
+indirizzo completo. Questo indirizzo deve risultare in `path_hops[0].visiting_gnode` con posizione al livello `ask_lvl`
+uguale a `path_hops[1].previous_gnode_border_real_pos`. Se è così, allora il nodo toglie il primo elemento dalla lista `path_hops` e
+poi instrada il pacchetto *di richiesta* verso `path_hops[1].visiting_gnode`, che adesso è B.  
 Allo stesso modo, una volta raggiunto il primo singolo nodo dentro il g-nodo B, questi deve verificare che
 il passo precedente era *w<sub>B</sub>* dentro A, e così via.  
 Se un nodo scopre una incongruenza, allora il fatto viene comunicato al nodo mittente *v* dal nodo
@@ -996,16 +1010,16 @@ interne al g-nodo comune con la destinazione finale.
 In questo caso, indicato nell'algoritmo con l'eccezione SearchMigrationPathError,
 il nodo *v* stralcia completamente la path indicata da `current`, come se
 avesse restituito `esito=NO_SOLUTION` con `set_adjacent` vuoto. Ma al contempo ora considera
-il g-nodo finale `current.gnode` come non ancora visitato: cioè potrebbe visitarlo in seguito
+il g-nodo finale `current.visiting_gnode` come non ancora visitato: cioè potrebbe visitarlo in seguito
 attraverso altre path.
 
 Proseguiamo ipotizzando che il percorso invece non contiene incongruenze.  
-Indichiamo con *w* il primo singolo nodo che si è incontrato in `current.gnode`.  
+Indichiamo con *w* il primo singolo nodo che si è incontrato in `current.visiting_gnode`.  
 Il nodo *w* nel pacchetto *di richiesta* ha ricevuto `ask_lvl`, `max_host_lvl`, `reserve_request_id`, `𝜀 ≥ 1`.
 Ora il nodo *w* prosegue con l'algoritmo, che spiegheremo a breve con maggiori dettagli.
 Intanto diciamo che alla fine il nodo *w* prepara un pacchetto *di risposta*
-e lo instrada verso *v*. Esso contiene `esito`, `host_lvl`, `pos`, `eldership`,
-`max_host_lvl`, `set_adjacent`, `middle_pos`, `middle_eldership`.
+e lo instrada verso *v*. Esso contiene `esito`, `host_lvl`, `real_new_pos`, `real_new_eldership`,
+`max_host_lvl`, `set_adjacent`, `new_conn_vir_pos`, `new_eldership`.
 
 Riassumendo, i pacchetti contengono:
 
@@ -1024,13 +1038,13 @@ SearchMigrationPathError:
 SearchMigrationPathResponse:
   TupleGNode v
   Esito esito
-  int host_lvl
-  int pos
-  int eldership
-  int max_host_lvl
-  Set<Pair<TupleGNode,int>> set_adjacent
-  int middle_pos
-  int middle_eldership
+  int? host_lvl
+  int? real_new_pos
+  int? real_new_eldership
+  int? max_host_lvl
+  Set<Pair<TupleGNode,int>>? set_adjacent
+  int? new_conn_vir_pos
+  int? new_eldership
 ```
 
 Per l'instradamento di questi pacchetti saranno previsti i metodi remoti:
@@ -1055,11 +1069,12 @@ come abbiamo visto prima che poteva accadere durante l'instradamento. Questo con
 originante *v* di ignorare il presente percorso e al contempo non escludere tutto il g-nodo
 dalla possibilità di essere visitato di nuovo.
 
-Il nodo *w*, agendo per conto dell'intero g-nodo `current.gnode` e collaborando con i Coordinator
+Il nodo *w*, agendo per conto dell'intero g-nodo `current.visiting_gnode` e collaborando con i Coordinator
 di quel g-nodo e dei suoi g-nodi superiori, ora vede se c'è un posto disponibile al livello
-richiesto o a uno dei livelli superiori accettabili (cioè fino a `max_host_lvl`). Se no comunque
-memorizza (in `middle_pos` e `middle_eldership`) e restituisce le informazioni necessarie
-alla migration-path, cioè i posti *virtuali* al livello `ask_lvl + 1`.
+richiesto o a uno dei livelli superiori accettabili (cioè fino a `max_host_lvl`). Se non
+ne trova uno ad un livello *soddisfacente* (cioè fino a `ok_host_lvl`) comunque
+restituisce le informazioni (memorizzate in `new_conn_vir_pos` e `new_eldership`) necessarie
+alla migration-path, cioè un posto *virtuale* al livello `ask_lvl + 1` e una nuova anzianità.
 
 Per sapere se c'è un posto al livello `host_lvl` viene usata la funzione `coord_reserve`, la quale è un delegato
 che chiama nel modulo Coordinator il metodo `reserve(host_lvl, reserve_request_id)`. Questo metodo
@@ -1114,7 +1129,7 @@ il cui livello è maggiore o uguale a `ask_lvl + 1`.
 ##### Risposta al nodo richiedente
 
 Il nodo *w* instrada verso il nodo *v* in un pacchetto *di risposta* la tupla composta di
-`esito`, `host_lvl`, `pos`, `eldership`, `max_host_lvl`, `set_adjacent`, `middle_pos`, `middle_eldership`.
+`esito`, `host_lvl`, `real_new_pos`, `real_new_eldership`, `max_host_lvl`, `set_adjacent`, `new_conn_vir_pos`, `new_eldership`.
 
 ##### I g-nodi adiacenti devono essere del livello richiesto
 
@@ -1137,7 +1152,7 @@ in grado da solo di identificare tutti i g-nodi di livello `ask_lvl + 1` adiac
 
 Anche qui si usa la struttura `PathHop` per garantire il corretto instradamento. Si usa sempre la funzione
 `get_path_hops(current)` per avere la lista di passi e poi si aggiunge in coda l'elemento con
-il membro `gnode` = `n`. Il membro `mig_pos` non serve.
+il membro `visiting_gnode` = `n`. Il membro `previous_gnode_border_real_pos` non serve.
 
 Riassumendo, i pacchetti contengono:
 
@@ -1181,7 +1196,7 @@ soluzioni.
 Per ogni soluzione `Solution s` che decide di non perseguire, il nodo *v* ha i dati necessari a
 contattare il g-nodo che aveva fatta una prenotazione con posizione *reale* e a chiederne la
 cancellazione.  
-La tupla `s.leaf.gnode` rappresenta il g-nodo contattato, il quale però è di livello `ask_lvl + 1`
+La tupla `s.leaf.visiting_gnode` rappresenta il g-nodo contattato, il quale però è di livello `ask_lvl + 1`
 mentre il livello in cui è stata ottenuta una prenotazione *reale* è `s.host_lvl`. Quindi il
 g-nodo da contattare va aggiustato.  
 Il nodo *v* inoltre conosce l'identificativo `reserve_request_id` che è stato usato per etichettare la
@@ -1193,7 +1208,7 @@ Il pacchetto contiene:
 
 ```
 DeleteReservationRequest:
-  TupleGNode gnode
+  TupleGNode dest_gnode
   int reserve_request_id
 ```
 
@@ -1278,22 +1293,22 @@ prosegue con il prossimo valore di *i*.
 
 Ora il nodo *v* contatta un singolo nodo *𝛽0<sub>m-1</sub>* in *𝛽<sub>m-1</sub>*, in *p<sub>m-1</sub>*.
 Se *m* = 2, è possibile che lo stesso *v* sia *𝛽0<sub>m-1</sub>*.  
-Conosciamo *pos1*, la posizione di *𝛽<sub>m-1</sub>* in *p<sub>m-1</sub>*, che è *reale*. Essa è stata salvata nel membro
-`mig_pos` di SolutionStep.  
-Sappiamo anche che è stato riservato un posto *virtuale* *pos2* in *p<sub>m-1</sub>* che verrà assegnato
+Conosciamo *mig_gnode_old_pos*, la posizione di *𝛽<sub>m-1</sub>* in *p<sub>m-1</sub>*, che è *reale*. Essa è stata salvata nel membro
+`previous_gnode_border_real_pos` di SolutionStep.  
+Sappiamo anche che è stato riservato un posto *virtuale* *conn_gnode_pos* in *p<sub>m-1</sub>* che verrà assegnato
 all'identità *di connettività* che *𝛽<sub>m-1</sub>* assume in *p<sub>m-1</sub>*. Esso è stato
-salvato nel membro `middle_pos` di SolutionStep.  
+salvato nel membro `previous_gnode_new_conn_vir_pos` di SolutionStep.  
 Sappiamo anche che nel g-nodo *p<sub>m</sub>* di livello *k*, con *k* ≥ *l* + 1, è stato
-riservato un posto *reale* *pos_next*. Il valore di *k* è stato salvato nel membro `host_lvl` di Solution.
-Il valore di *pos_next* è stato salvato nel membro `new_pos` di Solution.  
+riservato un posto *reale* *mig_gnode_new_pos*. Il valore di *k* è stato salvato nel membro `host_lvl` di Solution.
+Il valore di *mig_gnode_new_pos* è stato salvato nel membro `real_new_pos` di Solution.  
 Il nodo *v* passa al nodo *𝛽0<sub>m-1</sub>* queste informazioni e il suo *migration_id*.  
 Il nodo *𝛽0<sub>m-1</sub>* attraverso una *propagazione senza ritorno* fa in modo che
 queste informazioni giungano a tutti i singoli nodi di *𝛽<sub>m-1</sub>*. Questi avviano la seconda
 parte delle operazioni di duplicazione dell'identità.  
 Il g-nodo *𝛽<sub>m-1</sub>* si duplica: viene creato il g-nodo isomorfo *𝛽'<sub>m-1</sub>* che entra in *p<sub>m</sub>*
-con la posizione *pos_next*. Invece il vecchio *𝛽<sub>m-1</sub>* diventa un g-nodo *di connettività*
-in *p<sub>m-1</sub>* assumendo la posizione *virtuale* *pos2*.  
-Il g-nodo *di connettività* *𝛽<sub>m-1</sub>* che assume *pos2* in *p<sub>m-1</sub>* deve garantire di restare in vita
+con la posizione *mig_gnode_new_pos*. Invece il vecchio *𝛽<sub>m-1</sub>* diventa un g-nodo *di connettività*
+in *p<sub>m-1</sub>* assumendo la posizione *virtuale* *conn_gnode_pos*.  
+Il g-nodo *di connettività* *𝛽<sub>m-1</sub>* che assume *conn_gnode_pos* in *p<sub>m-1</sub>* deve garantire di restare in vita
 e di non rimuovere nemmeno gli archi esterni ai livelli di connettività per un certo tempo necessario al corretto
 svolgimento della migration-path. Si veda a tale riguardo il metodo `remove_identity_arc` dettagliato nella
 trattazione del modulo [Identities](../ModuloIdentities/DettagliTecnici.md), il segnale `presence_notified`
@@ -1305,21 +1320,21 @@ Dopo aver dato il via alla *propagazione senza ritorno* il nodo *𝛽0<sub>m-1</
 Ora il nodo *v* riparte da *i* = *m* - 2 e scende fino a 1. Il nodo *v* contatta un singolo
 nodo *𝛽0<sub>i</sub>* in *𝛽<sub>i</sub>*, in *p<sub>i</sub>*. Se *i* = 1, è possibile che
 lo stesso *v* sia *𝛽0<sub>i</sub>*.  
-Conosciamo *pos1*, la posizione di *𝛽<sub>i</sub>* in *p<sub>i</sub>*, che è *reale*. Essa è stata salvata nel membro
-`mig_pos` di SolutionStep.  
-Sappiamo anche che è stato riservato un posto *virtuale* *pos2* in *p<sub>i</sub>* che verrà assegnato
+Conosciamo *mig_gnode_old_pos*, la posizione di *𝛽<sub>i</sub>* in *p<sub>i</sub>*, che è *reale*. Essa è stata salvata nel membro
+`previous_gnode_border_real_pos` di SolutionStep.  
+Sappiamo anche che è stato riservato un posto *virtuale* *conn_gnode_pos* in *p<sub>i</sub>* che verrà assegnato
 all'identità *di connettività* che *𝛽<sub>i</sub>* assume in *p<sub>i</sub>*. Esso è stato
-salvato nel membro `middle_pos` di SolutionStep.  
+salvato nel membro `previous_gnode_new_conn_vir_pos` di SolutionStep.  
 Sappiamo anche che intanto un border-g-nodo di livello *l* sta migrando da *p<sub>i+1</sub>*
-a *p<sub>i+2</sub>* e che la posizione che aveva in *p<sub>i+1</sub>* è *pos_next*, ed è *reale*.
-Essa è stata salvata nel membro `mig_pos` di SolutionStep riferita al passo successivo.  
+a *p<sub>i+2</sub>* e che la posizione che aveva in *p<sub>i+1</sub>* è *mig_gnode_new_pos*, ed è *reale*.
+Essa è stata salvata nel membro `previous_gnode_border_real_pos` di SolutionStep riferita al passo successivo.  
 Il nodo *v* passa al nodo *𝛽0<sub>i</sub>* queste informazioni e il suo *migration_id*.  
 Il nodo *𝛽0<sub>i</sub>* attraverso una *propagazione senza ritorno* fa in modo che
 queste informazioni giungano a tutti i singoli nodi di *𝛽<sub>i</sub>*. Questi avviano la seconda
 parte delle operazioni di duplicazione dell'identità.  
 Il g-nodo *𝛽<sub>i</sub>* si duplica: viene creato il g-nodo isomorfo *𝛽'<sub>i</sub>* che entra in
-*p<sub>i+1</sub>* con la posizione *pos_next*. Invece il vecchio *𝛽<sub>i</sub>* diventa un g-nodo *di connettività*
-in *p<sub>i</sub>* assumendo la posizione *virtuale* *pos2*: questi deve garantire di restare in vita
+*p<sub>i+1</sub>* con la posizione *mig_gnode_new_pos*. Invece il vecchio *𝛽<sub>i</sub>* diventa un g-nodo *di connettività*
+in *p<sub>i</sub>* assumendo la posizione *virtuale* *conn_gnode_pos*: questi deve garantire di restare in vita
 con tutti i suoi archi per un certo tempo, come già detto prima.  
 Dopo aver dato il via alla *propagazione senza ritorno* il nodo *𝛽0<sub>i</sub>* lo comunica al nodo *v* che
 prosegue con il prossimo valore di *i*.
@@ -1336,39 +1351,43 @@ Ogni struttura contiene:
 
 ```
 MigData:
-  TupleGNode gnode
-  int pos1
+  TupleGNode from_gnode
+  int mig_gnode_old_pos
   int migration_id
-  int pos2
-  int eld2
-  TupleGNode gnode_next
-  int? pos_next
-  int? host_lvl
-  int? new_pos
-  int? new_eldership
+  int conn_gnode_pos
+  int prev_mig_gnode_new_eldership
+  TupleGNode to_gnode
+  int? mig_gnode_new_pos
+  int? final_mig_gnode_host_lvl
+  int? final_mig_gnode_new_pos
+  int? final_mig_gnode_new_eldership
 ```
 
 Il significato dei vari membri per l'elemento *i*-esimo della lista, con 1 ≤ *i* ≤ *m* - 1, è il seguente:
 
-*   `gnode` indica il g-nodo *p<sub>i</sub>*, cioè il g-nodo da cui un g-nodo di livello *l*
+*   `from_gnode` indica il g-nodo *p<sub>i</sub>*, cioè il g-nodo da cui un g-nodo di livello *l*
     dovrà migrare.
-*   `pos1` è la posizione a livello *l* del g-nodo *𝛽<sub>i</sub>* che
-    dovrà migrare. Sappiamo che `pos1` è una posizione *reale*.
+*   `mig_gnode_old_pos` è la posizione a livello *l* del g-nodo *𝛽<sub>i</sub>* che
+    dovrà migrare. Sappiamo che `mig_gnode_old_pos` è una posizione *reale*.
 *   `migration_id` è l'identificativo associato alla migrazione di *𝛽<sub>i</sub>*.
-*   `pos2` e `eld2` sono posizione e anzianità riservate nel g-nodo *p<sub>i</sub>* per l'identità
-    *di connettività* con cui il g-nodo *𝛽<sub>i</sub>* resta in *p<sub>i</sub>*. Sappiamo che `pos2` è una
-    posizione *virtuale*.
-*   `gnode_next` indica il g-nodo *p<sub>i+1</sub>*, cioè il g-nodo in cui il g-nodo *𝛽<sub>i</sub>*
+*   `conn_gnode_pos` è la posizione *virtuale* riservata nel g-nodo *p<sub>i</sub>* per l'identità
+    *di connettività* con cui il g-nodo *𝛽<sub>i</sub>* resta in *p<sub>i</sub>*. Sappiamo che non
+    serve una particolare anzianità per i g-nodi *di connettività*.
+*   `prev_mig_gnode_new_eldership` è l'anzianità che può essere assegnata al g-nodo che dal
+    precedente passo della migration-path (oppure dal passo di ingresso nella rete che ha provocato
+    la ricerca di una migration-path) viene ad occupare la posizione *reale* `mig_gnode_old_pos`
+    appena liberata in *p<sub>i</sub>*.
+*   `to_gnode` indica il g-nodo *p<sub>i+1</sub>*, cioè il g-nodo in cui il g-nodo *𝛽<sub>i</sub>*
     dovrà migrare.
-*   `pos_next` è *null* nell'ultimo elemento della lista.  
+*   `mig_gnode_new_pos` è *null* nell'ultimo elemento della lista.  
     Negli altri elementi, esso è la posizione *reale* a livello *l* che il g-nodo *𝛽'<sub>i</sub>*
     può assumere in *p<sub>i+1</sub>*.
-*   `host_lvl` è *null* in tutti gli elementi della lista tranne l'ultimo.  
+*   `final_mig_gnode_host_lvl` è *null* in tutti gli elementi della lista tranne l'ultimo.  
     Nell'ultimo elemento della lista, esso è il livello di *p<sub>m</sub>* in cui è stato riservato
-    un posto *reale* al livello `host_lvl - 1`.
-*   `new_pos` e `new_eldership` sono *null* in tutti gli elementi della lista tranne l'ultimo.  
+    un posto *reale* al livello `final_mig_gnode_host_lvl - 1`.
+*   `final_mig_gnode_new_pos` e `final_mig_gnode_new_eldership` sono *null* in tutti gli elementi della lista tranne l'ultimo.  
     Nell'ultimo elemento della lista, essi sono posizione e anzianità riservate nel g-nodo *p<sub>m</sub>*
-    per l'ultimo passo della migrazione. Sappiamo che `new_pos` è una posizione *reale*.
+    per l'ultimo passo della migrazione. Sappiamo che `final_mig_gnode_new_pos` è una posizione *reale*.
 
 Per tradurre il contenuto dell'istanza di Solution nella lista di MigData l'algoritmo è il seguente:
 
@@ -1378,29 +1397,29 @@ List<MigData> migs = [];
 
 Assert s.leaf.parent ≠ null
 bool last = True
-int? pos_next = null
+int? mig_gnode_new_pos = null
 SolutionStep current = s.leaf
 Mentre current.parent ≠ null:
   MigData mig = new MigData()
   Se last:
-    mig.host_lvl = s.host_lvl
-    mig.new_pos = s.new_pos
-    mig.new_eldership = s.new_eldership
-  mig.gnode = current.parent.gnode
-  mig.pos1 = current.mig_pos
+    mig.final_mig_gnode_host_lvl = s.host_lvl
+    mig.final_mig_gnode_new_pos = s.real_new_pos
+    mig.final_mig_gnode_new_eldership = s.real_new_eldership
+  mig.from_gnode = current.parent.visiting_gnode
+  mig.mig_gnode_old_pos = current.previous_gnode_border_real_pos
   mig.migration_id = Random_int()
-  mig.pos2 = current.middle_pos
-  mig.eld2 = current.middle_eldership
-  mig.gnode_next = current.gnode
-  mig.pos_next = pos_next
+  mig.conn_gnode_pos = current.previous_gnode_new_conn_vir_pos
+  mig.prev_mig_gnode_new_eldership = current.previous_gnode_new_eldership
+  mig.to_gnode = current.visiting_gnode
+  mig.mig_gnode_new_pos = mig_gnode_new_pos
   migs.insert(0,mig)
   last = False
-  pos_next = current.mig_pos
+  mig_gnode_new_pos = current.previous_gnode_border_real_pos
   current = current.parent
 ```
 
 Segue l'algoritmo che *v* usa per instradare un pacchetto di richiesta verso il primo nodo dentro un
-preciso g-nodo `gnode` e ricevere una risposta.  
+preciso g-nodo `dest` e ricevere una risposta.  
 L'algoritmo illustrato viene usato sia per la prima fase, in cui si comunica ad un g-nodo di avviare
 la prima fase della duplicazione, sia per la seconda, in cui si istruisce il g-nodo di completare la
 duplicazione e le altre operazioni della migrazione. Le istanze di `RequestPacket` possono contenere
@@ -1410,8 +1429,8 @@ metodo ritorna solo dopo che un singolo nodo nel g-nodo desiderato ha completato
 metodo `void execute_mig(RequestPacket p0)`.
 
 ```
-void send_mig_request(TupleGNode gnode, RequestPacket p0):
-  p0.dest = gnode
+void send_mig_request(TupleGNode dest, RequestPacket p0):
+  p0.dest = dest
   Se my_pos in p0.dest:
     execute_mig(RequestPacket p0)
     Return
@@ -1475,12 +1494,12 @@ RequestPacket.fase1(MigData mig)
 RequestPacket.fase2(MigData mig)
   this.operation = RequestPacketType.FINISH_MIGRATION
   this.migration_id = mig.migration_id
-  this.pos2 = mig.pos2
-  this.eld2 = mig.eld2
-  this.pos_next = mig.pos_next
-  this.host_lvl = mig.host_lvl
-  this.new_pos = mig.new_pos
-  this.new_eldership = mig.new_eldership
+  this.conn_gnode_pos = mig.conn_gnode_pos
+  this.prev_mig_gnode_new_eldership = mig.prev_mig_gnode_new_eldership
+  this.mig_gnode_new_pos = mig.mig_gnode_new_pos
+  this.final_mig_gnode_host_lvl = mig.final_mig_gnode_host_lvl
+  this.final_mig_gnode_new_pos = mig.final_mig_gnode_new_pos
+  this.final_mig_gnode_new_eldership = mig.final_mig_gnode_new_eldership
 
 ```
 
@@ -1490,15 +1509,15 @@ Segue l'algortimo che *v* usa per eseguire la migration-path descritta in `List<
 Per i = migs.size - 1 scende fino a 0:
   MigData mig = migs[i]
   RequestPacket p0 = new RequestPacket.fase1(mig)
-  send_mig_request(mig.gnode+mig.pos1, p0)
+  send_mig_request(mig.from_gnode+mig.mig_gnode_old_pos, p0)
 Per i = migs.size - 1:
   MigData mig = migs[i]
   RequestPacket p0 = new RequestPacket.fase2(mig)
-  send_mig_request(mig.gnode+mig.pos1, p0)
+  send_mig_request(mig.from_gnode+mig.mig_gnode_old_pos, p0)
 Per i = migs.size - 2 scende fino a 0:
   MigData mig = migs[i]
   RequestPacket p0 = new RequestPacket.fase2(mig)
-  send_mig_request(mig.gnode+mig.pos1, p0)
+  send_mig_request(mig.from_gnode+mig.mig_gnode_old_pos, p0)
 
 ```
 
