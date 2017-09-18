@@ -19,7 +19,6 @@
     1.  [Cancellazione delle prenotazioni](#Strategia_ingresso_Cancellazione_prenotazioni)
     1.  [Esecuzione della migration-path](#Strategia_ingresso_Esecuzione_migration_path)
     1.  [Algoritmo di esecuzione](#Strategia_ingresso_Algoritmo_esecuzione)
-    1.  [Degradazione](#Strategia_ingresso_Degradazione)
 1.  [Risoluzione di uno split di g-nodo](#Split_gnodo)
 
 ## <a name="Ruolo_Migrations"></a>Il ruolo del modulo Migrations
@@ -39,7 +38,7 @@ una rete a cui non apparteneva. Questo può rendersi necessario a fronte di due 
     Si sono quindi formate varie isole *g'*, *g''*, eccetera. Questo
     mentre il suo g-nodo di livello superiore *h* risulta ancora internamente connesso. Allora
     ogni isola che non contiene il nodo più anziano deve considerarsi come una distinta
-    rete *J* (composta da un solo g-nodo di livello *l*) che incontra *G*.
+    rete *J* (composta da un solo g-nodo di livello *l* o minore) che incontra *G*.
 
 Nelle varie fasi delle sue operazioni, il modulo Migrations si avvale della collaborazione del
 modulo Coordinator, pur non avendo una diretta dipendenza sul modulo Coordinator. Questo è reso
@@ -58,9 +57,9 @@ Si sceglie di assegnare al nodo Coordinator del g-nodo *g* questo ruolo. Quando 
 si rende necessaria il modulo Coordinator farà da proxy fra il generico singolo nodo *n*  ∈ *g*
 e il nodo Coordinator di *g*.
 
-In altri algoritmi, invece, sempre in esecuzione in un singolo nodo *n*  ∈ *g*, ha bisogno
+In altri suoi algoritmi in esecuzione in un singolo nodo *n*  ∈ *g*, il modulo Migrations ha bisogno
 di provocare l'esecuzione di altri suoi algoritmi in tutti i singoli nodi di *g*.  
-In questo caso il modulo Coordinator coordinerà l'esecuzione su tutti i nodi.
+In questo caso il modulo Coordinator coordinerà l'esecuzione su tutti i singoli nodi.
 
 ### Terminologia e notazioni
 
@@ -111,9 +110,16 @@ Se prendiamo tutti i g-nodi di livello *l* del grafo originale *G* e li consider
 un altro grafo che rappresenta tutta la rete come composta da vertici di livello *l*. Questo grafo lo indichiamo
 così: *[G]<sub>l</sub>*.
 
-Sia *g* un g-nodo di livello *l*. Indichiamo con *𝛤<sub>l</sub>(g)* l'insieme dei vicini (vertici direttamente
-collegati) di *g* nel grafo *[G]<sub>l</sub>*.
+**Definizione** *𝛤*:  
+Sia *g* un g-nodo di livello *l*. Indichiamo con *𝛤<sub>l</sub>(g)* l'insieme dei diretti vicini
+di *g* nel grafo *[G]<sub>l</sub>*.  
+In questa definizione sono inclusi anche g-nodi di livello *l* che hanno posizioni *virtuali* a qualche livello tra
+*l* e *levels-1*.
 
+Notiamo che un singolo nodo *n* che appartiene a *g* non ha una conoscenza diretta di tutti i g-nodi di *𝛤<sub>l</sub>(g)*.
+
+**Definizione** *size*:  
+Sia *g* un g-nodo di livello *l*.
 Indichiamo con *size<sub>m</sub>(g)*, dove *m* < *l*, il numero di g-nodi di livello *m* dentro *g*. Questa definizione
 va precisata, tenendo in considerazione il fatto che un g-nodo può assumere un indirizzo *virtuale* come descritto nella
 trattazione del modulo Qspn. Quindi un g-nodo di livello *m* dentro *g* può avere uno o più identificativi *virtuali* ai
@@ -152,19 +158,26 @@ sfruttando il punto di contatto migliore.
 ### <a name="Fusione_reti_fase1"></a>Prima fase - valutazione del singolo nodo
 
 Diciamo subito che il modulo Migrations è un modulo *di identità*, cioè viene creata una istanza
-per ogni identità nel sistema. Ma esso opera attivamente solo nella *identità principale* del sistema.
-Nelle altre identità si limita a rispondere alle richieste dei vicini con una eccezione NotPrincipalError.
+per ogni identità nel sistema.
 
-Inoltre diciamo che tale modulo opera attivamente solo se l'identità ha un indirizzo completamente *reale*.
+Le operazioni di questa prima fase iniziano con la segnalazione (da parte dell'utilizzatore del modulo)
+che un diretto vicino della nostra identità (cioè un nodo collegato tramite un arco-identità)
+non appartiene alla nostra stessa rete.
+
+A fronte di questa segnalazione il modulo Migrations opera attivamente (relativamente a questa prima fase) solo
+nella *identità principale* del sistema. Nelle altre identità non prende iniziativa e si limita a rispondere
+alle richieste dei vicini con una eccezione `NotPrincipalError`.
+
+Inoltre il modulo opera attivamente solo se l'identità ha un indirizzo completamente *reale*.
 Infatti ricordiamo che l'identità principale di un sistema potrebbe essere in
 una fase temporanea in cui il suo indirizzo non ha tutte le componenti *reali*.
-Anche in questi casi il modulo si limita a rispondere alle richieste dei vicini con una eccezione VirtualAddressError.
+Altrimenti non prende iniziativa e si limita a rispondere alle richieste dei vicini con una eccezione `VirtualAddressError`.
 
 Quindi nella nostra trattazione *n* e *v* hanno entrambi un indirizzo completamente *reale*.
 
 Il modulo Migrations del nodo *n* prepara una struttura dati che descrive *G* come è vista da *n*. Poi contatta il nodo *v*,
 gli fornisce questa struttura e gli chiede al contempo di ricevere una struttura dati che descrive *J* come è vista da *v*.  
-Le strutture sono le stesse. Ad esempio, quella ricevuta da *v* contiene:
+Le strutture sono le stesse. Ad esempio, quella che *n* riceve da *v* contiene:
 
 *   `int64 netid` = Identificativo della rete *J*.
 *   `List<int> gsizes` = Lista che descrive la topologia della rete *J*. Da essa si ricava `levels`.
@@ -227,7 +240,8 @@ La classe EvaluateEnterData è definita nel modulo Migrations. Si tratta di una 
 L'istanza `evaluate_enter_data` andrà passata ad un metodo del modulo Migrations nel nodo Coordinator della rete.
 
 Ora il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
-metodo proxy `evaluate_enter`. A questo metodo viene passato il livello *levels* e un `Object evaluate_enter_data`.  
+metodo proxy `evaluate_enter` (vedi [qui](../ModuloCoordinator/AnalisiFunzionale.md#Deliverables_manager)).
+A questo metodo viene passato il livello *levels* e un `Object evaluate_enter_data`.  
 La reale classe che implementa questa struttura dati non è infatti nota al modulo Coordinator. Questi sa solo
 che è serializzabile.
 
@@ -523,28 +537,36 @@ di *v* di livello *lvl+1* o superiore.
 
 Il modulo Migrations nel nodo *v* cerca la shortest migration-path come descritto [qui](#Strategia_ingresso).
 
-Se il nodo *v* trova che non esiste una migration-path a livello *lvl* lo comunica a *n*. Questi
-dovrà comunicare al modulo Migrations nel nodo Coordinator di *g* che questo ingresso è abortito.
+Se il nodo *v* trova che non esiste una migration-path a livello *lvl* lo comunica a *n*
+con l'eccezione `NoMigrationPathFoundError`.  
+Il nodo *n* dovrà comunicare al modulo Migrations nel nodo Coordinator di *g* che questo ingresso è abortito.
 Questo processo sarà dettagliato nel paragrafo [Prenotazione fallita](#Fusione_reti_fase7b).  
 Poi il modulo Migrations nel nodo *n* potrà decidere di degradare, cioè tentare ingresso con un
 g-nodo di livello inferiore. Dovrà ripartire dalla comunicazione con il nuovo g-nodo entrante. Cioè
 chiamare il metodo `begin_enter` del modulo Migrations nel nodo Coordinator di *g'* (di livello inferiore)
 e quindi fare la richiesta di nuovo a *v*.
 
-Altrimenti il nodo *v* trova un set di soluzioni e giudica quale sia la migliore e la esegue.
-Cioè coordina l'effettiva esecuzione di tutte le migrazioni necessarie; di modo che in uno dei g-nodi di *v*
-ci sarà un posto riservato per l'ingresso di *g*.  
-Per tutte le altre soluzioni scartate, invece, il nodo *v* avvia l'instradamento di un messaggio che
-dovrà giungere ad un nodo nel g-nodo in cui era stata fatta una prenotazione di una posizione *reale*,
-cioè l'ultimo passo della migration-path. Questo nodo chiederà al Coordinator di cancellare la prenotazione
-fatta per questa ricerca di migration-path.
+Altrimenti, cioè se il nodo *v* trova una migration-path, allora la esegue. In questo caso ci sono due
+possibili esiti: l'esecuzione riesce oppure fallisce.  
+L'esecuzione della migration-path da parte di *v* può fallire nel senso che il nodo *v* avvia la trasmissione
+di un pacchetto (si vedrà sotto l'algoritmo di `send_mig_request`) per far eseguire la migrazione
+*i*-esima e attende un pacchetto di risposta: se tale risposta non arriva entro un tempo limite deve
+considerare fallita l'esecuzione della migration-path. In questo caso il nodo *v* lo comunica a *n*
+con l'eccezione `MigrationPathExecuteFailureError`.  
+In questo caso il nodo *n* riparte con la richiesta al suo vicino *v* di prenotare un posto per *g* in *J*. Di modo
+che viene di nuovo avviata la ricerca di una migration-path allo stesso livello.
 
-La migration-path scelta da *v* conteneva, riguardo ai g-nodi di appartenenza di *v*, queste informazioni:
+Se invece l'esecuzione della migration-path da parte di *v* riesce, questo farà si che
+in uno dei g-nodi di *v* di livello maggiore di *lvl* ci sarà un posto riservato per l'ingresso di *g*.
 
-*   `host_gnode_level` - il livello del g-nodo di *v* in cui adesso è stato riservato un posto.  
-    Questo livello può essere maggiore o uguale a quello richiesto dal nodo *n*. Infatti, come
-    descritto [qui](#Strategia_ingresso), la migration-path giudicata ottimale potrebbe essere
-    una di lunghezza zero che comporta la creazione di un nuovo g-nodo di grandezza maggiore.
+Sia `host_gnode_level` il livello del g-nodo di *v* in cui adesso è stato riservato un posto.  
+Questo livello può essere maggiore o uguale a *lvl* + 1. Infatti, come
+descritto [qui](#Strategia_ingresso), la migration-path giudicata ottimale potrebbe essere
+una di lunghezza zero che comporta la creazione di un nuovo g-nodo di grandezza maggiore.
+
+Ora il nodo *v*, riguardo al suo g-nodo in cui adesso è stato riservato un posto, ha queste informazioni:
+
+*   `host_gnode_level` - il livello.
 *   `int new_pos` - la posizione di livello `host_gnode_level` - 1 riservata.
 *   `int new_eldership` - l'anzianità della nuova posizione dentro il livello `host_gnode_level`.
 
@@ -634,9 +656,13 @@ lista di g-nodi che soddisfa questi requisiti:
     *h* o un g-nodo di livello maggiore che contiene *h*.
 *   Per ogni *i* da 1 a *m* - 1:
     *   **Nota** può essere *m* = 1, quindi questo ciclo non viene mai valutato.
-    *   *lvl(p<sub>i</sub>)* = *lvl(h)* = *l* + 1.
+    *   *lvl(p<sub>i</sub>)* = *lvl(h)* = *l* + 1.  
+        Inoltre è necessario che il g-nodo *p<sub>i</sub>* abbia tutte le posizioni *reali*, ai livelli
+        da *l* + 1 a *levels* - 1.
     *   *p<sub>i+1</sub>* ∈ *𝛤<sub>l+1</sub>(p<sub>i</sub>)*, cioè *p<sub>i+1</sub>* è direttamente collegato a
-        *p<sub>i</sub>* nel grafo *[G]<sub>l+1</sub>*.
+        *p<sub>i</sub>* nel grafo *[G]<sub>l+1</sub>*.  
+        Inoltre è necessario che il g-nodo di livello *l* in *p<sub>i</sub>* diretto vicino di
+        *p<sub>i+1</sub>* abbia la posizione *reale* al livello *l*.
     *   *size<sub>l</sub>(p<sub>i</sub>)* = *gsizes(l)*, cioè *p<sub>i</sub>* è saturo.
 *   *lvl(p<sub>m</sub>)* = *k* ≥ *lvl(h)* = *l* + 1. Indichiamo con *k* il livello di *p<sub>m</sub>*.
 *   *size<sub>k-1</sub>(p<sub>m</sub>)* `<` *gsizes(k-1)*, cioè *p<sub>m</sub>* non è saturo.
@@ -651,7 +677,8 @@ Detto in altri termini, il nodo *v* deve cercare la shortest migration-path a li
 *   un posto già libero in un suo g-nodo di livello maggiore; *oppure*
 *   la shortest migration-path per liberare un posto nel suo g-nodo di livello *l* + 1, cioè in *h*.
 
-Usare questa migration-path significa far migrare un border g-nodo di livello *l* da ognuno dei g-nodi
+Usare questa migration-path significa far migrare un border g-nodo di livello *l* (che ha
+una posizione *reale* al livello *l*) da ognuno dei g-nodi
 di livello *l* + 1 della lista *P* nel successivo in modo tale da liberare un posto nel primo g-nodo
 di livello *l* + 1 della lista *P*. Come *costo* abbiamo che viene occupato un ulteriore posto nell'ultimo g-nodo
 della lista *P*, il quale non era saturo, ma anche poteva essere di livello maggiore di *l* + 1.
@@ -712,7 +739,7 @@ migration-path con il delta minore dell'ultimo *hl*.
 
 Quando ci siamo fermati avremo un insieme di soluzioni tra cui scegliere. Qualsiasi soluzione in
 questo insieme, anche se non ottimale, è comunque da preferire all'alternativa di degradare il livello
-a cui si tenta di fare ingresso, come vedremo subito dopo.
+a cui si tenta di fare ingresso.
 
 Data una soluzione *s<sub>i</sub>* di questo elenco, la successiva *s<sub>i+1</sub>* è da preferire
 se *d<sub>i+1</sub>* `<` *d<sub>i</sub>* + 5 oppure
@@ -1191,6 +1218,10 @@ Quindi il nodo *v* esegue immediatamente al contempo due operazioni: avvia l'ese
 soluzione e avvia dei messaggi per la cancellazione delle prenotazioni fatte nelle precedenti
 soluzioni.
 
+Se invece nessuna soluzione è stata trovata, il nodo *v* immediatamente comunica al nodo *n*
+(che aveva fatto la richiesta di ingresso) questo risultato con l'eccezione `NoMigrationPathFoundError`.
+Il nodo *n* potrà tentare di degradare.
+
 ### <a name="Strategia_ingresso_Cancellazione_prenotazioni"></a>Cancellazione delle prenotazioni
 
 Per ogni soluzione `Solution s` che decide di non perseguire, il nodo *v* ha i dati necessari a
@@ -1427,7 +1458,7 @@ metodo ritorna solo dopo che un singolo nodo nel g-nodo desiderato ha completato
 metodo `void execute_mig(RequestPacket p0)`.
 
 ```
-void send_mig_request(TupleGNode dest, RequestPacket p0):
+void send_mig_request(TupleGNode dest, RequestPacket p0) throws MigrationPathExecuteFailureError:
   p0.dest = dest
   Se my_pos in p0.dest:
     execute_mig(RequestPacket p0)
@@ -1440,8 +1471,11 @@ void send_mig_request(TupleGNode dest, RequestPacket p0):
   // send request
   Stub st = best_gw_to(p0.dest)
   st.route_mig_request(p0)
-  // wait response
-  var v = ch.recv()
+  // wait response with timeout
+  Try:
+    var v = ch.recv(timeout)
+  Su eccezione Timeout:
+    Lancia eccezione MigrationPathExecuteFailureError
   Return
 
 
@@ -1587,20 +1621,6 @@ void finish_migration(lvl, finish_migration_data):
 Questi ultimi algoritmi sono stati brevemente delineati, ma in effetti questi non sono di pertinenza
 del modulo Migrations, bensì del suo utilizzatore. Quindi compito dei metodi `prepare_migration` e
 `finish_migration` del modulo Migrations è quello di emettere i relativi segnali.
-
-### <a name="Strategia_ingresso_Degradazione"></a>Degradazione
-
-È possibile che la ricerca di una migration-path a livello *l*, anche senza porre alcun limite superiore
-a *lh*, fallisca. Ciò avviene quando il grafo della rete a quel livello è pieno, cioè non esiste in tutta
-la rete una posizione libera per un g-nodo di livello *l* o superiore.
-
-Il livello *l* con cui inizialmente è stata cercata una migration-path (indicato con `ask_lvl` nell'algoritmo
-appena illustrato) era stato deciso dalla rete *G* che aveva incontrata la rete *J* e aveva deciso
-di fare ingresso in essa. Come abbiamo visto [sopra](#Fusione_reti_fase2) esso è `max_lvl`.  
-Se il tentativo al livello desiderato fallisce non resta che decrementare di
-uno il livello e riprovare. Si cerca in questo modo di fare entrare *G* in *J* anche gradualmente. Ovviamente
-esiste anche il caso limite in cui tutto lo spazio degli indirizzi validi è stato occupato in *J*, quindi nessun
-ulteriore singolo nodo può entrare in *J*.
 
 ## <a name="Split_gnodo"></a>Risoluzione di uno split di g-nodo
 
