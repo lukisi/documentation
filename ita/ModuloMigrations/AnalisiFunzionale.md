@@ -157,36 +157,39 @@ sfruttando il punto di contatto migliore.
 
 ### <a name="Fusione_reti_fase1"></a>Prima fase - valutazione del singolo nodo
 
-Diciamo subito che il modulo Migrations è un modulo *di identità*, cioè viene creata una istanza
+Il modulo Migrations è un modulo *di identità*, cioè viene creata una istanza
 per ogni identità nel sistema.
 
-Le operazioni di questa prima fase iniziano con la segnalazione (da parte dell'utilizzatore del modulo)
-che un diretto vicino della nostra identità (cioè un nodo collegato tramite un arco-identità)
-non appartiene alla nostra stessa rete.
+L'utilizzatore del modulo Migrations, cioè il demone *ntkd*, gli comunica la nascita e la rimozione
+di ogni arco-identità. Sulla creazione di un nuovo arco-identità e in seguito periodicamente,
+il modulo Migrations contatta l'identità diretta vicina per chiedere informazioni sulla sua
+rete di appartenenza, con il metodo remoto `exchange_network_data`. La firma completa del metodo è
+`NetworkData exchange_network_data(NetworkData d, bool ask_coord=False) throws NotPrincipalError, VirtualAddressError`.  
+Questa "ispezione" viene fatta al primo contatto e poi periodicamente, perché l'identità diretta
+vicina potrebbe diventare appartenente ad una rete diversa nel tempo.
 
-A fronte di questa segnalazione il modulo Migrations opera attivamente (relativamente a questa prima fase) solo
-nella *identità principale* del sistema. Nelle altre identità non prende iniziativa e si limita a rispondere
-alle richieste dei vicini con una eccezione `NotPrincipalError`.
-
-Inoltre il modulo opera attivamente solo se l'identità ha un indirizzo completamente *reale*.
-Infatti ricordiamo che l'identità principale di un sistema potrebbe essere in
-una fase temporanea in cui il suo indirizzo non ha tutte le componenti *reali*.
-Altrimenti non prende iniziativa e si limita a rispondere alle richieste dei vicini con una eccezione `VirtualAddressError`.
+Questa comunicazione si completa solo se entrambe le identità sono *identità principali* e con tutte
+le posizioni *reali*. Infatti se la propria identità non è tale, il modulo non fa questa richiesta.
+Inoltre, se riceve questa richiesta da un vicino risponde con l'eccezione `NotPrincipalError`
+o `VirtualAddressError`.
 
 Quindi nella nostra trattazione *n* e *v* hanno entrambi un indirizzo completamente *reale*.
 
-Il modulo Migrations del nodo *n* prepara una struttura dati che descrive *G* come è vista da *n*. Poi contatta il nodo *v*,
-gli fornisce questa struttura e gli chiede al contempo di ricevere una struttura dati che descrive *J* come è vista da *v*.  
+Il modulo Migrations del nodo *n* prepara una struttura dati `NetworkData` che descrive *G* come è vista da *n*. Poi
+contatta il nodo *v*, gli fornisce questa struttura e gli chiede al contempo di ricevere una struttura dati che
+descrive *J* come è vista da *v*.  
 Le strutture sono le stesse. Ad esempio, quella che *n* riceve da *v* contiene:
 
 *   `int64 netid` = Identificativo della rete *J*.
 *   `List<int> gsizes` = Lista che descrive la topologia della rete *J*. Da essa si ricava `levels`.
-*   `List<int> neighbor_n_nodes` = Per i valori *i* da 1 a `levels`, l'elemento `neighbor_n_nodes[i-1]` è il
-    numero di singoli nodi dentro *g<sub>i</sub>(v)*.
+*   `int neighbor_n_nodes` = Numero di singoli nodi dentro la rete *J*.
 *   `List<int> neighbor_pos` = Per i valori *i* da 1 a `levels`, l'elemento `neighbor_pos[i-1]` è la
     posizione al livello `i-1` di *v* dentro *g<sub>i</sub>(v)*.
-*   `List<int> neighbor_n_free_pos` = Per i valori *i* da 1 a `levels`, l'elemento `neighbor_n_free_pos[i-1]` è il
-    numero di posizioni libere dentro *g<sub>i</sub>(v)*.
+
+Da questa prima operazione il modulo Migrations in autonomia capisce se l'identità diretta vicina
+appartiene ad una rete diversa. Ovviamente solo in questo caso procede con le successive operazioni.
+
+Inoltre si procede solo se le topologie delle due reti *G* e *J* sono identiche.
 
 Le due reti sicuramente vogliono fondersi in una. Si preferisce che sia la più piccola, come numero di singoli nodi in tutta la rete,
 ad entrare nella più grande. Solo in caso di parità assoluta si ricorra all'identificativo della rete (che è un numero
@@ -224,7 +227,7 @@ decide che *G* deve entrare in *J*.
 
 Allora il modulo Migrations aggiunge un'altra informazione a quelle della struttura dati di cui sopra:
 
-*   `int minimum_lvl` = Livello minimo a cui il singolo nodo *n* è disposto a fare ingresso. Infatti il nodo *n*
+*   `int min_lvl` = Livello minimo a cui il singolo nodo *n* è disposto a fare ingresso. Infatti il nodo *n*
     potrebbe essere un gateway verso una rete privata in cui si vogliono adottare diversi meccanismi di
     assegnazione di indirizzi e routing. In questo caso il gateway potrebbe volere una assegnazione di un
     g-nodo di livello tale da poter disporre di un certo spazio
@@ -235,7 +238,7 @@ Inoltre sceglie un identificativo univoco random per questa richiesta, `int eval
 Ora il modulo Migrations del nodo *n* prepara una nuova struttura dati con le informazioni di cui sopra
 istanziando un `EvaluateEnterData evaluate_enter_data`.  
 La classe EvaluateEnterData è definita nel modulo Migrations. Si tratta di una classe serializzabile. I membri di questa classe sono:
-`int64 netid`, `List<int> gsizes`, `List<int> neighbor_n_nodes`, `List<int> neighbor_pos`, `List<int> neighbor_n_free_pos`,
+`int64 netid`, `List<int> gsizes`, `int neighbor_n_nodes`, `List<int> neighbor_pos`,
 `int min_lvl`, `int evaluate_enter_id`.  
 L'istanza `evaluate_enter_data` andrà passata ad un metodo del modulo Migrations nel nodo Coordinator della rete.
 
@@ -275,12 +278,6 @@ al codice in esecuzione nel modulo Migrations) conosce il livello più basso `in
 tale che la rete *G* è composta da un solo g-nodo a quel livello. Questo valore è utile, perché
 se si raggiunge la prenotazione di una posizione a questo livello, l'intera rete *G* può entrare in *J*
 in blocco. Non è quindi necessario chiedere di più.
-
-Sebbene in teoria sarebbe possibile far entrare (almeno gradualmente) la rete *G* dentro la rete *J*
-anche nel caso in cui le topologie fossero differenti, questo comporterebbe delle importanti variazioni
-agli algoritmi di calcolo dell'indirizzo IP (globale, interno, anonimizzante).  
-Per questo motivo ci limitiamo per ora a stabilire che l'ingresso in una rete diversa non viene affatto
-tentato se le topologie differiscono.
 
 Il nodo Coordinator dell'intera rete *G* non ha particolari informazioni sui g-nodi (di livello inferiore a
 `levels`) a cui appartiene *n*. Ma tali informazioni comunque non gli sono necessarie. Esso infatti dovrà
