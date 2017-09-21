@@ -163,8 +163,8 @@ per ogni identità nel sistema.
 L'utilizzatore del modulo Migrations, cioè il demone *ntkd*, gli comunica la nascita e la rimozione
 di ogni arco-identità. Sulla creazione di un nuovo arco-identità e in seguito periodicamente,
 il modulo Migrations contatta l'identità diretta vicina per chiedere informazioni sulla sua
-rete di appartenenza, con il metodo remoto `exchange_network_data`. La firma completa del metodo è
-`NetworkData exchange_network_data(NetworkData d, bool ask_coord=False) throws NotPrincipalError, VirtualAddressError`.  
+rete di appartenenza, con il metodo remoto `retrieve_network_data`. La firma completa del metodo è
+`NetworkData retrieve_network_data(bool ask_coord=False) throws NotPrincipalError, VirtualAddressError`.  
 Questa "ispezione" viene fatta al primo contatto e poi periodicamente, perché l'identità diretta
 vicina potrebbe diventare appartenente ad una rete diversa nel tempo.
 
@@ -175,10 +175,9 @@ o `VirtualAddressError`.
 
 Quindi nella nostra trattazione *n* e *v* hanno entrambi un indirizzo completamente *reale*.
 
-Il modulo Migrations del nodo *n* prepara una struttura dati `NetworkData` che descrive *G* come è vista da *n*. Poi
-contatta il nodo *v*, gli fornisce questa struttura e gli chiede al contempo di ricevere una struttura dati che
-descrive *J* come è vista da *v*.  
-Le strutture sono le stesse. Ad esempio, quella che *n* riceve da *v* contiene:
+Il modulo Migrations del nodo *n* chiama il metodo remoto `retrieve_network_data` sul nodo *v* e riceve
+una struttura dati che descrive *J* come è vista da *v*.  
+La struttura `NetworkData` contiene:
 
 *   `int64 netid` = Identificativo della rete *J*.
 *   `List<int> gsizes` = Lista che descrive la topologia della rete *J*. Da essa si ricava `levels`.
@@ -215,10 +214,9 @@ il nodo *v* di sua iniziativa a fare le operazioni.
 
 Se invece il nodo *n* vede che la differenza non è molta, allora riparte: chiede l'informazione
 *numero di singoli nodi in G* al nodo Coordinator di *G*. Qui abbiamo una collaborazione col modulo Coordinator,
-quella relativa al suo metodo `get_n_nodes`. Poi comunica la struttura di cui sopra al
-nodo *v* indicandogli di rispondere con la medesima struttura, ma solo dopo aver chiesto l'informazione
-*numero di singoli nodi in J* al nodo Coordinator di *J*.  
-A questo punto anche se la differenza fosse piccola entrambi i nodi *n* e *v* sanno se proseguire o meno.
+quella relativa al suo metodo `get_n_nodes`. Poi chiama di nuovo il metodo remoto `retrieve_network_data` sul nodo
+*v* indicandogli però di chiedere l'informazione *numero di singoli nodi in J* al nodo Coordinator di *J*.  
+A questo punto, anche se la differenza fosse piccola, il nodo *n* sa se proseguire o meno.
 
 Per analizzare il resto delle operazioni in questo documento, assumiamo per ipotesi che il nodo *n*
 decide che *G* deve entrare in *J*.
@@ -238,8 +236,7 @@ Inoltre sceglie un identificativo univoco random per questa richiesta, `int eval
 Ora il modulo Migrations del nodo *n* prepara una nuova struttura dati con le informazioni di cui sopra
 istanziando un `EvaluateEnterData evaluate_enter_data`.  
 La classe EvaluateEnterData è definita nel modulo Migrations. Si tratta di una classe serializzabile. I membri di questa classe sono:
-`int64 netid`, `List<int> gsizes`, `int neighbor_n_nodes`, `List<int> neighbor_pos`,
-`int min_lvl`, `int evaluate_enter_id`.  
+`int64 netid`, `int neighbor_n_nodes`, `List<int> neighbor_pos`, `int min_lvl`, `int evaluate_enter_id`.  
 L'istanza `evaluate_enter_data` andrà passata ad un metodo del modulo Migrations nel nodo Coordinator della rete.
 
 Ora il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
