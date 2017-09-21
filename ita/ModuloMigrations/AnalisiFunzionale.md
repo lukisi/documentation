@@ -161,19 +161,20 @@ Il modulo Migrations è un modulo *di identità*, cioè viene creata una istanza
 per ogni identità nel sistema.
 
 L'utilizzatore del modulo Migrations, cioè il demone *ntkd*, gli comunica la nascita e la rimozione
-di ogni arco-identità. Sulla creazione di un nuovo arco-identità e in seguito periodicamente,
-il modulo Migrations contatta l'identità diretta vicina per chiedere informazioni sulla sua
+di ogni arco-identità.
+
+Per ogni arco-identità il modulo Migrations contatta l'identità diretta vicina per chiedere informazioni sulla sua
 rete di appartenenza, con il metodo remoto `retrieve_network_data`. La firma completa del metodo è
-`NetworkData retrieve_network_data(bool ask_coord=False) throws NotPrincipalError, VirtualAddressError`.  
-Questa "ispezione" viene fatta al primo contatto e poi periodicamente, perché l'identità diretta
-vicina potrebbe diventare appartenente ad una rete diversa nel tempo.
+`NetworkData retrieve_network_data(bool ask_coord=False) throws NotPrincipalError, VirtualAddressError`.
 
 Questa comunicazione si completa solo se entrambe le identità sono *identità principali* e con tutte
-le posizioni *reali*. Infatti se la propria identità non è tale, il modulo non fa questa richiesta.
-Inoltre, se riceve questa richiesta da un vicino risponde con l'eccezione `NotPrincipalError`
-o `VirtualAddressError`.
+le posizioni *reali*. Inoltre, dopo questa comunicazione si procede solo se le topologie delle due
+reti *G* e *J* sono identiche.  
+Quindi nella nostra trattazione *n* e *v* hanno entrambi un indirizzo completamente *reale* e con
+la stessa topologia di rete.
 
-Quindi nella nostra trattazione *n* e *v* hanno entrambi un indirizzo completamente *reale*.
+Il dettaglio delle operazioni per far sì che queste comunicazioni avvengano nei tempi e casi desiderati
+è illustrato [qui](DettagliTecnici.md#Operazioni_arco_identita).
 
 Il modulo Migrations del nodo *n* chiama il metodo remoto `retrieve_network_data` sul nodo *v* e riceve
 una struttura dati che descrive *J* come è vista da *v*.  
@@ -187,8 +188,6 @@ La struttura `NetworkData` contiene:
 
 Da questa prima operazione il modulo Migrations in autonomia capisce se l'identità diretta vicina
 appartiene ad una rete diversa. Ovviamente solo in questo caso procede con le successive operazioni.
-
-Inoltre si procede solo se le topologie delle due reti *G* e *J* sono identiche.
 
 Le due reti sicuramente vogliono fondersi in una. Si preferisce che sia la più piccola, come numero di singoli nodi in tutta la rete,
 ad entrare nella più grande. Solo in caso di parità assoluta si ricorra all'identificativo della rete (che è un numero
