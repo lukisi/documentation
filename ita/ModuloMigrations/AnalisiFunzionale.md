@@ -235,7 +235,7 @@ Inoltre sceglie un identificativo univoco random per questa richiesta, `int eval
 Ora il modulo Migrations del nodo *n* prepara una nuova struttura dati con le informazioni di cui sopra
 istanziando un `EvaluateEnterData evaluate_enter_data`.  
 La classe EvaluateEnterData è definita nel modulo Migrations. Si tratta di una classe serializzabile. I membri di questa classe sono:
-`int64 netid`, `int neighbor_n_nodes`, `List<int> neighbor_pos`, `int min_lvl`, `int evaluate_enter_id`.  
+`int64 netid`, `List<int> neighbor_pos`, `int min_lvl`, `int evaluate_enter_id`.  
 L'istanza `evaluate_enter_data` andrà passata ad un metodo del modulo Migrations nel nodo Coordinator della rete.
 
 Ora il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
@@ -256,7 +256,7 @@ suo output. Il valore restituito da questo metodo è una istanza della classe se
 definita nel modulo Migrations. Anche qui diciamo che la classe non è nota al modulo Coordinator, che
 lo riceve come un generico Object, sapendo solo che è serializzabile.  
 La classe `EvaluateEnterResult` è in grado di rappresentare i possibili esiti del metodo, cioè
-`int retval` oppure `AskAgainError` oppure `IgnoreNetworkError`.
+`int first_ask_lvl` oppure `AskAgainError` oppure `IgnoreNetworkError`.
 
 Vediamo cosa avviene nel metodo `evaluate_enter` del modulo Migrations eseguito sul nodo Coordinator di *G*.
 
@@ -275,37 +275,35 @@ tale che la rete *G* è composta da un solo g-nodo a quel livello. Questo valore
 se si raggiunge la prenotazione di una posizione a questo livello, l'intera rete *G* può entrare in *J*
 in blocco. Non è quindi necessario chiedere di più.
 
-Il nodo Coordinator dell'intera rete *G* non ha particolari informazioni sui g-nodi (di livello inferiore a
-`levels`) a cui appartiene *n*. Ma tali informazioni comunque non gli sono necessarie. Esso infatti dovrà
-solo individuare, sulla base delle informazioni ricevute circa i g-nodi di *v* in *J*, un livello
-a cui cercare di far entrare un g-nodo di *n* dentro un g-nodo di *v*.
+Il nodo Coordinator dell'intera rete *G* non ha particolari informazioni sui g-nodi (di livello inferiore al
+minimo comune g-nodo) a cui appartiene *n*. Ma tali informazioni comunque non gli sono necessarie.
 
-Ora il modulo Migrations nel nodo Coordinator di *G* si chiede: se il solo punto di contatto fra *G* e *J*
-fosse il nodo *n* con il suo arco verso il nodo *v*, di cui conosciamo la visione della rete *J*,
-assumendo che il fatto di cercare di far entrare *G* dentro *J* sia dato per buono,
-a quale livello compreso tra `min_lvl` e `max_lvl` andrebbe tentato l'ingresso di (una parte di) *G* in *J*?
+Bisogna individuare un livello a cui cercare di far entrare un g-nodo di *n* dentro un g-nodo di *v*.  
+Sicuramente il primo tentativo sarà di entrare in blocco. Cioè con il livello più piccolo tale che la rete *G* è
+costituita da un solo g-nodo, cioè `max_lvl`.
 
-**TODO** Inserire qui ogni idea su some rispondere alla domanda.
+Però se abbiamo `max_lvl = levels` allora possiamo tentare al massimo con `levels - 1`. Invece se abbiamo
+abbiamo `max_lvl < min_lvl` allora dobbiamo tentare con `min_lvl`.
 
-**Nota 1** Quando due reti si incontrano e la rete più piccola *G* decide di entrare in *J* il primo tentativo
-dovrebbe essere quello di entrare in blocco. Cioè con il livello più piccolo tale che *G* è costituita da un solo
-g-nodo. Quello che abbiamo chiamato `max_lvl`.
+Chiamiamo `first_ask_lvl` il livello del g-nodo con cui faremo il primo tentativo. Vedremo in seguito che se questo
+fallisce si potrà degradare, cioè tentare ingresso con un g-nodo di livello inferiore.
 
-Diciamo che la risposta alla domanda sia *lvl_0*.
+Il compito del nodo Coordinator di *G* adesso è quello di memorizzare che è stata incontrata la rete *J* attraverso
+un arco tra il nodo *n* e il nodo *v*, tramite il quale potremo tentare di far entrare il g-nodo *g<sub>first_ask_lvl</sub>(n)*
+dentro un g-nodo di *v*.
 
-Assumiamo che questa richiesta sia la prima pervenuta che coinvolge il g-nodo *g<sub>lvl_0</sub>(n)*
-e la rete *J*. Il modulo Migrations se ne avvede accedendo alla memoria condivisa di tutta la rete (spiegheremo
-meglio il significato di questo a breve).  
-Allora il modulo Migrations nel nodo Coordinator di *G* associa alla richiesta `evaluate_enter_data`, al nodo *n*
-e alla valutazione *lvl_0* una scadenza `timeout = global_timeout da ora`, rappresentata con un oggetto Timer serializzabile.  
-Cioè crea una istanza `EvaluateEnterEvaluation resp` con i campi `evaluate_enter_data`, `client_address`,
-`lvl`, `timeout` e altri campi che dettaglieremo in seguito. In seguito potremmo riferirci a questa
-struttura dati con il termine *valutazione*.
-
-Ogni *valutazione* può trovarsi in un particolare stato, anche questo memorizzato nella suddetta struttura
-dati nel membro `status`. Lo stato in cui viene inizializzata questa valutazione è "*pending*".
-
-Questa valutazione deve essere memorizzata nella memoria condivisa di tutta la rete *G*.
+Assumiamo che questa richiesta sia la prima pervenuta nella rete *G*. Il modulo Migrations se ne avvede
+accedendo alla memoria condivisa di tutta la rete (spiegheremo meglio il significato di questo a breve).  
+Allora il modulo Migrations nel nodo Coordinator di *G* crea una istanza `EvaluateEnterEvaluation resp` con
+i campi `evaluate_enter_data` e `client_address`. In seguito potremmo riferirci a questa
+struttura dati con il termine *valutazione*.  
+Inoltre rappresenta con un oggetto serializzabile `Timer timeout = global_timeout da ora` la scadenza di
+questa *valutazione*.  
+Infine rappresenta con un oggetto serializzabile `EvaluationStatus status = EvaluationStatus.PENDING` lo
+stato di questa *valutazione*.  
+A questo punto queste informazioni devono essere memorizzate nella memoria condivisa di tutta la rete *G*:
+la *valutazione* come elemento di una lista nel membro `evaluation_list`; il livello con cui tentare
+inizialmente nel membro `first_ask_lvl`; la scadenza nel membro `timeout`; lo stato nel membro `status`.
 
 #### <a name="Accesso_memoria_condivisa"></a>Accesso alla memoria condivisa
 
@@ -335,33 +333,28 @@ classe serializzabile `EvaluateEnterResult` dalla chiamata del metodo `evaluate_
 istruisce il modulo Migrations nel nodo *n* di ripetere la stessa richiesta (con le stesse informazioni
 tra cui lo stesso `evaluate_enter_id`) dopo aver atteso alcuni istanti.  
 Questa attesa deve essere più piccola (almeno 3 o 4 volte) di quella calcolata come `global_timeout`,
-che come abbiamo detto può essere calcolata dal modulo Migrations esclusivamente sulla base del numero di singoli nodi presenti in *G*.
+che come abbiamo detto può essere calcolata dal modulo Migrations esclusivamente sulla base del numero di
+singoli nodi presenti in *G*.
 
-Supponiamo che nel frattempo giunga al Coordinator della rete *G* una richiesta simile dal nodo *q*
-relativa alla rete *J*. Eseguendo il metodo `evaluate_enter` del modulo Migrations per la richiesta pervenuta
-da *q*, alla domanda "a quale livello andrebbe tentato l'ingresso dal nodo *q*" il modulo Migrations risponde
-con il livello *lvl_1*.
+Supponiamo che nel frattempo giunga al Coordinator della rete *G* una richiesta simile dal nodo *w*
+relativa alla rete *F*. Nel metodo `evaluate_enter` del modulo Migrations eseguito nel nodo Coordinator
+di *G* per la richiesta pervenuta da *w*, accedendo alla memoria condivisa della rete si scopre che esiste una
+precedente *valutazione* di ingresso in *J*. Si deduce che la seconda richiesta non può essere presa in
+considerazione. Il nodo Coordinator deve rispondere con l'eccezione `IgnoreNetworkError`, che sarà spiegata sotto.
 
-Ora il modulo Migrations nel nodo Coordinator di *G* accedendo alla memoria condivisa della rete scopre che esiste una precedente
-*valutazione* di ingresso in *J* che ancora è *pending*. Allora confronta i due g-nodi coinvolti
-e scopre che il g-nodo *g<sub>lvl_1</sub>(q)* interseca (è equivalente a, oppure contiene, oppure è contenuto in)
-il g-nodo *g<sub>lvl_0</sub>(n)*. Il modulo Migrations nel nodo Coordinator di *G* deduce che queste *valutazioni*
-(quella sulla richiesta di *n* e quella sulla richiesta di *q*) vanno considerate insieme perché sono intersecanti
-e riguardano la stessa rete *J*. Le due *valutazioni* risultano ora collegate fra di loro. Anche questo collegamento farà parte della
-memoria condivisa di tutta la rete: ogni *valutazione* mantiene un membro `next_id` che coincide con
-il membro `evaluate_enter_data.evaluate_enter_id` della prossima collegata.
+Supponiamo, invece, che nel frattempo giunga al Coordinator della rete *G* una richiesta simile dal nodo *q*
+relativa alla rete *J*. Accedendo alla memoria condivisa della rete si scopre che esiste una
+precedente *valutazione* di ingresso in *J* e che lo `status` ancora è `PENDING`. Si deduce che queste *valutazioni*
+(quella sulla richiesta di *n* e quella sulla richiesta di *q*) vanno considerate insieme perché
+riguardano la stessa rete *J*. Le due *valutazioni* vanno entrambe memorizzate nella lista `evaluation_list`.
 
-Le *valutazioni* tra loro collegate devono avere sempre la medesima scadenza. Se `lvl_1` è maggiore di `lvl_0`, ovvero più in generale, se il
-livello del g-nodo coinvolto nella *valutazione* della richiesta appena pervenuta è maggiore del livello del g-nodo coinvolto in tutte
-le *valutazioni* ad essa collegate, allora il modulo Migrations nel nodo Coordinator di *G* computa una nuova
-scadenza `timeout = global_timeout da ora` e la aggiorna su tutte le *valutazioni* collegate. Altrimenti esso
-mantiene la precedente scadenza (comune a tutte le *valutazioni* precedenti) e la usa anche per
-la *valutazione* sulla richiesta di *q*.
+La scadenza delle *valutazioni* resta la stessa memorizzata prima.
 
-Il modulo Migrations nel nodo Coordinator di *G* aggiorna la memoria condivisa di tutta la rete con tutte queste variazioni.
+Il modulo Migrations nel nodo Coordinator di *G* aggiorna la memoria condivisa di tutta la rete
+aggiungendo la *valutazione* relativa alla richiesta di *q*.
 
 Ora il modulo Migrations nel nodo Coordinator di *G* si accinge a rispondere alla richiesta di *q*.
-Se nella *valutazione* sulla richiesta di *q* il timer `timeout` non è ancora scaduto il Coordinator risponde anche a questa richiesta con
+Se il timer `timeout` non è ancora scaduto il Coordinator risponde anche a questa richiesta con
 una eccezione AskAgainError.
 
 Se invece `timeout` è scaduto si passa alla terza fase.
@@ -375,38 +368,34 @@ Una *valutazione* `v` recuperata dalla memoria condivisa della rete è sempre id
 come quella associata ad una particolare richiesta `r` appena pervenuta verificando che
 `r.evaluate_enter_id == v.evaluate_enter_data.evaluate_enter_id`.
 
-Alla fine arriverà una richiesta `req` di ingresso in *J* tale che il modulo Migrations nel nodo Coordinator di *G* ne assocerà
-la *valutazione* `resp` ad un gruppo di *valutazioni* nello stato *pending* il cui `timeout` è scaduto. A questo punto il modulo Migrations eleggerà
-la migliore fra le soluzioni.
+Alla fine arriverà una richiesta `req` di ingresso in *J*. Il modulo Migrations nel nodo Coordinator
+di *G* vedrà che esiste un gruppo di *valutazioni* per l'ingresso in *J*, che lo `status` è `PENDING`
+e che  il `timeout` è scaduto.  
+A questo punto il modulo Migrations dovrà eleggere la migliore fra le soluzioni.
 
-**TODO** Inserire qui ogni idea su some individuare la migliore soluzione. Ancora non abbiamo
-avviato alcuna ricerca di migration-path nella rete *J*.
-
-**Nota 1**: una cosa da evitare è quella di formare g-nodi che facilmente potrebbero "splittarsi", diventare
-disconnessi.  
+Una cosa da evitare è quella di formare g-nodi che facilmente potrebbero "splittarsi", cioè diventare
+internamente disconnessi.  
 Per questo in `EvaluateEnterData evaluate_enter_data` memoriziamo `List<int> neighbor_pos` la posizione
-del vicino con cui c'è un arco. Il modulo Migrations nel nodo Coordinator di *G* accedendo nella memoria condivisa
+del vicino *v* dentro *J*. Il modulo Migrations nel nodo Coordinator di *G* accedendo nella memoria condivisa
 alla lista di *valutazioni* vede che un certo numero di queste ha per nodo vicino un nodo che appartiene
 al g-nodo di *J* in cui *G* vorrebbe entrare. Deduce quindi il numero di archi che dovrebbero rompersi
 per far sì che il g-nodo divenga disconnesso.
 
 Diciamo che la soluzione eletta sia la *valutazione* `v`.
 
-La *valutazione* eletta `v` passa nello stato "*eletta, da comunicare*" e la sua nuova scadenza viene
-valorizzata con `timeout = global_timeout da ora`. Tutte le altre *valutazioni* collegate passano nello
-stato "*riconsiderabile*" con scadenza `timeout = global_timeout da ora`.
+Nella memoria condivisa di tutta la rete il membro `status` passa a `TO_BE_NOTIFIED` e si aggiunge un
+nuovo membro `EvaluateEnterEvaluation elected = v`. Il membro `timeout` viene di nuovo impostato
+a `timeout = global_timeout da ora`.
 
 Il modulo Migrations nel nodo Coordinator di *G* aggiorna la memoria condivisa di tutta la rete con tutte queste variazioni.
 
-Ora il modulo Migrations guarda alla richiesta `req` appena pervenuta. Se la relativa *valutazione* `resp` è proprio `v`
+Ora il modulo Migrations guarda alla richiesta `req` appena pervenuta. Se la relativa *valutazione* `resp` è proprio `elected`
 allora il modulo Migrations nel nodo Coordinator di *G* fa queste operazioni:
 
-*   Si prepara a rispondere alla richiesta del client con il livello a cui deve fare ingresso. Cioè memorizza `ret = resp.lvl`.
-*   La *valutazione* eletta `v` viene rimossa dall'elenco, operando sui campi `next_id` delle altre *valutazioni* oltre che
-    sulle strutture dati della memoria condivisa.
-*   Tutte le *valutazioni* collegate passano nello stato "*scartata, da comunicare*" con scadenza `timeout = global_timeout da ora`.
+*   La *valutazione* `elected` viene rimossa dalla lista `evaluation_list`.
+*   Il membro `status` passa a `NOTIFIED`.
 *   Aggiorna la memoria condivisa di tutta la rete.
-*   Risponde alla richiesta del client con `ret`.
+*   Risponde alla richiesta del client con `first_ask_lvl`.
 
 Altrimenti il modulo Migrations fa queste operazioni:
 
@@ -416,35 +405,35 @@ Le successive richieste saranno gestite nella quarta fase.
 
 ### <a name="Fusione_reti_fase4"></a>Quarta fase - comunicazione della elezione
 
-Quando arriva una richiesta `req` di ingresso in *J* il modulo Migrations nel nodo Coordinator di *G* si avvede che si trova nella quarta fase
-perché la sua *valutazione* `v` era stata già fatta ed è nella memoria condivisa di tutta la rete nello
-stato *da comunicare* o *riconsiderabile*.
+Quando arriva una richiesta `req` di ingresso in *J* il modulo Migrations nel nodo Coordinator di *G* si avvede che si trova
+nella quarta fase perché nella memoria condivisa di tutta la rete lo `status` è `TO_BE_NOTIFIED` o `NOTIFIED`.
 
-Se `v` è nello stato *eletta, da comunicare*
+Sia `v` la valutazione data a `req`.
+
+Se lo `status` è `TO_BE_NOTIFIED` e la valutazione `v` è proprio `elected`
 allora il modulo Migrations nel nodo Coordinator di *G* fa queste operazioni:
 
-*   Si prepara a rispondere alla richiesta del client con il livello a cui deve fare ingresso. Cioè memorizza `ret = v.lvl`.
-*   La *valutazione* eletta `v` viene rimossa dall'elenco, operando sui campi `next_id` delle altre *valutazioni* oltre che
-    sulle strutture dati della memoria condivisa.
-*   Tutte le *valutazioni* collegate passano nello stato "*scartata, da comunicare*" con scadenza `timeout = global_timeout da ora`.
+*   La *valutazione* `elected` viene rimossa dalla lista `evaluation_list`.
+*   Il membro `status` passa a `NOTIFIED`.
 *   Aggiorna la memoria condivisa di tutta la rete.
-*   Risponde alla richiesta del client con `ret`.
+*   Risponde alla richiesta del client con `first_ask_lvl`.
 
-Altrimenti, se `v` è nello stato *riconsiderabile* il modulo Migrations fa queste operazioni:
+Altrimenti, se lo `status` è `TO_BE_NOTIFIED` il modulo Migrations fa queste operazioni:
 
-*   Se `v.timeout` è scaduto:
-    *   Cerca fra le *valutazioni* collegate quella nello stato *eletta, da comunicare* e la rimuove dall'elenco.
-    *   Tutte le altre *valutazioni* le mette nello stato *pending* mantenendone immutato il `timeout`.
+*   Se `timeout` è scaduto:
+    *   La *valutazione* `elected` viene rimossa dalla lista `evaluation_list`.
+    *   Il membro `elected` viene azzerato.
+    *   Il membro `status` torna a `PENDING`.
+    *   Il membro `timeout` resta immutato.
     *   Il modulo Migrations ricomincia dalla terza fase: cioè si trova a dover eleggere la migliore fra le soluzioni
-        collegate a questa.
+        presenti ora in `evaluation_list`.
 *   Altrimenti:
     *   Risponde alla richiesta del client con l'eccezione AskAgainError.
 
-Altrimenti, se `v` è nello stato *scartata, da comunicare* il modulo Migrations fa queste operazioni:
+Altrimenti, se lo `status` è `NOTIFIED` il modulo Migrations fa queste operazioni:
 
-*   La *valutazione* `v` viene rimossa dall'elenco.
-*   Cicla fra le *valutazioni* collegate e se ne trova qualcuna il cui `timeout` è scaduto la rimuove dall'elenco.  
-    Le scadenze dovrebbero giungere tutte insieme, quindi in pratica svuota l'elenco.
+*   La *valutazione* `v` viene rimossa dalla lista `evaluation_list`.
+*   Se `timeout` è scaduto svuota la lista `evaluation_list`.
 *   Aggiorna la memoria condivisa di tutta la rete.
 *   Risponde alla richiesta del client con l'eccezione IgnoreNetworkError.
 
@@ -459,7 +448,8 @@ che come abbiamo detto può essere calcolata dal modulo Migrations esclusivament
 
 La quinta fase inizia quando un singolo nodo di *G*, assumiamo sia il nodo *n*, riceve l'autorizzazione
 dal Coordinator di *G* di tentare l'ingresso in *J* tramite il suo vicino *v* con il suo g-nodo *g* di livello
-*lvl*. Anche qui, il valore *lvl* è ricevuto dal nodo *n* come membro di una istanza di `EvaluateEnterResult` dalla chiamata
+*lvl* = `first_ask_lvl`.  
+Anche qui, il valore `first_ask_lvl` è ricevuto dal nodo *n* come membro di una istanza di `EvaluateEnterResult` dalla chiamata
 del metodo `evaluate_enter` sul modulo Coordinator.
 
 Ora il modulo Migrations nel nodo *n* vuole chiamare il metodo `begin_enter` del modulo Migrations nel nodo Coordinator del
