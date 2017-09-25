@@ -20,6 +20,7 @@
     1.  [Esecuzione della migration-path](#Strategia_ingresso_Esecuzione_migration_path)
     1.  [Algoritmo di esecuzione](#Strategia_ingresso_Algoritmo_esecuzione)
 1.  [Risoluzione di uno split di g-nodo](#Split_gnodo)
+1.  [Classe MigrationsMemory](#Class_MigrationsMemory)
 
 ## <a name="Ruolo_Migrations"></a>Il ruolo del modulo Migrations
 
@@ -305,6 +306,9 @@ A questo punto queste informazioni devono essere memorizzate nella memoria condi
 la *valutazione* come elemento di una lista nel membro `evaluation_list`; il livello con cui tentare
 inizialmente nel membro `first_ask_lvl`; la scadenza nel membro `timeout`; lo stato nel membro `status`.
 
+La memoria condivisa della rete (o più genericamente di un g-nodo) di pertinenza del modulo Migrations
+è una istanza della classe `MigrationsMemory`. L'elenco dei suoi campi è riportato in seguito [qui](#Class_MigrationsMemory).
+
 #### <a name="Accesso_memoria_condivisa"></a>Accesso alla memoria condivisa
 
 Abbiamo già detto che il modulo Migrations può fare in modo che venga richiamato un metodo nel modulo Coordinator, pur non
@@ -501,20 +505,28 @@ nodo che porta avanti l'ingresso di *g* in blocco in una nuova rete.
 
 Il modulo Migrations nel nodo Coordinator di *g* accede alla memoria condivisa di *g* e
 verifica che non sia in corso un'altra operazione di ingresso di *g* in un'altra rete; e allo stesso
-tempo memorizza che ora è in corso questa operazione.  
+tempo memorizza che ora è in corso questa operazione e gli assegna un tempo limite per il suo
+completamento. **TODO** quanto? deve permettere il completamento della ricerca della migration-path
+nella rete *J* in cui stiamo entrando.  
 Chiamiamo questa operazione "autorizzazione esclusiva a procedere".
-Nella memorizzazione deve essere incluso un timer. Scaduto questo timer l'operazione va considerata abortita.
+
+Nella memoria condivisa del g-nodo *g* di pertinenza del modulo Migrations, cioè nell'istanza di
+`MigrationsMemory` posta nel membro `migrations_memory` dell'istanza di `CoordGnodeMemory` associata
+a *g*, il membro `Timer? begin_enter_timeout` è *null* se non è in corso una operazione di ingresso
+di *g*. Se invece è valorizzato significa che è stata avviata una operazione di ingresso riguardante il
+g-nodo *g*. Ma se il timer è scaduto l'operazione va considerata abortita.  
+Quindi, se questo valore non è *null* e non è scaduto allora l'autorizzazione esclusiva non è riuscita.
+Altrimenti il valore viene impostato con la nuova scadenza, viene aggiornata la memoria condivisa del g-nodo
+e l'autorizzazione esclusiva è riuscita.
 
 Se l'autorizzazione esclusiva non riesce, allora il metodo `begin_enter` del modulo Migrations
 rilancia l'eccezione AlreadyEnteringError (attraverso una apposita istanza di BeginEnterResult)
 che dovrà essere gestita nel nodo *n*.
 
 Se, invece, l'autorizzazione esclusiva riesce, allora il metodo `begin_enter` del modulo Migrations nel nodo
-Coordinator del g-nodo *g* avvia una tasklet su cui procedere, mentre risponde positivamente al nodo *n*
+Coordinator del g-nodo *g* risponde positivamente al nodo *n*
 (attraverso una apposita istanza di BeginEnterResult) permettendogli di proseguire con le operazioni di
 ingresso di *g* in *J*.
-
-Nella nuova tasklet... **TODO**
 
 ### <a name="Fusione_reti_fase6"></a>Sesta fase - richiesta della prenotazione di un posto
 
@@ -1615,4 +1627,20 @@ del modulo Migrations, bensì del suo utilizzatore. Quindi compito dei metodi `p
 ## <a name="Split_gnodo"></a>Risoluzione di uno split di g-nodo
 
 **TODO**
+
+## <a name="Class_MigrationsMemory"></a>Classe MigrationsMemory
+
+La classe `MigrationsMemory` è serializzabile. È usata una sua istanza per rappresentare la
+memoria condivisa di un g-nodo di pertinenza del modulo Migrations.
+
+I suoi membri sono:
+
+*   `List<EvaluateEnterEvaluation> evaluate_enter_evaluation_list` - Lista di valutazioni.
+    Può essere vuota, se non si sta valutando alcun ingresso.
+*   `int? evaluate_enter_first_ask_lvl`
+*   `Timer? evaluate_enter_timeout`
+*   `EvaluationStatus? evaluate_enter_status`
+*   `EvaluateEnterEvaluation? evaluate_enter_elected`
+*   `Timer? begin_enter_timeout`
+
 
