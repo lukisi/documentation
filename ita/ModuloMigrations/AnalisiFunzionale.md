@@ -69,7 +69,7 @@ Indichiamo con *G = (V, E)* il grafo di una rete con i suoi vertici e archi, cio
 e i collegamenti fra di essi.
 
 La rete ha una topologia gerarchica. Indichiamo con *levels* il numero di livelli di questa gerarchia
-e con *gsizes(i)* il numero di posizioni *reali* dentro il livello *i*, con 0 ≤ *i* ﹤ *levels*.
+e con *gsizes(i)* il numero di posizioni *reali* al livello *i* dentro un g-nodo di livello *i* + 1, con 0 ≤ *i* ﹤ *levels*.
 
 Sappiamo che un nodo *x* ha indirizzo *x<sub>0</sub>·x<sub>1</sub>·...·x<sub>levels-1</sub>*.
 
@@ -282,7 +282,7 @@ Bisogna individuare un livello a cui cercare di far entrare un g-nodo di *n* den
 Sicuramente il primo tentativo sarà di entrare in blocco. Cioè con il livello più piccolo tale che la rete *G* è
 costituita da un solo g-nodo, cioè `max_lvl`.
 
-Però se abbiamo `max_lvl = levels` allora possiamo tentare al massimo con `levels - 1`. Invece se abbiamo
+Però se abbiamo `max_lvl = levels` allora possiamo tentare al massimo con `levels - 1`. Invece se
 abbiamo `max_lvl < min_lvl` allora dobbiamo tentare con `min_lvl`.
 
 Chiamiamo `first_ask_lvl` il livello del g-nodo con cui faremo il primo tentativo. Vedremo in seguito che se questo
@@ -408,7 +408,10 @@ Le successive richieste saranno gestite nella quarta fase.
 Quando arriva una richiesta `req` di ingresso in *J* il modulo Migrations nel nodo Coordinator di *G* si avvede che si trova
 nella quarta fase perché nella memoria condivisa di tutta la rete lo `status` è `TO_BE_NOTIFIED` o `NOTIFIED`.
 
-Sia `v` la valutazione data a `req`.
+Sia `v` la valutazione data a `req`.  
+Può essere che `v` è stata recuperata da `evaluation_list`, oppure non c'era ed è stata calcolata
+proprio ora. In quest'ultimo caso il modulo la aggiunge a `evaluation_list` e aggiorna la memoria
+condivisa.
 
 Se lo `status` è `TO_BE_NOTIFIED` e la valutazione `v` è proprio `elected`
 allora il modulo Migrations nel nodo Coordinator di *G* fa queste operazioni:
@@ -444,12 +447,16 @@ rete tramite il diretto vicino *v* per un certo tempo.
 Questo tempo potrebbe essere un multiplo (diciamo 20 volte tanto) di quello calcolato come `global_timeout`,
 che come abbiamo detto può essere calcolata dal modulo Migrations esclusivamente sulla base del numero di singoli nodi presenti in *G*.
 
+**Nota**: Il nodo Coordinator della rete *G* deve valutare una richiesta `EvaluateEnterData` alla
+volta. Ciò significa che l'implementazione del metodo `evaluate_enter` del modulo Migrations deve acquisire
+un *lock* prima di iniziare e rilasciarlo prima di rispondere.
+
 ### <a name="Fusione_reti_fase5"></a>Quinta fase - comunicazione con il g-nodo entrante
 
 La quinta fase inizia quando un singolo nodo di *G*, assumiamo sia il nodo *n*, riceve l'autorizzazione
 dal Coordinator di *G* di tentare l'ingresso in *J* tramite il suo vicino *v* con il suo g-nodo *g* di livello
 *lvl* = `first_ask_lvl`.  
-Anche qui, il valore `first_ask_lvl` è ricevuto dal nodo *n* come membro di una istanza di `EvaluateEnterResult` dalla chiamata
+Ricordiamo che il valore `first_ask_lvl` è ricevuto dal nodo *n* come membro di una istanza di `EvaluateEnterResult` dalla chiamata
 del metodo `evaluate_enter` sul modulo Coordinator.
 
 Ora il modulo Migrations nel nodo *n* vuole chiamare il metodo `begin_enter` del modulo Migrations nel nodo Coordinator del
