@@ -453,7 +453,7 @@ che come abbiamo detto può essere calcolata dal modulo Migrations esclusivament
 
 **Nota**: Il nodo Coordinator della rete *G* deve valutare una richiesta `EvaluateEnterData` alla
 volta. Ciò significa che l'implementazione del metodo `evaluate_enter` del modulo Migrations deve acquisire
-un *lock* prima di iniziare e rilasciarlo prima di rispondere.
+un *lock* (nel nodo corrente) prima di iniziare e rilasciarlo prima di rispondere.
 
 ### <a name="Fusione_reti_fase5"></a>Quinta fase - comunicazione con il g-nodo entrante
 
@@ -535,7 +535,9 @@ suo vicino *v* la prenotazione di un posto per *g* in *J*.
 
 Il modulo Migrations nel nodo *n* chiede al modulo Migrations nel nodo *v* di trovare una migration-path e di riservare
 un posto per *g* (cioè per il g-nodo di livello *lvl* a cui appartiente *n*, con 0 ≤ *lvl* ﹤ *levels*) dentro *l'attuale* g-nodo
-di *v* di livello *lvl+1* o superiore.
+di *v* di livello *lvl+1* o superiore.  
+Questo lo fa con il metodo remoto `search_migration_path` la cui firma è:  
+`EntryData search_migration_path(int lvl) throws NoMigrationPathFoundError, MigrationPathExecuteFailureError`  
 
 Il modulo Migrations nel nodo *v* cerca la shortest migration-path come descritto [qui](#Strategia_ingresso).
 
@@ -581,7 +583,8 @@ Va ricordato che *v* ora potrebbe anche avere una posizione *virtuale* al livell
 cioè essere una identità *di connettività* ai livelli da `host_gnode_level` (fino a un altro livello).
 Ma questo sicuramente non cambia le sue conoscenze ai livelli superiori.
 
-Il nodo *v* comunica al nodo *n* i dettagli per fare ingresso nel suo g-nodo nel posto che si è appena liberato.
+Il nodo *v* comunica al nodo *n* i dettagli per fare ingresso nel suo g-nodo nel posto che si è appena liberato.  
+La classe `EntryData` che il metodo remoto `search_migration_path` restituisce contiene questi campi:
 
 *   `List<int> pos` - Posizioni ai livelli da `host_gnode_level` - 1 a `levels`.
 *   `List<int> elderships` - Anzianità ai livelli da `host_gnode_level` - 1 a `levels`.

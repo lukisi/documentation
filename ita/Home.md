@@ -72,6 +72,7 @@ Il software si compone dei moduli seguenti:
     *   [Dettagli Tecnici](ModuloCoordinator/DettagliTecnici.md)
 *   Migrations
     *   [Analisi funzionale](ModuloMigrations/AnalisiFunzionale.md)
+    *   [Dettagli Tecnici](ModuloMigrations/DettagliTecnici.md)
 
 Per giungere ad una corretta definizione delle relazioni che il demone ntkd deve avere con i
 singoli moduli tra loro indipendenti, si è realizzato prima un programma *proof-of-concept* per
