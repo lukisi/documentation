@@ -4,7 +4,13 @@
 
 ## <a name="Operazioni_arco_identita"></a>Operazioni relative ad un arco-identità
 
-Il modulo migrations, quando aggiunge un arco-identità, avvia una nuova tasklet. In essa eseguirà
+Il modulo Migrations inizia le sue attività relativamente ad una certa identità nel sistema.
+Cioè una istanza di `MigrationsManager` viene costruita quando si crea una identità nel
+sistema e a questa viene associata.  
+L'utilizzatore del modulo Migrations comunica poi a questa istanza di `MigrationsManager` la
+nascita e la rimozione di ogni arco-identità associato a quella identità nel sistema.
+
+Il modulo Migrations, quando aggiunge un arco-identità, avvia una nuova tasklet. In essa eseguirà
 tutte le operazioni relative a quell'arco-identità. Quando rimuove un arco-identità abortisce
 la tasklet relativa.
 
@@ -79,10 +85,24 @@ Se invece il nuovo valore di `ask_lvl` non è minore di 0, allora ripete dall'in
 esecuzione dell'ingresso al livello `ask_lvl`, ripartendo dalla chiamata di `begin_enter`.
 
 Se invece il metodo remoto `search_migration_path(ask_lvl)` non rilancia eccezioni, allora la tasklet
-riceve una istanza di `EntryData` con le informazioni necessarie all'ingresso del suo g-nodo di
+riceve una istanza di `EntryData entry_data` con le informazioni necessarie all'ingresso del suo g-nodo di
 livello `ask_lvl` nell'altra rete.
 
+Ora la tasklet inventa un identificativo `migration_id`. Poi fa uso della collaborazione con il modulo
+Coordinator per avviare una *propagazione con ritorno* a tutti i singoli nodi del suo g-nodo di
+livello `ask_lvl`. Essi avviano la prima parte delle operazioni di duplicazione dell'identità usando
+l'identificativo `migration_id` comunicato dalla nostra tasklet.
 
+La tasklet di nuovo fa uso della collaborazione con il modulo Coordinator per avviare una *propagazione senza ritorno*
+a tutti i singoli nodi del suo g-nodo di livello `ask_lvl`. Essi avviano la seconda parte delle operazioni
+di duplicazione dell'identità e la costruzione di un g-nodo isomorfo dentro la nuova rete.  
+Ricordiamo che in questa operazione non diamo nessuna importanza al mantenimento della connettività
+interna dei g-nodi della vecchia rete: cioè le precedenti identità vengono dismesse immediatamente senza
+dover assumere una posizione *di connettività*.
 
-**TODO**
+Le informazioni che vanno comunicate ai singoli nodi in questa propagazione sono l'identificativo `migration_id`
+e quelle contenute in `entry_data`.
+
+Dopo aver dato il via alla *propagazione senza ritorno* la tasklet fa in modo che nella sua stessa
+identità venga operata questa migrazione. Poi, essendo la sua identità destinata a venire dismessa, termina.
 
