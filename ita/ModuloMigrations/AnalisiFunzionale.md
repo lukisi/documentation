@@ -1629,6 +1629,18 @@ del modulo Migrations, bensì del suo utilizzatore. Quindi compito dei metodi `p
 
 ## <a name="Split_gnodo"></a>Risoluzione di uno split di g-nodo
 
+Quando un g-nodo *g* di livello *l* si "splitta" si formano diverse isole. Quelle che non hanno
+dentro di sé il nodo che in precedenza era il più anziano, cioè il nodo che ha dato il suo fingerprint
+al g-nodo *g*, dovranno considerarsi staccate dalla rete.
+
+Sia *g'* una di queste isole di livello *l*. Ad accorgersi di questa situazione è un border-nodo *n*
+che non appartiene a *g'*, che è diretto vicino di un border-nodo *v* che appartiene a *g'*. Precisamente,
+se ne accorge il modulo Qspn di *n*, il quale emette un segnale.
+
+L'utilizzatore del modulo in risposta a questo segnale chiama il metodo `signal_split` del modulo Migrations
+indicando l'arco-identità su cui comunicare. Il modulo Migrations in esso chiama il metodo remoto
+`you_have_splitted` su quell'arco-identità indicando il livello di *l* dello split.
+
 **TODO**
 
 ## <a name="Class_MigrationsMemory"></a>Classe MigrationsMemory
