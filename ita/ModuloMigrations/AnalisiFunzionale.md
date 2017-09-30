@@ -9,7 +9,6 @@
     1.  [Quinta fase - comunicazione con il g-nodo entrante](#Fusione_reti_fase5)
     1.  [Sesta fase - richiesta della prenotazione di un posto](#Fusione_reti_fase6)
     1.  [Prenotazione riuscita: Settima fase - ingresso](#Fusione_reti_fase7a)
-    1.  [Prenotazione riuscita: Ottava fase - TODO](#Fusione_reti_fase8a)
     1.  [Prenotazione fallita: Settima fase - annullamento al g-nodo entrante](#Fusione_reti_fase7b)
 1.  [Strategia di ingresso](#Strategia_ingresso)
     1.  [Definizione della migration-path](#Strategia_ingresso_Definizione_migration_path)
@@ -591,11 +590,62 @@ La classe `EntryData` che il metodo remoto `search_migration_path` restituisce c
 
 ### <a name="Fusione_reti_fase7a"></a>Prenotazione riuscita: Settima fase - ingresso
 
-**TODO** dettagli
+Questa fase inizia quando il nodo *n* riceve l'istanza di `EntryData` dal metodo remoto `search_migration_path`
+che aveva chiamato sul nodo *v* per (trovare una migration-path e) riservare un posto per il suo g-nodo *g* di
+livello *lvl*.
 
-### <a name="Fusione_reti_fase8a"></a>Prenotazione riuscita: Ottava fase - TODO
+Ora il modulo Migrations nel nodo *n* vuole chiamare il metodo `completed_enter` del modulo Migrations nel nodo Coordinator del
+g-nodo *g*.
 
-**TODO**
+Prima il modulo Migrations del nodo *n* prepara una nuova struttura dati con le informazioni che servono
+a questo metodo istanziando un `CompletedEnterData completed_enter_data`.  
+La classe CompletedEnterData è definita nel modulo Migrations. Si tratta di una classe serializzabile. I membri
+di questa classe sono:
+
+*   nessuno?
+
+Poi il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
+metodo proxy `completed_enter`.  
+A questo metodo viene passato il livello *lvl* e un `Object completed_enter_data`.
+La reale classe che implementa questa struttura dati non è infatti nota al modulo Coordinator. Questi sa solo
+che è serializzabile.
+
+Grazie ai meccanismi del modulo Coordinator ora nel nodo Coordinator del g-nodo *g* viene chiamato
+dallo stesso modulo Coordinator il metodo `completed_enter` del modulo Migrations. E questi riceve come argomento,
+oltre alla struttura dati `completed_enter_data`, anche l'indirizzo di *n*, `List<int> client_address`.
+
+Il valore che verrà restituito dal metodo `completed_enter` del modulo Migrations è una istanza della classe
+serializzabile `CompletedEnterResult` definita nel modulo Migrations.  
+La classe `CompletedEnterResult` è in grado di rappresentare i possibili esiti del metodo, cioè
+`void`.
+
+Vediamo cosa avviene nel metodo `completed_enter` del modulo Migrations eseguito sul nodo Coordinator del g-nodo *g*.
+
+Il nodo Coordinator del g-nodo *g* accede in scrittura alla memoria condivisa di *g*:
+il membro `Timer? begin_enter_timeout` viene posto a *null*, a segnalare che non è più
+in corso una operazione di ingresso di *g*.
+
+Poi il metodo `completed_enter` del modulo Migrations nel nodo Coordinator del g-nodo *g* termina.
+Il nodo *n* riceve la relativa istanza di `CompletedEnterResult`.
+
+Ora il nodo *n* prosegue con l'ingresso vero e proprio. In modo simile a quanto dettagliato nella
+trattazione dell'esecuzione della migration-path.
+
+Per prima cosa il nodo *n* inventa un identificativo `migration_id`.  
+Attraverso una *propagazione con ritorno* fa in modo che tutti i singoli nodi di *g* ricevano questa
+informazione e avviino la prima parte delle operazioni di duplicazione dell'identità.
+
+In `EntryData` abbiamo:
+
+*   `List<int> pos` - Posizioni ai livelli da `host_gnode_level` - 1 a `levels`.
+*   `List<int> elderships` - Anzianità ai livelli da `host_gnode_level` - 1 a `levels`.
+
+Sappiamo che `host_gnode_level` ≥ *lvl* + 1.
+
+Il nodo *n* attraverso una *propagazione senza ritorno* fa in modo che queste informazioni giungano a tutti
+i singoli nodi di *g*. Questi avviano la seconda parte delle operazioni di duplicazione dell'identità.
+Il g-nodo *g* si duplica: viene creato il g-nodo isomorfo *g'* che entra nella nuova rete. Invece il vecchio *g*
+viene dismesso.
 
 ### <a name="Fusione_reti_fase7b"></a>Prenotazione fallita: Settima fase - annullamento al g-nodo entrante
 
