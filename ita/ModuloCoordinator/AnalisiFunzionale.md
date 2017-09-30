@@ -75,7 +75,7 @@ i record del database distribuito realizzato dal servizio Coordinator.
 Il modulo Coordinator quindi mette a disposizione dei metodi per leggere o scrivere in questa memoria
 garantendo la coerenza del dato nel database distribuito.
 
-Si vedranno nella trattazione i metodi `evaluate_enter`, `begin_enter`, `completed_enter`,
+Si vedranno nella trattazione i metodi `evaluate_enter`, `begin_enter`, `completed_enter`, `abort_enter`,
 `get_migrations_memory` e `set_migrations_memory`.
 
 #### Esecuzioni su tutti i nodi di un g-nodo
@@ -358,6 +358,34 @@ Essa ha il solo membro:
 
 *   `Object completed_enter_result`.
 
+#### <a name="Abortito_ingresso"></a>Abortito ingresso in altra rete
+
+Una richiesta/segnalazione *r* di tipo AbortEnterRequest fatta al nodo Coordinator di *g* dal singolo nodo *n*
+(il client del servizio) indica che sono state abortite le operazioni di ingresso del g-nodo *g* in una diversa rete.  
+Questa richiesta non è di nessuno dei tipi classici: *insert*, *read-only*, *update*, *replica-valore*,
+*replica-cancellazione*.
+
+I membri di *r* sono:
+
+*   `lvl` = livello di *g*.
+*   `Object abort_enter_data` = un oggetto serializzabile la cui classe è nota al delegato IAbortEnterHandler.  
+    Contiene informazioni che non sono di pertinenza del modulo Coordinator.
+
+Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordinator di *g*, perché esso
+era stato interpellata all'avvio delle operazioni (con la richiesta).
+
+Per rispondere, non essendo questa materia di competenza del modulo Coordinator, viene utilizzato
+un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IAbortEnterHandler
+che ha il metodo `abort_enter`.
+
+La risposta ottenuta dal delegato contiene informazioni che non sono di pertinenza del modulo Coordinator.
+Si tratta di una istanza di Object che sappiamo essere serializzabile.
+
+Il risultato va restituito così com'è al client del servizio attraverso una istanza di AbortEnterResponse.  
+Essa ha il solo membro:
+
+*   `Object abort_enter_result`.
+
 #### <a name="Get_migrations_memory"></a>Lettura memoria di pertinenza del modulo Migrations
 
 Le richieste esposte sopra (EvaluateEnter, BeginEnter, CompletedEnter) fanno sì che il modulo Migrations in
@@ -560,6 +588,9 @@ implementato dall'utilizzatore del modulo richiama il metodo `xyz` nel modulo Mi
 *   `Object completed_enter(int lvl, Object completed_enter_data)`.  
     L'esecuzione del metodo `completed_enter` del modulo Migrations nel nodo Coordinator segnala
     il completamento dell'ingresso.
+*   `Object abort_enter(int lvl, Object abort_enter_data)`.  
+    L'esecuzione del metodo `abort_enter` del modulo Migrations nel nodo Coordinator segnala
+    che il tentativo di ingresso è stato abortito.
 
 Il modulo Coordinator fornisce inoltre nella classe CoordinatorManager metodi di accesso alla
 memoria condivisa di pertinenza del modulo Migrations.
@@ -690,6 +721,37 @@ CompletedEnterResponse. Essa contiene:
 
 Questo Object serializzabile è quello che il metodo `completed_enter` del CoordinatorClient restituisce al chiamante.  
 Ed è quello che il metodo `completed_enter` del modulo Coordinator restituisce al chiamante.
+
+#### Metodo abort_enter
+
+Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `abort_enter` nel nodo Coordinator
+del suo g-nodo *g* di livello *lvl*, richiama il metodo `abort_enter` del modulo Coordinator.
+
+Gli argomenti di questo metodo sono:
+
+*   `int lvl` - il livello del g-nodo il cui Coordinator deve essere interpellato.
+*   `Object abort_enter_data` - la struttura dati serializzabile che contiene l'input del metodo
+    da eseguire nel nodo Coordinator.
+
+L'esecuzione di `abort_enter` del modulo Coordinator consiste in questo:
+
+Viene preparato un client del servizio Coordinator. Cioè una istanza di CoordinatorClient.
+
+Su questo CoordinatorClient viene chiamato il metodo `abort_enter` passando tutti gli argomenti ricevuti dal
+metodo `abort_enter` del modulo Coordinator.
+
+Il CoordinatorClient prepara una richiesta *r* = [AbortEnterRequest](#Abortito_ingresso)
+che comprende i dati di cui sopra: sia i dati di input, sia il livello cioè la chiave da usare nel
+database distribuito del servizio Coordinator.
+
+Poi il CoordinatorClient invia la richiesta *r* al servente per la chiave *lvl* e ottiene una risposta che è una istanza di
+AbortEnterResponse. Essa contiene:
+
+*   `Object abort_enter_result` - la struttura dati serializzabile che contiene l'output del metodo
+    eseguito nel nodo Coordinator.
+
+Questo Object serializzabile è quello che il metodo `abort_enter` del CoordinatorClient restituisce al chiamante.  
+Ed è quello che il metodo `abort_enter` del modulo Coordinator restituisce al chiamante.
 
 #### Metodi get_migrations_memory e set_migrations_memory
 
@@ -845,6 +907,9 @@ I metodi della classe CoordinatorClient sono:
 *   `Object completed_enter(int lvl, Object completed_enter_data)` -
     chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
     Vedi la relativa [richiesta](#Confermato_ingresso).
+*   `Object abort_enter(int lvl, Object abort_enter_data)` -
+    chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
+    Vedi la relativa [richiesta](#Abortito_ingresso).
 *   `Object get_migrations_memory(int lvl)` - recupera la porzione di dati di pertinenza
     del modulo Migrations nella memoria condivisa del g-nodo di livello *lvl*.  
     Vedi la relativa [richiesta](#Get_migrations_memory).
@@ -921,6 +986,18 @@ I metodi previsti dall'interfaccia ICompletedEnterHandler sono:
 
 *   `Object completed_enter(int lvl, Object completed_enter_data)`  
     Con questo metodo si richiama il metodo `completed_enter` del modulo Migrations. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).
+
+* * *
+
+L'interfaccia IAbortEnterHandler è definita dal modulo Coordinator.  
+Una istanza di tale interfaccia viene passata al modulo Coordinator nel costruttore. Di tale istanza viene
+usato il metodo `abort_enter` quando si riceve una richiesta AbortEnterRequest. L'oggetto restituito
+dal metodo serve al modulo per produrre l'istanza di AbortEnterResponse da restituire.
+
+I metodi previsti dall'interfaccia IAbortEnterHandler sono:
+
+*   `Object abort_enter(int lvl, Object abort_enter_data)`  
+    Con questo metodo si richiama il metodo `abort_enter` del modulo Migrations. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).
 
 ### <a name="Classi_Strutture">Strutture dati
 
