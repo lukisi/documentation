@@ -519,12 +519,13 @@ Altrimenti il valore viene impostato con la nuova scadenza, viene aggiornata la 
 e l'autorizzazione esclusiva è riuscita.
 
 Se l'autorizzazione esclusiva non riesce, allora il metodo `begin_enter` del modulo Migrations
-rilancia l'eccezione AlreadyEnteringError (attraverso una apposita istanza di BeginEnterResult)
-che dovrà essere gestita nel nodo *n*.
+rilancia l'eccezione `AlreadyEnteringError` attraverso una apposita istanza di `BeginEnterResult`.
+Il nodo *n* in questo caso desiste dal prendere l'iniziativa: sarà probabilmente un altro singolo nodo
+a coordinare un ingresso in altra rete.
 
 Se, invece, l'autorizzazione esclusiva riesce, allora il metodo `begin_enter` del modulo Migrations nel nodo
 Coordinator del g-nodo *g* risponde positivamente al nodo *n*
-(attraverso una apposita istanza di BeginEnterResult) permettendogli di proseguire con le operazioni di
+(attraverso una apposita istanza di `BeginEnterResult`) permettendogli di proseguire con le operazioni di
 ingresso di *g* in *J*.
 
 ### <a name="Fusione_reti_fase6"></a>Sesta fase - richiesta della prenotazione di un posto
@@ -649,7 +650,53 @@ viene dismesso.
 
 ### <a name="Fusione_reti_fase7b"></a>Prenotazione fallita: Settima fase - annullamento al g-nodo entrante
 
-**TODO**
+Questa fase si ha quando il nodo *n* riceve l'eccezione `NoMigrationPathFoundError` dal metodo remoto `search_migration_path`
+che aveva chiamato sul nodo *v* per (trovare una migration-path e) riservare un posto per il suo g-nodo *g* di
+livello *lvl*.  
+Significa che non è possibile far entrare il g-nodo *g* in blocco. E che si potrà tentare l'ingresso in blocco
+solo di un g-nodo di livello inferiore.
+
+Ora il modulo Migrations nel nodo *n* vuole chiamare il metodo `abort_enter` del modulo Migrations nel nodo Coordinator del
+g-nodo *g*.
+
+Prima il modulo Migrations del nodo *n* prepara una nuova struttura dati con le informazioni che servono
+a questo metodo istanziando un `AbortEnterData abort_enter_data`.  
+La classe AbortEnterData è definita nel modulo Migrations. Si tratta di una classe serializzabile. I membri
+di questa classe sono:
+
+*   nessuno?
+
+Poi il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
+metodo proxy `abort_enter`.  
+A questo metodo viene passato il livello *lvl* e un `Object abort_enter_data`.
+La reale classe che implementa questa struttura dati non è infatti nota al modulo Coordinator. Questi sa solo
+che è serializzabile.
+
+Grazie ai meccanismi del modulo Coordinator ora nel nodo Coordinator del g-nodo *g* viene chiamato
+dallo stesso modulo Coordinator il metodo `abort_enter` del modulo Migrations. E questi riceve come argomento,
+oltre alla struttura dati `abort_enter_data`, anche l'indirizzo di *n*, `List<int> client_address`.
+
+Il valore che verrà restituito dal metodo `abort_enter` del modulo Migrations è una istanza della classe
+serializzabile `AbortEnterResult` definita nel modulo Migrations.  
+La classe `AbortEnterResult` è in grado di rappresentare i possibili esiti del metodo, cioè
+`void`.
+
+Vediamo cosa avviene nel metodo `abort_enter` del modulo Migrations eseguito sul nodo Coordinator del g-nodo *g*.
+
+Il nodo Coordinator del g-nodo *g* accede in scrittura alla memoria condivisa di *g*:
+il membro `Timer? begin_enter_timeout` viene posto a *null*, a segnalare che non è più
+in corso una operazione di ingresso di *g*.
+
+Poi il metodo `abort_enter` del modulo Migrations nel nodo Coordinator del g-nodo *g* termina.
+Il nodo *n* riceve la relativa istanza di `AbortEnterResult`.
+
+Ora il nodo *n* decrementa di 1 il valore di *lvl*. Se adesso è minore di 0, allora non è proprio possibile
+entrare nell'altra rete. Il nodo *n* in questo caso desiste dal prendere l'iniziativa.
+
+Se invece il nuovo valore di *lvl* non è minore di 0, allora il nodo *n* potrà ripartire
+dalla quinta fase (comunicazione con il g-nodo entrante) con il nuovo valore di *lvl*. Cioè,
+considerando se stesso ancora come "eletto" a tentare l'ingresso in *J* per conto della rete *G*,
+riparte dalla chiamata di `begin_enter` con il nuovo valore di *lvl*.
 
 ## <a name="Strategia_ingresso"></a>Strategia di ingresso
 
