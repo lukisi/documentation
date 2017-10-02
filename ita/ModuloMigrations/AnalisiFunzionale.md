@@ -633,7 +633,7 @@ Ora il nodo *n* prosegue con l'ingresso vero e proprio. In modo simile a quanto 
 trattazione dell'esecuzione della migration-path.
 
 Per prima cosa il nodo *n* inventa un identificativo `migration_id`.  
-Attraverso una *propagazione con ritorno* fa in modo che tutti i singoli nodi di *g* ricevano questa
+Attraverso la *propagazione con ritorno* del metodo `prepare_migration` fa in modo che tutti i singoli nodi di *g* ricevano questa
 informazione e avviino la prima parte delle operazioni di duplicazione dell'identità.
 
 In `EntryData` abbiamo:
@@ -643,7 +643,7 @@ In `EntryData` abbiamo:
 
 Sappiamo che `host_gnode_level` ≥ *lvl* + 1.
 
-Il nodo *n* attraverso una *propagazione senza ritorno* fa in modo che queste informazioni giungano a tutti
+Il nodo *n* attraverso la *propagazione senza ritorno* del metodo `finish_migration` fa in modo che queste informazioni giungano a tutti
 i singoli nodi di *g*. Questi avviano la seconda parte delle operazioni di duplicazione dell'identità.
 Il g-nodo *g* si duplica: viene creato il g-nodo isomorfo *g'* che entra nella nuova rete. Invece il vecchio *g*
 viene dismesso.
@@ -1415,7 +1415,7 @@ che appartiene al g-nodo di livello *l* *𝛽<sub>i</sub>*, che appartiene al g-
 *p<sub>i</sub>*. Notiamo che nell'ultimo passo, cioè con *i* = 1, è possibile che lo stesso nodo
 *v* appartenga a *𝛽<sub>i</sub>*: in questo caso è lo stesso nodo *v* a fare le veci di *𝛽0<sub>i</sub>*.  
 Il nodo *v* passa al nodo *𝛽0<sub>i</sub>* il suo `migration_id`.  
-Il nodo *𝛽0<sub>i</sub>* attraverso una *propagazione con ritorno* fa in modo che
+Il nodo *𝛽0<sub>i</sub>* attraverso la *propagazione con ritorno* del metodo `prepare_migration` fa in modo che
 tutti i singoli nodi di *𝛽<sub>i</sub>* avviano la prima parte delle operazioni di duplicazione
 dell'identità. Quando questa è stata eseguita, *𝛽0<sub>i</sub>* lo comunica al nodo *v* che
 prosegue con il prossimo valore di *i*.
@@ -1433,7 +1433,7 @@ riservato un posto *reale*. Indichiamo con `final_mig_gnode_host_lvl` il livello
 sua anzianità. Questi valori sono stati salvati nei membri `host_lvl`, `real_new_pos` e
 `real_new_eldership` di Solution.  
 Il nodo *v* passa al nodo *𝛽0<sub>m-1</sub>* queste informazioni e il suo `migration_id`.  
-Il nodo *𝛽0<sub>m-1</sub>* attraverso una *propagazione senza ritorno* fa in modo che
+Il nodo *𝛽0<sub>m-1</sub>* attraverso la *propagazione senza ritorno* del metodo `finish_migration` fa in modo che
 queste informazioni giungano a tutti i singoli nodi di *𝛽<sub>m-1</sub>*. Questi avviano la seconda
 parte delle operazioni di duplicazione dell'identità.  
 Il g-nodo *𝛽<sub>m-1</sub>* si duplica: viene creato il g-nodo isomorfo *𝛽'<sub>m-1</sub>* che entra in *p<sub>m</sub>*
@@ -1460,7 +1460,7 @@ Sappiamo anche che intanto un border-g-nodo di livello *l* sta migrando da *p<su
 a *p<sub>i+2</sub>* e che la posizione che aveva in *p<sub>i+1</sub>* è `mig_gnode_new_pos`, ed è *reale*.
 Essa è stata salvata nel membro `previous_gnode_border_real_pos` di SolutionStep riferita al passo successivo.  
 Il nodo *v* passa al nodo *𝛽0<sub>i</sub>* queste informazioni e il suo `migration_id`.  
-Il nodo *𝛽0<sub>i</sub>* attraverso una *propagazione senza ritorno* fa in modo che
+Il nodo *𝛽0<sub>i</sub>* attraverso la *propagazione senza ritorno* del metodo `finish_migration` fa in modo che
 queste informazioni giungano a tutti i singoli nodi di *𝛽<sub>i</sub>*. Questi avviano la seconda
 parte delle operazioni di duplicazione dell'identità.  
 Il g-nodo *𝛽<sub>i</sub>* si duplica: viene creato il g-nodo isomorfo *𝛽'<sub>i</sub>* che entra in
@@ -1726,19 +1726,23 @@ del modulo Migrations, bensì del suo utilizzatore. Quindi compito dei metodi `p
 
 ## <a name="Split_gnodo"></a>Risoluzione di uno split di g-nodo
 
-Quando un g-nodo *g* di livello *l* si "splitta" si formano diverse isole. Quelle che non hanno
+Quando nella rete *G* un g-nodo *g* di livello *l* si "splitta" si formano diverse isole. Quelle che non hanno
 dentro di sé il nodo che in precedenza era il più anziano, cioè il nodo che ha dato il suo fingerprint
-al g-nodo *g*, dovranno considerarsi staccate dalla rete.
+al g-nodo *g*, dovranno considerarsi staccate dalla rete *G*.
 
 Sia *g'* una di queste isole di livello *l*. Ad accorgersi di questa situazione è un border-nodo *n*
 che non appartiene a *g'*, che è diretto vicino di un border-nodo *v* che appartiene a *g'*. Precisamente,
-se ne accorge il modulo Qspn di *n*, il quale emette un segnale.
+se ne accorge il modulo Qspn di *n*, il quale emette un determinato segnale.
 
 L'utilizzatore del modulo in risposta a questo segnale chiama il metodo `signal_split` del modulo Migrations
 indicando l'arco-identità su cui comunicare. Il modulo Migrations in esso chiama il metodo remoto
-`you_have_splitted` su quell'arco-identità indicando il livello di *l* dello split.
+`you_have_splitted` su quell'arco-identità indicando il livello *l* dello split.
 
-**TODO**
+Il nodo *v* in questo metodo si avvale del modulo Coordinator per la *propagazione senza ritorno* del
+metodo `we_have_splitted`. In questo metodo ogni singolo nodo del g-nodo *g'* emette il segnale `exit_network` con
+il quale si spinge l'utilizzatore del modulo a chiamare un determinato metodo del modulo Qspn. Con
+esso il nodo rimuove tutti i percorsi verso destinazioni esterne a *g'*. Quindi tutto il g-nodo *g'* diventa
+una rete a sè, separata dal resto di *G*.
 
 ## <a name="Class_MigrationsMemory"></a>Classe MigrationsMemory
 
@@ -1753,6 +1757,6 @@ I suoi membri sono:
 *   `Timer? evaluate_enter_timeout`
 *   `EvaluationStatus? evaluate_enter_status`
 *   `EvaluateEnterEvaluation? evaluate_enter_elected`
-*   `Timer? begin_enter_timeout`
-
+*   `Timer? begin_enter_timeout` - Scadenza per un tentativo in corso di fare ingresso in
+    blocco in un'altra rete. È *null* se nessun tentativo di questo tipo è in corso.
 

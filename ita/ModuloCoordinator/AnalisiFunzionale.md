@@ -101,7 +101,7 @@ Ogni singolo metodo di questi ha direttamente codificata in sé la tipologia, ci
 *senza* ritorno e nel primo caso come trattare il valore restituito da ogni singolo nodo e combinarlo
 col valore restituito dal delegato in questo nodo.
 
-Si vedranno nella trattazione i metodi `prepare_migration`, `finish_migration`.
+Si vedranno nella trattazione i metodi `prepare_migration`, `finish_migration`, `we_have_splitted`.
 
 #### Altre collaborazioni
 
@@ -617,6 +617,8 @@ implementato dall'utilizzatore del modulo richiama il metodo `xyz` nel modulo Mi
     prima parte della duplicazione del g-nodo.
 *   `finish_migration()`.  
     Propaga in tutto il g-nodo la richiesta di completare le operazioni di migrazione.
+*   `we_have_splitted()`.  
+    Propaga in tutto il g-nodo la richiesta di uscire dalla rete a causa di uno split.
 
 Il modulo Coordinator fornisce inoltre nella classe CoordinatorManager i seguenti metodi:
 
@@ -838,6 +840,45 @@ Altrimenti, il nodo memorizza `propagation_id` in `propagation_id_list`.
 Poi prepara uno stub di tipo broadcast per i suoi diretti vicini e su questo chiama il metodo remoto
 `execute_finish_migration`, che come abbiamo detto non attende alcuna risposta.
 Subito dopo, avvia una tasklet che subito chiama il delegato che come abbiamo detto richiama il metodo `finish_migration`
+nel modulo Migrations. Infine avvia una tasklet che rimuoverà `propagation_id` e nel frattempo
+restituisce il controllo al chiamante.
+
+#### Metodo we_have_splitted
+
+Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `void we_have_splitted` in tutti i singoli
+nodi del suo g-nodo *g* di livello *lvl*, richiama il metodo `void we_have_splitted` del modulo Coordinator.
+
+Gli argomenti di questo metodo sono:
+
+*   `int lvl` - il livello del g-nodo in cui il metodo va propagato.
+*   `Object we_have_splitted_data` - la struttura dati serializzabile che contiene l'input del metodo
+    da eseguire in tutti i nodi.
+
+L'esecuzione di `we_have_splitted` del modulo Coordinator consiste in questo:
+
+Il nodo prepara la tupla `TupleGNode tuple` del suo g-nodo di livello *lvl*. Prepara inoltre l'identificativo
+`int fp_id` del suo fingerprint di livello *lvl*. **TODO** Usando i metodi di ICoordinatorMap?  
+Prepara infine un valore random `int propagation_id` e lo memorizza anche in una lista `List<int> propagation_id_list`.
+
+Il nodo prepara uno stub di tipo broadcast per i suoi diretti vicini e su questo chiama il metodo remoto
+`void execute_we_have_splitted(tuple, fp_id, propagation_id, lvl, we_have_splitted_data)`. Tale metodo nella classe stub
+non attende alcuna risposta. Subito dopo, avvia una tasklet che subito chiama un delegato
+implementato dall'utilizzatore del modulo Coordinator che richiama il metodo `void we_have_splitted(lvl, we_have_splitted_data)` nel
+modulo Migrations. Infine avvia una tasklet che dopo aver atteso un tempo sicuro (2 minuti) rimuoverà
+`propagation_id` da `propagation_id_list`. Nel frattempo il metodo `we_have_splitted` del modulo Coordinator
+restituisce il controllo al chiamante.
+
+Ogni nodo che riceve la chiamata del metodo remoto `execute_we_have_splitted` del modulo Coordinator
+fa queste operazioni:
+
+Se il nodo non si riconosce come appartenente al gnodo indicato in `tuple` (e in `fp_id`) oppure se
+l'identificativo `propagation_id` è già presente nella sua lista `propagation_id_list`, allora il nodo
+non fa nulla e il metodo restituisce il controllo al chiamante.
+
+Altrimenti, il nodo memorizza `propagation_id` in `propagation_id_list`.
+Poi prepara uno stub di tipo broadcast per i suoi diretti vicini e su questo chiama il metodo remoto
+`execute_we_have_splitted`, che come abbiamo detto non attende alcuna risposta.
+Subito dopo, avvia una tasklet che subito chiama il delegato che come abbiamo detto richiama il metodo `we_have_splitted`
 nel modulo Migrations. Infine avvia una tasklet che rimuoverà `propagation_id` e nel frattempo
 restituisce il controllo al chiamante.
 
