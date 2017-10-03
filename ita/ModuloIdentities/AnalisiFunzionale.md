@@ -197,7 +197,7 @@ Può capitare anche che il modulo Identities in autonomia rimuova un arco. Avvie
 per via di un tentativo di comunicazione con un sistema vicino, che l'arco non è più funzionante. Questo
 evento è notificato all'utilizzatore del modulo con un segnale che esso può ascoltare.
 
-* * *
+### Duplicazione identità
 
 Ad un certo punto l'utilizzatore del modulo può richiedere al manager di realizzare la duplicazione di una
 sua identità a causa di una migrazione.
@@ -242,7 +242,7 @@ Al resto pensa il modulo Identities.
 Al termine delle operazioni, cioè al ritorno del metodo *add_identity*, l'utilizzatore del modulo viene portato
 a conoscenza dell'identificativo della nuova identità.
 
-* * *
+### Rimozione identità di connettività
 
 Ad un certo punto l'utilizzatore del modulo può richiedere al manager di rimuovere una sua identità *id<sub>j</sub>*.
 
@@ -397,7 +397,7 @@ Nella classe Identity vengono memorizzate le istanze delle classi dei moduli *di
 * * *
 
 La classe usata per l'identificativo di una identità, cioè NodeID, è una classe serializzabile definita nella
-libreria [Common](../Librerie/Common.md). Il modulo Neighborhood ha una dipendenza su questa libreria, quindi conosce tale classe.
+libreria [Common](../Librerie/Common.md). Il modulo Identities ha una dipendenza su questa libreria, quindi conosce tale classe.
 
 Il modulo Identities crea le istanze di questa classe relative alle identità di questo sistema.
 

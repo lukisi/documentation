@@ -11,6 +11,7 @@ moduli avranno una dipendenza comune.
 
 ## HCoord
 La classe HCoord è nota a questi moduli:
+
 *   Qspn
 *   PeerServices
 
@@ -20,8 +21,9 @@ nodo: livello e identificativo nel livello.
 
 ## NodeID
 La classe NodeID è nota a questi moduli:
+
+*   Identities
 *   Neighborhood
-*   ...
 
 È una classe serializzabile, cioè le cui istanze sono adatte al passaggio di dati a metodi remoti
 (vedi framework [ZCD](ZCD.md)). Una sua istanza contiene un intero a 32 bit che identifica, in modo

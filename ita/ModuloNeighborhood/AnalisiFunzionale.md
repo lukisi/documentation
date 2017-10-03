@@ -173,8 +173,8 @@ Abbiamo detto inoltre che fra i ruoli del modulo Neighborhood c'è quello di per
 dell'applicazione la comunicazione con altri nodi. Ora aggiungiamo che un particolare modulo può essere
 interessato a questo tipo di identificazione precisa della identità all'interno di un nodo. Un altro modulo,
 invece, potrebbe essere agnostico rispetto a queste identità, e voler semplicemente chiamare un metodo
-remoto su un particolare nodo. Chiamiamo il primo tipo un *modulo consapevole di identità* o *modulo di
-identità* o *identity-aware*. Il secondo tipo è un *modulo di nodo* o *whole-node*. Di norma in un modulo
+remoto su un particolare nodo. Chiamiamo il primo tipo un *modulo consapevole di identità* o *modulo di identità*
+o *identity-aware*. Il secondo tipo è un *modulo di nodo* o *whole-node*. Di norma in un modulo
 *di identità* c'è una classe di cui viene creata una specifica istanza per ogni *identità* che il nodo assume.
 
 Il modulo Neighborhood, lato client, deve saper produrre uno stub per ogni esigenza. Inoltre, lato server,
