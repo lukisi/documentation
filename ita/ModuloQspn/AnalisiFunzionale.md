@@ -14,7 +14,6 @@
     1.  [Nodi virtuali](#Nodi_virtuali)
         1.  [Al livello 0](#Nodi_virtuali_livello_0)
         1.  [Ai livelli superiori](#Nodi_virtuali_altri_livelli)
-        1.  [Considerazioni varie](#Nodi_virtuali_considerazioni)
     1.  [Rimozione dell'indirizzo di connettività di un g-nodo dopo la sua migrazione](#Rimozione_indirizzo_connettivita)
         1.  [Implementazione](#Rimozione_indirizzo_connettivita_implementazione)
 1.  [Requisiti](#requisiti)
@@ -23,7 +22,7 @@
 
 ## <a name="Terminologia"></a>Terminologia
 
-Sappiamo che il programma che usa il modulo Qspn è in esecuzione su un sistema. In tale sistema possono esistere
+Sappiamo che il programma che usa il modulo Qspn è in esecuzione su un *sistema*. In tale sistema possono esistere
 diverse *identità*, ognuna delle quali costituisce una singola entità della rete Netsukuku, detta anche *nodo del grafo*
 o più brevemente *nodo*.
 
@@ -35,7 +34,8 @@ Per ogni identità che esiste nel sistema avremo quindi una istanza del modulo Q
 Inoltre, quando il modulo si interfaccia con il medesimo modulo nei sistemi vicini, lo fa sempre identificando
 una particolare identità nel suo sistema e una particolare identità nel sistema vicino.
 
-Per questo nel presente documento si farà principalmente riferimento ai *nodi* della rete.
+Per questo nel presente documento si farà principalmente riferimento ai *nodi* della rete. Quando si inizierà
+a trattare l'argomento dei nodi virtuali questa distinzione sarà più chiara.
 
 ## <a name="Ruolo_del_modulo"></a>Ruolo del modulo
 
@@ -422,43 +422,42 @@ del g-nodo *h* in cui entrare, sia la scelta dell'identificativo in *h*, sia la 
 in *g*, sia di conseguenza la composizione dei due indirizzi Netsukuku uno in *g* e uno in *h*, sono tutte operazioni
 di competenza dell'utilizzatore del modulo QSPN. Al modulo QSPN tutte queste informazioni vengono date dall'esterno.
 
+Invece di continuare a parlare di un nodo *n* che ha assunto un identificativo in *h* e inoltre ha mantenuto
+un identificativo *virtuale* in *g*, facciamo una astrazione e consideriamo che nello stesso *sistema* in cui
+esisteva il nodo *n* ora esiste anche il nodo *n'*. Il nodo *n'* ha l'indirizzo con un identificativo *reale* in *h* mentre
+il nodo *n* ha l'indirizzo con un identificativo *virtuale* in *g*.
+
 Avendo assunto tale identificativo *virtuale*, il nodo *n* ha reso libero il suo precedente identificativo *reale* in
-*g*: probabilmente era proprio questo l'obiettivo della sua migrazione. Nello stesso tempo questo permette a *g* e ai
-suoi g-nodi superiori fino a *U(g)* di non violare il vincolo di connettività interna. Infatti il nodo *n*, come membro
-di *g*, continua a partecipare alle trasmissioni di ETP all'interno di *U(g)* ed è in grado di inoltrare correttamente
+*g*: probabilmente era proprio questo l'obiettivo della sua migrazione. Nello stesso tempo, la persistenza del nodo *n*
+all'interno di *g* con il nuovo identificativo *virtuale*, permette a *g* e ai
+suoi g-nodi superiori fino a *U(g)* di non violare il vincolo di connettività interna. Infatti il nodo *n*
+continua a partecipare alle trasmissioni di ETP all'interno di *U(g)* ed è in grado di inoltrare correttamente
 pacchetti IP verso destinazioni interne a *U(g)*.
 
-Il nodo *n*, come membro di *g*, ha ora un indirizzo con la componente al livello 0 *virtuale*. Usiamo questo aggettivo
+Il nodo *n* ha ora un indirizzo con la componente al livello 0 *virtuale*. Usiamo questo aggettivo
 anche per l'indirizzo, diciamo che ha un indirizzo *virtuale* al livello 0.
 
 Si noti che il modulo QSPN al suo interno non ha alcuna difficoltà a gestire tuple *n<sub>0</sub>·...·n<sub>l-1</sub>*
 i cui membri non rispettano il limite *gsize(i)*.
 
-Riguardo le mansioni svolte dal modulo QSPN, il nodo *n* adotta un comportamento lievemente differente come membro di
-*g* rispetto a quello che avrebbe normalmente e che adotta come membro di *h*. La differenza sta nel fatto che *n* come
-membro di *g* non mantiene nessun arco con nodi esterni al g-nodo *U(g)*. Questo comportamento è a tutti gli effetti
-di pertinenza del modulo QSPN. Il modulo QSPN conosceva dall'inizio tutti gli archi del nodo in *g* e sarà lui a scegliere
+Riguardo le mansioni svolte dal modulo QSPN, il nodo *n* adotta un comportamento lievemente differente
+rispetto a quello che adotta il nodo *n'*. La differenza sta nel fatto che *n*
+non mantiene nessun arco con nodi esterni al g-nodo *U(g)*. Questo comportamento è a tutti gli effetti
+di pertinenza del modulo QSPN. Il modulo QSPN conosceva dall'inizio tutti gli archi del nodo *n* in *g* e sarà lui a scegliere
 in seguito (come vedremo a breve) quali rimuovere.
 
-Diciamo che l'indirizzo che il nodo *n* detiene in *g*, oltre ad essere *virtuale* al livello 0, è anche
+Diciamo che il nodo *n* è
 *di supporto alla connettività interna* ai livelli da 1 a *j*, nel senso che supporta la connettività interna dei
-suoi g-nodi di livello tra 1 e *j*. Per brevità diciamo che è un indirizzo *di connettività* ai livelli da 1 a *j*.
+suoi g-nodi di livello tra 1 e *j*. Per brevità diciamo che è un nodo *di connettività* ai livelli da 1 a *j*.
 
-Il nodo *n* ha ora anche un identificativo nella posizione 0 in *h*. Assumiamo che potrebbe essere anche esso
-temporaneamente un identificativo *virtuale*, cioè un numero maggiore di *gsize(0)* - 1. In questo caso anche
-l'indirizzo che il nodo *n* detiene in *h* sarebbe *virtuale* al livello 0. Però in questo caso il modulo QSPN
-è autorizzato a mantenere archi con qualunque nodo appartenente a g-nodi esterni di qualunque livello.
+I nodi *n* e *n'* che convivono nello stesso sistema sono a tutti gli effetti due identità distinte. Per quanto
+riguarda il modulo QSPN, essi hanno due distinti indirizzi, due distinti fingerprint
+a livello 0, due distinti set di archi, due distinte mappe di percorsi e così via.
 
-Il nodo *n* insieme ai due distinti indirizzi detiene, per quanto riguarda il modulo QSPN, due distinti fingerprint
-a livello 0, due distinti set di archi, due distinte mappe di percorsi e così via. Diciamo che il nodo *n* ha due
-*identità*. La vecchia identità è quella che mantiene un indirizzo Netsukuku (seppur virtuale) in *g*, mentre la
-nuova identità è quella che prende un indirizzo Netsukuku in *h*.
-
-Una differenza tra la nuova identità in *h* e quella vecchia in *g* è che l'identità in *g* è
+Una differenza tra la nuova identità *n'* e quella vecchia *n* è che l'identità *n* in *g* è
 destinata a sparire nel momento in cui la connettività interna di *g* e dei suoi g-nodi superiori fino a *U(g)*,
-cioè ai livelli da 1 a *j*, risulta garantita da altri collegamenti. Invece l'identità in *h* è destinata a
-rimanere e, se aveva preso un indirizzo Netsukuku con la componente al livello 0 *virtuale*, ad assumere
-una componente *reale* al livello 0. L'identità vecchia, temporanea, è detta *di connettività*. L'identità
+cioè ai livelli da 1 a *j*, risulta garantita da altri collegamenti. Invece l'identità *n'* in *h* è destinata a
+rimanere. L'identità vecchia, temporanea, è detta *di connettività*. L'identità
 nuova, che rimane, è detta *principale*.
 
 Alcune considerazioni sulle identità *principale* e *di connettività*.
@@ -473,17 +472,19 @@ Alcune considerazioni sulle identità *principale* e *di connettività*.
     identità *di connettività* del suo sistema. Sotto verrà dettagliato come si
     trasforma l'indirizzo del singolo nodo che appartiene al g-nodo che migra.
 *   Un'identità *di connettività* ai livelli da 1 a *x* ha sempre un indirizzo Netsukuku *virtuale* poiché la sua
-    componente a livello 0 è *virtuale*; mentre un'identità *principale* può avere un indirizzo *virtuale* o *reale*.
+    componente a livello 0 è *virtuale*. Più in generale, un'identità *di connettività* ai livelli da *i* a *j* ha
+    un indirizzo Netsukuku *virtuale* con una o più componenti *virtuali*. Invece un'identità *principale* ha
+    sempre un indirizzo *reale*.
 
 Considerando quanto esposto nella trattazione del
 modulo [Identities](../ModuloIdentities/AnalisiFunzionale.md), diciamo che:
 
-*   Indichiamo con *id<sub>0</sub>* l'identità che aveva il sistema *n* in *g*.
-*   L'identità di *id<sub>0</sub>* diventa una identità *di connettività* ai livelli da 1 a *j*.
-*   Si aggiunge nel sistema *n* l'identità *id<sub>1</sub>*, in *h*. Essa prende le caratteristiche che erano
+*   Indichiamo con *id<sub>0</sub>* l'identità nel nostro sistema che rappresenta il nodo *n* in *g*.
+*   Si aggiunge nel nostro sistema l'identità *id<sub>1</sub>* che rappresenta il nodo *n'* in *h*. Essa prende le caratteristiche che erano
     prima di *id<sub>0</sub>*: cioè, se *id<sub>0</sub>* era l'identità *principale* ora *id<sub>1</sub>* è
     l'identità *principale*, se *id<sub>0</sub>* era *di connettività* ai livelli da *x* a *y* ora *id<sub>1</sub>*
     è *di connettività* ai livelli da *x* a *y*.
+*   L'identità *id<sub>0</sub>* diventa una identità *di connettività* ai livelli da 1 a *j*.
 *   Ora all'identità *id<sub>1</sub>* si associano nuove istanze delle classi dei moduli *di identità*. Nell'esame
     del modulo QSPN diciamo che a *id<sub>1</sub>* si associa una nuova istanza di QspnManager.
 
@@ -507,8 +508,9 @@ In un certo senso potremmo dire che il concetto di anzianità perde di significa
 Un altro concetto che perde di significato per un g-nodo *di connettività* è il numero approssimato di singoli nodi
 al suo interno.  
 Possiamo dire che nell'identità *id<sub>0</sub>* ora il numero approssimato di singoli nodi all'interno
-del g-nodo di livello 0 è 0. Ma anche in questo caso si tratta di una specificazione superflua, poiché quando un
-nodo calcola il numero approssimato di singoli nodi all'interno del suo g-nodo di livello *i* si sommano
+del g-nodo di livello 0 è 0 anziché 1. Generalizzando, il numero approssimato di singoli nodi all'interno
+di un g-nodo *di connettività* di qualsiasi livello è 0. Ma anche in questo caso si tratta di una specificazione superflua,
+poiché quando un nodo calcola il numero approssimato di singoli nodi all'interno del suo g-nodo di livello *i* si sommano
 i valori riportati dai g-nodi di livello *i* - 1 in esso contenuti, che sono tutti g-nodi che non sono *di connettività*.
 
 Il set di archi di *id<sub>0</sub>* resta invariato, ma ogni arco in esso subisce delle variazioni. Il set di archi
@@ -534,7 +536,7 @@ per il tramite dei servizi del modulo Identities, per ogni *arco-identità* di *
 
 La mappa di *id<sub>0</sub>* resta invariata. La mappa di *id<sub>1</sub>* è una nuova istanza.
 
-La mappa di *id<sub>0</sub>* è quella che era stata popolata con gli ETP ricevuti quando *n* era in *g*. Sebbene il nodo
+La mappa di *id<sub>0</sub>* è quella che era stata popolata con gli ETP ricevuti in passato da *n* in *g*. Sebbene il nodo *n*
 abbia cambiato il suo identificativo in *g*, tutti i percorsi che conosceva verso le destinazioni di tutti i livelli
 restano validi. Anche i percorsi che ha reso pubblici ai suoi vicini non hanno subito alcuna variazione, quindi non ha
 bisogno di inviare ETP correttivi per essi. Ci sono due informazioni soltanto che deve propagare:
@@ -547,165 +549,90 @@ perché da esso il nodo che lo riceve si accorge che il nodo che lo ha inviato h
 Netsukuku. Riconoscendo l'arco-identità su cui l'ETP è stato ricevuto, il vicino ha memoria del vecchio indirizzo
 Netsukuku e vede quello nuovo.
 
-La mappa di *id<sub>1</sub>* viene inizializzata vuota, in attesa che il modulo QSPN processi nuovi ETP sulla base del
-nuovo indirizzo di *id<sub>1</sub>*. Le attività del modulo QSPN come detentore di questo nuovo indirizzo e della
-relativa mappa procedono come per qualsiasi indirizzo con cui un nodo entra in una rete esistente. Si vedrà nel
+La mappa di *id<sub>1</sub>* viene inizializzata vuota, in attesa che il modulo QSPN processi nuovi ETP ricevuti da *n'*.
+Le attività dell'istanza di QspnManager associata all'identità *id<sub>1</sub>* (cioè al nodo *n'*) e della
+relativa mappa procedono come per qualsiasi nodo che entra in una rete esistente. Si vedrà nel
 documento di dettaglio [esplorazione](EsplorazioneRete.md) che questo significa iniziare la fase di bootstrap e
 richiedere ETP ai propri vicini.
 
-Quando l'istanza del modulo QSPN gestita dall'identità *id<sub>1</sub>* ha completato la fase di bootstrap e ha
-trasmesso i primi ETP, lo segnala al suo utilizzatore. In questo momento esso potrà richiedere all'istanza del modulo
-QSPN gestita dall'identità *id<sub>0</sub>* di rimuovere tutti gli archi con vicini che non appartengono al g-nodo
-*U(g)*. Infatti ora quei vicini che si vedranno mancare un arco con il vecchio gateway verso *U(g)* avranno scoperto
-di poter raggiungere *U(g)* tramite il nuovo gateway.
+Quando l'istanza di QspnManager dell'identità *id<sub>1</sub>* ha completato la fase di bootstrap e ha
+trasmesso i primi ETP, lo segnala al suo utilizzatore. In questo momento esso potrà richiedere all'istanza
+di QspnManager dell'identità *id<sub>0</sub>* di rimuovere tutti gli archi con vicini che non appartengono al g-nodo
+*U(g)*. Infatti ora quei vicini che si vedranno mancare un arco con *n* (il loro vecchio gateway verso *U(g)*) avranno scoperto
+di poter raggiungere *U(g)* tramite *n'*.
 
-Se l'identificativo assunto in *h* era *virtuale*, ad esempio in attesa del completamento delle operazioni di una
-*migration path*, abbiamo detto che è destinato a divenire *reale*. Quando questa transizione si rende possibile
-l'utilizzatore comunica all'istanza del modulo QSPN gestita dall'identità *id<sub>1</sub>* di cambiare tale identificativo.
-Quando il modulo QSPN riceve questa richiesta esso verifica che non ci siano nella sua mappa percorsi verso il nuovo
-identificativo. Se ci sono li rimuove e ne segnala la rimozione all'utilizzatore. Poi ottempera al cambio di identificativo.
-Infine, se aveva già completato la fase di bootstrap, deve propagare una informazione:
+Per quanto riguarda la produzione e la processazione di messaggi ETP, l'istanza di QspnManager dell'identità
+*principale* e tutte le altre istanze di QspnManager delle identità *di connettività*
+si comportano allo stesso modo. Non fa alcuna differenza a questo proposito che il proprio indirizzo sia *virtuale* o *reale*.
 
-*   Che è possibile raggiungere tramite lui il suo nuovo identificativo *reale* in *h*.
-
-È una informazione che interessa soltanto i nodi che appartengono a *h*. È sufficiente un unico ETP senza alcun
-percorso. Infatti il percorso verso il nuovo identificativo è implicito nell'ETP.
-
-Se invece non aveva ancora completato la fase di bootstrap, questo ETP sarebbe superfluo perché appena possibile il
-modulo QSPN invierà un ETP completo.
-
-Per quanto riguarda la produzione e la processazione di messaggi ETP, l'identità del modulo QSPN che gestisce
-l'indirizzo *principale* e tutte le altre identità del modulo QSPN che gestiscono gli indirizzi *di connettività*
-si comportano allo stesso modo. Non fa alcuna differenza a questo proposito che un indirizzo sia *virtuale* o *reale*.
-
-Per quanto riguarda i percorsi che ogni identità del modulo QSPN acquisisce, essi sono esposti all'utilizzatore
-del modulo. L'utilizzatore del modulo QSPN deve saper trattare queste informazioni per istruire in modo appropriato
+Per quanto riguarda i percorsi che ogni istanza di QspnManager acquisisce, essi sono esposti all'utilizzatore
+del modulo QSPN. L'utilizzatore del modulo QSPN deve saper trattare queste informazioni per istruire in modo appropriato
 le tabelle di routing del sistema. Il modo più semplice di farlo è quello di realizzare un intero network stack
-indipendente per ogni identità assunta dal nodo. In un sistema Linux questo si può fare con
+indipendente per ogni identità assunta nel sistema. In un sistema Linux questo si può fare con
 i [network namespace](http://man7.org/linux/man-pages/man8/ip-netns.8.html).
 
 Ovviamente l'utilizzatore dovrà far attenzione a non utilizzare le destinazioni che hanno una componente *virtuale*
 nel popolamento delle tabelle di routing del kernel.
 
-* * *
-
-Su un sistema operativo che non offre la possibilità di realizzare molteplici network stack indipendenti, probabilmente
-la stessa cosa può essere orchestrata, ponendo particolare attenzione a queste criticità:
-
-*   Per gestire gli indirizzi IP globali:
-    *   In base al livello *k* delle destinazioni dei percorsi:
-        *   Se *k* > *j*, allora le destinazioni dovrebbero coincidere in *map(id<sub>0</sub>)* e
-            *map(id<sub>1</sub>)*. Si possono utilizzare nelle tabelle di routing tutti i percorsi.
-        *   Se *k* = *j*, avremo:
-            *   In *map(id<sub>0</sub>)* percorsi che hanno per destinazione *U(h)*. Questi non vanno utilizzati nelle
-                tabelle di routing, perché ora *n* è membro di *U(h)*.
-            *   In *map(id<sub>1</sub>)* percorsi che hanno per destinazione *U(g)*. Questi non vanno utilizzati nelle
-                tabelle di routing, perché *n* è ancora membro di *U(g)*.
-            *   Le destinazioni diverse da quelle viste sopra dovrebbero essere presenti in percorsi in *map(id<sub>0</sub>)*
-                e *map(id<sub>1</sub>)*. Si possono utilizzare nelle tabelle di routing tutti i percorsi.
-        *   Se *i* ≤ *k* < *j*, le destinazioni dei percorsi in *map(id<sub>0</sub>)* e *map(id<sub>1</sub>)* sono
-            distinte. Si **devono** utilizzare nelle tabelle di routing tutti i percorsi.
-        *   Se *k* < *i*, le destinazioni sono interne al g-nodo che ha migrato. I percorsi, anch'essi interni, sono
-            identici e vanno utilizzati nelle tabelle di routing solo una volta, prendiamo quelli di *map(id<sub>1</sub>)*.
-*   Per gestire gli indirizzi IP *interni* al proprio g-nodo di livello tra *i* e *j*:
-    *   Siccome il nodo *n* appartiene con le sue identità a diversi g-nodi (ad esempio *g0* con la sua identità
-        *principale* e *g1* con la sua identità *di connettività*), quando riceve un pacchetto IP che ha per destinazione
-        un indirizzo IP *interno* ad un g-nodo di livello tra *i* e *j* deve capire a quale g-nodo esso fa riferimento
-        sulla base dell'interfaccia di rete da cui il pacchetto è stato ricevuto e instradarlo correttamente. Per questo:
-        *   Occorre avere diverse tabelle di routing, una per ogni pseudo-interfaccia che è stata creata per gestire un
-            indirizzo *di connettività*. Per ogni pseudo-interfaccia inoltre occorre istruire le policy di routing del
-            sistema per usare la relativa tabella quando si riceve un pacchetto IP da quella interfaccia. Ad esempio
-            con *iptables* e *ip-rule*.
-        *   Se il nodo riceve un pacchetto IP che ha per destinazione un indirizzo IP *interno* tramite una
-            pseudo-interfaccia (quindi la destinazione è interna a *g1*), se il sistema ha assegnato a se lo stesso
-            indirizzo IP *interno* (naturalmente in *g0*), occorre evitare che il sistema si consideri lui il
-            destinatario. Ad esempio assegnando una maggiore priorità alla *ip-rule* designata per la pseudo-interfaccia
-            rispetto alla *ip-rule* che designa la tabella di routing *local*.
-        *   Se il nodo riceve un pacchetto IP che ha per mittente un indirizzo IP *interno* tramite una pseudo-interfaccia,
-            se il sistema ha assegnato a se lo stesso indirizzo IP *interno*, occorre evitare che il sistema consideri
-            il pacchetto un tentativo di [IP hijacking](https://en.wikipedia.org/wiki/IP_hijacking) e che quindi lo lasci
-            cadere. (Come si fa?)
-
-* * *
-
-Ritorniamo sul discorso della connettività interna dei g-nodi. Esaminiamo i nodi in *U(g)* che sono diretti vicini di *n*:
-
-*   Avevano un arco verso il vecchio identificativo *reale* di *n* in *U(g)*. Potevano usarlo per raggiungere *U(h)*, e
-    anche per raggiungere altri nodi in *U(g)*. Potenzialmente, potevano usarlo anche per raggiungere altri g-nodi.
-*   Hanno ora un arco verso il nuovo identificativo *virtuale* di *n* in *U(g)*. Possono usarlo, sulla base degli ETP
-    che ora esso trasmette, per raggiungere altri nodi in *U(g)*, ma **non** per raggiungere *U(h)* o altri g-nodi.
-*   Hanno ora un arco verso *U(h)*. Potenzialmente, possono usarlo, sulla base degli ETP che ora esso trasmette, anche
-    per raggiungere altri g-nodi.
-
-Esaminiamo i nodi in *U(h)* che sono diretti vicini di *n*:
-
-*   Avevano un arco verso *U(g)*. Potenzialmente, potevano usarlo anche per raggiungere altri g-nodi.
-*   Hanno ora un arco verso il nuovo identificativo di *n* in *U(h)*. Possono usarlo, sulla base degli ETP che ora
-    esso trasmette, per raggiungere *U(g)* e, potenzialmente, anche altri g-nodi.
-
-Esaminiamo i nodi in *w*, con *w* ≠ *U(g)* e *w* ≠ *U(h)*, che sono diretti vicini di *n*:
-
-*   Avevano un arco verso *U(g)*. Potevano usarlo per raggiungere *U(h)* e, potenzialmente, anche altri g-nodi.
-*   Hanno ora un arco verso *U(h)*. Possono usarlo, sulla base degli ETP che ora esso trasmette, per raggiungere
-    *U(g)* e, potenzialmente, anche altri g-nodi.
-
 #### <a name="Nodi_virtuali_altri_livelli"></a>Ai livelli superiori
 
 Come abbiamo detto sopra, questi concetti valgono anche per un livello *i* maggiore di 0.
 
-Sia un g-nodo *n’* di livello *i* border-nodo di un g-nodo *g’* di livello *i* + 1. Supponiamo che *n’* voglia migrare
-da *g’* ad un diverso g-nodo *h’*, sempre di livello *i* + 1. Sia *j* il più alto livello tale che *g’* ed *h’* non
-appartengono allo stesso g-nodo di livello *j*, con *i* < *j* < *l*. Sia *U(g’)* il g-nodo di livello *j* a cui
-appartiene *g’*. Sia *U(h’)* il g-nodo di livello *j* a cui appartiene *h’*.
+Sia un g-nodo *n̄* di livello *i* border-nodo di un g-nodo *ḡ* di livello *i* + 1. Supponiamo che *n̄* voglia migrare
+da *ḡ* ad un diverso g-nodo *h̄*, di livello *i* + 1 o maggiore. Sia *j* il più alto livello tale che *ḡ* ed *h̄* non
+appartengono allo stesso g-nodo di livello *j*, con *i* < *j* < *l*. Sia *U(ḡ)* il g-nodo di livello *j* a cui
+appartiene *ḡ*. Sia *U(h̄)* il g-nodo di livello *j* a cui appartiene *h̄*.
 
-Riguardo la migrazione di *n’*, diciamo che essa può essere considerata come una operazione atomica, sebbene avvenga
+Riguardo la migrazione di *n̄*, diciamo che essa può essere considerata come una operazione atomica, sebbene avvenga
 per forza di cose in modo graduale. Si considera atomica nel senso che quando un singolo nodo al suo interno
 concretizza la sua migrazione si comporta come se sapesse per certo che tutti gli altri singoli nodi lo stanno
-facendo nello stesso istante. Possiamo farlo perché all'interno di *n’* il grafo dei nodi e g-nodi che lo costituiscono
+facendo nello stesso istante. Possiamo farlo perché all'interno di *n̄* il grafo dei nodi e g-nodi che lo costituiscono
 non cambia.
 
-Consideriamo ogni singolo nodo *n* all'interno di *n’*.
+Consideriamo ogni singolo nodo *n* all'interno di *n̄*. Vediamo come da questo verrà generato un nuovo nodo *n'*
+che sarà parte di un nuovo g-nodo *n̄'* isomorfo di *n̄*.
 
-Il nodo *n*, partendo dalla sua identità *id<sub>0</sub>* che deteneva un indirizzo in *g’*, produce una sua nuova
-identità *id<sub>1</sub>* che gestirà un indirizzo in *h’*. La vecchia identità *id<sub>0</sub>* detiene ora un
+Il sistema in cui vive l'identità *id<sub>0</sub>* che rappresenta il nodo *n* (in *n̄*, in *ḡ*), partendo da questa produce una nuova
+identità *id<sub>1</sub>* che rappresenta il nodo *n'* (in *n̄'*, in *h̄*). La vecchia identità *id<sub>0</sub>* detiene ora un
 indirizzo *virtuale* al livello *i*.
 
-Consideriamo che l'indirizzo precedente di *id<sub>0</sub>* poteva essere anche *virtuale*, ma sicuramente aveva al
-livello *i* un identificativo *reale*. Da questo si deduce che un indirizzo *virtuale* può avere uno o più componenti
-(identificativi) *virtuali*.
+Consideriamo che l'indirizzo precedente di *id<sub>0</sub>* poteva essere anche *virtuale* ai livelli inferiori, ma sicuramente
+aveva al livello *i* e ai livelli superiori tutti identificativi *reali*. Da questo si deduce che un indirizzo *virtuale* può
+avere uno o più componenti (identificativi) *virtuali*.
 
 L'identità *id<sub>0</sub>*, inoltre, poteva essere precedentemente *principale* o *di connettività* ai livelli da
 *k1* a *k2*. Comunque l'identità *id<sub>0</sub>* da adesso sarà *di connettività* ai livelli da *i* + 1 a *j*.
 
 Ad eccezione della componente al livello *i* tutte le altre componenti restano invariate.
 
-La nuova identità *id<sub>1</sub>* del nodo *n* ha ora un indirizzo in *h’*. Le componenti ai livelli superiori
-a *i* sono ovviamente quelle di *h’*. La componente al livello *i* è quella riservata dal g-nodo per l'ingresso di *n’*, che
-può essere *reale* o temporaneamente *virtuale*. Le componenti ai livelli inferiori sono le stesse che componevano
-l'indirizzo di *id<sub>0</sub>* in *g’*.
+La nuova identità *id<sub>1</sub>*, che rappresenta il nodo *n'*, ha ora un indirizzo in *h̄*. Le componenti ai livelli superiori
+sono ovviamente quelle di *h̄*. La componente *reale* al livello subito inferiore a quello di *h̄* (che può essere *i*
+o maggiore) è quella riservata dal g-nodo *h̄* per l'ingresso di *n̄'*. Le componenti ai livelli inferiori sono le stesse
+che componevano l'indirizzo di *id<sub>0</sub>* in *ḡ*.
 
 Inoltre, l'identità *id<sub>0</sub>* poteva essere precedentemente *principale* o *di connettività* ai livelli da
 *k1* a *k2*; se era *principale* allora l'identità *id<sub>1</sub>* sarà *principale*, se era *di connettività*
-allora l'identità *id<sub>1</sub>* sarà *di connettività* ai livelli da *k1* a *k2*.
+allora l'identità *id<sub>1</sub>* sarà *di connettività* ai livelli da *k1* a *k2*. Ma se *k2* è maggiore di *i*
+allora *id<sub>1</sub>* può considerarsi *di connettività* ai livelli da *k1* a *i*.
 
-Per tutti gli aspetti inerenti il modulo QSPN, riguardo le identità *id<sub>0</sub>* e *id<sub>1</sub>* del nodo *n*
-valgono tutte le osservazioni viste prima. Rimangono da precisare alcuni aspetti:
+Per tutti gli aspetti inerenti le istanze di QspnManager associate alle identità *id<sub>0</sub>* e *id<sub>1</sub>*
+valgono tutte le osservazioni viste prima.
 
-*   Riguardo la mappa di *id<sub>1</sub>*, tutti i percorsi che hanno per destinazione un livello inferiore a *i*,
-    cioè un g-nodo interno a *n’*, rimangono validi. Per questo l'utilizzatore del modulo QSPN quando istanzia il nuovo
-    QspnManager gestito dalla identità *id<sub>1</sub>* lo istruisce di copiare i percorsi con destinazioni di livello
-    inferiore a *i* dalla mappa del QspnManager gestito dalla identità *id<sub>0</sub>*.  
-    In seguito il QspnManager gestito dalla identità *id<sub>1</sub>* inizia la fase di bootstrap a livello *i*.  
-    Solo se *n* ha un arco con (almeno) un vicino *v* che è esterno a *n’* ma interno a *h’* il modulo richiede un ETP
-    a questo vicino. Se riceve nuove informazioni esce dalla fase di bootstrap a livello *i* e le propaga all'interno di *n’*.  
-    I nodi interni attendono un certo tempo (dipendente dalle conoscenze che il modulo QSPN ha dei percorsi interni a
-    *n’*) entro il quale dovrebbero ricevere un ETP originatosi all'esterno di *n’*, cioè contenente destinazioni di
-    livello maggiore di *i*, e quindi uscire dalla fase di bootstrap a livello *i*.
+Riguardo la mappa dei percorsi c'è da dire questo: tutti i percorsi che erano noti al nodo *n* e che hanno per
+destinazione un livello inferiore a *i*, cioè un g-nodo interno a *n̄*, saranno validi anche per il nodo *n'* in *n̄'*.
+Per questo l'utilizzatore del modulo QSPN quando istanzia il nuovo QspnManager di *id<sub>1</sub>* lo istruisce
+di copiare i percorsi con destinazioni di livello inferiore a *i* dalla mappa del QspnManager di *id<sub>0</sub>*.  
+In seguito il QspnManager di *id<sub>1</sub>* inizia la fase di bootstrap a livello *i*.  
+Solo se *n'* ha un arco con (almeno) un vicino *v* che è esterno a *n̄'* ma interno a *h̄* il modulo richiede un ETP
+a questo vicino. Se riceve nuove informazioni esce dalla fase di bootstrap a livello *i* e le propaga all'interno di *n̄'*.  
+I nodi interni attendono un certo tempo (dipendente dalle conoscenze che il QspnManager di *n'* ha dei percorsi interni a
+*n̄'*) entro il quale dovrebbero ricevere un ETP originatosi all'esterno di *n̄'*, cioè contenente destinazioni di
+livello maggiore di *i*, e quindi uscire dalla fase di bootstrap a livello *i*.
 
-Il g-nodo *n’* in *g’* dovrà sparire quando la connettività interna di *g’* e dei suoi g-nodi superiori fino a *U(g’)*,
+Il g-nodo *n̄* in *ḡ* dovrà sparire quando la connettività interna di *ḡ* e dei suoi g-nodi superiori fino a *U(ḡ)*,
 cioè ai livelli da *i* + 1 a *j*, risulterà garantita da altri collegamenti. Sarebbe bene che un solo nodo, chiamiamolo
-*n<sub>0</sub>* in *n’*, facesse in modo periodico la richiesta al modulo QSPN di controllare questo evento e in caso
-di esito positivo lo comunicasse a tutti i nodi in *n’*. Possiamo assegnare questo compito al nodo che, stando semplicemente
+*n<sub>0</sub>* in *n̄*, facesse in modo periodico la richiesta al modulo QSPN di controllare questo evento e in caso
+di esito positivo lo comunicasse a tutti i nodi in *n̄*. Possiamo assegnare questo compito al nodo che, stando semplicemente
 alle conoscenze della sua mappa ai livelli da *i* - 1 in giù, ha l'indirizzo più prossimo allo 0.
 
 Si osservi che la migrazione di un g-nodo di livello alto coinvolge un numero elevato di nodi, ma allo stesso tempo
@@ -713,61 +640,6 @@ permette il mantenimento delle informazioni già reperite per un elevato numero 
 informazioni vengono messe a frutto grazie all'utilizzo di indirizzi IP *interni*, come spiegato sopra.
 
 Un esempio dell'uso di indirizzi *virtuali* e *di connettività* è illustrato in questo [allegato](UsoIndirizziVirtuali/Step1.md).
-
-#### <a name="Nodi_virtuali_considerazioni"></a>Considerazioni varie
-
-Consideriamo un nodo *n* che vuole fare ingresso in una rete *G*. In generale questo significa che il nodo *n* non ha
-ancora un indirizzo in *G* e vuole creare un nuovo g-nodo *n’* (al limite di livello 0) all'interno di un g-nodo *g*
-esistente in *G*, avendo *n* almeno un arco verso un altro nodo *m* che appartiene a *g*. Consideriamo il momento in
-cui il nodo *n* ha appena rilevato l'esistenza della rete *G* di cui ancora esso non fa parte. Il nodo *n* rileva un
-numero di vicini che appartengono a *G*, tra i quali il nodo *m*. Ci chiediamo: se il nodo *m* ha una identità
-*principale* e una o più identità *di connettività*, come vengono valutate queste dal nodo *n* nella strategia di
-individuazione del g-nodo *g* in cui fare ingresso? E una volta deciso il g-nodo *g* in cui fare ingresso, con quali
-identità di *m* il nodo *n* costituisce degli archi?
-
-Diciamo che il nodo *m* ha la sua identità *principale* *m0* e una identità *m1* che è *di connettività* ai livelli
-da *i* a *j*. Quindi *g<sub>k</sub>(m0)* e *g<sub>k</sub>(m1)* possono essere distinti per ogni valore di *k* tra *i*
-e *j* compresi, sono equivalenti per i valori di *k* superiori a *j*, sono isomorfi per i valori di *k* inferiori a *i*.
-
-Consideriamo il caso in cui la strategia di ingresso porti il nodo *n* a cercare di entrare in un g-nodo di livello
-*k*, con *k* maggiore di *j*, formando un nuovo g-nodo di livello *k* - 1. In questo caso il nodo *n* può sfruttare il
-suo arco con il g-nodo *g<sub>k-1</sub>(m0)* per vedere se può entrare nel g-nodo *g<sub>k</sub>(m0)* (che è equivalente
-al g-nodo *g<sub>k</sub>(m1)*). Se poi il nodo *n* forma un nuovo g-nodo di livello *k* - 1 nel g-nodo *g<sub>k</sub>(m0)*,
-allora costituisce un arco con la sola identità *m0*. Se invece entra, grazie ad altri suoi vicini, in un diverso
-g-nodo di livello *k*, anche in questo caso costituisce un arco con la sola identità *m0*.
-
-Consideriamo il caso in cui la strategia di ingresso porti il nodo *n* a cercare di entrare in un g-nodo di livello
-*k*, con *k* tra *i* e *j* compresi, formando un nuovo g-nodo di livello *k* - 1. In questo caso il nodo *n* può sfruttare
-il suo arco con il g-nodo *g<sub>k-1</sub>(m0)* per vedere se può entrare nel g-nodo *g<sub>k</sub>(m0)*, o può
-sfruttare il suo arco con il g-nodo *g<sub>k-1</sub>(m1)* per vedere se può entrare nel g-nodo *g<sub>k</sub>(m1)*.
-Se poi il nodo *n* forma un nuovo g-nodo di livello *k* - 1 nel g-nodo *g<sub>k</sub>(m0)*, allora costituisce un arco
-con la sola identità *m0*. Se invece entra nel g-nodo *g<sub>k</sub>(m1)*, allora costituisce un arco con l'identità
-*m1* e anche con la *m0*. Se invece entra, grazie ad altri suoi vicini, in un diverso g-nodo di livello *k*, anche in
-questo caso costituisce un arco con la sola identità *m0*.
-
-Consideriamo infine il caso in cui la strategia di ingresso porti il nodo *n* a cercare di entrare in un g-nodo di
-livello *k*, con *k* minore di *i*, formando un nuovo g-nodo di livello *k* - 1. In questo caso il nodo *n* può sfruttare
-il suo arco con il g-nodo *g<sub>k-1</sub>(m0)* per vedere se può entrare nel g-nodo *g<sub>k</sub>(m0)* (che è
-isomorfo al g-nodo *g<sub>k</sub>(m1)*). Se poi il nodo *n* forma un nuovo g-nodo di livello *k* - 1 nel g-nodo
-*g<sub>k</sub>(m0)*, allora il nodo *n* dovrà assumere una identità *principale* *n0* e una *di connettività* *n1*.
-Con la *n0* costituisce un arco con la sola identità *m0*; con la *n1* costituisce un arco con la sola *m1*. Se invece
-entra, grazie ad altri suoi vicini, in un diverso g-nodo di livello *k*, in questo caso assume una sola identità e
-costituisce un arco con la sola identità *m0*.
-
-* * *
-
-Consideriamo un nodo *n* che appartiene (come border-nodo) ad un g-nodo *g* di livello *k* che migra da *A* in *B* di
-livello *k* + 𝜀. Per ogni vicino *m* che non appartiene a *g* e che detiene almeno una identità *di connettività* a
-un livello minore di *k* + 𝜀, il nodo *n* deve valutare se aggiungere/mantenere/rimuovere un arco con quella identità.
-
-Si valuta secondo la regola vista in questo paragrafo: se l'identità *m1* di *m* è *di connettività* ai livelli da
-*i* a *j* essa non mantiene archi con nodi che non appartengono al suo g-nodo di livello *j*.
-
-* * *
-
-Consideriamo un nodo *n* che forma un nuovo arco, cioè rileva un vicino *m* che prima non era a distanza di
-rilevamento. Entrambi hanno una identità *principale* e possono avere una identità *di connettività*. La decisione
-su quali archi formare va valutata come detto prima.
 
 ### <a name="Rimozione_indirizzo_connettivita"></a>Rimozione dell'indirizzo di connettività di un g-nodo dopo la sua migrazione
 
