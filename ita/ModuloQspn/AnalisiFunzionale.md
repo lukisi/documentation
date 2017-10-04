@@ -189,8 +189,7 @@ i g-nodi di livello *l* - 1 che conosce, tranne *n<sub>l-1</sub>*.
 
 Affinché questa mappa gerarchica sia sufficiente al nodo per raggiungere ogni singolo nodo esistente nella rete, ogni
 g-nodo deve essere internamente connesso. È compito del modulo  QSPN scoprire e segnalare se un g-nodo di cui si
-conosce l'esistenza (e  almeno 2 diversi percorsi) è divenuto disconnesso. Eventuali successive  azioni volte a porre
-rimedio non sono di competenza del modulo.
+conosce l'esistenza (e  almeno 2 diversi percorsi) è divenuto disconnesso.
 
 A questo scopo ogni g-nodo ha anche un altro identificativo chiamato *fingerprint*. Vediamo come si genera un
 fingerprint e come viene "assegnato" ad un g-nodo.
@@ -276,15 +275,23 @@ Basandosi sul fatto che un fingerprint di un g-nogo di livello maggiore di 0 ha 
 che gli ha dato il suo identificativo, il nodo *y* può individuare quale dei due fingerprint sia stato assegnato
 a *g* dal nodo più anziano in *g*. In altre parole, quale isola formatasi con il potenziale split sia da considerarsi
 più anziana. Siccome *y* ha fra i suoi diretti vicini un border-nodo di un'isola di *g* con un fingerprint diverso
-da quello dell'isola più anziana, il modulo QSPN segnalerà al suo utilizzatore questo rilevamento. Al ricevere tale
-segnalazione, l'utilizzatore del modulo potrà fare in modo che l'isola scollegata venga avvertita.
+da quello dell'isola più anziana, il modulo QSPN segnalerà al suo utilizzatore questo rilevamento.
+
+Quando l'utilizzatore del modulo riceve questa segnalazione è suo compito fare in modo che l'isola scollegata venga
+avvertita e che per tutti i singoli nodi dell'isola scollegata venga chiamato il metodo `exit_network(lvl=1)` della relativa
+istanza di QspnManager, passando come argomento il livello del g-nodo che si è splittato.
+Il meccanismo con cui si realizza questo non è di pertinenza del modulo QSPN: esso coinvolge
+il modulo Migrations in collaborazione con il modulo Coordinator (vedi [qui](../ModuloMigrations/AnalisiFunzionale.md#Split_gnodo)).
+
+Nel metodo `exit_network(lvl)` di QspnManager il modulo rimuove tutti i percorsi che il nodo conosce per destinazioni
+di livello maggiore o uguale a `lvl`; inoltre richiede la rimozione di tutti gli archi che lo collegano direttamente
+a distinti g-nodi di livello maggiore o uguale a `lvl`. In questo modo di fatto l'isola scollegata diventa una rete a
+sé stante, che dovrà rilevare di nuovo i collegamenti e fare ingresso nella rete originale.
 
 Si intuisce che questo meccanismo si ripresenta in maniera analoga qualsiasi sia il livello del g-nodo che diventa
 disconnesso, basta che il g-nodo di livello superiore sia ancora connesso. Se invece lo split avviene sul livello più
 alto, cioè se si divide tutta la rete, quello che si ottiene è che le 2 isole diventano reti distinte con identificativi
-di rete distinti. Per entrambe le situazioni, come detto in precedenza, il compito del modulo QSPN è solo quello di
-permetterne il rilevamento. In particolare nel caso di split di un g-nodo, è necessario che lo rilevi almeno un nodo
-diretto vicino di un border-nodo dell'isola (o delle isole) che non contiene il nodo più anziano.
+di rete distinti.
 
 Infine, una nota sui segnali emessi dal modulo QSPN. Osserviamo cosa succede quando un nodo generico
 *n* (non solo *x* e *y*) scopre che due percorsi *p1* e *p2* che conosce verso un g-nodo *g* riportano due diversi
