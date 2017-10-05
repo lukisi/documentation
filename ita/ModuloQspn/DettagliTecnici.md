@@ -531,12 +531,13 @@ Il modulo permette di ... con il metodo *exit_network* di QspnManager. **TODO**
 
 Il modulo, attraverso il segnale *arc_removed* di QspnManager, notifica che un arco *arc* è stato rimosso di
 iniziativa del QspnManager. Questo può avvenire per diverse situazioni: riconoscere il motivo della rimozione
-è importante per l'utilizzatore del modulo, perché da questo dipende come l'utilizzatore deve reagire al segnale.
+è importante per l'utilizzatore del modulo, cioè il demone *ntkd*, perché da questo dipende come deve reagire al segnale.
 
 *   Una comunicazione attraverso *arc* fatta con protocollo reliable fallisce. Di norma ci si avvede di questo con
     l'eccezione StubError.  
-    In questo caso l'utilizzatore del modulo dovrebbe presumere che il link ha dei problemi. L'utilizzatore dovrà rimuovere
-    l'arco-nodo su cui questo arco-identità si poggia; con esso anche tutti gli altri archi-identità che vi si poggiano.
+    In questo caso il demone *ntkd* del modulo dovrebbe presumere che il link ha dei problemi.
+    Dovrà identificare l'arco fisico (del modulo Neighborhood) su cui questo arco-identità si appoggiava e rimuoverlo
+    dal modulo Neighborhood.
 *   Si sono verificati problemi di comprensione di una comunicazione attraverso *arc*. Ad esempio un DeserializeError
     (comprende i casi in cui si riceve un oggetto sconosciuto o che non implementa l'interfaccia voluta), oppure una
     istanza di IQspnEtpMessage che non è un EtpMessage, oppure un EtpMessage con dati errati, oppure una istanza di
@@ -545,28 +546,25 @@ iniziativa del QspnManager. Questo può avvenire per diverse situazioni: riconos
     nodo nostro o nel nodo vicino; oppure un comportamento malevolo nel nodo vicino; oppure una diversa versione del
     programma nel nodo vicino. In ogni caso si può ipotizzare che le altre possibili istanze di QspnManager (quindi le
     altre identità collegate con altri archi-identità) possono continuare a funzionare a dovere.  
-    Se questo arco-identità è l'arco *principale* dell'arco-nodo su cui si poggia, allora l'utilizzatore dovrà rimuovere
-    l'arco-nodo; con esso anche tutti gli altri archi-identità che vi si poggiano. Altrimenti viene rimosso solo questo
-    arco-identità e l'utilizzatore non intraprende altre azioni.
+    Il demone *ntkd* dovrà rimuovere il relativo arco-identità dal modulo Identities.
 *   Il vicino (una particolare identità del nodo vicino) collegato su *arc* non ha (o non ha più) *arc* fra i suoi archi.
     Di norma ci si avvede di questo con l'eccezione QspnNotAcceptedError.  
-    Se questo arco-identità è l'arco *principale* dell'arco-nodo su cui si poggia, allora l'utilizzatore dovrà rimuovere
-    l'arco-nodo; con esso anche tutti gli altri archi-identità che vi si poggiano. Altrimenti viene rimosso solo questo
-    arco-identità e l'utilizzatore non intraprende altre azioni.
-*   Il metodo *remove_outer_arcs* chiamato dall'utilizzatore del modulo ha prodotto la rimozione di *arc*.  
-    In questo caso, per definizione, questo arco-identità non è l'arco *principale* dell'arco-nodo su cui si poggia. Quindi
-    viene rimosso solo questo arco-identità e l'utilizzatore non intraprende altre azioni.
-*   Il metodo *exit_network* chiamato dall'utilizzatore del modulo ha prodotto la rimozione di *arc*.  
-    In questo caso... **TODO**
+    Il demone *ntkd* dovrà rimuovere il relativo arco-identità dal modulo Identities.
+*   Il metodo *remove_outer_arcs* chiamato dal demone *ntkd* del modulo ha prodotto la rimozione di *arc*.  
+    Il demone *ntkd* dovrà rimuovere il relativo arco-identità dal modulo Identities.
+*   Il metodo *exit_network* chiamato dal demone *ntkd* del modulo ha prodotto la rimozione di *arc*.  
+    Il demone *ntkd* dovrà rimuovere il relativo arco-identità dal modulo Identities.
 *   Il metodo remoto *got_destroy* chiamato da un vicino ha prodotto la rimozione di *arc*.  
-    Se questo arco-identità è l'arco *principale* dell'arco-nodo su cui si poggia, allora l'utilizzatore dovrà rimuovere
-    l'arco-nodo; con esso anche tutti gli altri archi-identità che vi si poggiano. Altrimenti viene rimosso solo questo
-    arco-identità e l'utilizzatore non intraprende altre azioni.
+    Il demone *ntkd* dovrà rimuovere il relativo arco-identità dal modulo Identities.
 
 Riassumendo, nel segnale *arc_removed* di QspnManager viene incluso un booleano *bad_link* che dice se la rimozione è da
-imputare ad un errore nella trasmissione di un pacchetto tentata con protocollo reliable. In questo caso l'utilizzatore
-dovrà rimuovere l'arco-nodo. Negli altri casi l'utilizzatore presume che si voglia rimuovere solo quel preciso arco-identità
-(a meno che non si tratti dell'arco-identità principale).
+imputare ad un errore nella trasmissione di un pacchetto tentata con protocollo reliable.  
+Se *bad_link* è *True* allora il demone *ntkd* dovrà rimuovere l'arco fisico dal modulo Neighborhood.  
+Se invece *bad_link* è *False* allora il demone *ntkd* dovrà solo rimuovere il relativo arco-identità dal modulo Identities.
+
+La rimozione di un arco-identità che il demone *ntkd* opera sul modulo Identities, a sua volta, può scatenare
+altre operazioni. Ad esempio se si trattava dell'arco identità *principale* appoggiato su un arco fisico ancora valido
+allora il modulo lo ricostruirà. Ma questo non è di pertinenza del modulo QSPN.
 
 * * *
 
@@ -590,7 +588,8 @@ attraverso il segnale *changed_nodes_inside* di QspnManager.
 
 * * *
 
-Il modulo notifica il rilevamento di uno split in un g-nodo di sua conoscenza attraverso il segnale *gnode_splitted* di QspnManager.
+Il modulo può rilevare uno split di g-nodo, per un g-nodo a cui esso non appartiene, di cui fa parte un suo diretto
+vicino. Il modulo notifica questo rilevamento attraverso il segnale *gnode_splitted* di QspnManager.
 
 * * *
 

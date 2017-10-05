@@ -32,7 +32,8 @@ una istanza della classe QspnManager) che è associata ad una particolare identi
 Per ogni identità che esiste nel sistema avremo quindi una istanza del modulo Qspn.
 
 Inoltre, quando il modulo si interfaccia con il medesimo modulo nei sistemi vicini, lo fa sempre identificando
-una particolare identità nel suo sistema e una particolare identità nel sistema vicino.
+una particolare identità nel suo sistema e una particolare identità nel sistema vicino. Perciò quando si parla di
+*archi* in questa trattazione ci si riferisce agli archi-identità.
 
 Per questo nel presente documento si farà principalmente riferimento ai *nodi* della rete. Quando si inizierà
 a trattare l'argomento dei nodi virtuali questa distinzione sarà più chiara.
@@ -284,7 +285,7 @@ Il meccanismo con cui si realizza questo non è di pertinenza del modulo QSPN: e
 il modulo Migrations in collaborazione con il modulo Coordinator (vedi [qui](../ModuloMigrations/AnalisiFunzionale.md#Split_gnodo)).
 
 Nel metodo `exit_network(lvl)` di QspnManager il modulo rimuove tutti i percorsi che il nodo conosce per destinazioni
-di livello maggiore o uguale a `lvl`; inoltre richiede la rimozione di tutti gli archi che lo collegano direttamente
+di livello maggiore o uguale a `lvl`; inoltre rimuove tutti gli archi che lo collegano direttamente
 a distinti g-nodi di livello maggiore o uguale a `lvl`. In questo modo di fatto l'isola scollegata diventa una rete a
 sé stante, che dovrà rilevare di nuovo i collegamenti e fare ingresso nella rete originale.
 
