@@ -777,6 +777,8 @@ Ogni istanza del modulo QSPN creata per gestire una precisa identità del nodo:
         *   una approssimazione del numero di singoli nodi al suo interno. In questo computo non si considerano
             le identità *di connettività*. Restituisce un intero. Se il nodo è nella fase di bootstrap a livello
             *i* o inferiore, lancia eccezione QspnBootstrapInProgressError.
+    *   Dato un livello *i*, uscire dalla rete corrente insieme al suo g-nodo di livello *i*. Questo da
+        usare quando si scopre di far parte di una isola disconnessa a causa di uno split di g-nodo.
 *   Se l'istanza gestisce una identità *di connettività* ai livelli da *i* a *j* nel g-nodo *w* di livello
     *i* - 1, fornisce metodi per:
     *   Rimuovere gli archi verso diretti vicini esterni al proprio g-nodo di livello *j*.
@@ -856,9 +858,11 @@ L'interfaccia IQspnFingerprint consente di:
     stato assegnato l'identificativo dal g-nodo di livello *i* - 2 più anziano (metodo *i_qspn_elder_seed*).  
     In questo caso il minimo valore di *i* è 2, in quanto non ha senso confrontare due fingerprint dello stesso singolo
     nodo (g-nodo di livello 0) che certamente non può subire uno split.
-*   Partendo dal fingerprint del proprio g-nodo *g* di livello *i* - 1, dati i fingerprint di tutti gli altri g-nodi
-    conosciuti di livello *i* - 1 dentro il mio g-nodo *h* di livello *i*, con 1 ≤ *i* ≤ *l*, dove *l* è il numero di
-    livelli, ottenere l'istanza di fingerprint del g-nodo *h* (metodo *i_qspn_construct*).
+*   Partendo dal fingerprint del proprio g-nodo *g* di livello *i* - 1, assumendo che il g-nodo *g* non sia
+    un g-nodo *di connettività*, dati i fingerprint di tutti gli altri g-nodi di livello *i* - 1 che ci sono
+    noti come possibili destinazioni (i quali per definizione non sono *di connettività*) dentro il mio g-nodo *h* di
+    livello *i*, con 1 ≤ *i* ≤ *l*, dove *l* è il numero di livelli, ottenere l'istanza di fingerprint del
+    g-nodo *h* (metodo *i_qspn_construct*).
 
 * * *
 
@@ -946,7 +950,8 @@ Essa è serializzabile. Contiene:
 *   Il numero di nodi nel g-nodo *d* come riportato da questo percorso. Proprietà `int nodes_inside`.
 *   Una lista di *l* booleani il cui elemento *i*-esimo (da 0 a *l* - 1) dice se va ignorato questo percorso dai nodi
     che non appartengono al g-nodo di livello *i* del nodo *n* che ha prodotto l'ETP. In realtà per *i* = 0 il
-    valore è sempre *false* ma per semplicità teniamo anche questo valore. Proprietà `List<bool> ignore_outside`.
+    valore è sempre *false* ma per migliore leggibilità del codice teniamo anche questo elemento della lista.
+    Proprietà `List<bool> ignore_outside`.
 
 * * *
 
