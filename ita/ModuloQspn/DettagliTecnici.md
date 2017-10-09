@@ -525,7 +525,17 @@ Esaminiamo altri deliverable del modulo QSPN, che sono gli stessi per ogni tipo 
 
 * * *
 
-Il modulo permette di ... con il metodo *exit_network* di QspnManager. **TODO**
+Il modulo permette di forzare il nodo associato ad una istanza di QspnManager ad uscire dalla rete in cui
+si trova, in blocco con tutto il suo g-nodo di un dato livello. Questo avviene con la chiamata del metodo `exit_network(lvl)`
+sulla suddetta istanza di QspnManager. Questa chiamata viene fatta dal demone *ntkd* quando è stato rilevato
+che tale g-nodo è in realtà una isola scollegatasi dal g-nodo originale in conseguenza di uno split.
+
+In questo metodo il modulo per realizzare questa *uscita* rimuove forzatamente alcuni percorsi e alcuni archi,
+naturalmente notificandolo con i relativi segnali. In questo modo di fatto l'isola scollegata diventa una rete a
+sé stante. Nei nodi più esterni, avendo il modulo QSPN segnalato la rimozione degli archi, saranno rimossi
+degli archi-identità nel modulo Identities. Di conseguenza se tali archi-identità erano *principali* il modulo
+Identities li riformerà di nuovo, provocando le operazioni di ingresso nella rete originale con un nuovo indirizzo
+come un nuovo distinto g-nodo internamente connesso.
 
 * * *
 
