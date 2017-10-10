@@ -285,21 +285,6 @@ Ricordiamo che un indirizzo Netsukuku identifica un *nodo del grafo*, cioè una 
 all'interno di un *sistema*. Però in ogni sistema, in ogni momento, esiste una ed una sola
 *identità principale*, che è l'unica che detiene un indirizzo Netsukuku *reale*.
 
-Per l'esattezza, l'identità principale di un sistema può detenere per brevi istanti un
-indirizzo Netsukuku *virtuale*, durante le operazioni di una migrazione coinvolta in una
-*migration path*. Durante questo periodo quel sistema (e insieme a quello anche tutti
-gli altri sistemi che appartengono al g-nodo *g* che sta migrando) non può avere un indirizzo
-IP globale. Questo però non inficia sulla possibilità di quel sistema di avere un indirizzo
-IP interno al livello *i* per ogni valore di *i* da 0 a *k*, dove *k* è il livello
-del g-nodo *g*.
-
-Questo permette, come detto prima, che le connessioni realizzate tra due sistemi appartenenti
-al g-nodo *g* non vengano compromesse. Per questo aggiungiamo che la mappatura associa alcuni
-indirizzi IP anche ad un indirizzo Netsukuku *virtuale* (ma solo per l'identità principale), purché
-siano *reali* i suoi identificativi minori di *k*. Questi sono:
-
-*   Un indirizzo IP interno al livello *i* per ogni valore di *i* da 0 a *k*.
-
 Gli algoritmi di calcolo dei vari tipi di indirizzo IP sono descritti nel documento [IndirizziIP](IndirizziIP.md).
 
 ## <a name="Identita"></a> Identità
@@ -310,7 +295,7 @@ che ha come destinazione (e come passi) un g-nodo *visibile* dal suo indirizzo N
 Un sistema ha sempre una identità principale e zero o più identità di connettività.
 
 L'identità principale gestisce il network namespace default. L'identità principale ha un indirizzo
-Netsukuku *definitivo* che può essere *reale* o *virtuale*.
+Netsukuku *definitivo* che è *reale*.
 
 L'identità di connettività gestisce un certo network namespace. L'identità di connettività ha un indirizzo
 Netsukuku *di connettività* che è *virtuale*.
@@ -322,16 +307,13 @@ Le identità di connettività non si assegnano mai nessun indirizzo IP nel loro 
 L'identità principale, nel network namespace default, si assegna degli indirizzi IP sulla base del
 suo indirizzo Netsukuku.
 
-Sia *n* l'indirizzo Netsukuku dell'identità principale di un sistema. Sia *i* il livello più basso in
-cui la componente di *n* è virtuale. Diciamo che *i* vale *l* se *n* è del tutto *reale*.
+Sia *n* l'indirizzo Netsukuku dell'identità principale di un sistema. Sia *l* il numero dei livelli della topologia.
 
-*   Per ogni livello *j* da 0 a *i*:
-    *   Se *j* = *l*:
-        *   Il sistema si assegna l'indirizzo IP globale di *n*.
-        *   Il sistema può (opzionalmente) fare da anonimizzatore. Cioè si aggiunge la regola di SNAT.
-        *   Il sistema può (opzionalmente) assegnarsi l'indirizzo IP globale anonimizzante di *n*.
-    *   Altrimenti:
-        *   Il sistema si assegna l'indirizzo IP interno al livello *j* di *n*.
+*   Per ogni livello *j* da 0 a *l* - 1:
+    *   Il sistema si assegna l'indirizzo IP interno al livello *j* di *n*.
+*   Il sistema si assegna l'indirizzo IP globale di *n*.
+*   Il sistema può (opzionalmente) fare da anonimizzatore. Cioè si aggiunge la regola di SNAT.
+*   Il sistema può (opzionalmente) assegnarsi l'indirizzo IP globale anonimizzante di *n*.
 
 ### <a name="Assegnazione_rotte"></a> Assegnazione rotte
 
@@ -349,61 +331,60 @@ rotte verso i possibili indirizzi IP di destinazione.
 *   Per *i* che scende da *l* - 1 a `$subnetlevel`, per *j* da 0 a *gsize(i)* - 1, se *pos_n(i)* ≠ *j*:
     *   Sia *d* il g-nodo di coordinate (*i*, *j*) rispetto a *n*. Indipendentemente dal
         fatto che *d* sia presente o meno nella rete.
-    *   Se esiste l'indirizzo IP globale di *d* (cioè se è stato possibile computarlo):
-        *   Di conseguenza esiste anche il suo indirizzo IP anonimizzante.
-        *   Il sistema imposta una rotta per i pacchetti IP in *partenza* verso l'indirizzo IP globale di *d*.  
-            La tabella usata per i pacchetti IP in *partenza* sarà chiamata `ntk` e sarà presente
-            solo nel network namespace default.  
-            Nelle tabelle di routing del kernel per ogni indirizzo IP (con suffisso CIDR) si
-            può dichiarare che la destinazione è *non raggiungibile* oppure si riporta come informazione
-            il gateway da usare per raggiungere la destinazione.  
-            Se l'identità è a conoscenza di percorsi per quella destinazione, allora il programma
-            imposta nella tabella il primo gateway del miglior percorso (sebbene l'identità sia
-            a conoscenza in effetti anche di altre informazioni sul percorso). Altrimenti il programma
-            dichiara nella tabella che la destinazione è *non raggiungibile*.
-        *   Analogamente il sistema imposta una rotta per i pacchetti IP in *partenza* verso l'indirizzo IP
+    *   Si computa l'indirizzo IP globale di *d* ed anche il suo indirizzo IP anonimizzante.
+    *   Il sistema imposta una rotta per i pacchetti IP in *partenza* verso l'indirizzo IP globale di *d*.  
+        La tabella usata per i pacchetti IP in *partenza* sarà chiamata `ntk` e sarà presente
+        solo nel network namespace default.  
+        Nelle tabelle di routing del kernel per ogni indirizzo IP (con suffisso CIDR) si
+        può dichiarare che la destinazione è *non raggiungibile* oppure si riporta come informazione
+        il gateway da usare per raggiungere la destinazione.  
+        Se l'identità è a conoscenza di percorsi per quella destinazione, allora il programma
+        imposta nella tabella il primo gateway del miglior percorso (sebbene l'identità sia
+        a conoscenza in effetti anche di altre informazioni sul percorso). Altrimenti il programma
+        dichiara nella tabella che la destinazione è *non raggiungibile*.
+    *   Analogamente il sistema imposta una rotta per i pacchetti IP in *partenza* verso l'indirizzo IP
+        anonimizzante di *d*.
+    *   In realtà, la tabella `ntk` nel network namespace default gestito dall'identità principale
+        del sistema verrà usata anche per i pacchetti IP in *inoltro* da un MAC address che l'identità
+        non conosce. Questo va bene, perché la ricezione di tali pacchetti IP da inoltrare si dovrebbe
+        poter verificare solo sul network namespace default e solo se il sistema viene usato consapevolmente
+        come gateway: ad esempio se questo sistema è un gateway per una sottorete a gestione autonoma, oppure
+        se questo sistema viene usato come NAT per una rete privata.
+    *   Per ogni MAC address *m* di diretto vicino che l'identità conosce:
+        *   Il sistema imposta una rotta per i pacchetti IP provenienti da *m* in *inoltro* verso
+            l'indirizzo IP globale di *d*.  
+            La tabella usata per i pacchetti IP in *inoltro* da *m* sarà chiamata `ntk_from_$m` e sarà
+            presente in qualsiasi network namespace.  
+            Viene impostata la rotta identificata dal miglior percorso noto per quella
+            destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
+            La destinazione è *non raggiungibile* per i pacchetti IP
+            in *inoltro* provenienti da *m* se non esiste nella rete la destinazione *d*, oppure se
+            l'identità non conosce nessun percorso verso *d* che non passi per il
+            massimo distinto g-nodo di *m* per *n*.
+        *   Analogamente il sistema imposta una rotta in *inoltro* da *m* verso l'indirizzo IP
             anonimizzante di *d*.
-        *   In realtà, la tabella `ntk` nel network namespace default gestito dall'identità principale
-            del sistema verrà usata anche per i pacchetti IP in *inoltro* da un MAC address che l'identità
-            non conosce. Questo va bene, perché la ricezione di tali pacchetti IP da inoltrare si dovrebbe
-            poter verificare solo sul network namespace default e solo se il sistema viene usato consapevolmente
-            come gateway: ad esempio se questo sistema è un gateway per una sottorete a gestione autonoma, oppure
-            se questo sistema viene usato come NAT per una rete privata.
+    *   Si tenga presente che solo per l'identità principale nel network namespace default
+        e solo per la tabella `ntk` va indicato nella rotta l'indirizzo *src* preferito,
+        che serve se un processo locale vuole inviare un pacchetto IP. Sia per la rotta che
+        punta all'indirizzo IP globale di *d*, sia per la rotta che punta all'indirizzo
+        IP anonimizzante, come *src* preferito dovrà essere indicato l'indirizzo IP globale di *n*.
+    *   Per *k* che scende da *l* - 1 a *i* + 1:
+        *   Si computa l'indirizzo IP interno al livello *k* di *d*.
+        *   Il sistema imposta una rotta per i pacchetti IP in *partenza* verso l'indirizzo IP di *d*
+            interno al livello *k*.
         *   Per ogni MAC address *m* di diretto vicino che l'identità conosce:
             *   Il sistema imposta una rotta per i pacchetti IP provenienti da *m* in *inoltro* verso
-                l'indirizzo IP globale di *d*.  
-                La tabella usata per i pacchetti IP in *inoltro* da *m* sarà chiamata `ntk_from_$m` e sarà
-                presente in qualsiasi network namespace.  
-                Viene impostata la rotta identificata dal miglior percorso noto per quella
-                destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
-                La destinazione è *non raggiungibile* per i pacchetti IP
-                in *inoltro* provenienti da *m* se non esiste nella rete la destinazione *d*, oppure se
-                l'identità non conosce nessun percorso verso *d* che non passi per il
-                massimo distinto g-nodo di *m* per *n*.
-            *   Analogamente il sistema imposta una rotta in *inoltro* da *m* verso l'indirizzo IP
-                anonimizzante di *d*.
-        *   Si tenga presente che solo per l'identità principale nel network namespace default
-            e solo per la tabella `ntk` va indicato nella rotta l'indirizzo *src* preferito,
-            che serve se un processo locale vuole inviare un pacchetto IP. Sia per la rotta che
-            punta all'indirizzo IP globale di *d*, sia per la rotta che punta all'indirizzo
-            IP anonimizzante, come *src* preferito dovrà essere indicato l'indirizzo IP globale di *n*.
-    *   Per *k* che scende da *l* - 1 a *i* + 1:
-        *   Se esiste l'indirizzo IP interno al livello *k* di *d*:
-            *   Il sistema imposta una rotta per i pacchetti IP in *partenza* verso l'indirizzo IP di *d*
-                interno al livello *k*.
-            *   Per ogni MAC address *m* di diretto vicino che l'identità conosce:
-                *   Il sistema imposta una rotta per i pacchetti IP provenienti da *m* in *inoltro* verso
-                    l'indirizzo IP di *d* interno al livello *k* per i pacchetti IP.
-            *   Di nuovo solo per l'identità principale nel network namespace default
-                e solo per la tabella `ntk`, per la rotta che punta all'indirizzo IP interno
-                al livello *k* di *d* come *src* preferito dovrà essere indicato l'indirizzo
-                IP di *n* interno al livello *k*.
+                l'indirizzo IP di *d* interno al livello *k* per i pacchetti IP.
+        *   Di nuovo solo per l'identità principale nel network namespace default
+            e solo per la tabella `ntk`, per la rotta che punta all'indirizzo IP interno
+            al livello *k* di *d* come *src* preferito dovrà essere indicato l'indirizzo
+            IP di *n* interno al livello *k*.
 
 ## <a name="Indirizzi_del_sistema"></a> Indirizzi IP dell'identità principale del sistema
 
 Come abbiamo visto prima, in un sistema possono esistere diverse identità. Ogni identità detiene un
 indirizzo Netsukuku. Ma solo l'identità *principale* del sistema, sulla base del suo indirizzo Netsukuku,
-si può assegnare zero o più indirizzi IPv4 che gli permetteranno di comunicare con il resto della rete.
+si assegna alcuni indirizzi IPv4 che gli permetteranno di comunicare con il resto della rete.
 
 Vediamo come queste impostazioni si configurano in un sistema Linux e quindi quali operazioni fa il programma *qspnclient*.
 
@@ -415,18 +396,13 @@ Il programma **qspnclient** sa quando può cambiare l'indirizzo Netsukuku dell'i
 sistema:
 
 *   All'avvio del programma. In questo momento si costituisce la prima identità nel sistema, che è
-    in quel momento la principale; ad essa viene associato il primo indirizzo Netsukuku che è
-    completamente *reale*.
+    in quel momento la principale; ad essa viene associato il primo indirizzo Netsukuku che è completamente *reale*.
 *   Quando l'identità principale si duplica. In questo momento la vecchia identità diventa di connettività
     e il posto di identità principale viene preso dalla nuova identità; ad essa viene associato un
-    nuovo indirizzo Netsukuku che ha **almeno** una componente *virtuale*: quella al livello direttamente
-    inferiore al  g-nodo che ha ospitato l'ultima migrazione/ingresso. Ne potrebbe avere di più
-    se in quel momento una sua componente era già *virtuale*.
-*   Quando l'identità principale cambia uno dei componenti del suo indirizzo Netsukuku da *virtuale*
-    a *reale*.
+    nuovo indirizzo Netsukuku che è completamente *reale*.
 
 In queste occasioni il programma **qspnclient** computa gli indirizzi IP che si deve assegnare il
-sistema e quelli che si deve rimuovere. Li associa/rimuove tutti a ognuna delle interfacce di rete reali.
+sistema. Li associa tutti a ognuna delle interfacce di rete reali.
 
 ## <a name="Rotte_nelle_tabelle_di_routing"></a> Rotte nelle tabelle di routing
 
@@ -679,9 +655,6 @@ autonoma, il programma **qspnclient** deve assicurarsi che ci siano queste regol
 *   Indichiamo con *n* l'indirizzo Netsukuku dell'identità principale del sistema.
 *   Indichiamo con *pos_n(i)* l'identificativo al livello *i* dell'indirizzo Netsukuku *n*.
 *   Per *i* che sale da *subnetlevel* a *l* - 1:
-    *   Se *pos_n(i)* ≥ *gsize(i)*, cioè se la posizione è *virtuale* al livello *i* (questa condizione
-        è sempre falsa nel caso delle operazioni iniziali del sistema):
-        *   Esci dal ciclo *i*.
     *   Se *i* < *l* - 1:
         *   Per i pacchetti IP che passano per questo sistema e sono destinati ad
             un indirizzo IP di tipo interno di livello *i* + 1 che identifica un nodo
@@ -731,9 +704,8 @@ autonoma, il programma **qspnclient** deve assicurarsi che ci siano queste regol
                 interno alla mia sottorete autonoma.
 
 Per assicurare questo, il programma **qspnclient** deve intervenire all'inizio (cioè quando l'identità
-principale del sistema assume il suo primo indirizzo Netsukuku), ogni volta che l'identità principale
-del sistema cambia (un'altra identità diventa la principale) e ogni volta che l'identità principale
-cambia il suo indirizzo Netsukuku (passando un suo identificativo da virtuale a reale).
+principale del sistema assume il suo primo indirizzo Netsukuku) e ogni volta che l'identità principale
+del sistema cambia (un'altra identità diventa la principale).
 
 In tutte queste occasioni il programma **qspnclient**, conoscendo l'indirizzo Netsukuku precedente e quello nuovo dell'identità
 principale del sistema, produce i comandi `iptables -t nat -A` e `iptables -t nat -D` necessari.

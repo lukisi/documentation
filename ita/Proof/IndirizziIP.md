@@ -1,16 +1,5 @@
 # Proof of concept - Indirizzi IP
 
-*   **Nota**  
-    Questo documento è di pertinenza dell'utilizzatore del modulo QSPN. Quando il modulo
-    QSPN comunica di aver scoperto una nuova destinazione, allora l'utilizzatore è tenuto a
-    popolare le tabelle di routing tenendo conto delle convenzioni descritte in questo documento.  
-    Ci sono riferimenti al presente documento in alcuni punti:
-
-    *   Nell'analisi funzionale del modulo PeerServices si parla di "connessione TCP con un percorso interno".  
-        Andrà modificata quella parte.
-    *   Nei dettagli tecnici del modulo PeerServices si fa riferimento al "documento livelli e bits".  
-        Andrà modificata quella parte.
-
 ## Tipi di nodi del grafo
 
 Nel documento di [analisi](AnalisiFunzionale.md) abbiamo precisato che ogni *identità* che vive in
@@ -19,8 +8,8 @@ un sistema detiene un indirizzo Netsukuku. Ogni identità è quindi un *nodo del
 i processi in esecuzione nel sistema che vogliono accedere alla rete (come mittenti o destinatari di pacchetti
 IP) sono dentro il solo network namespace default.
 
-L'identità *principale* di un sistema può volersi assegnare zero o più indirizzi IP. A seconda se ha un
-indirizzo Netsukuku completamente *reale* oppure *virtuale* a qualche livello.
+L'identità *principale* di un sistema ha sempre un indirizzo Netsukuku completamente *reale*. Quindi essa
+sempre si assegna un certo numero di indirizzi IP.
 
 ## Calcolo degli indirizzi IP
 
