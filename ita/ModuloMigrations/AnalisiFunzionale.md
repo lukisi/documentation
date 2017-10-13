@@ -165,9 +165,9 @@ di ogni arco-identità.
 
 Per ogni arco-identità il modulo Migrations contatta l'identità diretta vicina per chiedere informazioni sulla sua
 rete di appartenenza, con il metodo remoto `retrieve_network_data`. La firma completa del metodo è
-`NetworkData retrieve_network_data(bool ask_coord=False) throws NotPrincipalError, VirtualAddressError`.
+`NetworkData retrieve_network_data(bool ask_coord=False) throws NotPrincipalError`.
 
-Questa comunicazione si completa solo se entrambe le identità sono *identità principali* e con tutte
+Questa comunicazione si completa solo se entrambe le identità sono *identità principali*, quindi con tutte
 le posizioni *reali*. Inoltre, dopo questa comunicazione si procede solo se le topologie delle due
 reti *G* e *J* sono identiche.  
 Quindi nella nostra trattazione *n* e *v* hanno entrambi un indirizzo completamente *reale* e con
@@ -1734,15 +1734,22 @@ Sia *g'* una di queste isole di livello *l*. Ad accorgersi di questa situazione 
 che non appartiene a *g'*, che è diretto vicino di un border-nodo *v* che appartiene a *g'*. Precisamente,
 se ne accorge il modulo Qspn di *n*, il quale emette un determinato segnale.
 
-L'utilizzatore del modulo in risposta a questo segnale chiama il metodo `signal_split` del modulo Migrations
+Il demone *ntkd* in risposta a questo segnale chiama il metodo `signal_split` del modulo Migrations
 indicando l'arco-identità su cui comunicare. Il modulo Migrations in esso chiama il metodo remoto
 `you_have_splitted` su quell'arco-identità indicando il livello *l* dello split.
 
 Il nodo *v* in questo metodo si avvale del modulo Coordinator per la *propagazione senza ritorno* del
 metodo `we_have_splitted`. In questo metodo ogni singolo nodo del g-nodo *g'* emette il segnale `exit_network` con
-il quale si spinge l'utilizzatore del modulo a chiamare un determinato metodo del modulo Qspn. Con
-esso il nodo rimuove tutti i percorsi verso destinazioni esterne a *g'*. Quindi tutto il g-nodo *g'* diventa
-una rete a sè, separata dal resto di *G*.
+il quale si spinge il demone *ntkd* a chiamare un determinato metodo del modulo Qspn.  
+In tale metodo il modulo Qspn rimuove tutti i percorsi verso destinazioni esterne a *g'*. Quindi tutto il g-nodo *g'* diventa
+una rete a sè, separata dal resto di *G*.  
+Inoltre il modulo Qspn, nei nodi più esterni di *g'*, rimuove tutti gli archi che lo collegano direttamente a distinti
+g-nodi. Avendo il modulo Qspn segnalato la rimozione degli archi, il demone *ntkd* rimuoverà gli archi-identità nel
+modulo Identities. Di conseguenza se tali archi-identità erano principali il modulo Identities li riformerà di nuovo,
+e il demone *ntkd*, accorgendosene, comunicherà al modulo Migrations la nascita di un nuovo arco.
+
+Con i meccanismi descritti in precedenza questo provoca le operazioni di ingresso di *g'* nella rete originale con un
+nuovo indirizzo come un nuovo distinto g-nodo internamente connesso.
 
 ## <a name="Class_MigrationsMemory"></a>Classe MigrationsMemory
 

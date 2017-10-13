@@ -8,7 +8,8 @@ Il modulo Migrations inizia le sue attività relativamente ad una certa identit�
 Cioè una istanza di `MigrationsManager` viene costruita quando si crea una identità nel
 sistema e a questa viene associata.  
 L'utilizzatore del modulo Migrations comunica poi a questa istanza di `MigrationsManager` la
-nascita e la rimozione di ogni arco-identità associato a quella identità nel sistema.
+nascita e la rimozione di ogni arco-identità associato a quella identità nel sistema. Questo
+chiamando i metodi pubblici `add_arc` e `remove_arc` dell'istanza di `MigrationsManager`.
 
 Il modulo Migrations, quando aggiunge un arco-identità, avvia una nuova tasklet. In essa eseguirà
 tutte le operazioni relative a quell'arco-identità. Quando rimuove un arco-identità abortisce
@@ -17,26 +18,25 @@ la tasklet relativa.
 ### Esame delle identità
 
 La tasklet per prima cosa esamina il tipo di identità su cui è in esecuzione. Se si tratta di una
-identità *di connettività* la tasklet termina. Se si tratta di una identità *principale* ma con
-indirizzo *virtuale* la tasklet attende un tempo breve e poi guarda di nuovo. Se si tratta di una
-identità *principale* con indirizzo *reale* allora prosegue. Questa verifica viene fatta all'inizio
+identità *di connettività* la tasklet termina. Se si tratta di una identità *principale* (quindi
+con indirizzo *reale*) allora prosegue. Questa verifica viene fatta all'inizio
 e in seguito ogni volta che la tasklet intende chiamare il metodo remoto `retrieve_network_data`.
 
 La tasklet chiama il metodo remoto `retrieve_network_data` sul suo arco-identità. La risposta può essere
-l'eccezione `NotPrincipalError` oppure l'eccezione `VirtualAddressError` oppure informazioni sulla rete
+l'eccezione `NotPrincipalError` oppure informazioni sulla rete
 di appartenenza del vicino.
 
 Se rileva che l'identità vicina è *di connettività*, allora la tasklet termina.
 
-Se rileva una identità *principale* ma con indirizzo *virtuale*, allora attende un tempo breve e poi
-ripete la stessa operazione (cioè chiama di nuovo il metodo remoto `retrieve_network_data` dopo aver
-verificato il tipo di identità su cui è in esecuzione). Infatti l'identità vicina dovrebbe presto
-assumere un indirizzo *reale*.
+Se l'identità vicina appartiene alla nostra stessa rete, allora la tasklet emette un segnale `same_network` indicando
+questo arco-identità. L'utilizzatore gestirà questo segnale memorizzando che quel dato arco-identità congiunge
+due nodi della stessa rete e quindi aggiungendo un IQspnArc al modulo QSPN.  
+Poi la tasklet termina. Infatti l'identità vicina potrebbe in seguito diventare di un'altra rete, ad
+esempio a causa di uno split di g-nodo. Ma in questo caso l'utilizzatore del modulo procederebbe
+a rimuovere l'arco-identità e eventualmente a ricostruirne un altro.
 
-Se l'identità vicina appartiene alla nostra stessa rete, allora attende un tempo lungo (10 minuti) prima
-di ripetere la stessa operazione. Infatti l'identità vicina potrebbe diventare di un'altra rete.
-
-Se l'identità vicina appartiene ad una rete diversa che ha una topologia diversa, allora la tasklet termina.
+Se l'identità vicina appartiene ad una rete diversa che ha una topologia diversa, allora la tasklet termina.  
+Le due reti, infatti, non potranno in alcun modo fondersi.
 
 Se l'identità vicina appartiene ad una rete diversa che ha la stessa topologia, allora la tasklet procede
 con la valutazione.
