@@ -16,10 +16,14 @@ La suite di software per un nodo nella rete Netsukuku si compone di:
     girano nel nodo, le quali lo richiamano in modo del tutto trasparente tramite l'uso del
     [Name Service Switch](https://en.wikipedia.org/wiki/Name_Service_Switch).
 
-*   Un server (`dns-to-andna`) che traduce le richieste DNS in richieste ANDNA e interroga il server ANDNA.
-    Questo è utile per le applicazioni che vogliono interrogare direttamente il DNS senza passare attraverso il NSS.
-    Permette inoltre di dare supporto ai Sistemi Operativi che non hanno un NSS o per i quali la suite Netsukuku non
-    fornisce ancora un'applicazione nativa.
+*   Un server (`dns-to-andna`) che traduce le richieste DNS in richieste ANDNA e interroga il server ANDNA.  
+    Di norma questo è in esecuzione su un nodo sul quale gira anche il demone `ntkd` ed interroga il
+    server ANDNA del nodo locale. Questo server `dns-to-andna` si rende necessario per questi casi:
+
+    *   Applicazioni nel nodo stesso, che vogliono interrogare direttamente il DNS senza passare attraverso il NSS.
+    *   Applicazioni nel nodo stesso, in un Sistema Operativo che non ha un NSS.
+    *   Applicazioni in un nodo che fa parte di una sottorete a gestione autonoma (cioè sul quale non è in
+        esecuzione la suite Netsukuku) che esce attraverso un gateway nella rete Netsukuku.
 
 *   Un tool di risoluzione nomi (`ntk-resolv`) che interroga direttamente il server ANDNA. Può essere utile durante
     un troubleshooting in una rete.
@@ -42,14 +46,14 @@ il corretto funzionamento e apportare modifiche o correzioni.
 Poi ci sono alcune librerie che offrono funzionalità che vengono usate da quasi tutti i moduli. Su queste librerie
 tutti i moduli hanno una dipendenza.
 
-*   **tasklet-system**. Con una dipendenza su questa libreria, un modulo può usare un generico sistema di
+*   [tasklet-system](Librerie/TaskletSystem.md). Con una dipendenza su questa libreria, un modulo può usare un generico sistema di
     tasklet (thread cooperativi) senza dover conoscere la specifica implementazione che il programma
-    adotterà. [TaskletSystem](Librerie/TaskletSystem.md)
-*   **ZCD**. Questa libreria formalizza e realizza il passaggio di messaggi tra nodi della rete, anche
+    adotterà.
+*   [ZCD](Librerie/ZCD.md). Questa libreria formalizza e realizza il passaggio di messaggi tra nodi della rete, anche
     quando ancora i nodi non hanno configurato le loro interfacce di rete con indirizzi e parametri
-    concordati. [ZCD](Librerie/ZCD.md)
-*   **ntkd-common**. Questa libreria contiene alcune classi e funzioni che sono note a più di un
-    modulo. [Common](Librerie/Common.md)
+    concordati.
+*   [ntkd-common](Librerie/Common.md). Questa libreria contiene alcune classi e funzioni che sono note a più di un
+    modulo.
 
 Il software si compone dei moduli seguenti:
 
