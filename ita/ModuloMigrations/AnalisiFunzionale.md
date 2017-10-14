@@ -1,6 +1,9 @@
 # Modulo Migrations - Analisi Funzionale
 
+1.  [Terminologia e notazioni](#Notazioni)
 1.  [Il ruolo del modulo Migrations](#Ruolo_Migrations)
+    1.  [Migration-path](#Migration_path)
+    1.  [Collaborazione con il modulo Coordinator](#Collaborazione_coordinator)
 1.  [Incontro e fusione di due reti distinte](#Fusione_reti)
     1.  [Prima fase - valutazione del singolo nodo](#Fusione_reti_fase1)
     1.  [Seconda fase - valutazione della rete](#Fusione_reti_fase2)
@@ -21,49 +24,9 @@
 1.  [Risoluzione di uno split di g-nodo](#Split_gnodo)
 1.  [Classe MigrationsMemory](#Class_MigrationsMemory)
 
-## <a name="Ruolo_Migrations"></a>Il ruolo del modulo Migrations
+## <a name="Notazioni"></a>Terminologia e notazioni
 
-Il ruolo del modulo Migrations è quello di trovare una migration-path e di coordinare
-la sua esecuzione.
-
-La ricerca di una migration-path ha come obiettivo la liberazione (se necessario) di una posizione
-*reale* in un g-nodo. La migration-path più corta può essere di lunghezza zero, se in effetti una
-posizione *reale* libera esiste già nel g-nodo.
-
-La motivazione che spinge alla ricerca di una migration-path è sempre l'ingresso di un g-nodo in
-una rete a cui non apparteneva. Questo può rendersi necessario a fronte di due situazioni:
-
-*   Una rete *J* incontra una rete distinta *G*. Le due reti si erano formate indipendentemente.
-*   Un g-nodo *g* di livello *l*, con *g* ∈ *G*, si è "splittato", cioè non è più internamente connesso.
-    Si sono quindi formate varie isole *g'*, *g''*, eccetera. Questo
-    mentre il suo g-nodo di livello superiore *h* risulta ancora internamente connesso. Allora
-    ogni isola che non contiene il nodo più anziano deve considerarsi come una distinta
-    rete *J* (composta da un solo g-nodo di livello *l* o minore) che incontra *G*.
-
-Nelle varie fasi delle sue operazioni, il modulo Migrations si avvale della collaborazione del
-modulo Coordinator, pur non avendo una diretta dipendenza sul modulo Coordinator. Questo è reso
-possibile dall'utilizzatore di questi due moduli, cioè il demone *ntkd*, attraverso l'implementazione
-di precise interfacce o delegati.
-
-Le diverse modalità di questa collaborazione sono dettagliate nel documento di analisi del
-modulo Coordinator ([qui](../ModuloCoordinator/AnalisiFunzionale.md#Collaborazione_migrations))
-e comunque verranno illustrate nel resto del presente documento dove necessario.
-
-In pratica questa collaborazione consiste in questo: il modulo Migrations
-in alcuni dei suoi algoritmi in esecuzione in un singolo nodo *n*  ∈ *g* ha bisogno
-di provocare l'esecuzione di altri suoi algoritmi in uno specifico nodo
-*n<sub>0</sub>* ∈ *g* che sia sempre quello.  
-Si sceglie di assegnare al nodo Coordinator del g-nodo *g* questo ruolo. Quando questa esecuzione
-si rende necessaria il modulo Coordinator farà da proxy fra il generico singolo nodo *n*  ∈ *g*
-e il nodo Coordinator di *g*.
-
-In altri suoi algoritmi in esecuzione in un singolo nodo *n*  ∈ *g*, il modulo Migrations ha bisogno
-di provocare l'esecuzione di altri suoi algoritmi in tutti i singoli nodi di *g*.  
-In questo caso il modulo Coordinator coordinerà l'esecuzione su tutti i singoli nodi.
-
-### Terminologia e notazioni
-
-#### La rete con i suoi vertici
+### La rete con i suoi vertici
 
 Indichiamo con *G = (V, E)* il grafo di una rete con i suoi vertici e archi, cioè i suoi singoli nodi
 e i collegamenti fra di essi.
@@ -90,7 +53,7 @@ In particolare, *[x]<sub>0</sub>* = {*x*}.
 
 Mentre, *[x]<sub>levels</sub>* = *V*, cioè tutti i vertici del grafo *G*, tutta la rete.
 
-#### G-nodi
+### G-nodi
 
 Quando parliamo di un g-nodo, ad esempio il g-nodo di livello *l* a cui appartiene il nodo *x*, facciamo riferimento
 ad un particolare grafo. Lo indichiamo con *g<sub>l</sub>(x)*.
@@ -133,6 +96,52 @@ nodo *x* appartenente a *g* è in grado autonomamente (tramite le sole conoscenz
 Se invece abbiamo *size<sub>0</sub>(g) = gsizes(0) \* gsizes(1) \* ... \* gsizes(l-1)* diciamo che il g-nodo *g* è *pieno*:
 cioè non ci sono più dentro *g* indirizzi liberi. Va notato che un singolo nodo *x* appartenente a *g* non è in grado
 autonomamente di calcolare tale valore, se non nel caso in cui *l* = 1.
+
+## <a name="Ruolo_Migrations"></a>Il ruolo del modulo Migrations
+
+Il ruolo del modulo Migrations è ...
+
+### <a name="Migration_path"></a>Migration-path
+
+Compito del modulo Migrations è anche quello di trovare una migration-path e di coordinare
+la sua esecuzione.
+
+La ricerca di una migration-path ha come obiettivo la liberazione (se necessario) di una posizione
+*reale* in un g-nodo. La migration-path più corta può essere di lunghezza zero, se in effetti una
+posizione *reale* libera esiste già nel g-nodo.
+
+La motivazione che spinge alla ricerca di una migration-path è sempre l'ingresso di un g-nodo in
+una rete a cui non apparteneva. Questo può rendersi necessario a fronte di due situazioni:
+
+*   Una rete *J* incontra una rete distinta *G*. Le due reti si erano formate indipendentemente.
+*   Un g-nodo *g* di livello *l*, con *g* ∈ *G*, si è "splittato", cioè non è più internamente connesso.
+    Si sono quindi formate varie isole *g'*, *g''*, eccetera. Questo
+    mentre il suo g-nodo di livello superiore *h* risulta ancora internamente connesso. Allora
+    ogni isola che non contiene il nodo più anziano deve considerarsi come una distinta
+    rete *J* (composta da un solo g-nodo di livello *l* o minore) che incontra *G*.
+
+### <a name="Collaborazione_coordinator"></a>Collaborazione con il modulo Coordinator
+
+Nelle varie fasi delle sue operazioni, il modulo Migrations si avvale della collaborazione del
+modulo Coordinator, pur non avendo una diretta dipendenza sul modulo Coordinator. Questo è reso
+possibile dall'utilizzatore di questi due moduli, cioè il demone *ntkd*, attraverso l'implementazione
+di precise interfacce o delegati.
+
+Le diverse modalità di questa collaborazione sono dettagliate nel documento di analisi del
+modulo Coordinator ([qui](../ModuloCoordinator/AnalisiFunzionale.md#Collaborazione_migrations))
+e comunque verranno illustrate nel resto del presente documento dove necessario.
+
+In pratica questa collaborazione consiste in questo: il modulo Migrations
+in alcuni dei suoi algoritmi in esecuzione in un singolo nodo *n*  ∈ *g* ha bisogno
+di provocare l'esecuzione di altri suoi algoritmi in uno specifico nodo
+*n<sub>0</sub>* ∈ *g* che sia sempre quello.  
+Si sceglie di assegnare al nodo Coordinator del g-nodo *g* questo ruolo. Quando questa esecuzione
+si rende necessaria il modulo Coordinator farà da proxy fra il generico singolo nodo *n*  ∈ *g*
+e il nodo Coordinator di *g*.
+
+In altri suoi algoritmi in esecuzione in un singolo nodo *n*  ∈ *g*, il modulo Migrations ha bisogno
+di provocare l'esecuzione di altri suoi algoritmi in tutti i singoli nodi di *g*.  
+In questo caso il modulo Coordinator coordinerà l'esecuzione su tutti i singoli nodi.
 
 ## <a name="Fusione_reti"></a>Incontro e fusione di due reti distinte
 
