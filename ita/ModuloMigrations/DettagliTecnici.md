@@ -1,17 +1,17 @@
-# Modulo Migrations - Dettagli Tecnici
+# Modulo Hooking - Dettagli Tecnici
 
 1.  [Operazioni relative ad un arco-identità](#Operazioni_arco_identita)
 
 ## <a name="Operazioni_arco_identita"></a>Operazioni relative ad un arco-identità
 
-Il modulo Migrations inizia le sue attività relativamente ad una certa identità nel sistema.
-Cioè una istanza di `MigrationsManager` viene costruita quando si crea una identità nel
+Il modulo Hooking inizia le sue attività relativamente ad una certa identità nel sistema.
+Cioè una istanza di `HookingManager` viene costruita quando si crea una identità nel
 sistema e a questa viene associata.  
-L'utilizzatore del modulo Migrations comunica poi a questa istanza di `MigrationsManager` la
+L'utilizzatore del modulo Hooking comunica poi a questa istanza di `HookingManager` la
 nascita e la rimozione di ogni arco-identità associato a quella identità nel sistema. Questo
-chiamando i metodi pubblici `add_arc` e `remove_arc` dell'istanza di `MigrationsManager`.
+chiamando i metodi pubblici `add_arc` e `remove_arc` dell'istanza di `HookingManager`.
 
-Il modulo Migrations, quando aggiunge un arco-identità, avvia una nuova tasklet. In essa eseguirà
+Il modulo Hooking, quando aggiunge un arco-identità, avvia una nuova tasklet. In essa eseguirà
 tutte le operazioni relative a quell'arco-identità. Quando rimuove un arco-identità abortisce
 la tasklet relativa.
 

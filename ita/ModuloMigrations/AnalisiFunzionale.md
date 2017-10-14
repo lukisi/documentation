@@ -1,7 +1,7 @@
-# Modulo Migrations - Analisi Funzionale
+# Modulo Hooking - Analisi Funzionale
 
 1.  [Terminologia e notazioni](#Notazioni)
-1.  [Il ruolo del modulo Migrations](#Ruolo_Migrations)
+1.  [Il ruolo del modulo Hooking](#Ruolo_Hooking)
     1.  [Migration-path](#Migration_path)
     1.  [Collaborazione con il modulo Coordinator](#Collaborazione_coordinator)
 1.  [Incontro e fusione di due reti distinte](#Fusione_reti)
@@ -22,7 +22,7 @@
     1.  [Esecuzione della migration-path](#Strategia_ingresso_Esecuzione_migration_path)
     1.  [Algoritmo di esecuzione](#Strategia_ingresso_Algoritmo_esecuzione)
 1.  [Risoluzione di uno split di g-nodo](#Split_gnodo)
-1.  [Classe MigrationsMemory](#Class_MigrationsMemory)
+1.  [Classe HookingMemory](#Class_HookingMemory)
 
 ## <a name="Notazioni"></a>Terminologia e notazioni
 
@@ -97,13 +97,13 @@ Se invece abbiamo *size<sub>0</sub>(g) = gsizes(0) \* gsizes(1) \* ... \*
 cioè non ci sono più dentro *g* indirizzi liberi. Va notato che un singolo nodo *x* appartenente a *g* non è in grado
 autonomamente di calcolare tale valore, se non nel caso in cui *l* = 1.
 
-## <a name="Ruolo_Migrations"></a>Il ruolo del modulo Migrations
+## <a name="Ruolo_Hooking"></a>Il ruolo del modulo Hooking
 
-Il ruolo del modulo Migrations è ...
+Il ruolo del modulo Hooking è ...
 
 ### <a name="Migration_path"></a>Migration-path
 
-Compito del modulo Migrations è anche quello di trovare una migration-path e di coordinare
+Compito del modulo Hooking è anche quello di trovare una migration-path e di coordinare
 la sua esecuzione.
 
 La ricerca di una migration-path ha come obiettivo la liberazione (se necessario) di una posizione
@@ -122,16 +122,16 @@ una rete a cui non apparteneva. Questo può rendersi necessario a fronte di due 
 
 ### <a name="Collaborazione_coordinator"></a>Collaborazione con il modulo Coordinator
 
-Nelle varie fasi delle sue operazioni, il modulo Migrations si avvale della collaborazione del
+Nelle varie fasi delle sue operazioni, il modulo Hooking si avvale della collaborazione del
 modulo Coordinator, pur non avendo una diretta dipendenza sul modulo Coordinator. Questo è reso
 possibile dall'utilizzatore di questi due moduli, cioè il demone *ntkd*, attraverso l'implementazione
 di precise interfacce o delegati.
 
 Le diverse modalità di questa collaborazione sono dettagliate nel documento di analisi del
-modulo Coordinator ([qui](../ModuloCoordinator/AnalisiFunzionale.md#Collaborazione_migrations))
+modulo Coordinator ([qui](../ModuloCoordinator/AnalisiFunzionale.md#Collaborazione_hooking))
 e comunque verranno illustrate nel resto del presente documento dove necessario.
 
-In pratica questa collaborazione consiste in questo: il modulo Migrations
+In pratica questa collaborazione consiste in questo: il modulo Hooking
 in alcuni dei suoi algoritmi in esecuzione in un singolo nodo *n*  ∈ *g* ha bisogno
 di provocare l'esecuzione di altri suoi algoritmi in uno specifico nodo
 *n<sub>0</sub>* ∈ *g* che sia sempre quello.  
@@ -139,7 +139,7 @@ Si sceglie di assegnare al nodo Coordinator del g-nodo *g* questo ruolo. Quando 
 si rende necessaria il modulo Coordinator farà da proxy fra il generico singolo nodo *n*  ∈ *g*
 e il nodo Coordinator di *g*.
 
-In altri suoi algoritmi in esecuzione in un singolo nodo *n*  ∈ *g*, il modulo Migrations ha bisogno
+In altri suoi algoritmi in esecuzione in un singolo nodo *n*  ∈ *g*, il modulo Hooking ha bisogno
 di provocare l'esecuzione di altri suoi algoritmi in tutti i singoli nodi di *g*.  
 In questo caso il modulo Coordinator coordinerà l'esecuzione su tutti i singoli nodi.
 
@@ -148,12 +148,12 @@ In questo caso il modulo Coordinator coordinerà l'esecuzione su tutti i singoli
 Si consideri un nodo *n* che appartiene alla rete *G*. Questa è una generalizzazione,
 che comprende ad esempio il caso di un singolo nodo che compone una intera rete.
 
-Il modulo Migrations del nodo *n* che appartiene alla rete *G* si avvede del vicino *v* di altra rete *J*.
+Il modulo Hooking del nodo *n* che appartiene alla rete *G* si avvede del vicino *v* di altra rete *J*.
 
 Questo incontro tra due singoli nodi di reti diverse è l'evento atomico di cui si compone
 l'evento macroscopico "la rete *G* incontra la rete *J*".
 
-Esaminiamo in questo documento le fasi che portano il modulo Migrations del nodo *n* a fare la sua parte
+Esaminiamo in questo documento le fasi che portano il modulo Hooking del nodo *n* a fare la sua parte
 al fine di decidere e effettuare l'ingresso della rete *G* dentro la rete *J*.
 
 È importante che la decisione venga presa dalla rete *G* come entità atomica, poiché il fatto che il
@@ -166,13 +166,13 @@ sfruttando il punto di contatto migliore.
 
 ### <a name="Fusione_reti_fase1"></a>Prima fase - valutazione del singolo nodo
 
-Il modulo Migrations è un modulo *di identità*, cioè viene creata una istanza
+Il modulo Hooking è un modulo *di identità*, cioè viene creata una istanza
 per ogni identità nel sistema.
 
-L'utilizzatore del modulo Migrations, cioè il demone *ntkd*, gli comunica la nascita e la rimozione
+L'utilizzatore del modulo Hooking, cioè il demone *ntkd*, gli comunica la nascita e la rimozione
 di ogni arco-identità.
 
-Per ogni arco-identità il modulo Migrations contatta l'identità diretta vicina per chiedere informazioni sulla sua
+Per ogni arco-identità il modulo Hooking contatta l'identità diretta vicina per chiedere informazioni sulla sua
 rete di appartenenza, con il metodo remoto `retrieve_network_data`. La firma completa del metodo è
 `NetworkData retrieve_network_data(bool ask_coord=False) throws NotPrincipalError`.
 
@@ -185,7 +185,7 @@ la stessa topologia di rete.
 Il dettaglio delle operazioni per far sì che queste comunicazioni avvengano nei tempi e casi desiderati
 è illustrato [qui](DettagliTecnici.md#Operazioni_arco_identita).
 
-Il modulo Migrations del nodo *n* chiama il metodo remoto `retrieve_network_data` sul nodo *v* e riceve
+Il modulo Hooking del nodo *n* chiama il metodo remoto `retrieve_network_data` sul nodo *v* e riceve
 una struttura dati che descrive *J* come è vista da *v*.  
 La struttura `NetworkData` contiene:
 
@@ -195,7 +195,7 @@ La struttura `NetworkData` contiene:
 *   `List<int> neighbor_pos` = Per i valori *i* da 1 a `levels`, l'elemento `neighbor_pos[i-1]` è la
     posizione al livello `i-1` di *v* dentro *g<sub>i</sub>(v)*.
 
-Da questa prima operazione il modulo Migrations in autonomia capisce se l'identità diretta vicina
+Da questa prima operazione il modulo Hooking in autonomia capisce se l'identità diretta vicina
 appartiene ad una rete diversa. Ovviamente solo in questo caso procede con le successive operazioni.
 
 Le due reti sicuramente vogliono fondersi in una. Si preferisce che sia la più piccola, come numero di singoli nodi in tutta la rete,
@@ -231,7 +231,7 @@ decide che *G* deve entrare in *J*.
 
 ### <a name="Fusione_reti_fase2"></a>Seconda fase - valutazione della rete
 
-Allora il modulo Migrations aggiunge un'altra informazione a quelle della struttura dati di cui sopra:
+Allora il modulo Hooking aggiunge un'altra informazione a quelle della struttura dati di cui sopra:
 
 *   `int min_lvl` = Livello minimo a cui il singolo nodo *n* è disposto a fare ingresso. Infatti il nodo *n*
     potrebbe essere un gateway verso una rete privata in cui si vogliono adottare diversi meccanismi di
@@ -241,13 +241,13 @@ Allora il modulo Migrations aggiunge un'altra informazione a quelle della strutt
 
 Inoltre sceglie un identificativo univoco random per questa richiesta, `int evaluate_enter_id`.
 
-Ora il modulo Migrations del nodo *n* prepara una nuova struttura dati con le informazioni di cui sopra
+Ora il modulo Hooking del nodo *n* prepara una nuova struttura dati con le informazioni di cui sopra
 istanziando un `EvaluateEnterData evaluate_enter_data`.  
-La classe EvaluateEnterData è definita nel modulo Migrations. Si tratta di una classe serializzabile. I membri di questa classe sono:
+La classe EvaluateEnterData è definita nel modulo Hooking. Si tratta di una classe serializzabile. I membri di questa classe sono:
 `int64 netid`, `List<int> neighbor_pos`, `int min_lvl`, `int evaluate_enter_id`.  
-L'istanza `evaluate_enter_data` andrà passata ad un metodo del modulo Migrations nel nodo Coordinator della rete.
+L'istanza `evaluate_enter_data` andrà passata ad un metodo del modulo Hooking nel nodo Coordinator della rete.
 
-Ora il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
+Ora il modulo Hooking del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
 metodo proxy `evaluate_enter` (vedi [qui](../ModuloCoordinator/AnalisiFunzionale.md#Deliverables_manager)).
 A questo metodo viene passato il livello *levels* e un `Object evaluate_enter_data`.  
 La reale classe che implementa questa struttura dati non è infatti nota al modulo Coordinator. Questi sa solo
@@ -255,21 +255,21 @@ che è serializzabile.
 
 Grazie ai meccanismi del modulo Coordinator (di cui è trattato nella relativa documentazione) ora
 nel nodo Coordinator della rete *G* viene chiamato dallo stesso modulo Coordinator (tramite un
-delegato che ha ricevuto nel suo costruttore) il metodo `evaluate_enter` del modulo Migrations.  
+delegato che ha ricevuto nel suo costruttore) il metodo `evaluate_enter` del modulo Hooking.  
 Va considerato che, sempre grazie ai meccanismi del modulo Coordinator, oltre alla struttura dati
 `evaluate_enter_data` il metodo `evaluate_enter` eseguito sul nodo Coordinator di *G* riceve
 come argomento anche l'indirizzo di *n*, `List<int> client_address`.
 
-Prima di vedere cosa fa il metodo `evaluate_enter` del modulo Migrations specifichiamo quale sarà il
+Prima di vedere cosa fa il metodo `evaluate_enter` del modulo Hooking specifichiamo quale sarà il
 suo output. Il valore restituito da questo metodo è una istanza della classe serializzabile `EvaluateEnterResult`
-definita nel modulo Migrations. Anche qui diciamo che la classe non è nota al modulo Coordinator, che
+definita nel modulo Hooking. Anche qui diciamo che la classe non è nota al modulo Coordinator, che
 lo riceve come un generico Object, sapendo solo che è serializzabile.  
 La classe `EvaluateEnterResult` è in grado di rappresentare i possibili esiti del metodo, cioè
 `int first_ask_lvl` oppure `AskAgainError` oppure `IgnoreNetworkError`.
 
-Vediamo cosa avviene nel metodo `evaluate_enter` del modulo Migrations eseguito sul nodo Coordinator di *G*.
+Vediamo cosa avviene nel metodo `evaluate_enter` del modulo Hooking eseguito sul nodo Coordinator di *G*.
 
-Ora il modulo Migrations nel nodo Coordinator di *G* computa il tempo in millisecondi `global_timeout` entro il quale intende rispondere alle
+Ora il modulo Hooking nel nodo Coordinator di *G* computa il tempo in millisecondi `global_timeout` entro il quale intende rispondere alle
 richieste di ingresso in una diversa rete. Abbiamo accennato prima al fatto che è bene attendere
 un tempo per verificare la possibilità di fare ingresso sfruttando il punto di contatto migliore
 fra le due reti.  
@@ -279,7 +279,7 @@ dare il tempo agli altri singoli nodi di *G*, che potrebbero venire in contatto 
 in altri punti, di raggiungere il nodo Coordinator di *G* con la loro proposta.
 
 Oltre alle informazioni ricevute dal nodo *n*, il nodo Coordinator della rete *G* (sempre riferendoci
-al codice in esecuzione nel modulo Migrations) conosce il livello più basso `int max_lvl`
+al codice in esecuzione nel modulo Hooking) conosce il livello più basso `int max_lvl`
 tale che la rete *G* è composta da un solo g-nodo a quel livello. Questo valore è utile, perché
 se si raggiunge la prenotazione di una posizione a questo livello, l'intera rete *G* può entrare in *J*
 in blocco. Non è quindi necessario chiedere di più.
@@ -301,9 +301,9 @@ Il compito del nodo Coordinator di *G* adesso è quello di memorizzare che è st
 un arco tra il nodo *n* e il nodo *v*, tramite il quale potremo tentare di far entrare il g-nodo *g<sub>first_ask_lvl</sub>(n)*
 dentro un g-nodo di *v*.
 
-Assumiamo che questa richiesta sia la prima pervenuta nella rete *G*. Il modulo Migrations se ne avvede
+Assumiamo che questa richiesta sia la prima pervenuta nella rete *G*. Il modulo Hooking se ne avvede
 accedendo alla memoria condivisa di tutta la rete (spiegheremo meglio il significato di questo a breve).  
-Allora il modulo Migrations nel nodo Coordinator di *G* crea una istanza `EvaluateEnterEvaluation resp` con
+Allora il modulo Hooking nel nodo Coordinator di *G* crea una istanza `EvaluateEnterEvaluation resp` con
 i campi `evaluate_enter_data` e `client_address`. In seguito potremmo riferirci a questa
 struttura dati con il termine *valutazione*.  
 Inoltre rappresenta con un oggetto serializzabile `Timer timeout = global_timeout da ora` la scadenza di
@@ -314,42 +314,42 @@ A questo punto queste informazioni devono essere memorizzate nella memoria condi
 la *valutazione* come elemento di una lista nel membro `evaluation_list`; il livello con cui tentare
 inizialmente nel membro `first_ask_lvl`; la scadenza nel membro `timeout`; lo stato nel membro `status`.
 
-La memoria condivisa della rete (o più genericamente di un g-nodo) di pertinenza del modulo Migrations
-è una istanza della classe `MigrationsMemory`. L'elenco dei suoi campi è riportato in seguito [qui](#Class_MigrationsMemory).
+La memoria condivisa della rete (o più genericamente di un g-nodo) di pertinenza del modulo Hooking
+è una istanza della classe `HookingMemory`. L'elenco dei suoi campi è riportato in seguito [qui](#Class_HookingMemory).
 
 #### <a name="Accesso_memoria_condivisa"></a>Accesso alla memoria condivisa
 
-Abbiamo già detto che il modulo Migrations può fare in modo che venga richiamato un metodo nel modulo Coordinator, pur non
+Abbiamo già detto che il modulo Hooking può fare in modo che venga richiamato un metodo nel modulo Coordinator, pur non
 avendo una dipendenza diretta sul modulo Coordinator. In particolare avremo una coppia di metodi
-`get_migrations_memory` e `set_migrations_memory`
+`get_hooking_memory` e `set_hooking_memory`
 (vedi [qui](../ModuloCoordinator/AnalisiFunzionale.md#Deliverables_manager)) con i quali si recupera e si salva
-una istanza di Object (perché il modulo Coordinator non conosce i dati del modulo Migrations) che costituisce
-l'intera base dati (cioè la memoria condivisa della rete) relativa agli aspetti gestiti dal modulo Migrations.  
-Il modulo Migrations nel nodo Coordinator di *G* recupera l'intera base dati corrente e la integra con
+una istanza di Object (perché il modulo Coordinator non conosce i dati del modulo Hooking) che costituisce
+l'intera base dati (cioè la memoria condivisa della rete) relativa agli aspetti gestiti dal modulo Hooking.  
+Il modulo Hooking nel nodo Coordinator di *G* recupera l'intera base dati corrente e la integra con
 l'aggiunta di questa nuova *valutazione*. Poi immediatamente salva l'intera base dati.  
 Abbiamo detto nella trattazione del modulo Coordinator che questi garantisce l'affidabilità e
-la coerenza del dato. Ma sta al modulo Migrations, che è l'unico che accede a questi dati, garantire
+la coerenza del dato. Ma sta al modulo Hooking, che è l'unico che accede a questi dati, garantire
 l'atomicità di queste operazioni. Sarà sufficiente acquisire un *lock* **nel nodo corrente**
 in tutti i punti del suo codice dove si accede a questa memoria: cioè l'uso del modulo Coordinator
 fa sì che non sia necessario un meccanismo di lock su diversi nodi.  
 In seguito ci riferiremo a questa sequenza di operazioni semplicemente dicendo che
-il modulo Migrations nel nodo Coordinator di *G* accede e/o aggiorna la memoria condivisa di tutta la rete con delle
+il modulo Hooking nel nodo Coordinator di *G* accede e/o aggiorna la memoria condivisa di tutta la rete con delle
 informazioni di sua pertinenza.
 
 * * *
 
-Ora il modulo Migrations nel nodo Coordinator di *G* risponde al client *n* con una eccezione AskAgainError.
+Ora il modulo Hooking nel nodo Coordinator di *G* risponde al client *n* con una eccezione AskAgainError.
 
 L'eccezione AskAgainError, ricevuta come abbiamo detto sottoforma di una particolare istanza della
 classe serializzabile `EvaluateEnterResult` dalla chiamata del metodo `evaluate_enter` sul modulo Coordinator,
-istruisce il modulo Migrations nel nodo *n* di ripetere la stessa richiesta (con le stesse informazioni
+istruisce il modulo Hooking nel nodo *n* di ripetere la stessa richiesta (con le stesse informazioni
 tra cui lo stesso `evaluate_enter_id`) dopo aver atteso alcuni istanti.  
 Questa attesa deve essere più piccola (almeno 3 o 4 volte) di quella calcolata come `global_timeout`,
-che come abbiamo detto può essere calcolata dal modulo Migrations esclusivamente sulla base del numero di
+che come abbiamo detto può essere calcolata dal modulo Hooking esclusivamente sulla base del numero di
 singoli nodi presenti in *G*.
 
 Supponiamo che nel frattempo giunga al Coordinator della rete *G* una richiesta simile dal nodo *w*
-relativa alla rete *F*. Nel metodo `evaluate_enter` del modulo Migrations eseguito nel nodo Coordinator
+relativa alla rete *F*. Nel metodo `evaluate_enter` del modulo Hooking eseguito nel nodo Coordinator
 di *G* per la richiesta pervenuta da *w*, accedendo alla memoria condivisa della rete si scopre che esiste una
 precedente *valutazione* di ingresso in *J*. Si deduce che la seconda richiesta non può essere presa in
 considerazione. Il nodo Coordinator deve rispondere con l'eccezione `IgnoreNetworkError`, che sarà spiegata sotto.
@@ -362,10 +362,10 @@ riguardano la stessa rete *J*. Le due *valutazioni* vanno entrambe memorizzate n
 
 La scadenza delle *valutazioni* resta la stessa memorizzata prima.
 
-Il modulo Migrations nel nodo Coordinator di *G* aggiorna la memoria condivisa di tutta la rete
+Il modulo Hooking nel nodo Coordinator di *G* aggiorna la memoria condivisa di tutta la rete
 aggiungendo la *valutazione* relativa alla richiesta di *q*.
 
-Ora il modulo Migrations nel nodo Coordinator di *G* si accinge a rispondere alla richiesta di *q*.
+Ora il modulo Hooking nel nodo Coordinator di *G* si accinge a rispondere alla richiesta di *q*.
 Se il timer `timeout` non è ancora scaduto il Coordinator risponde anche a questa richiesta con
 una eccezione AskAgainError.
 
@@ -373,22 +373,22 @@ Se invece `timeout` è scaduto si passa alla terza fase.
 
 ### <a name="Fusione_reti_fase3"></a>Terza fase - elezione dell'ingresso
 
-Consideriamo che ogni volta che arriva una richiesta `r` di ingresso in *J* il modulo Migrations nel
+Consideriamo che ogni volta che arriva una richiesta `r` di ingresso in *J* il modulo Hooking nel
 nodo Coordinator di *G* prima di valutarla accede alla memoria condivisa di tutta la rete per
 vedere se a tale richiesta è stata già data una *valutazione*.  
 Una *valutazione* `v` recuperata dalla memoria condivisa della rete è sempre identificabile
 come quella associata ad una particolare richiesta `r` appena pervenuta verificando che
 `r.evaluate_enter_id == v.evaluate_enter_data.evaluate_enter_id`.
 
-Alla fine arriverà una richiesta `req` di ingresso in *J*. Il modulo Migrations nel nodo Coordinator
+Alla fine arriverà una richiesta `req` di ingresso in *J*. Il modulo Hooking nel nodo Coordinator
 di *G* vedrà che esiste un gruppo di *valutazioni* per l'ingresso in *J*, che lo `status` è `PENDING`
 e che  il `timeout` è scaduto.  
-A questo punto il modulo Migrations dovrà eleggere la migliore fra le soluzioni.
+A questo punto il modulo Hooking dovrà eleggere la migliore fra le soluzioni.
 
 Una cosa da evitare è quella di formare g-nodi che facilmente potrebbero "splittarsi", cioè diventare
 internamente disconnessi.  
 Per questo in `EvaluateEnterData evaluate_enter_data` memoriziamo `List<int> neighbor_pos` la posizione
-del vicino *v* dentro *J*. Il modulo Migrations nel nodo Coordinator di *G* accedendo nella memoria condivisa
+del vicino *v* dentro *J*. Il modulo Hooking nel nodo Coordinator di *G* accedendo nella memoria condivisa
 alla lista di *valutazioni* vede che un certo numero di queste ha per nodo vicino un nodo che appartiene
 al g-nodo di *J* in cui *G* vorrebbe entrare. Deduce quindi il numero di archi che dovrebbero rompersi
 per far sì che il g-nodo divenga disconnesso.
@@ -399,17 +399,17 @@ Nella memoria condivisa di tutta la rete il membro `status` passa a `TO_BE_NOTIF
 nuovo membro `EvaluateEnterEvaluation elected = v`. Il membro `timeout` viene di nuovo impostato
 a `timeout = global_timeout da ora`.
 
-Il modulo Migrations nel nodo Coordinator di *G* aggiorna la memoria condivisa di tutta la rete con tutte queste variazioni.
+Il modulo Hooking nel nodo Coordinator di *G* aggiorna la memoria condivisa di tutta la rete con tutte queste variazioni.
 
-Ora il modulo Migrations guarda alla richiesta `req` appena pervenuta. Se la relativa *valutazione* `resp` è proprio `elected`
-allora il modulo Migrations nel nodo Coordinator di *G* fa queste operazioni:
+Ora il modulo Hooking guarda alla richiesta `req` appena pervenuta. Se la relativa *valutazione* `resp` è proprio `elected`
+allora il modulo Hooking nel nodo Coordinator di *G* fa queste operazioni:
 
 *   La *valutazione* `elected` viene rimossa dalla lista `evaluation_list`.
 *   Il membro `status` passa a `NOTIFIED`.
 *   Aggiorna la memoria condivisa di tutta la rete.
 *   Risponde alla richiesta del client con `first_ask_lvl`.
 
-Altrimenti il modulo Migrations fa queste operazioni:
+Altrimenti il modulo Hooking fa queste operazioni:
 
 *   Risponde alla richiesta del client con l'eccezione AskAgainError.
 
@@ -417,7 +417,7 @@ Le successive richieste saranno gestite nella quarta fase.
 
 ### <a name="Fusione_reti_fase4"></a>Quarta fase - comunicazione della elezione
 
-Quando arriva una richiesta `req` di ingresso in *J* il modulo Migrations nel nodo Coordinator di *G* si avvede che si trova
+Quando arriva una richiesta `req` di ingresso in *J* il modulo Hooking nel nodo Coordinator di *G* si avvede che si trova
 nella quarta fase perché nella memoria condivisa di tutta la rete lo `status` è `TO_BE_NOTIFIED` o `NOTIFIED`.
 
 Sia `v` la valutazione data a `req`.  
@@ -426,26 +426,26 @@ proprio ora. In quest'ultimo caso il modulo la aggiunge a `evaluation_list` e ag
 condivisa.
 
 Se lo `status` è `TO_BE_NOTIFIED` e la valutazione `v` è proprio `elected`
-allora il modulo Migrations nel nodo Coordinator di *G* fa queste operazioni:
+allora il modulo Hooking nel nodo Coordinator di *G* fa queste operazioni:
 
 *   La *valutazione* `elected` viene rimossa dalla lista `evaluation_list`.
 *   Il membro `status` passa a `NOTIFIED`.
 *   Aggiorna la memoria condivisa di tutta la rete.
 *   Risponde alla richiesta del client con `first_ask_lvl`.
 
-Altrimenti, se lo `status` è `TO_BE_NOTIFIED` il modulo Migrations fa queste operazioni:
+Altrimenti, se lo `status` è `TO_BE_NOTIFIED` il modulo Hooking fa queste operazioni:
 
 *   Se `timeout` è scaduto:
     *   La *valutazione* `elected` viene rimossa dalla lista `evaluation_list`.
     *   Il membro `elected` viene azzerato.
     *   Il membro `status` torna a `PENDING`.
     *   Il membro `timeout` resta immutato.
-    *   Il modulo Migrations ricomincia dalla terza fase: cioè si trova a dover eleggere la migliore fra le soluzioni
+    *   Il modulo Hooking ricomincia dalla terza fase: cioè si trova a dover eleggere la migliore fra le soluzioni
         presenti ora in `evaluation_list`.
 *   Altrimenti:
     *   Risponde alla richiesta del client con l'eccezione AskAgainError.
 
-Altrimenti, se lo `status` è `NOTIFIED` il modulo Migrations fa queste operazioni:
+Altrimenti, se lo `status` è `NOTIFIED` il modulo Hooking fa queste operazioni:
 
 *   La *valutazione* `v` viene rimossa dalla lista `evaluation_list`.
 *   Se `timeout` è scaduto svuota la lista `evaluation_list`.
@@ -454,13 +454,13 @@ Altrimenti, se lo `status` è `NOTIFIED` il modulo Migrations fa queste operazio
 
 L'eccezione IgnoreNetworkError, ricevuta come abbiamo detto sottoforma di una particolare istanza della
 classe serializzabile `EvaluateEnterResult` dalla chiamata del metodo `evaluate_enter` sul modulo Coordinator,
-istruisce il modulo Migrations nel nodo *n* di non prendere alcuna iniziativa e di evitare ulteriori valutazioni di ingresso nella
+istruisce il modulo Hooking nel nodo *n* di non prendere alcuna iniziativa e di evitare ulteriori valutazioni di ingresso nella
 rete tramite il diretto vicino *v* per un certo tempo.  
 Questo tempo potrebbe essere un multiplo (diciamo 20 volte tanto) di quello calcolato come `global_timeout`,
-che come abbiamo detto può essere calcolata dal modulo Migrations esclusivamente sulla base del numero di singoli nodi presenti in *G*.
+che come abbiamo detto può essere calcolata dal modulo Hooking esclusivamente sulla base del numero di singoli nodi presenti in *G*.
 
 **Nota**: Il nodo Coordinator della rete *G* deve valutare una richiesta `EvaluateEnterData` alla
-volta. Ciò significa che l'implementazione del metodo `evaluate_enter` del modulo Migrations deve acquisire
+volta. Ciò significa che l'implementazione del metodo `evaluate_enter` del modulo Hooking deve acquisire
 un *lock* (nel nodo corrente) prima di iniziare e rilasciarlo prima di rispondere.
 
 ### <a name="Fusione_reti_fase5"></a>Quinta fase - comunicazione con il g-nodo entrante
@@ -471,55 +471,55 @@ dal Coordinator di *G* di tentare l'ingresso in *J* tramite il suo vicino *v* co
 Ricordiamo che il valore `first_ask_lvl` è ricevuto dal nodo *n* come membro di una istanza di `EvaluateEnterResult` dalla chiamata
 del metodo `evaluate_enter` sul modulo Coordinator.
 
-Ora il modulo Migrations nel nodo *n* vuole chiamare il metodo `begin_enter` del modulo Migrations nel nodo Coordinator del
+Ora il modulo Hooking nel nodo *n* vuole chiamare il metodo `begin_enter` del modulo Hooking nel nodo Coordinator del
 g-nodo *g*.
 
-Prima il modulo Migrations del nodo *n* prepara una nuova struttura dati con le informazioni che servono
+Prima il modulo Hooking del nodo *n* prepara una nuova struttura dati con le informazioni che servono
 a questo metodo istanziando un `BeginEnterData begin_enter_data`.  
-La classe BeginEnterData è definita nel modulo Migrations. Si tratta di una classe serializzabile. I membri
+La classe BeginEnterData è definita nel modulo Hooking. Si tratta di una classe serializzabile. I membri
 di questa classe sono:
 
 *   nessuno?
 
-Poi il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
+Poi il modulo Hooking del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
 metodo proxy `begin_enter`.  
 A questo metodo viene passato il livello *lvl* e un `Object begin_enter_data`.
 La reale classe che implementa questa struttura dati non è infatti nota al modulo Coordinator. Questi sa solo
 che è serializzabile.
 
 Grazie ai meccanismi del modulo Coordinator ora nel nodo Coordinator del g-nodo *g* viene chiamato
-dallo stesso modulo Coordinator il metodo `begin_enter` del modulo Migrations. E questi riceve come argomento,
+dallo stesso modulo Coordinator il metodo `begin_enter` del modulo Hooking. E questi riceve come argomento,
 oltre alla struttura dati `begin_enter_data`, anche l'indirizzo di *n*, `List<int> client_address`.
 
-Il valore che verrà restituito dal metodo `begin_enter` del modulo Migrations è una istanza della classe
-serializzabile `BeginEnterResult` definita nel modulo Migrations.  
+Il valore che verrà restituito dal metodo `begin_enter` del modulo Hooking è una istanza della classe
+serializzabile `BeginEnterResult` definita nel modulo Hooking.  
 La classe `BeginEnterResult` è in grado di rappresentare i possibili esiti del metodo, cioè
 `void` oppure `AlreadyEnteringError`.
 
-Vediamo cosa avviene nel metodo `begin_enter` del modulo Migrations eseguito sul nodo Coordinator del g-nodo *g*.
+Vediamo cosa avviene nel metodo `begin_enter` del modulo Hooking eseguito sul nodo Coordinator del g-nodo *g*.
 
-Analogamente a quanto detto per il modulo Migrations nel nodo Coordinator di tutta la rete *G*, anche il modulo Migrations nel nodo
+Analogamente a quanto detto per il modulo Hooking nel nodo Coordinator di tutta la rete *G*, anche il modulo Hooking nel nodo
 Coordinator del g-nodo *g* ha bisogno di poter accedere in lettura e scrittura alla memoria condivisa del
-g-nodo *g* relativa agli aspetti gestiti dal modulo Migrations.  
-Anche in questo caso, lo fa stimolando la chiamata dei metodi `get_migrations_memory` e `set_migrations_memory` nel modulo
-Coordinator. E le operazioni possono essere considerate atomiche se il modulo Migrations si occupa di acquisire
+g-nodo *g* relativa agli aspetti gestiti dal modulo Hooking.  
+Anche in questo caso, lo fa stimolando la chiamata dei metodi `get_hooking_memory` e `set_hooking_memory` nel modulo
+Coordinator. E le operazioni possono essere considerate atomiche se il modulo Hooking si occupa di acquisire
 un *lock* nel nodo corrente nei punti del suo codice che accedono a questa memoria condivisa.  
 In seguito ci riferiremo a questa sequenza di operazioni semplicemente dicendo che
-il modulo Migrations nel nodo Coordinator del g-nodo *g* accede e/o aggiorna la memoria condivisa di *g* con delle
+il modulo Hooking nel nodo Coordinator del g-nodo *g* accede e/o aggiorna la memoria condivisa di *g* con delle
 informazioni di sua pertinenza.
 
-Il modulo Migrations nel nodo Coordinator di *g* vuole ora accertarsi che ci sia un solo
+Il modulo Hooking nel nodo Coordinator di *g* vuole ora accertarsi che ci sia un solo
 nodo che porta avanti l'ingresso di *g* in blocco in una nuova rete.
 
-Il modulo Migrations nel nodo Coordinator di *g* accede alla memoria condivisa di *g* e
+Il modulo Hooking nel nodo Coordinator di *g* accede alla memoria condivisa di *g* e
 verifica che non sia in corso un'altra operazione di ingresso di *g* in un'altra rete; e allo stesso
 tempo memorizza che ora è in corso questa operazione e gli assegna un tempo limite per il suo
 completamento. **TODO** quanto? deve permettere il completamento della ricerca della migration-path
 nella rete *J* in cui stiamo entrando.  
 Chiamiamo questa operazione "autorizzazione esclusiva a procedere".
 
-Nella memoria condivisa del g-nodo *g* di pertinenza del modulo Migrations, cioè nell'istanza di
-`MigrationsMemory` posta nel membro `migrations_memory` dell'istanza di `CoordGnodeMemory` associata
+Nella memoria condivisa del g-nodo *g* di pertinenza del modulo Hooking, cioè nell'istanza di
+`HookingMemory` posta nel membro `hooking_memory` dell'istanza di `CoordGnodeMemory` associata
 a *g*, il membro `Timer? begin_enter_timeout` è *null* se non è in corso una operazione di ingresso
 di *g*. Se invece è valorizzato significa che è stata avviata una operazione di ingresso riguardante il
 g-nodo *g*. Ma se il timer è scaduto l'operazione va considerata abortita.  
@@ -527,12 +527,12 @@ Quindi, se questo valore non è *null* e non è scaduto allora l'autorizzazione 
 Altrimenti il valore viene impostato con la nuova scadenza, viene aggiornata la memoria condivisa del g-nodo
 e l'autorizzazione esclusiva è riuscita.
 
-Se l'autorizzazione esclusiva non riesce, allora il metodo `begin_enter` del modulo Migrations
+Se l'autorizzazione esclusiva non riesce, allora il metodo `begin_enter` del modulo Hooking
 rilancia l'eccezione `AlreadyEnteringError` attraverso una apposita istanza di `BeginEnterResult`.
 Il nodo *n* in questo caso desiste dal prendere l'iniziativa: sarà probabilmente un altro singolo nodo
 a coordinare un ingresso in altra rete.
 
-Se, invece, l'autorizzazione esclusiva riesce, allora il metodo `begin_enter` del modulo Migrations nel nodo
+Se, invece, l'autorizzazione esclusiva riesce, allora il metodo `begin_enter` del modulo Hooking nel nodo
 Coordinator del g-nodo *g* risponde positivamente al nodo *n*
 (attraverso una apposita istanza di `BeginEnterResult`) permettendogli di proseguire con le operazioni di
 ingresso di *g* in *J*.
@@ -542,21 +542,21 @@ ingresso di *g* in *J*.
 La sesta fase inizia quando il nodo *n*, riceve l'autorizzazione dal Coordinator di *g* di chiedere al
 suo vicino *v* la prenotazione di un posto per *g* in *J*.
 
-Il modulo Migrations nel nodo *n* chiede al modulo Migrations nel nodo *v* di trovare una migration-path e di riservare
+Il modulo Hooking nel nodo *n* chiede al modulo Hooking nel nodo *v* di trovare una migration-path e di riservare
 un posto per *g* (cioè per il g-nodo di livello *lvl* a cui appartiente *n*, con 0 ≤ *lvl* ﹤ *levels*) dentro *l'attuale* g-nodo
 di *v* di livello *lvl+1* o superiore.  
 Questo lo fa con il metodo remoto `search_migration_path` la cui firma è:  
 `EntryData search_migration_path(int lvl) throws NoMigrationPathFoundError, MigrationPathExecuteFailureError`  
 
-Il modulo Migrations nel nodo *v* cerca la shortest migration-path come descritto [qui](#Strategia_ingresso).
+Il modulo Hooking nel nodo *v* cerca la shortest migration-path come descritto [qui](#Strategia_ingresso).
 
 Se il nodo *v* trova che non esiste una migration-path a livello *lvl* lo comunica a *n*
 con l'eccezione `NoMigrationPathFoundError`.  
-Il nodo *n* dovrà comunicare al modulo Migrations nel nodo Coordinator di *g* che questo ingresso è abortito.
+Il nodo *n* dovrà comunicare al modulo Hooking nel nodo Coordinator di *g* che questo ingresso è abortito.
 Questo processo sarà dettagliato nel paragrafo [Prenotazione fallita](#Fusione_reti_fase7b).  
-Poi il modulo Migrations nel nodo *n* potrà decidere di degradare, cioè tentare ingresso con un
+Poi il modulo Hooking nel nodo *n* potrà decidere di degradare, cioè tentare ingresso con un
 g-nodo di livello inferiore. Dovrà ripartire dalla comunicazione con il nuovo g-nodo entrante. Cioè
-chiamare il metodo `begin_enter` del modulo Migrations nel nodo Coordinator di *g'* (di livello inferiore)
+chiamare il metodo `begin_enter` del modulo Hooking nel nodo Coordinator di *g'* (di livello inferiore)
 e quindi fare la richiesta di nuovo a *v*.
 
 Altrimenti, cioè se il nodo *v* trova una migration-path, allora la esegue. In questo caso ci sono due
@@ -604,38 +604,38 @@ Questa fase inizia quando il nodo *n* riceve l'istanza di `EntryData` dal metodo
 che aveva chiamato sul nodo *v* per (trovare una migration-path e) riservare un posto per il suo g-nodo *g* di
 livello *lvl*.
 
-Ora il modulo Migrations nel nodo *n* vuole chiamare il metodo `completed_enter` del modulo Migrations nel nodo Coordinator del
+Ora il modulo Hooking nel nodo *n* vuole chiamare il metodo `completed_enter` del modulo Hooking nel nodo Coordinator del
 g-nodo *g*.
 
-Prima il modulo Migrations del nodo *n* prepara una nuova struttura dati con le informazioni che servono
+Prima il modulo Hooking del nodo *n* prepara una nuova struttura dati con le informazioni che servono
 a questo metodo istanziando un `CompletedEnterData completed_enter_data`.  
-La classe CompletedEnterData è definita nel modulo Migrations. Si tratta di una classe serializzabile. I membri
+La classe CompletedEnterData è definita nel modulo Hooking. Si tratta di una classe serializzabile. I membri
 di questa classe sono:
 
 *   nessuno?
 
-Poi il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
+Poi il modulo Hooking del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
 metodo proxy `completed_enter`.  
 A questo metodo viene passato il livello *lvl* e un `Object completed_enter_data`.
 La reale classe che implementa questa struttura dati non è infatti nota al modulo Coordinator. Questi sa solo
 che è serializzabile.
 
 Grazie ai meccanismi del modulo Coordinator ora nel nodo Coordinator del g-nodo *g* viene chiamato
-dallo stesso modulo Coordinator il metodo `completed_enter` del modulo Migrations. E questi riceve come argomento,
+dallo stesso modulo Coordinator il metodo `completed_enter` del modulo Hooking. E questi riceve come argomento,
 oltre alla struttura dati `completed_enter_data`, anche l'indirizzo di *n*, `List<int> client_address`.
 
-Il valore che verrà restituito dal metodo `completed_enter` del modulo Migrations è una istanza della classe
-serializzabile `CompletedEnterResult` definita nel modulo Migrations.  
+Il valore che verrà restituito dal metodo `completed_enter` del modulo Hooking è una istanza della classe
+serializzabile `CompletedEnterResult` definita nel modulo Hooking.  
 La classe `CompletedEnterResult` è in grado di rappresentare i possibili esiti del metodo, cioè
 `void`.
 
-Vediamo cosa avviene nel metodo `completed_enter` del modulo Migrations eseguito sul nodo Coordinator del g-nodo *g*.
+Vediamo cosa avviene nel metodo `completed_enter` del modulo Hooking eseguito sul nodo Coordinator del g-nodo *g*.
 
 Il nodo Coordinator del g-nodo *g* accede in scrittura alla memoria condivisa di *g*:
 il membro `Timer? begin_enter_timeout` viene posto a *null*, a segnalare che non è più
 in corso una operazione di ingresso di *g*.
 
-Poi il metodo `completed_enter` del modulo Migrations nel nodo Coordinator del g-nodo *g* termina.
+Poi il metodo `completed_enter` del modulo Hooking nel nodo Coordinator del g-nodo *g* termina.
 Il nodo *n* riceve la relativa istanza di `CompletedEnterResult`.
 
 Ora il nodo *n* prosegue con l'ingresso vero e proprio. In modo simile a quanto dettagliato nella
@@ -665,38 +665,38 @@ livello *lvl*.
 Significa che non è possibile far entrare il g-nodo *g* in blocco. E che si potrà tentare l'ingresso in blocco
 solo di un g-nodo di livello inferiore.
 
-Ora il modulo Migrations nel nodo *n* vuole chiamare il metodo `abort_enter` del modulo Migrations nel nodo Coordinator del
+Ora il modulo Hooking nel nodo *n* vuole chiamare il metodo `abort_enter` del modulo Hooking nel nodo Coordinator del
 g-nodo *g*.
 
-Prima il modulo Migrations del nodo *n* prepara una nuova struttura dati con le informazioni che servono
+Prima il modulo Hooking del nodo *n* prepara una nuova struttura dati con le informazioni che servono
 a questo metodo istanziando un `AbortEnterData abort_enter_data`.  
-La classe AbortEnterData è definita nel modulo Migrations. Si tratta di una classe serializzabile. I membri
+La classe AbortEnterData è definita nel modulo Hooking. Si tratta di una classe serializzabile. I membri
 di questa classe sono:
 
 *   nessuno?
 
-Poi il modulo Migrations del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
+Poi il modulo Hooking del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
 metodo proxy `abort_enter`.  
 A questo metodo viene passato il livello *lvl* e un `Object abort_enter_data`.
 La reale classe che implementa questa struttura dati non è infatti nota al modulo Coordinator. Questi sa solo
 che è serializzabile.
 
 Grazie ai meccanismi del modulo Coordinator ora nel nodo Coordinator del g-nodo *g* viene chiamato
-dallo stesso modulo Coordinator il metodo `abort_enter` del modulo Migrations. E questi riceve come argomento,
+dallo stesso modulo Coordinator il metodo `abort_enter` del modulo Hooking. E questi riceve come argomento,
 oltre alla struttura dati `abort_enter_data`, anche l'indirizzo di *n*, `List<int> client_address`.
 
-Il valore che verrà restituito dal metodo `abort_enter` del modulo Migrations è una istanza della classe
-serializzabile `AbortEnterResult` definita nel modulo Migrations.  
+Il valore che verrà restituito dal metodo `abort_enter` del modulo Hooking è una istanza della classe
+serializzabile `AbortEnterResult` definita nel modulo Hooking.  
 La classe `AbortEnterResult` è in grado di rappresentare i possibili esiti del metodo, cioè
 `void`.
 
-Vediamo cosa avviene nel metodo `abort_enter` del modulo Migrations eseguito sul nodo Coordinator del g-nodo *g*.
+Vediamo cosa avviene nel metodo `abort_enter` del modulo Hooking eseguito sul nodo Coordinator del g-nodo *g*.
 
 Il nodo Coordinator del g-nodo *g* accede in scrittura alla memoria condivisa di *g*:
 il membro `Timer? begin_enter_timeout` viene posto a *null*, a segnalare che non è più
 in corso una operazione di ingresso di *g*.
 
-Poi il metodo `abort_enter` del modulo Migrations nel nodo Coordinator del g-nodo *g* termina.
+Poi il metodo `abort_enter` del modulo Hooking nel nodo Coordinator del g-nodo *g* termina.
 Il nodo *n* riceve la relativa istanza di `AbortEnterResult`.
 
 Ora il nodo *n* decrementa di 1 il valore di *lvl*. Se adesso è minore di 0, allora non è proprio possibile
@@ -1017,7 +1017,7 @@ la posizione e l'anzianità dei suoi g-nodi.
 
 La funzione `make_tuple_from_hc(hc)` produce una istanza di `TupleGNode` che identifica
 il g-nodo che il nodo corrente vede nella sua mappa gerarchica con le coordinate `hc`. Il nodo
-corrente nel modulo Migrations ha modo di vedere nella sua mappa gerarchica anche l'anzianità
+corrente nel modulo Hooking ha modo di vedere nella sua mappa gerarchica anche l'anzianità
 del g-nodo che conosce come `hc`.
 
 La funzione `level(n)` restituisce il livello del g-nodo identificato dalla tupla `n`.
@@ -1691,13 +1691,13 @@ void execute_mig(RequestPacket p0):
 
 ```
 
-Nell'algoritmo descritto qui sopra, il modulo Migrations richiama un metodo (`prepare_migration`
+Nell'algoritmo descritto qui sopra, il modulo Hooking richiama un metodo (`prepare_migration`
 oppure `finish_migration`) del modulo Coordinator. Il primo è un metodo a *propagazione con ritorno*,
 il secondo è un metodo a *propagazione senza ritorno*, il cui funzionamento è dettagliato
-[qui](../ModuloCoordinator/AnalisiFunzionale.md#Collaborazione_migrations) e
+[qui](../ModuloCoordinator/AnalisiFunzionale.md#Collaborazione_hooking) e
 [qui](../ModuloCoordinator/AnalisiFunzionale.md#Deliverables_manager)
 nella trattazione del modulo Coordinator. Essi provocano in tutti i singoli nodi del g-nodo destinazione
-l'invocazione dei metodi (`prepare_migration` e `finish_migration`) del modulo Migrations.  
+l'invocazione dei metodi (`prepare_migration` e `finish_migration`) del modulo Hooking.  
 Si ricorda che il metodo `prepare_migration` deve terminare rapidamente perché il suo completamento
 viene atteso. Invece il metodo `finish_migration` sarà eseguito in una nuova tasklet senza attendere
 il suo completamento.  
@@ -1706,12 +1706,12 @@ Seguono gli algoritmi dei suddetti metodi.
 ```
 void prepare_migration(lvl, prepare_migration_data):
   int migration_id = prepare_migration_data.migration_id
-  var old_id = Identities.get_identity_from_migrations(this)
+  var old_id = Identities.get_identity_from_hookingmgr(this)
   Identities.prepare_add_identity(migration_id, old_id)
 
 void finish_migration(lvl, finish_migration_data):
   int migration_id = prepare_migration_data.migration_id
-  var old_id = Identities.get_identity_from_migrations(this)
+  var old_id = Identities.get_identity_from_hookingmgr(this)
   var new_id = Identities.add_identity(migration_id, old_id)
   var old_qspn_mgr = Identities.get_identity_module(old_id, "qspn")
   var new_qspn_mgr = new Qspn.migration(...)
@@ -1730,8 +1730,8 @@ void finish_migration(lvl, finish_migration_data):
 ```
 
 Questi ultimi algoritmi sono stati brevemente delineati, ma in effetti questi non sono di pertinenza
-del modulo Migrations, bensì del suo utilizzatore. Quindi compito dei metodi `prepare_migration` e
-`finish_migration` del modulo Migrations è quello di emettere i relativi segnali.
+del modulo Hooking, bensì del suo utilizzatore. Quindi compito dei metodi `prepare_migration` e
+`finish_migration` del modulo Hooking è quello di emettere i relativi segnali.
 
 ## <a name="Split_gnodo"></a>Risoluzione di uno split di g-nodo
 
@@ -1743,8 +1743,8 @@ Sia *g'* una di queste isole di livello *l*. Ad accorgersi di questa situazione 
 che non appartiene a *g'*, che è diretto vicino di un border-nodo *v* che appartiene a *g'*. Precisamente,
 se ne accorge il modulo Qspn di *n*, il quale emette un determinato segnale.
 
-Il demone *ntkd* in risposta a questo segnale chiama il metodo `signal_split` del modulo Migrations
-indicando l'arco-identità su cui comunicare. Il modulo Migrations in esso chiama il metodo remoto
+Il demone *ntkd* in risposta a questo segnale chiama il metodo `signal_split` del modulo Hooking
+indicando l'arco-identità su cui comunicare. Il modulo Hooking in esso chiama il metodo remoto
 `you_have_splitted` su quell'arco-identità indicando il livello *l* dello split.
 
 Il nodo *v* in questo metodo si avvale del modulo Coordinator per la *propagazione senza ritorno* del
@@ -1755,15 +1755,15 @@ una rete a sè, separata dal resto di *G*.
 Inoltre il modulo Qspn, nei nodi più esterni di *g'*, rimuove tutti gli archi che lo collegano direttamente a distinti
 g-nodi. Avendo il modulo Qspn segnalato la rimozione degli archi, il demone *ntkd* rimuoverà gli archi-identità nel
 modulo Identities. Di conseguenza se tali archi-identità erano principali il modulo Identities li riformerà di nuovo,
-e il demone *ntkd*, accorgendosene, comunicherà al modulo Migrations la nascita di un nuovo arco.
+e il demone *ntkd*, accorgendosene, comunicherà al modulo Hooking la nascita di un nuovo arco.
 
 Con i meccanismi descritti in precedenza questo provoca le operazioni di ingresso di *g'* nella rete originale con un
 nuovo indirizzo come un nuovo distinto g-nodo internamente connesso.
 
-## <a name="Class_MigrationsMemory"></a>Classe MigrationsMemory
+## <a name="Class_HookingMemory"></a>Classe HookingMemory
 
-La classe `MigrationsMemory` è serializzabile. È usata una sua istanza per rappresentare la
-memoria condivisa di un g-nodo di pertinenza del modulo Migrations.
+La classe `HookingMemory` è serializzabile. È usata una sua istanza per rappresentare la
+memoria condivisa di un g-nodo di pertinenza del modulo Hooking.
 
 I suoi membri sono:
 

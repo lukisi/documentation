@@ -41,7 +41,7 @@ e quelle di pertinenza di altri moduli:
 *   Il dialogo con identità in sistemi vicini appartenenti ad altre reti.
 *   Il coordinamento di un g-nodo (moduli PeerServices e Coordinator).
 *   La strategia di ingresso in una rete, cioè la scelta del g-nodo *g* in cui chiedere un posto.
-*   La ricerca della più breve *migration path* per liberare un posto in *g* (modulo Migrations).
+*   La ricerca della più breve *migration path* per liberare un posto in *g* (modulo Hooking).
 *   La comunicazione delle informazioni a tutte le identità interessate dalla migration path trovata.
 
 Il programma *qspnclient* interagisce con l'utente (il quale ha a disposizione alcuni meccanismi per dare istruzioni

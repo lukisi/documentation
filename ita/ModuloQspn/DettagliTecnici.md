@@ -159,7 +159,7 @@ g-nodo *g* ∈ *G* tale che:
 
 A fronte di diversi g-nodi che potrebbero soddisfare questi requisiti, la strategia che si adotta per la scelta
 del g-nodo non è di competenza del modulo QSPN. Viene descritta nel documento del
-modulo [Migrations](../ModuloMigrations/AnalisiFunzionale.md).
+modulo [Hooking](../ModuloHooking/AnalisiFunzionale.md).
 
 In quel documento si vedrà anche che nella fase iniziale avremo che:
 
@@ -178,17 +178,17 @@ In seguito però, se c'è stato bisogno di una *migration-path* avremo che:
 Se si tratta di un singolo nodo del grafo *n* che vuole entrare nel g-nodo *g* ∈ *G* — deve trattarsi
 dell'identità principale del suo sistema — lo stesso nodo *n* ha pattuito con un suo diretto vicino
 in *g* le informazioni necessarie all'ingresso, secondo le modalità trattate come detto prima nel
-documento del modulo Migrations. Dopo che *n* ha ricevuto la risposta, il demone *ntkd* crea una nuova
+documento del modulo Hooking. Dopo che *n* ha ricevuto la risposta, il demone *ntkd* crea una nuova
 identità *n’* duplicando *n* con l'ausilio del modulo [Identities](../ModuloIdentities/AnalisiFunzionale.md).
 Come sappiamo (dalla documentazione di tale modulo) *n’* diventa l'identità *principale* del sistema in *g*.
 Per la nuova identità *n’*, il demone *ntkd* crea una istanza di QspnManager basata sulla precedente istanza
 associata a *n*.
 
 Se si tratta di un g-nodo *w* che contiene diversi nodi del grafo e che vuole entrare in blocco nel g-nodo *g* ∈ *G*,
-le operazioni trattate nel documento del modulo Migrations saranno state fatte in uno dei nodi di *w*,
+le operazioni trattate nel documento del modulo Hooking saranno state fatte in uno dei nodi di *w*,
 poi le informazioni necessarie all'ingresso saranno state propagate a tutti i nodi di *w* e infine a tutti
 i nodi di *w* verrà dato l'ordine di completare l'ingresso. Tutto questo sempre attraverso modalità che sono
-descritte nella documentazione del modulo Migrations.
+descritte nella documentazione del modulo Hooking.
 
 In questo secondo scenario quando il nodo *n* riceve l'ordine di fare l'ingresso (o se è stato esso stesso
 a avviare la sua propagazione) il demone *ntkd* crea una nuova identità *n’* duplicando *n* con l'ausilio del modulo
@@ -216,7 +216,7 @@ I dati che ogni identità *n* riceve in relazione a questo ingresso nel g-nodo *
 *   L'indirizzo Netsukuku di *g* ∈ *G* e la sua anzianità e quella dei g-nodi superiori in *G*.
 *   La posizione *reale* riservata al nuovo g-nodo *w’* in *g* al livello *hl* - 1 e la sua anzianità.
 
-Abbiamo già detto come tali informazioni giungono ad un nodo *n* di *w*: il modulo *Migrations*
+Abbiamo già detto come tali informazioni giungono ad un nodo *n* di *w*: il modulo *Hooking*
 si occupa di ottenere queste informazioni e di propagarle. Il demone *ntkd* si avvale del modulo
 *Identities* per duplicare *n* in *n’*: qui viene usato il *migration_id*.
 
@@ -317,7 +317,7 @@ da un g-nodo *g* di livello *k* + 1 ad un diverso g-nodo *h* di livello *hl*, 
 a g-nodi distinti da quelli di *g* fino al livello *j*, con *j* ≥ *hl*.
 In questa trattazione è incluso il caso in cui *w* equivale a *n*.
 
-Queste migrazioni avvengono sempre all'interno di una migration-path che è stata coordinata dal modulo Migrations
+Queste migrazioni avvengono sempre all'interno di una migration-path che è stata coordinata dal modulo Hooking
 per permettere l'ingresso di un g-nodo in una rete a cui non apparteneva. In questo scenario rientra anche il
 caso di uno split di g-nodo.
 
@@ -325,9 +325,9 @@ Come detto prima in riferimento alle operazioni di ingresso, anche per la migraz
 
 *   Riguardo il generico nodo *n* di *w*, il suo indirizzo Netsukuku è *reale* dal livello *k* in su.
 
-Se *k* = 0, sempre come detto prima in riferimento alle operazioni di ingresso, il nodo *n* nel modulo Migrations
+Se *k* = 0, sempre come detto prima in riferimento alle operazioni di ingresso, il nodo *n* nel modulo Hooking
 ha ricevuto le informazioni per questa migrazione direttamente dal nodo che ha orchestrato la migration-path.  
-Altrimenti il nodo *n* le ha ricevute ugualmente nel modulo Migrations attraverso una propagazione
+Altrimenti il nodo *n* le ha ricevute ugualmente nel modulo Hooking attraverso una propagazione
 che ha interessato tutto il g-nodo *w*.  
 Comunque, il demone *ntkd* con l'ausilio del modulo Identities duplica *n* in *n’* e poi prepara per quest'ultimo
 una istanza di QspnManager.

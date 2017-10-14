@@ -1,7 +1,7 @@
 # Modulo Coordinator - Analisi Funzionale
 
 1.  [Il ruolo del modulo Coordinator](#Ruolo_coordinator)
-    1.  [Collaborazione con il modulo Migrations](#Collaborazione_migrations)
+    1.  [Collaborazione con il modulo Hooking](#Collaborazione_hooking)
 1.  [Il servizio Coordinator](#Servizio_coordinator)
     1.  [Contenuto della memoria condivisa di un g-nodo](#Records)
     1.  [Richieste previste](#Richieste_previste)
@@ -9,8 +9,8 @@
         1.  [Valuta un ingresso](#Valuta_ingresso)
         1.  [Avvio ingresso in altra rete](#Avvio_ingresso)
         1.  [Confermato ingresso in altra rete](#Confermato_ingresso)
-        1.  [Lettura memoria di pertinenza del modulo Migrations](#Get_migrations_memory)
-        1.  [Scrittura memoria di pertinenza del modulo Migrations](#Set_migrations_memory)
+        1.  [Lettura memoria di pertinenza del modulo Hooking](#Get_hooking_memory)
+        1.  [Scrittura memoria di pertinenza del modulo Hooking](#Set_hooking_memory)
         1.  [Prenota un posto](#Prenota_un_posto)
         1.  [Cancella prenotazione](#Cancella_prenotazione)
         1.  [Replica memoria condivisa](#Replica)
@@ -43,44 +43,44 @@ che rappresenta un g-nodo, bisogna che il lettore faccia attenzione al contesto.
 di Coordinator di un g-nodo (dal livello 1 fino all'intera rete) ci riferiamo al servizio, cioè
 al nodo che al momento viene identificato come servente.
 
-### <a name="Collaborazione_migrations"></a>Collaborazione con il modulo Migrations
+### <a name="Collaborazione_hooking"></a>Collaborazione con il modulo Hooking
 
 Le operazioni di ingresso in una rete, che sono messe in atto quando due reti distinte si incontrano
-per mezzo di alcuni archi, non sono di pertinenza del modulo Coordinator, bensì del modulo Migrations.
+per mezzo di alcuni archi, non sono di pertinenza del modulo Coordinator, bensì del modulo Hooking.
 
-Però gli algoritmi del modulo Migrations per questi compiti hanno dei requisiti che possono essere soddisfatti
+Però gli algoritmi del modulo Hooking per questi compiti hanno dei requisiti che possono essere soddisfatti
 attrtaverso una stretta collaborazione con il modulo Coordinator.
 
 #### Esecuzioni sul nodo Coordinator di un g-nodo
 
 In alcuni casi un g-nodo deve comportarsi come una unica entità. In questi casi abbiamo questi requisiti:
 
-1.  Il modulo Migrations in esecuzione in un qualsiasi singolo nodo (ad esempio un border-nodo che ha incontrato
+1.  Il modulo Hooking in esecuzione in un qualsiasi singolo nodo (ad esempio un border-nodo che ha incontrato
     un vicino di un'altra rete) vuole far eseguire alcuni suoi metodi nel nodo Coordinator di tutta la rete
     o di un g-nodo.
-1.  Un metodo del modulo Migrations in esecuzione nel nodo Coordinator di tutta la rete (o di un g-nodo)
+1.  Un metodo del modulo Hooking in esecuzione nel nodo Coordinator di tutta la rete (o di un g-nodo)
     vuole accedere in lettura/scrittura alla memoria condivisa di tutta la rete (o di un g-nodo) per salvare
     e recuperare alcune informazioni di sua pertinenza.
 
 Per il primo requisito esistono metodi proxy del modulo Coordinator, relativi metodi nella classe client del
 servizio Coordinator, relative classi di richieste e risposte (IPeersRequest e IPeersResponse) e delegati
 che la classe servente del servizio Coordinator (PeerService) può richiamare.  
-Di norma per ogni metodo del modulo Migrations (di quelli che vanno eseguiti nel nodo Coordinator su richiesta di
+Di norma per ogni metodo del modulo Hooking (di quelli che vanno eseguiti nel nodo Coordinator su richiesta di
 un altro nodo) esiste una specifica istanza dei suddetti elementi.
 
-Per il secondo requisito, esiste una classe serializzabile implementata nel modulo Migrations tale che una sua
+Per il secondo requisito, esiste una classe serializzabile implementata nel modulo Hooking tale che una sua
 istanza contiene tutta la memoria condivisa di tutta la rete (o di un g-nodo) relativamente a quanto è di pertinenza
-del modulo Migrations. Tale istanza viene salvata in un apposito membro della classe usata per contenere
+del modulo Hooking. Tale istanza viene salvata in un apposito membro della classe usata per contenere
 i record del database distribuito realizzato dal servizio Coordinator.  
 Il modulo Coordinator quindi mette a disposizione dei metodi per leggere o scrivere in questa memoria
 garantendo la coerenza del dato nel database distribuito.
 
 Si vedranno nella trattazione i metodi `evaluate_enter`, `begin_enter`, `completed_enter`, `abort_enter`,
-`get_migrations_memory` e `set_migrations_memory`.
+`get_hooking_memory` e `set_hooking_memory`.
 
 #### Esecuzioni su tutti i nodi di un g-nodo
 
-In alcuni casi il modulo Migrations in esecuzione in un qualsiasi singolo
+In alcuni casi il modulo Hooking in esecuzione in un qualsiasi singolo
 nodo (ad esempio quello che riceve il compito di coordinare una migrazione)
 vuole far eseguire alcuni suoi metodi in tutti i singoli nodi di un g-nodo.  
 Queste esecuzioni possono essere di due tipi:
@@ -107,9 +107,9 @@ Si vedranno nella trattazione i metodi `prepare_migration`, `finish_migration`, 
 
 Una importante funzione del modulo Coordinator è quella di riservare un posto in un g-nodo. Anche
 questa si può vedere come una fondamentale collaborazione del modulo Coordinator per le esigenze
-del modulo Migrations.
+del modulo Hooking.
 
-Un altro caso di collaborazione richiesta dal modulo Migrations è un metodo che il modulo Coordinator
+Un altro caso di collaborazione richiesta dal modulo Hooking è un metodo che il modulo Coordinator
 mette a disposizione per chiedere al nodo Coordinator della rete il numero di singoli nodi in essa.
 
 Si vedranno nella trattazione i metodi `reserve`, `get_n_nodes`.
@@ -174,45 +174,45 @@ di pertinenza di altri moduli.
 
 Verranno descritte ognuna con i suoi dettagli di seguito.
 
-#### <a name="Records_modulo_migrations"></a>Modulo Migrations
+#### <a name="Records_modulo_hooking"></a>Modulo Hooking
 
-Le informazioni di pertinenza del modulo Migrations sono memorizzate nel seguente membro della classe `CoordGnodeMemory`:
+Le informazioni di pertinenza del modulo Hooking sono memorizzate nel seguente membro della classe `CoordGnodeMemory`:
 
-*   `Object? migrations_memory`.
+*   `Object? hooking_memory`.
 
 Vediamo come avviene la scrittura e la rilettura della memoria condivisa di tutta la rete (o di un g-nodo) ad opera
-del modulo Migrations. Nella trattazione del modulo Migrations abbiamo detto
-(vedi [qui](../ModuloMigrations/AnalisiFunzionale.md#Accesso_memoria_condivisa))
+del modulo Hooking. Nella trattazione del modulo Hooking abbiamo detto
+(vedi [qui](../ModuloHooking/AnalisiFunzionale.md#Accesso_memoria_condivisa))
 che solo lo stesso nodo Coordinator (di tutta la rete o di un g-nodo)
 può essere nella posizione di scrivere/leggere in questa memoria.  
-Quando viene chiamato nel modulo Coordinator il metodo `set_migrations_memory` o il metodo
-`get_migrations_memory` questi verifica di essere in esecuzione proprio sul nodo Coordinator
+Quando viene chiamato nel modulo Coordinator il metodo `set_hooking_memory` o il metodo
+`get_hooking_memory` questi verifica di essere in esecuzione proprio sul nodo Coordinator
 del livello richiesto. Può fare questo controllo con il metodo pubblico `am_i_servant_for(k)`
 della classe base PeerClient ereditato da CoordinatorClient.
 Altrimenti rilancia l'eccezione NotCoordinatorNodeError.  
-Quando viene chiamato nel modulo Coordinator il metodo `set_migrations_memory(Object data, int level)`
+Quando viene chiamato nel modulo Coordinator il metodo `set_hooking_memory(Object data, int level)`
 (dopo che ha verificato di essere in esecuzione sul nodo Coordinator) questo crea una istanza
 del CoordinatorClient sulla quale chiama l'omonimo metodo. Questi avvia il
 contatto con il servizio Coordinator per la chiave `k.lvl = level`.  
-Quando viene contattato con tale richiesta, il servente mette l'argomento ricevuto nel membro `migrations_memory`
+Quando viene contattato con tale richiesta, il servente mette l'argomento ricevuto nel membro `hooking_memory`
 dell'istanza di `CoordGnodeMemory` associata alla chiave `k`.  
 Poi in una nuova tasklet avvia le operazioni di replica.  
-Quando viene chiamato nel modulo Coordinator il metodo `get_migrations_memory(int level)`
+Quando viene chiamato nel modulo Coordinator il metodo `get_hooking_memory(int level)`
 (dopo che ha verificato di essere in esecuzione sul nodo Coordinator) questo crea una istanza
 del CoordinatorClient sulla quale chiama l'omonimo metodo. Questi avvia il
 contatto con il servizio Coordinator per la chiave `k.lvl = level`. Quando viene contattato con tale richiesta,
-il servente restituisce l'oggetto che è nel membro `migrations_memory` dell'istanza di `CoordGnodeMemory`
+il servente restituisce l'oggetto che è nel membro `hooking_memory` dell'istanza di `CoordGnodeMemory`
 associata alla chiave `k`.
 
-Abbiamo detto che i metodi `set_migrations_memory` e `get_migrations_memory` possono essere eseguiti
+Abbiamo detto che i metodi `set_hooking_memory` e `get_hooking_memory` possono essere eseguiti
 solo nello stesso nodo Coordinator. Però l'accesso alla memoria condivisa del g-nodo deve avvenire
 comunque attraverso i meccanismi del modulo PeerServices, di modo che venga richiamato
 il metodo `fixed_keys_db_on_request` e venga garantita la coerenza dei dati.  
-Non è compito del modulo Coordinator, ma bensì del modulo Migrations, garantire l'atomicità delle
+Non è compito del modulo Coordinator, ma bensì del modulo Hooking, garantire l'atomicità delle
 sue operazioni. Ad esempio se vuole fare operazioni che prevedono la lettura e la successiva elaborazione
 e scrittura di questa memoria, esso può acquisire dei *lock* su tutte le parti del suo codice che accedono
 a questa memoria. Questo dovrebbe essere sufficiente: infatti il nodo che fa queste operazioni è solo uno
-e il modulo che le esegue è solo il modulo Migrations.
+e il modulo che le esegue è solo il modulo Hooking.
 
 ### <a name="Richieste_previste"></a>Richieste previste
 
@@ -386,55 +386,55 @@ Essa ha il solo membro:
 
 *   `Object abort_enter_result`.
 
-#### <a name="Get_migrations_memory"></a>Lettura memoria di pertinenza del modulo Migrations
+#### <a name="Get_hooking_memory"></a>Lettura memoria di pertinenza del modulo Hooking
 
-Le richieste esposte sopra (EvaluateEnter, BeginEnter, CompletedEnter) fanno sì che il modulo Migrations in
+Le richieste esposte sopra (EvaluateEnter, BeginEnter, CompletedEnter) fanno sì che il modulo Hooking in
 esecuzione in un qualsiasi singolo nodo possa far eseguire alcuni suoi metodi nel nodo Coordinator di tutta la rete
 o di un g-nodo.  
 L'altro requisito è che tali metodi in esecuzione nel nodo Coordinator possano accedere in lettura/scrittura
-alla memoria condivisa di tutta la rete, per alcune informazioni di pertinenza del modulo Migrations.  
-A questo servono le due richieste che ora esponiamo, GetMigrationsMemory e SetMigrationsMemory.
+alla memoria condivisa di tutta la rete, per alcune informazioni di pertinenza del modulo Hooking.  
+A questo servono le due richieste che ora esponiamo, GetHookingMemory e SetHookingMemory.
 
 Queste richieste possono essere avviate solo dallo stesso nodo Coordinator. Infatti le richieste viste sopra
 (EvaluateEnter, BeginEnter, CompletedEnter) non coinvolgono mai il reperimento di un record: cioè non sono
 di tipo *insert*, *read-only*, *update*, *replica-valore* o *replica-cancellazione*. Quindi non saranno demandate
 ad altri nodi, nemmeno nel caso in cui il Coordinator non è ancora esaustivo.
 
-Invece le richieste GetMigrationsMemory e SetMigrationsMemory sono una di tipo *read-only* e l'altra di tipo
+Invece le richieste GetHookingMemory e SetHookingMemory sono una di tipo *read-only* e l'altra di tipo
 *update*. Quindi è possibile (sebbene molto raramente, solo nel caso in cui il nodo Coordinator appena raggiunto
 dalla richiesta sia ancora non esaustivo) che esse comportino operazioni di trasmissione in rete.  
-In questo caso abbiamo che l'operazione GetMigrationsMemory potrebbe essere servita da un altro nodo. Mentre
-per l'operazione SetMigrationsMemory essa sarà servita dal nodo Coordinator ma questi potrebbe potrebbe avere
+In questo caso abbiamo che l'operazione GetHookingMemory potrebbe essere servita da un altro nodo. Mentre
+per l'operazione SetHookingMemory essa sarà servita dal nodo Coordinator ma questi potrebbe potrebbe avere
 la necessità di espletare prima le operazioni di recupero del record.
 
-Una richiesta *r* di tipo GetMigrationsMemoryRequest fatta sul g-nodo *g* indica che il client del servizio
-(in questo caso lo stesso nodo Coordinator di *g*) chiede la porzione di pertinenza del modulo Migrations
+Una richiesta *r* di tipo GetHookingMemoryRequest fatta sul g-nodo *g* indica che il client del servizio
+(in questo caso lo stesso nodo Coordinator di *g*) chiede la porzione di pertinenza del modulo Hooking
 della memoria condivisa di *g*.  
 Questa richiesta è di tipo *read-only*.
 
 *   `int lvl` = livello di *g*.
 
-Il nodo servente deve recuperare la risposta dal membro `migrations_memory` dell'istanza di `CoordGnodeMemory`
+Il nodo servente deve recuperare la risposta dal membro `hooking_memory` dell'istanza di `CoordGnodeMemory`
 associata al livello `lvl`.
 
-La risposta viene comunicata al client del servizio attraverso una istanza di GetMigrationsMemoryResponse, che ha
+La risposta viene comunicata al client del servizio attraverso una istanza di GetHookingMemoryResponse, che ha
 il membro:
 
-*   `Object migrations_memory`
+*   `Object hooking_memory`
 
-#### <a name="Set_migrations_memory"></a>Scrittura memoria di pertinenza del modulo Migrations
+#### <a name="Set_hooking_memory"></a>Scrittura memoria di pertinenza del modulo Hooking
 
-Una richiesta *r* di tipo SetMigrationsMemoryRequest fatta sul g-nodo *g* indica che il client del servizio
-(in questo caso lo stesso nodo Coordinator di *g*) vuole scrivere sulla porzione di pertinenza del modulo Migrations
+Una richiesta *r* di tipo SetHookingMemoryRequest fatta sul g-nodo *g* indica che il client del servizio
+(in questo caso lo stesso nodo Coordinator di *g*) vuole scrivere sulla porzione di pertinenza del modulo Hooking
 della memoria condivisa di *g*.  
 Questa richiesta è di tipo *update*.
 
 *   `int lvl` = livello di *g*.
-*   `Object migrations_memory`
+*   `Object hooking_memory`
 
-Il nodo servente scrive nel membro `migrations_memory` dell'istanza di `CoordGnodeMemory` associata al livello `lvl`.
+Il nodo servente scrive nel membro `hooking_memory` dell'istanza di `CoordGnodeMemory` associata al livello `lvl`.
 
-La richiesta SetMigrationsMemoryRequest dovrebbe essere avviata solo dallo stesso nodo Coordinator. E la risposta,
+La richiesta SetHookingMemoryRequest dovrebbe essere avviata solo dallo stesso nodo Coordinator. E la risposta,
 sebbene sia possibile che prima di processarla siano state fatte le operazioni di reperimento del record, dovrebbe
 provenire dallo stesso nodo.  
 Perciò, prima di operare, il nodo servente verifica che la richiesta venga da se stesso. Questo può farlo
@@ -444,7 +444,7 @@ guardando l'argomento `Gee.List<int> client_tuple` che riceve in quanto richiama
 Dopo aver effettuato la scrittura, prima di rispondere al client, come sempre il servente deve avviare
 una tasklet che si occupi di replicare la scrittura nei nodi replica.
 
-L'avvenuta scrittura viene comunicata al client del servizio attraverso una istanza di SetMigrationsMemoryResponse, che è vuota.
+L'avvenuta scrittura viene comunicata al client del servizio attraverso una istanza di SetHookingMemoryResponse, che è vuota.
 
 #### <a name="Prenota_un_posto"></a>Prenota un posto
 
@@ -503,13 +503,13 @@ Il significato del risultato è diverso a seconda che il valore di `new_pos` sia
 abbiamo riservato una posizione *virtuale* dobbiamo considerare che un g-nodo *virtuale* ha sempre una
 anzianità *nulla*, cioè tale che confrontata con quella di qualunque altro g-nodo risulta più giovane. Quindi
 la nuova anzianità non serve alla nuova posizione. Essa sarà usata in un altro modo durante le operazioni
-della migration-path descritte nella trattazione del modulo Migrations.
+della migration-path descritte nella trattazione del modulo Hooking.
 
 Il nodo client del servizio è un nodo *n* che già appartiene al g-nodo *g*. Questi richiede la prenotazione di
 un nuovo posto per conto di un altro nodo suo vicino, *m*, il quale non è ancora in *g* o perfino non è ancora
 nella rete.  
 Ricevuta la risposta dal nodo Coordinator, *n* la comunica al vicino *m*. Ma di questo si occupa il
-modulo Migrations.
+modulo Hooking.
 
 #### <a name="Cancella_prenotazione"></a>Cancella prenotazione
 
@@ -572,45 +572,45 @@ In quello stesso momento gli vengono forniti:
 
 ### <a name="Deliverables_manager"></a>Implementazione di CoordinatorManager
 
-Il modulo Coordinator fornisce nella classe CoordinatorManager metodi proxy per la sua collaborazione con il modulo Migrations.  
+Il modulo Coordinator fornisce nella classe CoordinatorManager metodi proxy per la sua collaborazione con il modulo Hooking.  
 Il loro utilizzo è questo: l'utilizzatore del modulo
 Coordinator nel nodo *n* passa un oggetto al metodo `xyz` (su istruzione
-del modulo Migrations); questi fa pervenire questo oggetto al nodo Coordinator (di tutta la
+del modulo Hooking); questi fa pervenire questo oggetto al nodo Coordinator (di tutta la
 rete o di un g-nodo) il quale lo passa ad un particolare delegato per il metodo `xyz`. Questo delegato
-implementato dall'utilizzatore del modulo richiama il metodo `xyz` nel modulo Migrations.
+implementato dall'utilizzatore del modulo richiama il metodo `xyz` nel modulo Hooking.
 
 *   `Object evaluate_enter(int lvl, Object evaluate_enter_data)`.  
-    L'esecuzione del metodo `evaluate_enter` del modulo Migrations nel nodo Coordinator produce la
+    L'esecuzione del metodo `evaluate_enter` del modulo Hooking nel nodo Coordinator produce la
     decisione per il nodo *n* di tentare o meno l'ingresso nella nuova rete e se sì a quale livello.
 *   `Object begin_enter(int lvl, Object begin_enter_data)`.  
-    L'esecuzione del metodo `begin_enter` del modulo Migrations nel nodo Coordinator autorizza
+    L'esecuzione del metodo `begin_enter` del modulo Hooking nel nodo Coordinator autorizza
     o nega l'ingresso.
 *   `Object completed_enter(int lvl, Object completed_enter_data)`.  
-    L'esecuzione del metodo `completed_enter` del modulo Migrations nel nodo Coordinator segnala
+    L'esecuzione del metodo `completed_enter` del modulo Hooking nel nodo Coordinator segnala
     il completamento dell'ingresso.
 *   `Object abort_enter(int lvl, Object abort_enter_data)`.  
-    L'esecuzione del metodo `abort_enter` del modulo Migrations nel nodo Coordinator segnala
+    L'esecuzione del metodo `abort_enter` del modulo Hooking nel nodo Coordinator segnala
     che il tentativo di ingresso è stato abortito.
 
 Il modulo Coordinator fornisce inoltre nella classe CoordinatorManager metodi di accesso alla
-memoria condivisa di pertinenza del modulo Migrations.
+memoria condivisa di pertinenza del modulo Hooking.
 Questi sono usati solo nel nodo Coordinator (di tutta la rete o di un g-nodo) che sta eseguendo
 uno dei metodi visti prima.
 
-*   `get_migrations_memory` e `set_migrations_memory`.  
-    Per accedere alla memoria condivisa di pertinenza del modulo Migrations.
+*   `get_hooking_memory` e `set_hooking_memory`.  
+    Per accedere alla memoria condivisa di pertinenza del modulo Hooking.
 
 Il modulo Coordinator fornisce inoltre nella classe CoordinatorManager metodi di propagazione per
-la sua collaborazione con il modulo Migrations.  
+la sua collaborazione con il modulo Hooking.  
 Il loro utilizzo è questo: l'utilizzatore del modulo Coordinator nel nodo *n* chiama il metodo `xyz(l)`
-su istruzione del modulo Migrations. Questi raccoglie delle informazioni che servono a identificare
+su istruzione del modulo Hooking. Questi raccoglie delle informazioni che servono a identificare
 i nodi che appartengono al suo stesso g-nodo di livello `l`, come ad esempio la tupla delle
 posizioni, l'identificativo del fingerprint, ecc. Poi chiama un omonimo metodo remoto su degli
 oggetti stub (diversi di tipo unicast oppure uno di tipo broadcast a seconda che sia prevista una
 risposta o meno). I metodi remoti nei nodi riceventi verificano sulla base delle suddette informazioni
 se fanno parte del g-nodo di propagazione. In caso positivo questi chiamano
 un particolare delegato per il metodo `xyz`. Questo delegato
-implementato dall'utilizzatore del modulo richiama il metodo `xyz` nel modulo Migrations.
+implementato dall'utilizzatore del modulo richiama il metodo `xyz` nel modulo Hooking.
 
 *   `prepare_migration()`.  
     Propaga in tutto il g-nodo la richiesta di eseguire la prima fase della migrazione, cioè la
@@ -631,14 +631,14 @@ Il modulo Coordinator fornisce inoltre nella classe CoordinatorManager i seguent
 
 #### Metodo evaluate_enter
 
-Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `evaluate_enter` nel nodo Coordinator
+Quando il modulo Hooking del nodo *n* vuole far eseguire il suo metodo `evaluate_enter` nel nodo Coordinator
 della rete *G*, richiama il metodo `evaluate_enter` del modulo Coordinator.
 
 Gli argomenti di questo metodo sono:
 
 *   `int lvl` - il livello del g-nodo il cui Coordinator deve essere interpellato.  
     Per questo metodo specifico avremo sempre `lvl` = `levels`, ma questo è un dettaglio di pertinenza
-    del modulo Migrations, quindi lo passiamo al modulo Coordinator come argomento.
+    del modulo Hooking, quindi lo passiamo al modulo Coordinator come argomento.
 *   `Object evaluate_enter_data` - la struttura dati serializzabile che contiene l'input del metodo
     da eseguire nel nodo Coordinator.
 
@@ -664,7 +664,7 @@ Ed è quello che il metodo `evaluate_enter` del modulo Coordinator restituisce a
 
 #### Metodo begin_enter
 
-Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `begin_enter` nel nodo Coordinator
+Quando il modulo Hooking del nodo *n* vuole far eseguire il suo metodo `begin_enter` nel nodo Coordinator
 del suo g-nodo *g* di livello *lvl*, richiama il metodo `begin_enter` del modulo Coordinator.
 
 Gli argomenti di questo metodo sono:
@@ -695,7 +695,7 @@ Ed è quello che il metodo `begin_enter` del modulo Coordinator restituisce al c
 
 #### Metodo completed_enter
 
-Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `completed_enter` nel nodo Coordinator
+Quando il modulo Hooking del nodo *n* vuole far eseguire il suo metodo `completed_enter` nel nodo Coordinator
 del suo g-nodo *g* di livello *lvl*, richiama il metodo `completed_enter` del modulo Coordinator.
 
 Gli argomenti di questo metodo sono:
@@ -726,7 +726,7 @@ Ed è quello che il metodo `completed_enter` del modulo Coordinator restituisce 
 
 #### Metodo abort_enter
 
-Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `abort_enter` nel nodo Coordinator
+Quando il modulo Hooking del nodo *n* vuole far eseguire il suo metodo `abort_enter` nel nodo Coordinator
 del suo g-nodo *g* di livello *lvl*, richiama il metodo `abort_enter` del modulo Coordinator.
 
 Gli argomenti di questo metodo sono:
@@ -755,19 +755,19 @@ AbortEnterResponse. Essa contiene:
 Questo Object serializzabile è quello che il metodo `abort_enter` del CoordinatorClient restituisce al chiamante.  
 Ed è quello che il metodo `abort_enter` del modulo Coordinator restituisce al chiamante.
 
-#### Metodi get_migrations_memory e set_migrations_memory
+#### Metodi get_hooking_memory e set_hooking_memory
 
-Il metodo `Object get_migrations_memory(int lvl)` e il metodo `void set_migrations_memory(int lvl, Object data)`
+Il metodo `Object get_hooking_memory(int lvl)` e il metodo `void set_hooking_memory(int lvl, Object data)`
 del modulo Coordinator vengono chiamati per accedere alla memoria condivisa del proprio g-nodo
-di livello *lvl* di pertinenza del modulo Migrations.  
+di livello *lvl* di pertinenza del modulo Hooking.  
 Come detto sopra, possono essere richiamati solo nel nodo Coordinator, quindi prevedono l'eccezione
 NotCoordinatorNodeError.
 
-Si vedano i commenti [qui](#Records_modulo_migrations).
+Si vedano i commenti [qui](#Records_modulo_hooking).
 
 #### Metodo prepare_migration
 
-Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `void prepare_migration` in tutti i singoli
+Quando il modulo Hooking del nodo *n* vuole far eseguire il suo metodo `void prepare_migration` in tutti i singoli
 nodi del suo g-nodo *g* di livello *lvl*, richiama il metodo `void prepare_migration` del modulo Coordinator.
 
 Gli argomenti di questo metodo sono:
@@ -786,7 +786,7 @@ Il nodo prepara uno stub per ognuno dei suoi diretti vicini e su ognuno chiama i
 `void execute_prepare_migration(tuple, fp_id, propagation_id, lvl, prepare_migration_data)`. Tale metodo nella classe stub
 ogni volta attende che il destinatario ha completato. Quando ha terminato, chiama un delegato
 implementato dall'utilizzatore del modulo Coordinator che richiama il metodo `void prepare_migration(lvl, prepare_migration_data)` nel
-modulo Migrations. Infine avvia una tasklet che dopo aver atteso un tempo sicuro (2 minuti) rimuoverà
+modulo Hooking. Infine avvia una tasklet che dopo aver atteso un tempo sicuro (2 minuti) rimuoverà
 `propagation_id` da `propagation_id_list`. Nel frattempo il metodo `prepare_migration` del modulo Coordinator
 restituisce il controllo al chiamante.
 
@@ -801,12 +801,12 @@ Altrimenti, il nodo memorizza `propagation_id` in `propagation_id_list`.
 Poi prepara uno stub per ognuno dei suoi diretti vicini e su ognuno chiama il metodo remoto
 `execute_prepare_migration`, che come abbiamo detto attende che il destinatario ha completato.
 Quando ha terminato, chiama il delegato che come abbiamo detto richiama il metodo `prepare_migration`
-nel modulo Migrations. Infine avvia una tasklet che rimuoverà `propagation_id` e nel frattempo
+nel modulo Hooking. Infine avvia una tasklet che rimuoverà `propagation_id` e nel frattempo
 restituisce il controllo al chiamante.
 
 #### Metodo finish_migration
 
-Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `void finish_migration` in tutti i singoli
+Quando il modulo Hooking del nodo *n* vuole far eseguire il suo metodo `void finish_migration` in tutti i singoli
 nodi del suo g-nodo *g* di livello *lvl*, richiama il metodo `void finish_migration` del modulo Coordinator.
 
 Gli argomenti di questo metodo sono:
@@ -825,7 +825,7 @@ Il nodo prepara uno stub di tipo broadcast per i suoi diretti vicini e su questo
 `void execute_finish_migration(tuple, fp_id, propagation_id, lvl, finish_migration_data)`. Tale metodo nella classe stub
 non attende alcuna risposta. Subito dopo, avvia una tasklet che subito chiama un delegato
 implementato dall'utilizzatore del modulo Coordinator che richiama il metodo `void finish_migration(lvl, finish_migration_data)` nel
-modulo Migrations. Infine avvia una tasklet che dopo aver atteso un tempo sicuro (2 minuti) rimuoverà
+modulo Hooking. Infine avvia una tasklet che dopo aver atteso un tempo sicuro (2 minuti) rimuoverà
 `propagation_id` da `propagation_id_list`. Nel frattempo il metodo `finish_migration` del modulo Coordinator
 restituisce il controllo al chiamante.
 
@@ -840,12 +840,12 @@ Altrimenti, il nodo memorizza `propagation_id` in `propagation_id_list`.
 Poi prepara uno stub di tipo broadcast per i suoi diretti vicini e su questo chiama il metodo remoto
 `execute_finish_migration`, che come abbiamo detto non attende alcuna risposta.
 Subito dopo, avvia una tasklet che subito chiama il delegato che come abbiamo detto richiama il metodo `finish_migration`
-nel modulo Migrations. Infine avvia una tasklet che rimuoverà `propagation_id` e nel frattempo
+nel modulo Hooking. Infine avvia una tasklet che rimuoverà `propagation_id` e nel frattempo
 restituisce il controllo al chiamante.
 
 #### Metodo we_have_splitted
 
-Quando il modulo Migrations del nodo *n* vuole far eseguire il suo metodo `void we_have_splitted` in tutti i singoli
+Quando il modulo Hooking del nodo *n* vuole far eseguire il suo metodo `void we_have_splitted` in tutti i singoli
 nodi del suo g-nodo *g* di livello *lvl*, richiama il metodo `void we_have_splitted` del modulo Coordinator.
 
 Gli argomenti di questo metodo sono:
@@ -864,7 +864,7 @@ Il nodo prepara uno stub di tipo broadcast per i suoi diretti vicini e su questo
 `void execute_we_have_splitted(tuple, fp_id, propagation_id, lvl, we_have_splitted_data)`. Tale metodo nella classe stub
 non attende alcuna risposta. Subito dopo, avvia una tasklet che subito chiama un delegato
 implementato dall'utilizzatore del modulo Coordinator che richiama il metodo `void we_have_splitted(lvl, we_have_splitted_data)` nel
-modulo Migrations. Infine avvia una tasklet che dopo aver atteso un tempo sicuro (2 minuti) rimuoverà
+modulo Hooking. Infine avvia una tasklet che dopo aver atteso un tempo sicuro (2 minuti) rimuoverà
 `propagation_id` da `propagation_id_list`. Nel frattempo il metodo `we_have_splitted` del modulo Coordinator
 restituisce il controllo al chiamante.
 
@@ -879,7 +879,7 @@ Altrimenti, il nodo memorizza `propagation_id` in `propagation_id_list`.
 Poi prepara uno stub di tipo broadcast per i suoi diretti vicini e su questo chiama il metodo remoto
 `execute_we_have_splitted`, che come abbiamo detto non attende alcuna risposta.
 Subito dopo, avvia una tasklet che subito chiama il delegato che come abbiamo detto richiama il metodo `we_have_splitted`
-nel modulo Migrations. Infine avvia una tasklet che rimuoverà `propagation_id` e nel frattempo
+nel modulo Hooking. Infine avvia una tasklet che rimuoverà `propagation_id` e nel frattempo
 restituisce il controllo al chiamante.
 
 #### Metodo get_n_nodes
@@ -951,12 +951,12 @@ I metodi della classe CoordinatorClient sono:
 *   `Object abort_enter(int lvl, Object abort_enter_data)` -
     chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
     Vedi la relativa [richiesta](#Abortito_ingresso).
-*   `Object get_migrations_memory(int lvl)` - recupera la porzione di dati di pertinenza
-    del modulo Migrations nella memoria condivisa del g-nodo di livello *lvl*.  
-    Vedi la relativa [richiesta](#Get_migrations_memory).
-*   `void set_migrations_memory(Object data, int lvl)` - modifica la porzione di dati di pertinenza
-    del modulo Migrations nella memoria condivisa del g-nodo di livello *lvl*.  
-    Vedi la relativa [richiesta](#Set_migrations_memory).
+*   `Object get_hooking_memory(int lvl)` - recupera la porzione di dati di pertinenza
+    del modulo Hooking nella memoria condivisa del g-nodo di livello *lvl*.  
+    Vedi la relativa [richiesta](#Get_hooking_memory).
+*   `void set_hooking_memory(Object data, int lvl)` - modifica la porzione di dati di pertinenza
+    del modulo Hooking nella memoria condivisa del g-nodo di livello *lvl*.  
+    Vedi la relativa [richiesta](#Set_hooking_memory).
 *   `void reserve(int lvl, int reserve_request_id, out int new_pos, out int new_eldership)` -
     chiede al Coordinator del g-nodo di livello *lvl* di riservare un posto.  
     Vedi la relativa [richiesta](#Prenota_un_posto).
@@ -1002,7 +1002,7 @@ dal metodo serve al modulo per produrre l'istanza di EvaluateEnterResponse da re
 I metodi previsti dall'interfaccia IEvaluateEnterHandler sono:
 
 *   `Object evaluate_enter(int lvl, Object evaluate_enter_data)`  
-    Con questo metodo si richiama il metodo `evaluate_enter` del modulo Migrations. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).
+    Con questo metodo si richiama il metodo `evaluate_enter` del modulo Hooking. Vedi [qui](../ModuloHooking/AnalisiFunzionale.md).
 
 * * *
 
@@ -1014,7 +1014,7 @@ dal metodo serve al modulo per produrre l'istanza di BeginEnterResponse da resti
 I metodi previsti dall'interfaccia IBeginEnterHandler sono:
 
 *   `Object begin_enter(int lvl, Object begin_enter_data)`  
-    Con questo metodo si richiama il metodo `begin_enter` del modulo Migrations. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).
+    Con questo metodo si richiama il metodo `begin_enter` del modulo Hooking. Vedi [qui](../ModuloHooking/AnalisiFunzionale.md).
 
 * * *
 
@@ -1026,7 +1026,7 @@ dal metodo serve al modulo per produrre l'istanza di CompletedEnterResponse da r
 I metodi previsti dall'interfaccia ICompletedEnterHandler sono:
 
 *   `Object completed_enter(int lvl, Object completed_enter_data)`  
-    Con questo metodo si richiama il metodo `completed_enter` del modulo Migrations. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).
+    Con questo metodo si richiama il metodo `completed_enter` del modulo Hooking. Vedi [qui](../ModuloHooking/AnalisiFunzionale.md).
 
 * * *
 
@@ -1038,7 +1038,7 @@ dal metodo serve al modulo per produrre l'istanza di AbortEnterResponse da resti
 I metodi previsti dall'interfaccia IAbortEnterHandler sono:
 
 *   `Object abort_enter(int lvl, Object abort_enter_data)`  
-    Con questo metodo si richiama il metodo `abort_enter` del modulo Migrations. Vedi [qui](../ModuloMigrations/AnalisiFunzionale.md).
+    Con questo metodo si richiama il metodo `abort_enter` del modulo Hooking. Vedi [qui](../ModuloHooking/AnalisiFunzionale.md).
 
 ### <a name="Classi_Strutture">Strutture dati
 
@@ -1052,11 +1052,11 @@ Essa contiene:
     è la posizione al livello `lvl`-1.
 *   `int new_eldership` - l'anzianità del g-nodo appena riservato nel suo g-nodo superiore.  
     Oppure, se il g-nodo riservato è *virtuale*, una nuova anzianità nel g-nodo superiore che
-    il modulo Migrations potrà usare nelle sue operazioni.
+    il modulo Hooking potrà usare nelle sue operazioni.
 
 Non è necessario che questo oggetto sia serializzabile. Infatti il metodo viene richiamato dall'utilizzatore
 del modulo Coordinator nel nodo stesso. Questi, attraverso qualche meccanismo, sarà stato provocato
-dal modulo Migrations che poi riceverà questo oggetto. Se dovrà, come si suppone, passare ad un altro
+dal modulo Hooking che poi riceverà questo oggetto. Se dovrà, come si suppone, passare ad un altro
 nodo le informazioni necessarie per fare un ingresso, si preoccuperà esso stesso di mettere
 tutti i dati necessari (questi e altri) in un oggetto serializzabile.
 

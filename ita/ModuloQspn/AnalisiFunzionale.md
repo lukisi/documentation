@@ -282,7 +282,7 @@ Quando l'utilizzatore del modulo riceve questa segnalazione è suo compito fare 
 avvertita e che per tutti i singoli nodi dell'isola scollegata venga chiamato il metodo `exit_network(lvl=1)` della relativa
 istanza di QspnManager, passando come argomento il livello del g-nodo che si è splittato.
 Il meccanismo con cui si realizza questo non è di pertinenza del modulo QSPN: esso coinvolge
-il modulo Migrations in collaborazione con il modulo Coordinator (vedi [qui](../ModuloMigrations/AnalisiFunzionale.md#Split_gnodo)).
+il modulo Hooking in collaborazione con il modulo Coordinator (vedi [qui](../ModuloHooking/AnalisiFunzionale.md#Split_gnodo)).
 
 Nel metodo `exit_network(lvl)` di QspnManager il modulo rimuove tutti i percorsi che il nodo conosce per destinazioni
 di livello maggiore o uguale a `lvl`; inoltre rimuove tutti gli archi che lo collegano direttamente
