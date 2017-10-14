@@ -4,6 +4,7 @@
 1.  [Il ruolo del modulo Hooking](#Ruolo_Hooking)
     1.  [Migration-path](#Migration_path)
     1.  [Collaborazione con il modulo Coordinator](#Collaborazione_coordinator)
+1.  [Incontro di due nodi nella stessa rete](#Nuovo_arco)
 1.  [Incontro e fusione di due reti distinte](#Fusione_reti)
     1.  [Prima fase - valutazione del singolo nodo](#Fusione_reti_fase1)
     1.  [Seconda fase - valutazione della rete](#Fusione_reti_fase2)
@@ -99,12 +100,25 @@ autonomamente di calcolare tale valore, se non nel caso in cui *l* = 1.
 
 ## <a name="Ruolo_Hooking"></a>Il ruolo del modulo Hooking
 
-Il ruolo del modulo Hooking è ...
+Il ruolo del modulo Hooking è la gestione degli archi-identità *principali*, cioè quelli che collegano
+l'identità principale nel sistema corrente ad una identità principale in un diverso sistema.  
+Quando due sistemi rilevano un arco fisico, ad esempio se con una interfaccia di rete wireless il
+sistema viene a trovarsi a distanza di rilevamento di un altro sistema, viene costruito su tale
+arco fisico un arco-identità che collega le due identità principali.  
+A questo punto ci sono due possibilità: le due identità possono appartenere alla stessa rete. In
+questo caso occorre costruire un IQspnArc da passare al modulo Qspn. Oppure le due identità possono
+appartenere a distinte reti. In questo caso occorre valutare se si possono fondere in una sola
+e in che modo.
+
+Quando si incontrano due *nodi* che già appartengono alla stessa rete il compito del modulo
+Hooking è piuttosto semplice.
+
+Quando si incontrano due *nodi* che appartengono a distinte reti il compito del modulo
+Hooking è decidere quale g-nodo deve fare ingresso in una diversa rete e in quale g-nodo ospite.  
+In questo caso può rendersi necessario che il modulo Hooking trovi una migration-path e coordini
+la sua esecuzione.
 
 ### <a name="Migration_path"></a>Migration-path
-
-Compito del modulo Hooking è anche quello di trovare una migration-path e di coordinare
-la sua esecuzione.
 
 La ricerca di una migration-path ha come obiettivo la liberazione (se necessario) di una posizione
 *reale* in un g-nodo. La migration-path più corta può essere di lunghezza zero, se in effetti una
@@ -143,6 +157,37 @@ In altri suoi algoritmi in esecuzione in un singolo nodo *n*  ∈ *g*, il modulo
 di provocare l'esecuzione di altri suoi algoritmi in tutti i singoli nodi di *g*.  
 In questo caso il modulo Coordinator coordinerà l'esecuzione su tutti i singoli nodi.
 
+## <a name="Nuovo_arco"></a>Incontro di due nodi nella stessa rete
+
+Si consideri un nodo *n* che appartiene alla rete *G*. Il modulo Hooking del nodo *n* si avvede del
+nodo vicino *v* nella stessa rete. Entrambi sono *identità principali*.
+
+Il sistema la cui identità principale è il nodo *n* e il sistema la cui identità principale è il nodo *v*
+hanno appena rilevato l'arco fisico che li collega direttamente. Di conseguenza è stato appena
+realizzato l'arco-identità *principale* che collega i due nodi. Non è stato ancora realizzato e
+comunicato al modulo Qspn l'arco IQspnArc relativo.  
+È compito del modulo Hooking segnalare al demone *ntkd* questo evento, affinché esso costruisca
+l'arco IQspnArc e lo comunichi al modulo Qspn.
+
+Il modulo Hooking è un modulo *di identità*, cioè viene creata una istanza
+per ogni identità nel sistema.
+
+L'utilizzatore del modulo Hooking, cioè il demone *ntkd*, gli comunica la nascita e la rimozione
+di ogni arco-identità.
+
+Per ogni arco-identità il modulo Hooking contatta l'identità diretta vicina per chiedere informazioni sulla sua
+rete di appartenenza, con il metodo remoto `retrieve_network_data`. La firma completa del metodo è
+`NetworkData retrieve_network_data(bool ask_coord=False) throws NotPrincipalError`.
+
+Questa comunicazione si completa solo se entrambe le identità sono *identità principali*.
+Dal risultato di questa comunicazione il modulo si avvede che le due identità sono
+della stessa rete ed emette il segnale `same_network`.  
+Il contenuto della classe `NetworkData` verrà dettagliato a breve nella trattazione dell'incontro
+di due reti distinte.
+
+Il dettaglio delle operazioni per far sì che queste comunicazioni avvengano nei tempi e casi desiderati
+è illustrato [qui](DettagliTecnici.md#Operazioni_arco_identita).
+
 ## <a name="Fusione_reti"></a>Incontro e fusione di due reti distinte
 
 Si consideri un nodo *n* che appartiene alla rete *G*. Questa è una generalizzazione,
@@ -166,24 +211,16 @@ sfruttando il punto di contatto migliore.
 
 ### <a name="Fusione_reti_fase1"></a>Prima fase - valutazione del singolo nodo
 
-Il modulo Hooking è un modulo *di identità*, cioè viene creata una istanza
-per ogni identità nel sistema.
-
-L'utilizzatore del modulo Hooking, cioè il demone *ntkd*, gli comunica la nascita e la rimozione
-di ogni arco-identità.
-
-Per ogni arco-identità il modulo Hooking contatta l'identità diretta vicina per chiedere informazioni sulla sua
-rete di appartenenza, con il metodo remoto `retrieve_network_data`. La firma completa del metodo è
-`NetworkData retrieve_network_data(bool ask_coord=False) throws NotPrincipalError`.
+Come detto prima, il modulo Hooking è un modulo *di identità* che conosce ogni arco-identità
+che collega la sua identità nel sistema ad un altro nodo.  
+Per il tramite del metodo remoto `retrieve_network_data` esso chiede informazioni ad ogni suo
+diretto vicino sulla sua rete di appartenenza.
 
 Questa comunicazione si completa solo se entrambe le identità sono *identità principali*, quindi con tutte
 le posizioni *reali*. Inoltre, dopo questa comunicazione si procede solo se le topologie delle due
 reti *G* e *J* sono identiche.  
 Quindi nella nostra trattazione *n* e *v* hanno entrambi un indirizzo completamente *reale* e con
 la stessa topologia di rete.
-
-Il dettaglio delle operazioni per far sì che queste comunicazioni avvengano nei tempi e casi desiderati
-è illustrato [qui](DettagliTecnici.md#Operazioni_arco_identita).
 
 Il modulo Hooking del nodo *n* chiama il metodo remoto `retrieve_network_data` sul nodo *v* e riceve
 una struttura dati che descrive *J* come è vista da *v*.  
