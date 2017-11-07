@@ -160,6 +160,7 @@ il servizio, ereditando dalla classe base PeerService. Possono esserci due casi:
 
     *   `guest_gnode_level` = *-1*. Significa che non c'era una precedente identità da cui reperire uno stato.
     *   `new_gnode_level` = *levels*. Significa che è stato formato un nuovo g-nodo di livello *levels*.
+    *   `timer_first_entry` = `new Timer(0)`. Da subito il nodo è di default esaustivo.
 
 1.  Il nodo *n* entra in una rete. Questa situazione può avvenire in due modi: o il nodo entra in una rete diversa
     da quella in cui si trovava prima, oppure migra in un diverso g-nodo all'interno della stessa rete. In entrambi
@@ -171,6 +172,10 @@ il servizio, ereditando dalla classe base PeerService. Possono esserci due casi:
     *   `guest_gnode_level` = *i*. Significa che dalla precedente identità si devono reperire le informazioni
         relative ai dati con visibilità locale ai livelli inferiori a *i*.
     *   `new_gnode_level` = *j-1*. Significa che è stato formato un nuovo g-nodo di livello *j-1*.
+    *   `timer_first_entry` = `new Timer(ttl_db_msec_ttl)`. Imposta il timer al TTL dei record di questo servizio.
+        Significa che fin quando non scade questo timer, se il nodo rifiuta come *non esaustivo* l'elaborazione
+        di una richiesta in quanto non ha ancora completato l'acquisizione dei record di sua pertinenza, allora
+        deve dichiarare che tutto il g-nodo di livello `guest_gnode_level` è anch'esso impossibilitato a rispondere.
 
     Inoltre in questo caso il costruttore di *p* deve essere messo in grado di recuperare dalla sua precedente
     identità alcune informazioni. Cioè deve avere un riferimento alla precedente istanza della classe del servizio.
@@ -198,14 +203,17 @@ Se un record collegato alla chiave *k* in *p* deve rimanere in vita, allora un n
 (di inserimento, lettura o aggiornamento) per la chiave *k* e questa giungerà al nodo *n*.
 
 Il nodo *n* risponderà rifiutando di elaborare la richiesta in quanto *non esaustivo*; ma al contempo verrà
-a conoscenza di una chiave *k*.
+a conoscenza di una chiave *k*.  
+Nel rifiuto il nodo *n*, non essendo ancora scaduto il `timer_first_entry`, dichiara che lo stesso vale
+per tutto il suo g-nodo di livello `guest_gnode_level`.
 
 Il nodo *q* proseguirà con la sua ricerca e passerà la richiesta ai successivi nodi più prossimi al hash-node
 fino a trovare un nodo in grado di rispondere. Questo nodo, chiamiamolo *current(k)*, la elaborerà e risponderà.
 Potrà trattarsi di una qualsiasi operazione: inserimento, lettura o aggiornamento.
 
 In parallelo il nodo *n* contatta *current(k)* (per farlo sarà sufficiente avviare `contact_peer` per la
-chiave *k* escludendo se stesso) e avvia il [procedimento di recupero](DettagliTecnici.md#Procedimento_di_recupero_di_un_record)
+chiave *k* escludendo se stesso e il suo g-nodo di livello `guest_gnode_level`)
+e avvia il [procedimento di recupero](DettagliTecnici.md#Procedimento_di_recupero_di_un_record)
 del record associato alla chiave *k* con attesa del tempo critico di coerenza *𝛿*.
 
 Come detto, tale procedimento prevede che se il nodo *n* durante questo tempo riceve richieste per la chiave *k*
@@ -225,8 +233,8 @@ In seguito il nodo *n* saprà rispondere in modo autonomo alle richieste di tutt
 
 Un passaggio ulteriore, sempre riferito ad un nodo che entra in una rete esistente e quindi si considera
 inizialmente *non esaustivo*, può essere questo: il nodo *n* richiama `contact_peer` prendendo come obiettivo
-`perfect_tuple` il suo stesso indirizzo ed escludendo se stesso; contatta un nodo (chiamiamolo *m*) e gli chiede
-tutte le chiavi (non i record) che conosce.
+`perfect_tuple` il suo stesso indirizzo ed escludendo se stesso e il suo g-nodo di livello `guest_gnode_level`;
+contatta un nodo (chiamiamolo *m*) e gli chiede tutte le chiavi (non i record) che conosce.
 
 Il modulo usa la classe RequestSendKeys e la classe RequestSendKeysResponse.
 
@@ -254,7 +262,8 @@ In questo modo previene il momento in cui scopre una chiave *k* perché gli vien
 
 Quando il recupero del record per ogni chiave *k* ottenuta da *m* è stato portato a termine, il nodo *n* può
 ripetere l'operazione iniziale (quella di chiamare `contact_peer` con il suo stesso indirizzo come obiettivo)
-quante volte vuole, escludendo oltre a se stesso i vari nodi *m* che ha precedentemente contattato.
+quante volte vuole, escludendo (oltre a se stesso e il suo g-nodo di ingresso) i vari nodi *m* che ha
+precedentemente contattato.
 
 Se riceve una eccezione PeersNoParticipantsInNetworkError su una richiesta successiva alla prima, il nodo
 termina queste operazioni e si considera *esaustivo* da subito.
@@ -377,7 +386,8 @@ Algoritmo di rimozione di *k* da `not_found_keys`:
 
 Algoritmo all'avvio:
 
-**void ttl_db_on_startup(ITemporalDatabaseDescriptor tdd, int p_id, int guest_gnode_level, int new_gnode_level, ITemporalDatabaseDescriptor? prev_id_tdd)**
+**void ttl_db_on_startup(ITemporalDatabaseDescriptor tdd, int p_id, int guest_gnode_level,**
+**int new_gnode_level, Timer timer_first_entry, ITemporalDatabaseDescriptor? prev_id_tdd)**
 
 *   assert: `services.has_key(p_id)`.
 *   In una nuova tasklet:
@@ -410,7 +420,7 @@ Algoritmo all'avvio:
     *   Try:
         *   `tuple_n` = `make_tuple_node(new HCoord(0, pos[0]), levels)`.
         *   `respondant` = null. Sarà una tupla nel g-nodo di livello *levels*, poiché `tuple_n` ha *levels* elementi.
-        *   Esegue `ret = contact_peer(p_id, tuple_n, r, tdd.ttl_db_timeout_exec_send_keys, True, out respondant)`.
+        *   Esegue `ret = contact_peer(p_id, tuple_n, r, tdd.ttl_db_timeout_exec_send_keys, guest_gnode_level, out respondant)`.
     *   Se riceve PeersNoParticipantsInNetworkError:
         *   `tdd.dh.timer_default_non_exhaustive` = un nuovo timer che scade dopo **0** millisecondi.
         *   Return. L'algoritmo termina.
@@ -447,7 +457,7 @@ Algoritmo all'avvio:
             *   Attendi 2 secondi.
             *   Se `timer_startup.is_expired()`: return.
             *   `respondant` = null. Sarà una tupla nel g-nodo di livello *levels*, poiché `tuple_n` ha *levels*.
-            *   Esegue `ret = contact_peer(p_id, tuple_n, r, tdd.ttl_db_timeout_exec_send_keys, True, out respondant, exclude_tuple_list)`.  
+            *   Esegue `ret = contact_peer(p_id, tuple_n, r, tdd.ttl_db_timeout_exec_send_keys, guest_gnode_level, out respondant, exclude_tuple_list)`.  
                 Il valore restituito dovrebbe essere un RequestSendKeysResponse, cioè una lista di Object.
                 Altrimenti la risposta viene ignorata.
             *   Se `ret` è una istanza di RequestSendKeysResponse:
@@ -488,7 +498,8 @@ Algoritmo alla ricezione della richiesta:
     *   `r`: la richiesta.
     *   `common_lvl`: il livello del minimo comune g-nodo con il richiedente, da 0 a *levels* compresi.
 *   Se `tdd.dh` = `null`:
-    *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE`.
+    *   `exclude_my_gnode = timer_first_entry.timeout ? 0 : guest_gnode_level`.
+    *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE` + `exclude_my_gnode`.
     *   L'algoritmo termina.
 *   Se `r` is `RequestSendKeys`:
     *   `ret` = `new RequestSendKeysResponse()`.
@@ -530,7 +541,8 @@ Algoritmo alla ricezione della richiesta:
                 *   Esegui `ttl_db_start_retrieve(tdd, k)`.
             *   Esegui `ttl_db_remove_not_found(tdd, k)`.
             *   Esegui `ttl_db_add_not_exhaustive(tdd, k)`.
-            *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE`.
+            *   `exclude_my_gnode = timer_first_entry.timeout ? 0 : guest_gnode_level`.
+            *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE` + `exclude_my_gnode`.
             *   L'algoritmo termina.
 *   Se `tdd.is_read_only_request(r)`:
     *   `Object k` = `tdd.get_key_from_request(r)`.
@@ -545,12 +557,14 @@ Algoritmo alla ricezione della richiesta:
         *   Risponde con `res`.
         *   L'algoritmo termina.
     *   Altrimenti:
-        *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE`.
+        *   `exclude_my_gnode = timer_first_entry.timeout ? 0 : guest_gnode_level`.
+        *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE` + `exclude_my_gnode`.
         *   L'algoritmo termina.
 *   Se `r` is `RequestWaitThenSendRecord`:
     *   `Object k` = `r.k`.
     *   Se **not** `tdd.my_records_contains(k)` **e not** `ttl_db_is_exhaustive(tdd, k)`:
-        *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE`.
+        *   `exclude_my_gnode = timer_first_entry.timeout ? 0 : guest_gnode_level`.
+        *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE` + `exclude_my_gnode`.
         *   L'algoritmo termina.
     *   Calcola *𝛿* il tempo critico di coerenza, basandosi sul numero approssimato di nodi nel minimo comune
         g-nodo tra il nodo corrente e quello del richiedente, cioè il proprio g-nodo di livello `common_lvl`.
@@ -591,7 +605,8 @@ Algoritmo alla ricezione della richiesta:
                 *   Esegui `ttl_db_start_retrieve(tdd, k)`.
             *   Esegui `ttl_db_remove_not_found(tdd, k)`.
             *   Esegui `ttl_db_add_not_exhaustive(tdd, k)`.
-            *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE`.
+            *   `exclude_my_gnode = timer_first_entry.timeout ? 0 : guest_gnode_level`.
+            *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE` + `exclude_my_gnode`.
             *   L'algoritmo termina.
 *   Se `tdd.is_replica_value_request(r)`:
     *   `Object k` = `tdd.get_key_from_request(r)`.
@@ -653,7 +668,8 @@ Algoritmo di avvio del recupero (in una nuova tasklet) del record per la chiave 
     *   Try:
         *   `PeerTupleNode respondant` = `null`.
         *   `h_p_k` = `tdd.evaluate_hash_node(k)`.
-        *   Esegue `IPeersResponse res = contact_peer(tdd.dh.p_id, h_p_k, r, timeout_exec, True, out respondant)`.
+        *   `exclude_my_gnode = timer_first_entry.timeout ? 0 : guest_gnode_level`.
+        *   Esegue `IPeersResponse res = contact_peer(tdd.dh.p_id, h_p_k, r, timeout_exec, exclude_my_gnode, out respondant)`.
         *   Se `res` è un `RequestWaitThenSendRecordResponse`:
             *   `record` = `res.record`.
     *   Se riceve PeersNoParticipantsInNetworkError:

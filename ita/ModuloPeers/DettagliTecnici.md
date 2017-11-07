@@ -278,10 +278,10 @@ deve avere una istanza della classe PeerClient del servizio *p*. Questa conosce 
 *x̄* = *h<sub>p</sub>(k)*, il tempo massimo di attesa dell'esecuzione `timeout_exec`, come produrre la richiesta
 *r* di tipo IPeersRequest e come interpretare la risposta di tipo IPeersResponse. Sempre l'istanza della classe
 PeerClient, avvia il seguente algoritmo, che in seguito chiamiamo `contact_peer`, che ha come argomenti
-(`p_id, x̄, r, timeout_exec, exclude_myself`) e restituisce come risultato una istanza di IPeersResponse.  
-Con l'introduzione del booleano `exclude_myself` permettiamo al richiedente del servizio (precisamente
-alla classe che implementa il PeerClient) di escludere direttamente la partecipazione del nodo stesso alla
-risposta.
+(`p_id, x̄, r, timeout_exec, exclude_my_gnode`) e restituisce come risultato una istanza di IPeersResponse.  
+Con l'introduzione dell'intero `exclude_my_gnode` permettiamo al richiedente del servizio (precisamente
+alla classe che implementa il PeerClient) di escludere direttamente la partecipazione alla risposta del nodo
+stesso e del suo g-nodo di un dato livello. Se tale parametro vale `-1` non ci sarà alcuna esclusione.
 
 *   Metti `refuse_messages` = "".
 *   Prepara una lista vuota `exclude_gnode_list` di istanze HCoord. Qui finiranno i g-nodi visibili nella mappa
@@ -291,8 +291,8 @@ risposta.
         *   Attende qualche istante.
     *   Mette in `exclude_gnode_list` tutti i g-nodi che stando alle sue conoscenze attuali non partecipano
         a `p_id`.
-*   Se `exclude_myself`:
-    *   Mette se stesso `(0, pos[0])` in `exclude_gnode_list`.
+*   Se `exclude_my_gnode` ≥ 0:
+    *   Mette tutto il suo g-nodo di livello `exclude_my_gnode` in `exclude_gnode_list`.
 *   Prepara una lista vuota `exclude_tuple_list`  di tuple globali nel g-nodo di ricerca. Qui finiranno i
     g-nodi non visibili nella mappa di *n*  che andranno esclusi in eventuali successivi tentativi di raggiungere
     l'hash-node.  
@@ -309,8 +309,11 @@ risposta.
             *   Rilancia dall'inizio l'algoritmo `contact_peer`.
             *   L'algoritmo termina.
         *   Se si riceve l'eccezione `PeersRefuseExecutionError e`:
+            *   A questa eccezione è associato un valore `e.lvl`, cioè il livello del g-nodo che, insieme al nodo corrente,
+                rifiuta di eseguire la richiesta.
             *   Aggiungi a `refuse_messages` il messaggio `e.message`.
-            *   Mette se stesso `(0, pos[0])` in `exclude_gnode_list`.
+            *   Mette tutto il suo g-nodo di livello `e.lvl` in `exclude_gnode_list`. Cioè se stesso e tutti i g-nodi
+                possibili di livello inferiore a `e.lvl`.
             *   Continua con la prossima iterazione del ciclo 1.
         *   L'elaborazione è accettata:
         *   Il risultato del metodo viene restituito
@@ -362,11 +365,16 @@ risposta.
                 e torna ad attendere.
             *   Riceve la risposta.
             *   Non aspetta altri messaggi, esce dal ciclo 2 e poi uscirà dal ciclo 1.
-        1.  Viene contattato da *x<sub>0</sub>*, che rifiuta di elaborare la richiesta.
+        1.  Viene contattato da *x<sub>0</sub>*, che rifiuta di elaborare la richiesta, insieme al suo g-nodo
+            *x<sub>e.lvl</sub>* di livello `e.lvl`.
             *   Accetta questo messaggio solo se aveva comunicato la richiesta a *x<sub>0</sub>* altrimenti lo ignora
                 e torna ad attendere.
-            *   Se  *x<sub>0</sub>* è visibile nella mappa di *n*, cioè se 0 = *j*:
+            *   Se *x<sub>e.lvl</sub>* è visibile nella mappa di *n* ma non è un g-nodo a cui appartiene *n*, cioè
+                se *j* = `e.lvl`:
                 *   Inserisce il g-nodo in `exclude_gnode_list` come istanza di HCoord.
+            *   Altrimenti-Se *x<sub>e.lvl</sub>* è un g-nodo a cui appartiene *n*, cioè se *j* < `e.lvl`:
+                *   Mette tutto il suo g-nodo di livello `e.lvl` in `exclude_gnode_list`. Cioè se stesso e tutti i g-nodi
+                    possibili di livello inferiore a `e.lvl`.
             *   Inserisce il g-nodo in `exclude_tuple_list` come tupla globale nel g-nodo di ricerca.
             *   Aggiungi a `refuse_messages` il messaggio di questo rifiuto.
             *   Non aspetta altri messaggi, esce dal ciclo 2.
@@ -425,8 +433,9 @@ Durante l'istradamento del messaggio *m’* il nodo *v* riceve il messaggio.
             1.  Trova lo stesso nodo *v*.
                 *   Il nodo *v* si connette via TCP ad  *n* attraverso la tupla *m’.n* e questi gli passa la richiesta,
                     come descritto prima. Il nodo *v*, però, ora ha la possibilità di elaborarla **oppure** di
-                    rifiutare l'elaborazione per mancanza di memoria o perché non esaustivo **oppure** di istruire
-                    il client di riavviare il calcolo distribuito di *H<sub>t</sub>*. Il nodo *v* comunica a *n* il risultato o il rifiuto.
+                    rifiutare l'elaborazione per mancanza di memoria o perché non esaustivo insieme al suo
+                    g-nodo di livello `e_lvl` **oppure** di istruire il client di riavviare il calcolo distribuito
+                    di *H<sub>t</sub>*. Il nodo *v* comunica a *n* il risultato o il rifiuto.
             1.  Restituisce l'eccezione nessun nodo.
                 *   Il  nodo *v* si connette via TCP ad  *n* attraverso la tupla *m’.n* e gli  comunica (senza
                     necessitare alcuna risposta) che il suo g-nodo di  livello *m’.lvl* non ha trovato una
@@ -688,7 +697,7 @@ Con il termine "robusto" intendiamo un database che:
     *   Se al tempo *t* + 1 il nodo *b* cerca di leggere il valore associato alla chiave *k*, deve
         ritrovare *v*, non più *w*.
 
-Come vedremo in seguito, il modulo fornisce dei metodi helper (inclusi nel modulo per evitare duplicazione
+Come vedremo in seguito, il modulo fornisce dei metodi (inclusi nel modulo per evitare duplicazione
 di codice) che potranno essere usati dai vari servizi registrati che si occupano di mantenere un database distribuito.
 
 Gli algoritmi con cui questi metodi affrontano le problematiche che intendono risolvere, dipendono da quali
@@ -751,7 +760,7 @@ La lista completa degli argomenti di `contact_peer` diventa ora:
 *   `PeerTupleNode x̄`,
 *   `RemoteCall r`,
 *   `int timeout_exec`,
-*   `bool exclude_myself`,
+*   `int exclude_my_gnode=-1`,
 *   `out PeerTupleNode respondant`,
 *   `PeerTupleGNodeContainer? exclude_tuple_list=null`
 
@@ -768,7 +777,7 @@ chiave *k* quando lui non sarà più partecipante procederà così:
 *   Mentre `lista_repliche.size < q`:
     *   `PeerTupleNode respondant`;
     *   Esegue l'algoritmo di avvio contatto:  
-        `ret = contact_peer(p_id, x̄, r, timeout_exec, True, out respondant, exclude_tuple_list)`.
+        `ret = contact_peer(p_id, x̄, r, timeout_exec, 0, out respondant, exclude_tuple_list)`.
     *   Se si riceve l'eccezione `PeersNoParticipantsInNetworkError`:
         *   break.
     *   Se si riceve l'eccezione `PeersDatabaseError`:

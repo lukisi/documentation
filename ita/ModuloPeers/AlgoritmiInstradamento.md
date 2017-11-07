@@ -7,14 +7,14 @@
 
 **contact_peer**
 
-Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_myself, respondant, exclude_tuple_list=null) throws PeersNoParticipantsInNetworkError, PeersDatabaseError`
+Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my_gnode=-1, respondant, exclude_tuple_list=null) throws PeersNoParticipantsInNetworkError, PeersDatabaseError`
 
 *   Gli argomenti passati sono:
     *   `int p_id`,
     *   `PeerTupleNode x̄`,
     *   `IPeersRequest request`,
     *   `int timeout_exec`,
-    *   `bool exclude_myself`,
+    *   `int exclude_my_gnode`=-1,
     *   `out PeerTupleNode respondant`,
     *   `PeerTupleGNodeContainer? exclude_tuple_list`=null.
 *   `refuse_messages` = "".
@@ -30,8 +30,8 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
     *   Mentre `maps_retrieved_below_level` < `target_levels`:
         *   Attende qualche istante.
 *   Mette in `exclude_gnode_list` tutti i g-nodi risultanti da `get_non_participant_gnodes(p_id, target_levels)`.
-*   Se `exclude_myself`:
-    *   Mette `HCoord(0, pos[0])` in `exclude_gnode_list`.
+*   Se `exclude_my_gnode` ≥ 0:
+    *   Mette la lista `get_all_gnodes_up_to_lvl(exclude_my_gnode)` in `exclude_gnode_list`.
 *   Se `exclude_tuple_list` = null:
     *   `exclude_tuple_list` = `new PeerTupleGNodeContainer(target_levels)`.
 *   `assert(exclude_tuple_list.top == target_levels)`.
@@ -57,11 +57,12 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
         *   Se riceve `PeersRedoFromStartError`:
             *   Return `contact_peer(...)`. Riavvia l'algoritmo.
         *   Se riceve `PeersRefuseExecutionError e`:
+            *   Questa eccezione contiene il livello `e_lvl`.
             *   `refuse_messages` += `e.message`.
             *   Se `refuse_messages.length` > 500:
                 *   Solo l'ultima parte.
                 *   `refuse_messages` = `refuse_messages.substr(refuse_messages.length-500)`.
-            *   Mette `HCoord(0, pos[0])` in `exclude_gnode_list`.
+            *   Mette la lista `get_all_gnodes_up_to_lvl(e_lvl)` in `exclude_gnode_list`.
             *   Continua con la prossima iterazione del ciclo 1.
         *   Calcola `respondant` = istanza di PeerTupleNode che rappresenta `HCoord(0, pos[0])` con
             `top` = `target_levels`, cioè il nodo stesso.
@@ -156,15 +157,19 @@ Firma: `IPeersResponse contact_peer(p_id, x̄, request, timeout_exec, exclude_my
                 *   Rimuovi `waiting_answer_map[m’.msg_id]`.
                 *   Esci dal ciclo 2. Poi uscirai dal ciclo 1.
             *   Altrimenti-Se `respondant` ≠ null **e** `waiting_answer.refuse_message` ≠ null:
-                *   Significa che l'attuale respondant ha rifiutato di elaborare la richiesta.
+                *   Significa che l'attuale respondant ha rifiutato di elaborare la richiesta insieme al suo g-nodo
+                    di livello `waiting_answer.e_lvl`.
                 *   `refuse_messages` += `waiting_answer.refuse_message`.
                 *   Se `refuse_messages.length` > 500:
                     *   Solo l'ultima parte.
                     *   `refuse_messages` = `refuse_messages.substr(refuse_messages.length-500)`.
-                *   Crea `t`, una istanza di PeerTupleGNode con `top=target_levels` che rappresenta il nodo respondant.
-                *   Se è visibile nella mia mappa:
-                    *   Crea `g`, una istanza di HCoord che rappresenta il nodo respondant.
+                *   Crea `t`, una istanza di PeerTupleGNode con `top=target_levels` che rappresenta il g-nodo di livello
+                    `waiting_answer.e_lvl` che contiene il nodo `respondant`.
+                *   Se `t` è visibile nella mia mappa e non è un g-nodo a cui appartengo:
+                    *   Crea `g`, una istanza di HCoord che rappresenta `t`.
                     *   Mette `g` in `exclude_gnode_list`.
+                *   Altrimenti-Se `t` è un g-nodo a cui appartengo:
+                    *   Mette la lista `get_all_gnodes_up_to_lvl(waiting_answer.e_lvl)` in `exclude_gnode_list`.
                 *   Mette `t` in `exclude_tuple_list`.
                 *   `respondant` = null.
                 *   Rimuovi `waiting_answer_map[m’.msg_id]`.
@@ -255,9 +260,10 @@ Firma: `void forward_peer_message(m’)`
                         *   Se riceve `StubError` o `DeserializeError`:
                             *   Ignora.
                     *   Se riceve `PeersRefuseExecutionError` `e`:
+                        *   Questa eccezione contiene il livello `e_lvl`.
                         *   Try:
                             *   `err_msg` = `e.message`.
-                            *   Esegue `nstub.set_refuse_message(m’.msg_id, err_msg, tuple_respondant)`.
+                            *   Esegue `nstub.set_refuse_message(m’.msg_id, err_msg, e_lvl, tuple_respondant)`.
                         *   Se riceve `StubError` o `DeserializeError`:
                             *   Ignora.
                 *   Se riceve `PeersUnknownMessageError` o `PeersInvalidRequest`:
@@ -459,13 +465,14 @@ Firma: `void set_response(int msg_id, IPeersResponse response, IPeerTupleNode _r
 
 **set_refuse_message**
 
-Firma: `void set_refuse_message(int msg_id, string refuse_message, IPeerTupleNode _respondant)`
+Firma: `void set_refuse_message(int msg_id, string refuse_message, int e_lvl, IPeerTupleNode _respondant)`
 
 *   Si verifica che il `msg_id` sia presente come chiave in `wainting_answer_map`. Altrimenti si ignora il messaggio.
 *   Si recupera dalla mappa il relativo `WaitingAnswer wa`.
 *   Si verifica che l'oggetto `_respondant` sia una valida istanza di PeerTupleNode e si assegna a `respondant`. Altrimenti si ignora il messaggio.
 *   Si verifica che `wa.respondant_node` = `respondant`. Altrimenti si ignora il messaggio.
 *   `wa.refuse_message` = `refuse_message`.
+*   `wa.e_lvl` = `e_lvl`.
 *   Si segnala l'evento sul canale con `wa.ch.send_async(0)`.
 
 **set_redo_from_start**

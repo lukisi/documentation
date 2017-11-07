@@ -68,7 +68,8 @@ Nelle sue operazioni, comunque, deve conoscere l'identificativo univoco del serv
 in quanto, se il servizio è opzionale, il risultato dipende dalla conoscenza di quali indirizzi sono detenuti
 da nodi che partecipano al servizio. Si tratta in questi casi di un sottinsieme del dominio di *𝛼<sub>t</sub>*.
 
-La conoscenza degli indirizzi detenuti dai nodi presenti nella rete (cioè del dominio di *𝛼<sub>t</sub>*) è realizzata attraverso il protocollo di
+La conoscenza degli indirizzi detenuti dai nodi presenti nella rete (cioè del dominio
+di *𝛼<sub>t</sub>*) è realizzata attraverso il protocollo di
 routing Qspn. Occorre invece definire un ulteriore meccanismo per giungere alla conoscenza di quali indirizzi
 sono detenuti da nodi che partecipano ad ognuno dei servizi opzionali.
 
@@ -89,7 +90,8 @@ memoria **e** ricorda di non essere esaustivo, rifiuta di rispondere e quindi la
 il prossimo nodo.
 
 Questo concetto di essere non *esaustivo* viene usato da un nodo *n* anche quando è da poco entrato nella rete ed
-è ancora in attesa di reperire i record di sua pertinenza.
+è ancora in attesa di reperire i record di sua pertinenza. In più, in questo caso, il nodo può segnalare che tutto
+il suo g-nodo di un certo livello *i* si trova in questa situazione.
 
 ### <a name="HDHT"></a>HDHT: Hierarchical DHT
 
@@ -158,9 +160,8 @@ modulo che era già associata alla vecchia identità.
 
 In ogni momento un nodo può fare al suo modulo PeerServices una richiesta relativa ad un servizio con un dato *p_id*.
 
-In realtà in ogni sistema, solo la *identità principale* è abilitata a fare richieste al suo modulo PeerServices. E se
-l'identità ha qualche componente *virtuale* nel suo indirizzo, può fare richieste solo circoscritte al massimo
-g-nodo dentro il quale tutte le sue componenti sono *reali*.
+In realtà in ogni sistema, solo l'*identità principale* è abilitata a fare richieste al suo modulo PeerServices. Questa,
+nel suo indirizzo, ha tutte le componenti *reali*.
 
 Il modulo PeerServices saprà a chi indirizzare la richiesta. Infatti, se il servizio è non-opzionale per definizione
 esso è fra quelli registrati nel modulo, quindi il modulo lo conosce, sa che è non-opzionale e non ha bisogno di mappe di
@@ -256,8 +257,8 @@ contenuta nel *pacchetto-p2p*.
 Lo stesso modulo, nel nodo server, si occupa di ricevere la richiesta del nodo client, di processarla e di
 trasmettere al client il relativo messaggio di risposta. Tutte queste comunicazioni il nodo server le può
 fare per mezzo di una connessione TCP diretta con il nodo client. Per questo è necessario (e accettabile come
-requisito) che i nodi client e server abbiano nel loro indirizzo componenti *reali* a tutti i livelli
-più bassi del livello di g-nodo in cui la richiesta è circoscritta.
+requisito) che i nodi client e server siano entrambi identità principali, quindi con un indirizzo le cui
+componenti sono tutte *reali*.
 
 ## <a name="Requisiti"></a>Requisiti
 

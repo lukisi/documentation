@@ -146,7 +146,8 @@ Quando il servizio *p* nel nodo *n* riceve una richiesta *r* per una chiave *k*,
 *   Il tipo della richiesta *r*. Può essere *di sola lettura* oppure no.
 
 Se la richiesta è di sola lettura e il recupero non è ancora completato, allora la rifiuta immediatamente
-come *non esaustivo*, di modo che sarà servita dal precedente detentore.
+come *non esaustivo*, di modo che sarà servita dal precedente detentore.  
+Nel rifiuto il nodo *n* dichiara che lo stesso vale per tutto il suo g-nodo di livello `guest_gnode_level`.
 
 A causa di questo comportamento, un client di questo servizio deve sapere che può ricevere una eccezione
 PeersDatabaseError. Non dovrà interpretarla con un "record non trovato" ma dovrà riprovare a fare la
@@ -226,7 +227,7 @@ Algoritmo alla ricezione della richiesta:
     *   `r`: la richiesta.
     *   `common_lvl`: il livello del minimo comune g-nodo con il richiedente, da 0 a `levels` compresi.
 *   Se `fkdd.dh` = `null`:
-    *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE`.
+    *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE` + `guest_gnode_level`.
     *   L'algoritmo termina.
 *   Se `fkdd.is_read_only_request(r)`:
     *   `Object k` = `fkdd.get_key_from_request(r)`.
@@ -235,12 +236,12 @@ Algoritmo alla ricezione della richiesta:
         *   Elabora la richiesta di lettura di `k`. Ottiene la risposta da restituire. `res` = `fkdd.execute(r)`.
         *   L'algoritmo termina.
     *   Altrimenti:
-        *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE`.
+        *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE` + `guest_gnode_level`..
         *   L'algoritmo termina.
 *   Se `r` is `RequestWaitThenSendRecord`:
     *   `Object k` = `r.k`.
     *   Se `k` è in `fkdd.dh.not_completed_keys`:
-        *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE`.
+        *   Rilancia `PeersRefuseExecutionError.NOT_EXHAUSTIVE` + `guest_gnode_level`..
         *   L'algoritmo termina.
     *   assert: `fkdd.my_records_contains(k)`.
     *   Calcola `𝛿` il tempo critico di coerenza, basandosi sul numero approssimato di nodi nel minimo comune

@@ -168,8 +168,11 @@ Contiene:
         una eccezione prevista dal servizio.
 *   `refuse_message`:
     *   Stringa inizialmente a null. Viene valorizzata per segnalare che il `respondant_node` corrente, al quale è stata
-        comunicata la richiesta, ha rifiutato di elaborarla. Quel nodo va quindi considerato da escludere e bisogna
-        ripartire.
+        comunicata la richiesta, ha rifiutato di elaborarla insieme al suo g-nodo di un certo livello. Quel g-nodo va quindi
+        considerato da escludere e bisogna ripartire. Il livello viene memorizzato nel membro successivo.
+*   `e_lvl`:
+    *   Intero inizialmente a null. Viene valorizzato quando il `respondant_node` corrente, al quale è stata
+        comunicata la richiesta, ha rifiutato di elaborarla insieme al suo g-nodo di questo livello.
 *   `redo_from_start`:
     *   Booleano inizialmente a False. Dice che è stata ricevuta l'istruzione di riavviare da capo il calcolo
         distribuito di *H<sub>t</sub>* da parte dell'hash-node.

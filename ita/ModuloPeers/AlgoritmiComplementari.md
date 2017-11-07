@@ -165,7 +165,7 @@ Firma: `bool next_replica(IPeersContinuation cont, out IPeersResponse? resp)`
 *   Se `cont.lista_repliche.size` ≥ `cont.q`:
     *   Return False.
 *   PeerTupleNode `respondant`;
-*   `ret` = `contact_peer(cont.p_id, cont.x̄, cont.r, cont.timeout_exec, True, out respondant, cont.exclude_tuple_list)`.
+*   `ret` = `contact_peer(cont.p_id, cont.x̄, cont.r, cont.timeout_exec, 0, out respondant, cont.exclude_tuple_list)`.
 *   Se si riceve l'eccezione `PeersNoParticipantsInNetworkError` o `PeersDatabaseError`:
     *   Return False. L'eccezione PeersDatabaseError va vista come "OUT-OF-MEMORY" essendo la replica una operazione di sovrascrittura o inserimento.
 *   `resp` = `ret`.
