@@ -44,29 +44,6 @@ Questo requisito è vitale per un nodo che ha (o può avere) più di un vicino e
 Infatti tale demone annuncia ai suoi vicini tutti i percorsi che conosce, quindi se il nodo ha più di un vicino è possibile
 che uno dei suoi vicini lo scelga come gateway per alcune destinazioni.
 
-**Nota: le argomentazioni che seguono andrebbero spostate in un altro documento.**
-
-Un'altra possibilità consisterebbe nell'usare una versione modificata del demone *ntkd*. Questa versione non annuncia
-nessun percorso, se non quello verso se stesso. Deve essere modificata in alcuni punti:
-
-*   cerca di fare hook nel più piccolo g-nodo possibile;
-*   non permette ad altri di entrare nel g-nodo di cui esso è Coordinator;
-*   non annuncia i suoi percorsi, solo quello intrinseco verso se stesso.
-
-Un nodo che usa questa versione modificata può fare a meno del requisito del forwarding. Questa opzione può essere
-importante se un nodo ha scarse risorse e non vuole essere gravato di compiti.
-
-Se il nodo **è sicuro** di non avere mai più di un vicino, allora il requisito del forwarding non è importante. Sarebbe
-bene che tale nodo usasse la versione modificata di cui si è parlato sopra, per evitare di occupare un nuovo g-nodo di
-livello alto senza un reale vantaggio per la rete.
-
-Se un nodo **ha la possibilità** di essere collegato contemporaneamente a più di un vicino, allora l'uso di questa
-versione modificata è potenzialmente pericoloso in una situazione estrema: se il nodo diventa l'unico punto di collegamento
-tra due isole che altrimenti sarebbero separate. In questa situazione, poiché il nodo non annuncia i suoi percorsi,
-i due tronconi della rete diventerebbero effettivamente due isole separate. Entrambe le isole avrebbero un normale
-comportamento, benché non sarebbero tra loro connesse. Il nodo in questione invece risulterebbe gravemente "confuso",
-in quanto non è contemplata la partecipazione di un nodo a due reti Netsukuku distinte.
-
 ### <a name="Requisiti_risposte_arp"></a>Risposte alle richieste ARP
 
 In alcune situazioni, le regole di routing per i pacchetti da inoltrare si basano sull'interfaccia di rete da cui il
@@ -126,18 +103,18 @@ fase di boot il sistema regola alcune impostazioni sulla base di alcuni file di 
 I sistemi Linux hanno alcune impostazioni che dicono se il sistema deve attivare il filtro Return-Path. Data una
 interfaccia di rete **NICX** il filtro risulta attivo se almeno una di queste due impostazioni:
 
-*   *net.ipv4.conf.all.rp_filter*
-*   *net.ipv4.conf.**NICX**.rp_filter*
+*   `net.ipv4.conf.all.rp_filter`
+*   `net.ipv4.conf.NICX.rp_filter`
 
 risulta uguale a 1. Risulta inattivo se entrambe sono uguali a 0.
 
-Vi è una terza impostazione, *net.ipv4.conf.default.rp_filter*, la quale viene presa in esame quando il sistema crea
+Vi è una terza impostazione, `net.ipv4.conf.default.rp_filter`, la quale viene presa in esame quando il sistema crea
 una interfaccia di rete (di solito in fase di boot) per valorizzare inizialmente l'impostazione specifica di quella interfaccia.
 
 ### <a name="Linux_forwarding"></a>Forwarding
 
 I sistemi Linux hanno una impostazione che dice se il forward dei pacchetti va abilitato; il suo nome è
-*net.ipv4.ip_forward*. Di default questo è messo a 0 (disabilitato) nei sistemi che si usano come normali computer,
+`net.ipv4.ip_forward`. Di default questo è messo a 0 (disabilitato) nei sistemi che si usano come normali computer,
 cioè che non sono dei router.
 
 Per il corretto funzionamento di un nodo nella rete Netsukuku questa impostazione va messa a 1.
@@ -147,7 +124,7 @@ Per il corretto funzionamento di un nodo nella rete Netsukuku questa impostazion
 I sistemi Linux hanno alcune impostazioni per ogni interfaccia di rete che influenzano il comportamento del sistema
 quando riceve una richiesta ARP attraverso quella interfaccia.
 
-In particolare, le impostazioni *net.ipv4.conf.**NICX**.arp_announce*=0 e *net.ipv4.conf.**NICX**.arp_ignore*=0 nella
+In particolare, le impostazioni `net.ipv4.conf.NICX.arp_announce=0` e `net.ipv4.conf.NICX.arp_ignore=0` nella
 configurazione di default fanno si che il sistema risponda su ogni interfaccia anche per indirizzi IP locali (che il
 sistema ha assegnati a sé) ma associati ad un'altra interfaccia.
 
@@ -159,7 +136,7 @@ net.ipv4.conf.NICX.arp_ignore=1
 net.ipv4.conf.NICX.arp_announce=2
 ```
 
-Vi sono anche le impostazioni *net.ipv4.conf.default.arp_** e *net.ipv4.conf.all.arp_**. Quelle *default* sono prese in
+Vi sono anche le impostazioni `net.ipv4.conf.default.arp_*` e `net.ipv4.conf.all.arp_*`. Quelle *default* sono prese in
 esame quando il sistema crea una interfaccia di rete (di solito in fase di boot) per valorizzare inizialmente le
 impostazioni specifiche di quella interfaccia. Quelle *all* sono valutate al momento del bisogno dal sistema insieme
 a quelle specifiche di una interfaccia: il sistema usa il valore massimo.
