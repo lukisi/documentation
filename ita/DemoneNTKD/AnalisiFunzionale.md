@@ -7,6 +7,12 @@
         1.  [Assegnazione delle rotte nel kernel](#Assegnazione_rotte)
         1.  [Associazione nomi - indirizzi](#Associazione_nomi_indirizzi)
 1.  [Architettura modulare di ntkd](#Architettura_modulare_ntkd)
+    1.  [Modulo Neighborhood](#Modulo_Neighborhood)
+    1.  [Modulo Identities](#Modulo_Identities)
+    1.  [Modulo Qspn](#Modulo_Qspn)
+    1.  [Modulo PeerServices](#Modulo_PeerServices)
+    1.  [Modulo Coordinator](#Modulo_Coordinator)
+    1.  [Modulo Hooking](#Modulo_Hooking)
 
 ## <a name="Ruolo_ntkd"></a>Ruolo del demone ntkd
 
@@ -124,4 +130,32 @@ e li coordina.
 
 ### <a name="Modulo_Neighborhood"></a>Modulo Neighborhood
 
+Il modulo Neighborhood rileva i possibili collegamenti tra il sistema corrente e altri sistemi diretti vicini.
+Li realizza e li mantiene memorizzati. Nel tempo ne monitora il costo e/o ne rileva la scomparsa.  
+Inoltre il modulo Neighborhood ha il compito di consentire le comunicazioni tra nodi.
+
+Il programma *ntkd* crea una istanza di `NeighborhoodManager` all'avvio delle operazioni. Essa resta in vita
+per tutta la durata del programma.
+
 **TODO**
+
+### <a name="Modulo_Identities"></a>Modulo Identities
+
+**TODO**
+
+### <a name="Modulo_Qspn"></a>Modulo Qspn
+
+**TODO**
+
+### <a name="Modulo_PeerServices"></a>Modulo PeerServices
+
+**TODO**
+
+### <a name="Modulo_Coordinator"></a>Modulo Coordinator
+
+**TODO**
+
+### <a name="Modulo_Hooking"></a>Modulo Hooking
+
+**TODO**
+
