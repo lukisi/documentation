@@ -36,6 +36,9 @@ esame questi requisiti annotando per ogni sistema operativo quali sono le impost
 
 ## ntkd
 
+*   [Analisi funzionale](DemoneNTKD/AnalisiFunzionale.md)
+*   [Dettagli Tecnici](DemoneNTKD/DettagliTecnici.md)
+
 Per una descrizione formale del ruolo del demone ntkd in una rete Netsukuku si legga la relativa
 [analisi funzionale](DemoneNTKD/AnalisiFunzionale.md).
 

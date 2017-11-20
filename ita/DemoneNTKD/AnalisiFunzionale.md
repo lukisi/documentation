@@ -135,7 +135,32 @@ Li realizza e li mantiene memorizzati. Nel tempo ne monitora il costo e/o ne ril
 Inoltre il modulo Neighborhood ha il compito di consentire le comunicazioni tra nodi.
 
 Il programma *ntkd* crea una istanza di `NeighborhoodManager` all'avvio delle operazioni. Essa resta in vita
-per tutta la durata del programma.
+per tutta la durata del programma.  
+Il programma fornisce nel costruttore i delegati per una serie di operazioni:
+
+*   Creare uno stub per chiamare metodi remoti in broadcast, in unicast o tramite indirizzo IP.
+*   Assegnare indirizzi link-local alle proprie interfacce di rete e impostare rotte verso gli indirizzi
+    link-local dei propri diretti vicini. Solo per l'identià principale del nodo (nel network namespace
+    default) e per le identità principali dei diretti vicini.
+*   Ottenere il/i dispatcher associati a una identità del sistema o al sistema.  
+    Questo opera in sinergia con l'implementazione di `IRpcDelegate` che il programma *ntkd* passa alla
+    libreria *ntkdrpc*, come verrà illustrato nei [dettagli tecnici](DettagliTecnici.md).
+
+Poi il programma passa all'istanza di `NeighborhoodManager` tutte le interfacce di rete che vuole gestire. Per
+ognuna di esse il nome, il MAC e un delegato per misurare il RTT con un dato sistema vicino.
+
+Quando il programma *ntkd* riceve un messaggio di RPC tramite ZCD, esso usa l'istanza di `NeighborhoodManager`
+per trovare il/i dispatcher da attivare.  
+Quando un metodo remoto viene avviato sul sistema corrente, il modulo interessato può chiedere al
+programma *ntkd* di individuare in qualche forma il sistema chiamante; in questo caso il programma *ntkd*
+usa l'istanza di `NeighborhoodManager` per identificare il vicino (identità o sistema)
+che ha inviato il messaggio di RPC.  
+L'implementazione di entrambi questi compiti deve rispecchiare quanto descritto nel documento
+[ChiamateLatoServer](../ModuloNeighborhood/ChiamateLatoServer.md) del modulo Neighborhood.
+
+Prima di terminare, il programma *ntkd* deve chiamare il metodo `stop_monitor_all` per poter ricevere e
+gestire i vari segnali `nic_address_unset`.  
+Poi dismetterà l'istanza di `NeighborhoodManager`.
 
 **TODO**
 
