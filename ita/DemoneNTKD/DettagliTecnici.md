@@ -70,8 +70,34 @@ il codice che restituisce le istanze skeleton dei suddetti moduli.
 
 ### Interfacce stub
 
-Per la classe radice e per ognuna delle classi che prevedono scambi di messaggi RPC (di norma
-una classe per modulo) la libreria *ntkdrpc* fornisce una interfaccia stub.
+Per la classe radice e per ognuna delle classi che prevedono scambi di messaggi RPC
+la libreria *ntkdrpc* fornisce una interfaccia stub. Inoltre fornisce tre metodi per
+ottenere (secondo le tre modalità di chiamata dei metodi remoti supportate da ZCD) una
+istanza della interfaccia della classe radice. Questi metodi sono:
 
-**TODO**
+*   `get_addr_tcp_client`
+*   `get_addr_unicast`
+*   `get_addr_broadcast`
+
+Il programma *ntkd* può chiamare uno di questi metodi e ottenere una istanza della classe
+radice `IAddressManagerStub`. Quando è in possesso di questa istanza, può chiamare i suoi
+metodi (e proprietà) pubblici per ottenere una istanza delle classi stub dei moduli:
+
+*   `INeighborhoodManagerStub neighborhood_manager`
+*   `IIdentityManagerStub identity_manager`
+*   `IQspnManagerStub qspn_manager`
+*   `IPeersManagerStub peers_manager`
+*   `ICoordinatorManagerStub coordinator_manager`
+*   `IHookingManagerStub hooking_manager`
+
+Su ogni classe stub così ottenuta il programma può chiamare i metodi pubblici. Facendolo in realtà
+produce la trasmissione della chiamata del metodo remoto.
+
+C'è da dire che le classi stub dei moduli sono ottenute come proprietà della classe stub radice.
+Cioè l'istanza di (ad esempio) `IIdentityManagerStub` è valida finché resta in vita l'istanza di
+`IAddressManagerStub` a cui è legata. Invece nei moduli spesso si è ideata una interfaccia
+chiamata `StubFactory` che consente al modulo di ottenere una istanza della classe stub del modulo
+stesso.  
+Per questo il programma *ntkd* fornisce per ogni modulo una classe stub proxy.
+
 
