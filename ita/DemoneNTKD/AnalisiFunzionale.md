@@ -184,6 +184,38 @@ in memoria le dovute associazioni che gli permettano di fornire una risposta ade
 
 ### <a name="Modulo_Identities"></a>Modulo Identities
 
+Il sistema su cui è in esecuzione il demone *ntkd* è un elemento di una rete.
+
+Possiamo fare in modo che nel sistema esistano diverse identità. Ognuna di esse gestisce
+un *network stack* indipendente. Quindi ognuna di esse è un distinto elemento della rete.  
+Questo stratagemma ci consente di trovare una soluzione al problema di assegnazione degli
+indirizzi in una rete a topologia gerarchica.
+
+Il modulo Identities aiuta il programma nella realizzazione e gestione di queste distinte identità
+nel sistema.
+
+Il programma *ntkd* crea una istanza di `IdentityManager` all'avvio delle operazioni. Essa resta in vita
+per tutta la durata del programma.  
+Il programma fornisce nel costruttore l'elenco delle interfacce di rete da gestire (per ognuna di esse
+è fornito il nome, il MAC e l'indirizzo IP link-local) e i delegati per una serie di operazioni:
+
+*   Creare, gestire e rimuovere i *network stack* indipendenti. Il primo, chiamato *network namespace default*,
+    esiste da subito e non viene mai rimosso. In esso vivono tutte le applicazioni in esecuzione
+    nel sistema, se non viene espressamente richiesta la loro esecuzione su un altro stack.
+*   Ottenere uno stub per comunicazioni reliable ad un vicino dato un arco.
+*   Ottenere l'arco da cui è stata ricevuta una chiamata a metodo remoto, passando il `caller` ricevuto
+    nei parametri del metodo remoto.
+
+La prima identità del sistema (che è inizialmente la *principale*) viene subito creata, quindi il
+programma immediatamente ne recupera un riferimento chiamando il metodo `get_main_id`.
+
+In seguito, quando il programma rileva un nuovo arco fisico (un collegamento con un sistema diretto
+vicino) o quando rileva la rimozione di un arco fisico, lo comunica al modulo Identities con i
+metodi `add_arc` e `remove_arc`.
+
+Prima di terminare, il programma *ntkd* deve rimuovere tutte le identità di connettività che
+eventualmente esistono nel sistema con il metodo `remove_identity`.
+
 **TODO**
 
 ### <a name="Modulo_Qspn"></a>Modulo Qspn
