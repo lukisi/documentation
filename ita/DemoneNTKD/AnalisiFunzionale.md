@@ -140,7 +140,7 @@ Il programma fornisce nel costruttore i delegati per una serie di operazioni:
 
 *   Creare uno stub per chiamare metodi remoti in broadcast, in unicast o tramite indirizzo IP.
 *   Assegnare indirizzi link-local alle proprie interfacce di rete e impostare rotte verso gli indirizzi
-    link-local dei propri diretti vicini. Solo per l'identià principale del nodo (nel network namespace
+    link-local dei propri diretti vicini. Solo per l'identità principale del nodo (nel network namespace
     default) e per le identità principali dei diretti vicini.
 *   Ottenere il/i dispatcher associati a una identità del sistema o al sistema.  
     Questo opera in sinergia con l'implementazione di `IRpcDelegate` che il programma *ntkd* passa alla
@@ -149,20 +149,38 @@ Il programma fornisce nel costruttore i delegati per una serie di operazioni:
 Poi il programma passa all'istanza di `NeighborhoodManager` tutte le interfacce di rete che vuole gestire. Per
 ognuna di esse il nome, il MAC e un delegato per misurare il RTT con un dato sistema vicino.
 
-Quando il programma *ntkd* riceve un messaggio di RPC tramite ZCD, esso usa l'istanza di `NeighborhoodManager`
-per trovare il/i dispatcher da attivare.  
-Quando un metodo remoto viene avviato sul sistema corrente, il modulo interessato può chiedere al
-programma *ntkd* di individuare in qualche forma il sistema chiamante; in questo caso il programma *ntkd*
-usa l'istanza di `NeighborhoodManager` per identificare il vicino (identità o sistema)
-che ha inviato il messaggio di RPC.  
-L'implementazione di entrambi questi compiti deve rispecchiare quanto descritto nel documento
-[ChiamateLatoServer](../ModuloNeighborhood/ChiamateLatoServer.md) del modulo Neighborhood.
-
 Prima di terminare, il programma *ntkd* deve chiamare il metodo `stop_monitor_all` per poter ricevere e
 gestire i vari segnali `nic_address_unset`.  
 Poi dismetterà l'istanza di `NeighborhoodManager`.
 
-**TODO**
+#### Gestione dei messaggi RPC ricevuti
+
+Quando il programma *ntkd* riceve un messaggio di RPC tramite ZCD, esso usa l'istanza di `NeighborhoodManager`
+per trovare il/i dispatcher da attivare.
+
+Quando poi un dispatcher avvia un metodo remoto sul sistema corrente, questo fa parte di un modulo. Il
+codice in tale metodo, implementato nel modulo interessato, può chiedere all'utilizzatore del modulo,
+cioè al programma *ntkd*, di individuare in qualche forma il sistema chiamante; in questo caso il programma *ntkd*
+usa l'istanza di `NeighborhoodManager` per identificare il vicino (identità o sistema)
+che ha inviato il messaggio di RPC.
+
+L'implementazione di entrambi questi compiti nel modulo Neighborhood rispecchia quanto descritto nel
+relativo documento [ChiamateLatoServer](../ModuloNeighborhood/ChiamateLatoServer.md).
+
+Per il primo compito (trovare il/i dispatcher) il programma *ntkd* deve fornire al `NeighborhoodManager`
+queste informazioni:
+
+*   uno skeleton per il nodo.
+*   un delegato per reperire uno skeleton per una identità.
+*   un delegato per reperire una lista di skeleton per più identità.
+
+In particolare, le funzioni delegate per identificare uno o più skeleton di identità saranno implementate
+dal programma *ntkd* avvalendosi dei servizi del modulo Identities.
+
+Per il secondo compito (individuare il vicino che ha chiamato il metodo remoto)  il programma *ntkd*
+riceve dal `NeighborhoodManager` o un `INeighborhoodArc` (se il modulo interessato è un modulo *di nodo*)
+o un `NodeID` (se il modulo interessato è un modulo *di identità*). Il programma *ntkd* deve quindi mantenere
+in memoria le dovute associazioni che gli permettano di fornire una risposta adeguata al modulo interessato.
 
 ### <a name="Modulo_Identities"></a>Modulo Identities
 
