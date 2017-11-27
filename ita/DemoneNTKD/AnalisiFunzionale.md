@@ -175,7 +175,8 @@ queste informazioni:
 *   un delegato per reperire una lista di skeleton per più identità.
 
 In particolare, le funzioni delegate per identificare uno o più skeleton di identità saranno implementate
-dal programma *ntkd* avvalendosi dei servizi del modulo Identities.
+dal programma *ntkd* avvalendosi dei dati che ha memorizzato sulla base delle segnalazioni fatte
+dal modulo Identities.
 
 Per il secondo compito (individuare il vicino che ha chiamato il metodo remoto)  il programma *ntkd*
 riceve dal `NeighborhoodManager` o un `INeighborhoodArc` (se il modulo interessato è un modulo *di nodo*)
@@ -202,16 +203,55 @@ Il programma fornisce nel costruttore l'elenco delle interfacce di rete da gesti
 *   Creare, gestire e rimuovere i *network stack* indipendenti. Il primo, chiamato *network namespace default*,
     esiste da subito e non viene mai rimosso. In esso vivono tutte le applicazioni in esecuzione
     nel sistema, se non viene espressamente richiesta la loro esecuzione su un altro stack.
-*   Ottenere uno stub per comunicazioni reliable ad un vicino dato un arco.
+*   Ottenere uno stub per comunicazioni reliable ad un vicino dato un arco.  
+    Per questo il programma si avvale del modulo Neighborhood, metodo `get_stub_whole_node_unicast`.
 *   Ottenere l'arco da cui è stata ricevuta una chiamata a metodo remoto, passando il `caller` ricevuto
-    nei parametri del metodo remoto.
+    nei parametri del metodo remoto.  
+    Per questo il programma si avvale del modulo Neighborhood, metodo `get_node_arc`.
 
 La prima identità del sistema (che è inizialmente la *principale*) viene subito creata, quindi il
 programma immediatamente ne recupera un riferimento chiamando il metodo `get_main_id`.
+Lo utilizza per costruire un oggetto `IdentityData` in cui mantiene alcune associazioni interne
+al programma stesso, che non sono di pertinenza del modulo Identities.  
+Ad esempio il modulo Identities sa se una certa identità è la principale o una di connettività, ma nel secondo
+caso non sa dire quali siano i livelli dei g-nodi di cui essa supporta la connettività interna: tale dettaglio
+il programma lo mantiene nei membri `connectivity_from_level` e `connectivity_to_level` della
+classe `IdentityData`.  
+Altri dettagli memorizzati in tale classe sono:
 
-In seguito, quando il programma rileva un nuovo arco fisico (un collegamento con un sistema diretto
+*   `int connectivity_from_level`. Se è 0 significa che è l'identità principale. Se è una
+    identità di connettività questo valore può andare da 1 a `levels-1`.
+*   `int connectivity_to_level`. Se è 0 significa che è l'identità principale. Se è una
+    identità di connettività questo valore può andare da `int connectivity_from_level` a `levels-1`.
+*   `AddressManagerForIdentity addr_man`. Lo skeleton radice da usare per i moduli di identità.
+*   `...`
+
+Similmente, il programma quando si avvede della creazione di archi di identità segnalati dal modulo Identities
+costruisce un oggetto `IdentityArc` (memorizzato nella lista `identity_arcs` del relativo `IdentityData`)
+in cui mantiene alcune associazioni che non sono di pertinenza del modulo Identities.  
+I dettagli memorizzati in tale classe sono:
+
+*   `NodeID id`. Serve?
+*   `weak IdentityData identity_data`. Riferimento alla propria identità.
+*   `IIdmgmtArc arc`. Riferimento all'arco fisico.
+*   `IIdmgmtIdentityArc id_arc`. Riferimento all'arco-identità. Come ottenuto dal modulo Identities.
+*   `string peer_mac`. MAC del vicino. Come riportato l'ultima volta dal modulo Identities.
+*   `string peer_linklocal`. Indirizzo IP link-local del vicino. Come riportato l'ultima volta dal
+    modulo Identities.
+*   `string? prev_peer_mac`. MAC precedente del vicino. Valorizzato quando il modulo Identities
+    segnala che l'identità del vicino collegato a noi su un esistente arco-identità ha cambiato i
+    suoi parametri.
+*   `string? prev_peer_linklocal`. Indirizzo IP link-local precedente del vicino. Valorizzato quando
+    il modulo Identities segnala che l'identità del vicino collegato a noi su un esistente
+    arco-identità ha cambiato i suoi parametri.
+*   `...`. Se attualmente l'arco-identità ha costituito un arco per il modulo Qspn... **TODO**
+*   `...`
+
+Quando il programma rileva un nuovo arco fisico (un collegamento con un sistema diretto
 vicino) o quando rileva la rimozione di un arco fisico, lo comunica al modulo Identities con i
-metodi `add_arc` e `remove_arc`.
+metodi `add_arc` e `remove_arc`. Nel caso `add_arc`, viene in questo momento creata (e aggiunta in una apposita
+lista `arc_list` nella memoria del programma) una istanza di una classe `Arc` che associa all'arco
+fisico l'istanza di `IIdmgmtArc` (anch'essa appena creato) che si aspetta il modulo Identities.
 
 Prima di terminare, il programma *ntkd* deve rimuovere tutte le identità di connettività che
 eventualmente esistono nel sistema con il metodo `remove_identity`.
