@@ -247,11 +247,17 @@ I dettagli memorizzati in tale classe sono:
 *   `...`. Se attualmente l'arco-identità ha costituito un arco per il modulo Qspn... **TODO**
 *   `...`
 
-Quando il programma rileva un nuovo arco fisico (un collegamento con un sistema diretto
-vicino) o quando rileva la rimozione di un arco fisico, lo comunica al modulo Identities con i
-metodi `add_arc` e `remove_arc`. Nel caso `add_arc`, viene in questo momento creata (e aggiunta in una apposita
-lista `arc_list` nella memoria del programma) una istanza di una classe `Arc` che associa all'arco
-fisico l'istanza di `IIdmgmtArc` (anch'essa appena creato) che si aspetta il modulo Identities.
+Quando il modulo Neighborhood segnala `neighborhood_arc_added`, cioè che un nuovo
+arco fisico (un collegamento con un sistema diretto vicino) è stato aggiunto, il programma
+lo comunica al modulo Identities con il metodo `add_arc`; similmente alla segnalazione
+dal modulo Neighborhood `neighborhood_arc_removing`, cioè che un arco fisico sta per essere
+rimosso, il programma chiama sul modulo Identities il metodo `remove_arc`.  
+In particolare, quando viene aggiunto un arco fisico (rappresentato dal modulo Neighborhood
+con una istanza di `INeighborhoodArc`), il programma crea e memorizza (in `arc_list`)
+una istanza di una classe `IdmgmtArc` che implementa l'interfaccia `IIdmgmtArc` che si aspetta
+il modulo Identities nel metodo `add_arc`. Quando un arco fisico sta per essere rimosso il programma
+cerca nella lista `arc_list` la relativa istanza di `IdmgmtArc` per passarla al modulo Identities
+nel metodo `remove_arc`.
 
 Prima di terminare, il programma *ntkd* deve rimuovere tutte le identità di connettività che
 eventualmente esistono nel sistema con il metodo `remove_identity`.
