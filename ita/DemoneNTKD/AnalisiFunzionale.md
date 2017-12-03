@@ -260,7 +260,7 @@ cerca nella lista `arc_list` la relativa istanza di `IdmgmtArc` per passarla al 
 nel metodo `remove_arc`.
 
 Prima di terminare, il programma *ntkd* deve rimuovere tutte le identità di connettività che
-eventualmente esistono nel sistema con il metodo `remove_identity`.
+eventualmente esistono nel sistema con il metodo `remove_identity` del modulo Identities.
 
 **TODO**
 
