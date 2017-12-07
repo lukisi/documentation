@@ -299,7 +299,8 @@ collegati. Quindi non ha senso proseguire le operazioni su altri eventuali archi
             *   Imposta *arc_is_broken* = True.
         *   Il manager nel sistema *a* ora sa se l'identità *b<sub>j</sub>* ha partecipato anch'essa alla migrazione.
             Se sì, il sistema *a* conosce i dati *peer_old_id_new_mac* e *peer_old_id_new_linklocal* che sono riferiti
-            a *b<sub>k</sub>*, la quale ora gestisce la vecchia interfaccia del sistema *b* che prima era gestita da *b<sub>j</sub>*.
+            d'ora in poi a *b<sub>j</sub>*. Conosce inoltre l'identificativo della nuova identità *b<sub>k</sub>*,
+            la quale ora gestisce la vecchia interfaccia del sistema *b* che prima era gestita da *b<sub>j</sub>*.
         *   Se *b<sub>j</sub>* ha partecipato alla migrazione:
             *   Il manager nel sistema *a* cambia i dati dell'arco assegnato ad *id<sub>j</sub>* relativamente all'interfaccia remota:
                 *   *w<sub>0</sub>.peer_mac = peer_old_id_new_mac*.

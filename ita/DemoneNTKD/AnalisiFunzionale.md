@@ -224,6 +224,7 @@ Altri dettagli memorizzati in tale classe sono:
 *   `int connectivity_to_level`. Se è 0 significa che è l'identità principale. Se è una
     identità di connettività questo valore può andare da `int connectivity_from_level` a `levels-1`.
 *   `AddressManagerForIdentity addr_man`. Lo skeleton radice da usare per i moduli di identità.
+*   `List<IdentityArc> identity_arcs`. Lista degli archi-identità.
 *   `...`
 
 Similmente, il programma quando si avvede della creazione di archi di identità segnalati dal modulo Identities
@@ -231,9 +232,8 @@ costruisce un oggetto `IdentityArc` (memorizzato nella lista `identity_arcs` del
 in cui mantiene alcune associazioni che non sono di pertinenza del modulo Identities.  
 I dettagli memorizzati in tale classe sono:
 
-*   `NodeID id`. Serve?
 *   `weak IdentityData identity_data`. Riferimento alla propria identità.
-*   `IIdmgmtArc arc`. Riferimento all'arco fisico.
+*   `IIdmgmtArc arc`. Riferimento all'arco fisico. Come passato al modulo Identities.
 *   `IIdmgmtIdentityArc id_arc`. Riferimento all'arco-identità. Come ottenuto dal modulo Identities.
 *   `string peer_mac`. MAC del vicino. Come riportato l'ultima volta dal modulo Identities.
 *   `string peer_linklocal`. Indirizzo IP link-local del vicino. Come riportato l'ultima volta dal
@@ -258,6 +258,41 @@ una istanza di una classe `IdmgmtArc` che implementa l'interfaccia `IIdmgmtArc` 
 il modulo Identities nel metodo `add_arc`. Quando un arco fisico sta per essere rimosso il programma
 cerca nella lista `arc_list` la relativa istanza di `IdmgmtArc` per passarla al modulo Identities
 nel metodo `remove_arc`.
+
+#### Archi identità
+
+Il programma riceve dal modulo Identities degli eventi che sono riferiti alla sua gestione
+degli archi-identità.  
+Alla creazione di un arco-identità il modulo aggiunge una rotta diretta verso il relativo indirizzo IP link-local;
+analogamente, alla rimozione il modulo rimuove la relativa rotta.  
+Tenendo traccia delle segnalazioni ricevute dal modulo, è compito del programma *ntkd* gestire opportunamente
+le rotte verso qualsiasi destinazione che usano come gateway un certo arco-identità.
+
+I segnali che il modulo Identities emette sono:
+
+*   `identity_arc_added`. Quando è stato aggiunto un arco-identità.
+*   `identity_arc_changed`. Quando un arco-identità cambia il suo `peer-mac` e `peer_linklocal`.
+*   `identity_arc_removing`. Quando un arco-identità sta per essere rimosso.
+*   `identity_arc_removed`. Quando un arco-identità è stato rimosso.
+
+Consideriamo un singolo arco fisico. Quando viene aggiunto, è il programma stesso che lo
+comunica al modulo Identities. Il modulo Identities crea in quel momento il primo arco-identità ad esso
+associato, che è quello che collega l'identità principale nel sistema corrente con l'identità
+principale nel sistema diretto vicino; è chiamato arco-identità *principale*. Il modulo Identities
+non aggiunge una rotta in questo caso perché essa è stata aggiunta nel *network namespace default* dal
+modulo Neighborhood.  
+Il programma riceve il segnale `identity_arc_added` relativo all'arco-identità principale. A questo
+segnale crea una istanza di `IdentityArc` e la associa alla relativa istanza di `IdentityData`.
+Inoltre passa questo arco-identità al modulo Hooking, il cui compito è gestire l'incontro di reti
+distinte oppure costruire un arco Qspn.
+
+Ora supponiamo che nel sistema vicino l'identità principale (a noi collegata tramite un arco-identità)
+si duplica (a causa di una migrazione). ... **TODO**
+
+Ora vediamo invece cosa avviene quando una identità nel nostro sistema, la quale ha degli archi-identità
+associati, si duplica. ... **TODO**
+
+#### Terminazione del programma
 
 Prima di terminare, il programma *ntkd* deve rimuovere tutte le identità di connettività che
 eventualmente esistono nel sistema con il metodo `remove_identity` del modulo Identities.
