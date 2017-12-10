@@ -264,7 +264,9 @@ nel metodo `remove_arc`.
 Il programma riceve dal modulo Identities degli eventi che sono riferiti alla sua gestione
 degli archi-identità.  
 Alla creazione di un arco-identità il modulo aggiunge una rotta diretta verso il relativo indirizzo IP link-local;
-analogamente, alla rimozione il modulo rimuove la relativa rotta.  
+analogamente, alla rimozione il modulo rimuove la relativa rotta. Queste operazioni sulle rotte (cioè sulle
+tabelle di routing del kernel del S.O.) non avvengono per l'arco-identità principale, perché in quel caso se
+ne occupa il modulo Neighborhood.  
 Tenendo traccia delle segnalazioni ricevute dal modulo, è compito del programma *ntkd* gestire opportunamente
 le rotte verso qualsiasi destinazione che usano come gateway un certo arco-identità.
 
@@ -287,7 +289,22 @@ Inoltre passa questo arco-identità al modulo Hooking, il cui compito è gestire
 distinte oppure costruire un arco Qspn.
 
 Ora supponiamo che nel sistema vicino l'identità principale (a noi collegata tramite un arco-identità)
-si duplica (a causa di una migrazione). ... **TODO**
+si duplica (a causa di una migrazione). Il modulo Identities nel sistema vicino contatta il modulo
+Identities nel nostro sistema e comunica questo evento. In risposta, il modulo Identities nel nostro
+sistema aggiunge un arco-identità e modifica le proprietà (`peer_linklocal` e `peer_mac`) del vecchio
+arco-identità.  
+Prima aggiunge un arco-identità nella sua memoria, ma non aggiunge la rotta all'indirizzo IP link-local
+perché già esiste. Poi modifica le proprietà del vecchio arco-identità nella sua memoria e aggiunge la
+rotta al nuovo indirizzo IP link-local. Poi il modulo segnala prima `identity_arc_added` e in
+seguito `identity_arc_changed`.  
+Il programma riceve il segnale `identity_arc_changed` relativo al vechio arco-identità. Il programma trova
+nella sua memoria l'istanza di `IdentityArc` e guarda le sue vecchie proprietà e le memorizza. Poi
+le aggiorna. Inoltre qui, se questo arco-identità era stato comunicato al modulo Qspn in quanto l'identità
+vicina appartiene alla stessa rete della nostra identità, sarà necessario aggiornare nelle tabelle del
+kernel tutte le rotte che usano questo arco-identità come gateway.  
+Poi il programma riceve il segnale `identity_arc_added` relativo al nuovo arco-identità, che nel nostro caso
+è di nuovo il *principale*, ma questo non ci interessa. Come prima, il programma crea una istanza
+di `IdentityArc` e la associa alla relativa istanza di `IdentityData`. E la passa al modulo Hooking.
 
 Ora vediamo invece cosa avviene quando una identità nel nostro sistema, la quale ha degli archi-identità
 associati, si duplica. ... **TODO**
