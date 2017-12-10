@@ -323,12 +323,12 @@ collegati. Quindi non ha senso proseguire le operazioni su altri eventuali archi
                 apporterà di sua iniziativa poiché anche in esso è avvenuta la migrazione di *b<sub>j</sub>* in *b<sub>k</sub>*.
         *   Altrimenti:
             *   Il manager nel sistema *b*, in autonomia come accennato sopra, forma un nuovo arco-identità
-                *b<sub>j</sub>*-*id<sub>i</sub>* e lo segnala al suo utilizzatore.
-            *   Cambia i dati dell' arco-identità *b<sub>j</sub>*-*id<sub>j</sub>*, cioè MAC e linklocal.  
-                Segnala al suo utilizzatore che c'è stato un cambio sui dati dell' arco-identità dovuto alla
-                migrazione del solo vicino.
+                *b<sub>j</sub>*-*id<sub>i</sub>*.
+            *   Cambia i dati dell' arco-identità *b<sub>j</sub>*-*id<sub>j</sub>*, cioè MAC e linklocal.
             *   Aggiunge una rotta nelle tabelle di un suo namespace (quello gestito da *b<sub>j</sub>*) per
                 l'arco *b<sub>j</sub>*-*id<sub>j</sub>*.
+            *   Segnala al suo utilizzatore prima il fatto che c'è stato un cambio sui dati del vecchio arco-identità
+                dovuto alla migrazione del solo vicino. Poi il fatto che si è formato un nuovo arco-identità.
     *   Se *arc_is_broken*:
         *   Avvia una tasklet in cui, fra un istante, si rimuove *arc* per `bad_link`.
 
