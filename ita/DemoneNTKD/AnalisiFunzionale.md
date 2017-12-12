@@ -277,6 +277,8 @@ I segnali che il modulo Identities emette sono:
 *   `identity_arc_removing`. Quando un arco-identità sta per essere rimosso.
 *   `identity_arc_removed`. Quando un arco-identità è stato rimosso.
 
+##### Aggiunta arco fisico
+
 Consideriamo un singolo arco fisico. Quando viene aggiunto, è il programma stesso che lo
 comunica al modulo Identities. Il modulo Identities crea in quel momento il primo arco-identità ad esso
 associato, che è quello che collega l'identità principale nel sistema corrente con l'identità
@@ -288,6 +290,8 @@ segnale crea una istanza di `IdentityArc` e la associa alla relativa istanza di 
 Inoltre passa questo arco-identità al modulo Hooking, il cui compito è gestire l'incontro di reti
 distinte oppure costruire un arco Qspn.
 
+##### Duplicazione identità
+
 Ora supponiamo che nel sistema vicino l'identità principale (a noi collegata tramite un arco-identità)
 si duplica (a causa di una migrazione). Il modulo Identities nel sistema vicino contatta il modulo
 Identities nel nostro sistema e comunica questo evento. In risposta, il modulo Identities nel nostro
@@ -295,8 +299,8 @@ sistema aggiunge un arco-identità e modifica le proprietà (`peer_linklocal` e 
 arco-identità.  
 Prima aggiunge un arco-identità nella sua memoria, ma non aggiunge la rotta all'indirizzo IP link-local
 perché già esiste. Poi modifica le proprietà del vecchio arco-identità nella sua memoria e aggiunge la
-rotta al nuovo indirizzo IP link-local. Poi il modulo segnala prima `identity_arc_added` e in
-seguito `identity_arc_changed`.  
+rotta al nuovo indirizzo IP link-local. Poi il modulo segnala prima `identity_arc_changed` e in
+seguito `identity_arc_added`.  
 Il programma riceve il segnale `identity_arc_changed` relativo al vechio arco-identità. Il programma trova
 nella sua memoria l'istanza di `IdentityArc` e guarda le sue vecchie proprietà e le memorizza. Poi
 le aggiorna. Inoltre qui, se questo arco-identità era stato comunicato al modulo Qspn in quanto l'identità
@@ -307,7 +311,47 @@ Poi il programma riceve il segnale `identity_arc_added` relativo al nuovo arco-i
 di `IdentityArc` e la associa alla relativa istanza di `IdentityData`. E la passa al modulo Hooking.
 
 Ora vediamo invece cosa avviene quando una identità nel nostro sistema, la quale ha degli archi-identità
-associati, si duplica. ... **TODO**
+associati, si duplica.  
+Il modulo Identities ha creato il *network namespace* indipendente che sarà gestito dalla vecchia identità,
+mentre ha associato alla nuova identità il precedente *network namespace*.  
+Il modulo Identities nel nostro sistema contatta il modulo Identities nel sistema vicino e comunica questo evento.
+Al tempo stesso apprende che l'identità nel sistema vicino non ha preso parte alla stessa migrazione.  
+Non serve aggiungere una rotta nel vecchio namespace (perché già esiste) che realizza il nuovo arco-identità.  
+Il modulo Identities nel nostro sistema aggiunge un arco-identità alla nuova identità e lo comunica con il
+segnale `identity_arc_added`.  
+Nel nuovo namespace, invece, gestito dalla vecchia identità, viene aggiunta la rotta che realizza il vecchio
+arco-identità.  
+Il modulo Identities non riporta alcun segnale relativamente al vecchio arco-identità.  
+Quindi il programma riceve solo il segnale `identity_arc_added` relativo al nuovo arco-identità. Come prima,
+il programma crea una istanza di `IdentityArc` e la associa alla relativa istanza di `IdentityData`. E la
+passa al modulo Hooking.
+
+Infine vediamo cosa avviene quando una identità nel nostro sistema si duplica per via di una migrazione
+che coinvolge anche una identità di un sistema vicino che è ad essa collegata.  
+Quanto segue avviene in entrambi i sistemi (per le identità che hanno partecipato alla stessa migrazione)
+indipendentemente dall'ordine in cui i due sistemi avviano le operazioni.  
+Il modulo Identities ha creato il *network namespace* indipendente che sarà gestito dalla vecchia identità,
+mentre ha associato alla nuova identità il precedente *network namespace*.  
+Il modulo Identities nel nostro sistema contatta il modulo Identities nel sistema vicino e comunica questo evento.
+Al tempo stesso apprende che l'identità nel sistema vicino ha preso parte alla stessa migrazione.  
+Non serve aggiungere una rotta nel vecchio namespace (perché già esiste) che realizza il nuovo arco-identità.  
+Il modulo Identities nel nostro sistema aggiunge un arco-identità alla nuova identità e lo comunica con il
+segnale `identity_arc_added`.  
+Nel nuovo namespace, invece, gestito dalla vecchia identità, viene aggiunta la rotta che realizza il vecchio
+arco-identità.  
+Questo vecchio arco-identità ha però le proprietà modificate. Quindi il modulo Identities riporta
+per esso il segnale `identity_arc_changed`.  
+Il programma riceve per primo il segnale `identity_arc_added` relativo al nuovo arco-identità. Come prima, il programma
+crea una istanza di `IdentityArc` e la associa alla relativa istanza di `IdentityData`. E la passa al modulo Hooking.  
+Il programma riceve poi il segnale `identity_arc_changed` relativo al vechio arco-identità. Ma in questa situazione
+c'è da dire che i due segnali sono relativi a due identità distinte nel nostro sistema, quindi operano su
+due distinti *network namespace*. Il programma trova nella sua memoria l'istanza di `IdentityArc` e guarda le sue vecchie
+proprietà e le memorizza. Poi le aggiorna. Inoltre, se questo arco-identità era stato comunicato al modulo Qspn, sarà
+necessario aggiornare nelle tabelle del kernel tutte le rotte che usano questo arco-identità come gateway.
+
+##### Rimozione identità
+
+**TODO**
 
 #### Terminazione del programma
 
