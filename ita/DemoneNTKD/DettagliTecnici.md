@@ -1,6 +1,7 @@
 # Demone NTKD - Dettagli Tecnici
 
 1.  [Interazioni con la libreria RPC](#RPC_Library)
+1.  [Calcolo indirizzi IPv4](#Ipv4)
 
 ## <a name="RPC_Library"></a>Interazioni con la libreria RPC
 
@@ -124,4 +125,7 @@ chiamata `StubFactory` che consente al modulo di ottenere una istanza della clas
 stesso.  
 Per questo il programma *ntkd* fornisce per ogni modulo una classe stub proxy.
 
+## <a name="Ipv4"></a>Calcolo indirizzi IPv4
+
+**TODO**
 

@@ -362,6 +362,46 @@ eventualmente esistono nel sistema con il metodo `remove_identity` del modulo Id
 
 ### <a name="Modulo_Qspn"></a>Modulo Qspn
 
+Il modulo QSPN viene portato a conoscenza dell' *indirizzo Netsukuku* del nodo del grafo nel
+quale sta operando. Poi il modulo si occupa di raccogliere e diffondere le conoscenze necessarie
+al popolamento delle tabelle di routing. In questo modo, dato che una istanza del modulo QSPN
+opera in ogni nodo del grafo, la rete Netsukuku è in grado di instradare i pacchetti IP da un
+qualsiasi nodo a qualsiasi altro nodo. Ricordiamo che un nodo del grafo è una specifica identità
+che vive in un dato sistema.
+
+Il programma *ntkd* associa ad ogni identità nel sistema una istanza di QspnManager. Tale istanza resta in vita
+finché resta in vita l'identità.
+
+La prima identità viene creata all'avvio del programma *ntkd* nel sistema. Lo abbiamo detto anche prima trattando
+le interazioni del programma con il modulo Identities. Tale identità è un nodo che costituisce una rete a se
+stante. Il nodo non ha alcun arco.  
+Ricordiamo che un arco passato al modulo Qspn (che in seguito chiameremo *arco-qspn*) è costruito su
+un arco-identità che collega due identità che appartengono alla stessa rete.
+
+Quindi il programma *ntkd* ha il semplice compito di creare in autonomia la prima istanza di QspnManager e
+associarla alla prima identità del sistema. Lo fa con il costruttore `create_net`, al quale passa
+l'indirizzo Netsukuku e il fingerprint.  
+L'indirizzo Netsukuku è composto dalle posizioni del nodo in ogni g-nodo a cui esso appartiene; siccome
+si tratta del primo nodo di una rete, per definizione nel momento in cui nasce il nodo nascono anche tutti
+i g-nodi (di livello 1, 2, ..., `levels`) a cui esso appartiene e nessuno di essi aveva posizioni occupate;
+quindi tutte le posizioni dell'indirizzo possono essere scelte in modo arbitrario nel range da 0 a `gsizes[i]-1`.  
+Il fingerprint è composto da un identificativo univoco del nodo e dalle anzianità: l'anzianità del nodo nel suo
+g-nodo di livello 1, l'anzianità del g-nodo di livello 1 nel suo g-nodo di livello 2, e così via; l'identificativo
+univoco del nodo è scelto in modo casuale; trattandosi del primo nodo di una rete tutte le anzianità sono impostate
+a 0, che significa appunto il membro più anziano in assoluto del suo g-nodo di livello superiore.
+
+Successivamente il programma *ntkd* potrà richiamare altre operazioni sul modulo QSPN. Potrà aggiungere (o rimuovere)
+un arco-qspn ad una istanza di QspnManager. Potrà duplicare una sua identità e di conseguenza creare una nuova istanza
+di QspnManager con il costruttore `enter_net` o `migrate` (non più con `create_net`).  
+Queste decisioni saranno prese a fronte di segnalazioni ricevute dal modulo Hooking. Ne parleremo quindi
+in seguito.
+
+Sulla base dell'indirizzo Netsukuku assegnato ad una certa identità nel sistema verranno calcolati gli
+indirizzi IPv4 che andranno assegnati al sistema corrente, precisamente nel network namespace associato
+a quella identità.  
+Le modalità di calcolo degli indirizzi IPv4 sulla base dell'indirizzo Netsukuku vengono illustrate
+nel [documento di dettaglio](DettagliTecnici.md#Ipv4).
+
 **TODO**
 
 ### <a name="Modulo_PeerServices"></a>Modulo PeerServices
