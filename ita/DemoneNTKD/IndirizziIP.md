@@ -13,7 +13,8 @@
 
 ## <a name="Mappatura_indirizzi_ip"></a>Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IPv4
 
-Gli indirizzi Netsukuku dei *nodi del grafo* vanno mappati in un range di indirizzi IP che si
+Lo spazio di indirizzi Netsukuku (quello costituito dagli indirizzi *reali* che sono assegnati alle
+identità *principali*) va mappato in un range di indirizzi IP che si
 decide di destinare alla rete Netsukuku. Nell'attuale implementazione si presume che questo
 range sia la classe IPv4 10.0.0.0/8.
 
@@ -28,7 +29,7 @@ a 10.1.2.15 useremo 10.1.2.8/29; e così via.
 
 Indichiamo con *l* il numero dei livelli. Indichiamo con *gsize(i)* la dimensione dei g-nodi di livello
 *i* + 1. Tali dimensioni devono essere potenze di 2. Indichiamo con *g-exp(i)* l'esponente della potenza
-di 2 che dà la dimensione dei g-nodi di livello *i* + 1. Il numero di bit necessari a coprire lo spazio
+di 2 che dà *gsize(i)*. Il numero di bit necessari a coprire lo spazio
 di indirizzi è dato dalla sommatoria per *i* da 0 a *l* - 1 di *g-exp(i)*. 𝛴 *<sub>0 ≤ i < l</sub>* *g-exp(i)*.
 
 Questo numero di bit non può essere maggiore di 22. Gli indirizzi IP nella classe 10.0.0.0/8 hanno 24 bit
@@ -49,11 +50,11 @@ associa ad un indirizzo Netsukuku *reale* un numero di indirizzi IP:
 *   Un indirizzo IP globale *anonimizzante*.  
     Questo indirizzo IP identifica un preciso *sistema* univocamente all'interno
     di tutta la rete. È una diversa rappresentazione, rispetto all'indirizzo IP globale,
-    che identifica lo stesso *sistema*; ma questa convoglia in più l'informazione che si vuole
-    contattare quel *sistema* restando anonimi.
+    che identifica lo stesso *sistema*; ma questa convoglia in più l'informazione che il client vuole
+    contattare quel *sistema* restando anonimo.
 *   Un indirizzo IP interno al livello *i* per ogni valore di *i* da 0 a *l* - 1.  
     Questo indirizzo IP identifica un preciso *sistema* univocamente all'interno
-    di un g-nodo *g* di livello *i*. Questo indirizzo IP si può utilizzare come indirizzo di
+    del suo g-nodo *g* di livello *i*. Questo indirizzo IP si può utilizzare come indirizzo di
     destinazione di un pacchetto IP quando sia il *sistema* mittente che il *sistema*
     identificato (il destinatario) appartengono allo stesso g-nodo *g* di livello *i*. La
     peculiarità di questi indirizzi IP (che si riflette sui pacchetti IP trasmessi a questi
@@ -70,41 +71,41 @@ Gli algoritmi di calcolo dei vari tipi di indirizzo IP sono descritti più sotto
 
 ## <a name="Identita"></a> Identità
 
-Ogni identità che vive nel sistema ha un suo indirizzo Netsukuku. Inoltre ha una mappa di percorsi, ognuno
-che ha come destinazione (e come passi) un g-nodo *visibile* dal suo indirizzo Netsukuku.
+Come abbiamo ricordato [qui](DettagliTecnici.md#Ipv4), l'identità principale del sistema ha un indirizzo
+Netsukuku *reale*. Essa assegna degli indirizzi IPv4 locali nel network stack default. Inoltre assegna
+delle rotte nelle tabelle sia per pacchetti IP generati localmente che per pacchetti IP da inoltrare. Queste
+rotte hanno come possibile destinazione tutti i g-nodi di qualsiasi livello che possono essere espressi in
+coordinate gerarchiche relative al suo indirizzo Netsukuku.
 
-Un sistema ha sempre una identità principale e zero o più identità di connettività.
+Invece, una identità di connettività ha un indirizzo Netsukuku con almeno una componente *virtuale*. Indichiamo
+con *i* il livello più alto in cui l'indirizzo Netsukuku di questa identità ha la componente *virtuale*.
+Essa non assegna alcun indirizzo IPv4 locale nel suo network stack. Invece assegna
+delle rotte nelle tabelle solo per pacchetti IP da inoltrare. Queste
+rotte hanno come possibile destinazione g-nodi di livello maggiore o uguale a *i* che possono essere espressi in
+coordinate gerarchiche relative al suo indirizzo Netsukuku.
 
-L'identità principale gestisce il network namespace default. L'identità principale ha un indirizzo
-Netsukuku *definitivo* che è *reale*.
+### <a name=""></a> Calcolo indirizzi IP locali
 
-L'identità di connettività gestisce un certo network namespace. L'identità di connettività ha un indirizzo
-Netsukuku *di connettività* che è *virtuale*.
-
-### <a name="Indirizzi_ip_propri"></a> Assegnazione indirizzi IP
-
-Le identità di connettività non si assegnano mai nessun indirizzo IP nel loro network namespace.
-
-L'identità principale, nel network namespace default, si assegna degli indirizzi IP sulla base del
-suo indirizzo Netsukuku.
-
-Sia *n* l'indirizzo Netsukuku dell'identità principale di un sistema. Sia *l* il numero dei livelli della topologia.
-
-*   Per ogni livello *j* da 0 a *l* - 1:
-    *   Il sistema si assegna l'indirizzo IP interno al livello *j* di *n*.
-*   Il sistema si assegna l'indirizzo IP globale di *n*.
-*   Il sistema può (opzionalmente) fare da anonimizzatore. Cioè si aggiunge la regola di SNAT.
-*   Il sistema può (opzionalmente) assegnarsi l'indirizzo IP globale anonimizzante di *n*.
-
-### <a name="Assegnazione_rotte"></a> Assegnazione rotte
-
-Ogni identità nel sistema ha un suo indirizzo Netsukuku e gestisce un network namespace. Per ognuna
-il programma computa, in base al suo indirizzo Netsukuku, tutti i possibili indirizzi IP di
-destinazione, ognuno con suffisso CIDR, secondo il seguente algoritmo:
+Questo si fa solo per l'identità *principale*.
 
 *   Indichiamo con *l* il numero di livelli nella topologia.
 *   Indichiamo con *subnetlevel* il livello del g-nodo rappresentato dalla sottorete autonoma.
-*   Indichiamo con *n* l'indirizzo Netsukuku del sistema.
+*   Indichiamo con *n* l'indirizzo Netsukuku dell'identità.
+*   Indichiamo con *pos_n(i)* l'identificativo al livello *i* dell'indirizzo Netsukuku *n*.
+*   Per ogni livello *k* da 0 a *l* - 1:
+    *   Calcola `local_ip_set.internal[k] = ip_internal_node(n, inside_level=k)`.
+*   Calcola `local_ip_set.global = ip_global_node(n)`.
+*   Calcola `local_ip_set.netmap_xxx = ip_netmap_xxx(n)`.
+*   Calcola `local_ip_set.netmap_yyy = ip_netmap_yyy(n)`.
+*   Calcola `local_ip_set.anonymizing = ip_anonymizing_node(n)`.
+
+### <a name=""></a> Calcolo indirizzi IP destinazioni
+
+Questo si fa con ogni identità.
+
+*   Indichiamo con *l* il numero di livelli nella topologia.
+*   Indichiamo con *subnetlevel* il livello del g-nodo rappresentato dalla sottorete autonoma.
+*   Indichiamo con *n* l'indirizzo Netsukuku dell'identità.
 *   Indichiamo con *pos_n(i)* l'identificativo al livello *i* dell'indirizzo Netsukuku *n*.
 *   Se si tratta dell'identità principale sia *up_to* = -1. Altrimenti indichiamo con *up_to* il livello
     più alto in cui l'elemento *pos_n(i)* è virtuale.
@@ -112,77 +113,75 @@ destinazione, ognuno con suffisso CIDR, secondo il seguente algoritmo:
     se *i* >= *up_to*,  
     per *j* da 0 a *gsize(i)* - 1,  
     se *pos_n(i)* ≠ *j*:
-    *   Calcola `n_addr` l'indirizzo Netsukuku equivalente di (*i*, *j*) rispetto a *n*.
-    *   `n_addr = n.slice(i+1); n_addr.insert_at(0,j)`;
-    *   Calcola `ip_global_gnode(n_addr)`.
-    *   Calcola `ip_anonymizing_gnode(n_addr)`.
+    *   Indichiamo con *hc* il g-nodo (*i*, *j*).
+    *   Calcola `hc_addr` l'indirizzo Netsukuku equivalente *hc* rispetto a *n*.  
+        Cioè: `hc_addr = n.slice(i+1); hc_addr.insert_at(0,j)`;
+    *   Calcola `dest_ip_set[hc].global = ip_global_gnode(hc_addr)`.
+    *   Calcola `dest_ip_set[hc].anonymizing = ip_anonymizing_gnode(hc_addr)`.
     *   Per *k* che scende da *l* - 1 a *i* + 1:
-        *   Calcola `ip_internal_gnode(n_addr, inside_level=k)`.
+        *   Calcola `dest_ip_set[hc].internal[k] = ip_internal_gnode(hc_addr, inside_level=k)`.
 
-Per ogni indirizzo IP calcolato in questo ciclo, sia esso `$ipaddr` (ad esempio `10.0.0.0/29`),
-il programma **qspnclient** esegue queste operazioni:
+### <a name="Indirizzi_ip_propri"></a> Assegnazione indirizzi IP locali
 
-```
-ip route add unreachable $ipaddr table ntk
-```
-
-Per ogni identità nel sistema, per ciascuna nel suo network namespace, il programma assegna le
-rotte verso i possibili indirizzi IP di destinazione.
+Questo si fa solo con l'identità *principale*.
 
 *   Indichiamo con *l* il numero di livelli nella topologia.
-*   Indichiamo con *n* l'indirizzo Netsukuku del sistema.
-*   Indichiamo con *pos_n(i)* l'identificativo al livello *i* dell'indirizzo Netsukuku *n*.
-*   Per *i* che scende da *l* - 1 a `$subnetlevel`, per *j* da 0 a *gsize(i)* - 1, se *pos_n(i)* ≠ *j*:
-    *   Sia *d* il g-nodo di coordinate (*i*, *j*) rispetto a *n*. Indipendentemente dal
-        fatto che *d* sia presente o meno nella rete.
-    *   Si computa l'indirizzo IP globale di *d* ed anche il suo indirizzo IP anonimizzante.
-    *   Il sistema imposta una rotta per i pacchetti IP in *partenza* verso l'indirizzo IP globale di *d*.  
-        La tabella usata per i pacchetti IP in *partenza* sarà chiamata `ntk` e sarà presente
-        solo nel network namespace default.  
-        Nelle tabelle di routing del kernel per ogni indirizzo IP (con suffisso CIDR) si
-        può dichiarare che la destinazione è *non raggiungibile* oppure si riporta come informazione
-        il gateway da usare per raggiungere la destinazione.  
-        Se l'identità è a conoscenza di percorsi per quella destinazione, allora il programma
-        imposta nella tabella il primo gateway del miglior percorso (sebbene l'identità sia
-        a conoscenza in effetti anche di altre informazioni sul percorso). Altrimenti il programma
-        dichiara nella tabella che la destinazione è *non raggiungibile*.
-    *   Analogamente il sistema imposta una rotta per i pacchetti IP in *partenza* verso l'indirizzo IP
-        anonimizzante di *d*.
-    *   In realtà, la tabella `ntk` nel network namespace default gestito dall'identità principale
-        del sistema verrà usata anche per i pacchetti IP in *inoltro* da un MAC address che l'identità
-        non conosce. Questo va bene, perché la ricezione di tali pacchetti IP da inoltrare si dovrebbe
-        poter verificare solo sul network namespace default e solo se il sistema viene usato consapevolmente
-        come gateway: ad esempio se questo sistema è un gateway per una sottorete a gestione autonoma, oppure
-        se questo sistema viene usato come NAT per una rete privata.
-    *   Per ogni MAC address *m* di diretto vicino che l'identità conosce:
-        *   Il sistema imposta una rotta per i pacchetti IP provenienti da *m* in *inoltro* verso
-            l'indirizzo IP globale di *d*.  
-            La tabella usata per i pacchetti IP in *inoltro* da *m* sarà chiamata `ntk_from_$m` e sarà
-            presente in qualsiasi network namespace.  
+*   Indichiamo con *subnetlevel* il livello del g-nodo rappresentato dalla sottorete autonoma.
+*   Per ogni livello *k* da 0 a *l* - 1:
+    *   Il sistema nel network namespace default si assegna l'indirizzo IP interno al livello *k*.
+        Cioè `local_ip_set.internal[k]`.
+*   Il sistema nel network namespace default si assegna l'indirizzo IP globale.
+    Cioè `local_ip_set.global`.
+*   Se il sistema è gateway per una sottorete autonoma, nel network namespace default aggiunge
+    le regole di NETMAP basate sulle componenti di *n* ai livelli maggiore o uguale a `subnetlevel`.
+*   Il sistema può (opzionalmente) fare da anonimizzatore. Cioè aggiunge nel network namespace default
+    la regola di SNAT che (nei pacchetti IP con destinazione nel range degli indirizzi anonimizzanti)
+    sostituisce al vero mittente il suo indirizzo IP globale. Cioè `local_ip_set.global`.
+*   Il sistema può (opzionalmente) assegnarsi il suo indirizzo IP globale anonimizzante.
+    Cioè `local_ip_set.anonymizing`.
+
+### <a name="Assegnazione_rotte"></a> Assegnazione rotte
+
+Questo si fa con ogni identità.
+
+*   Indichiamo con *l* il numero di livelli nella topologia.
+*   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
+    *   Indichiamo con `dest = dest_ip_set[hc]`.
+    *   Se si tratta dell'identità principale:
+        *   Esegue `ip route add unreachable $dest.global table ntk`.  
+            Nella tabella `ntk` nel solo network namespace default ci sono le rotte per i
+            pacchetti IP in *partenza*.  
+            Se l'identità è a conoscenza di percorsi per una destinazione, allora il programma
+            imposta nella tabella il primo gateway del miglior percorso. Altrimenti il programma
+            dichiara nella tabella che la destinazione è *non raggiungibile*.  
+            Se la destinazione è raggiungibile, in questa tabella va indicato nella rotta l'indirizzo
+            preferito come mittente (`src`), che serve se un processo locale vuole inviare un pacchetto
+            IP. Si deve usare `local_ip_set.global`.  
+            In realtà, la tabella `ntk` nel network namespace default gestito dall'identità principale
+            del sistema verrà usata anche per i pacchetti IP in *inoltro* da un MAC address che l'identità
+            non conosce. Questo va bene, perché la ricezione di tali pacchetti IP da inoltrare si dovrebbe
+            poter verificare solo sul network namespace default e solo se il sistema viene usato consapevolmente
+            come gateway: ad esempio se questo sistema è un gateway per una sottorete a gestione autonoma, oppure
+            se questo sistema viene usato come NAT per una rete privata.
+        *   Analogamente, per l'indirizzo IP anonimizzante, esegue `ip route add unreachable $dest.anonymizing table ntk`.  
+            Anche in questo caso, se la destinazione è raggiungibile va indicato nella rotta l'indirizzo
+            preferito come mittente (`src`). Si deve usare di nuovo `local_ip_set.global`.
+    *   Per ogni arco-qspn noto al manager di questa identità, indichiamo con *m* il relativo `peer_mac`:
+        *   Esegue `ip route add unreachable $dest.global table ntk_from_$m`.  
             Viene impostata la rotta identificata dal miglior percorso noto per quella
             destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
             La destinazione è *non raggiungibile* per i pacchetti IP
-            in *inoltro* provenienti da *m* se non esiste nella rete la destinazione *d*, oppure se
-            l'identità non conosce nessun percorso verso *d* che non passi per il
+            in *inoltro* provenienti da *m* se non esiste nella rete la destinazione `hc`, oppure se
+            l'identità non conosce nessun percorso verso `hc` che non passi per il
             massimo distinto g-nodo di *m* per *n*.
-        *   Analogamente il sistema imposta una rotta in *inoltro* da *m* verso l'indirizzo IP
-            anonimizzante di *d*.
-    *   Si tenga presente che solo per l'identità principale nel network namespace default
-        e solo per la tabella `ntk` va indicato nella rotta l'indirizzo *src* preferito,
-        che serve se un processo locale vuole inviare un pacchetto IP. Sia per la rotta che
-        punta all'indirizzo IP globale di *d*, sia per la rotta che punta all'indirizzo
-        IP anonimizzante, come *src* preferito dovrà essere indicato l'indirizzo IP globale di *n*.
-    *   Per *k* che scende da *l* - 1 a *i* + 1:
-        *   Si computa l'indirizzo IP interno al livello *k* di *d*.
-        *   Il sistema imposta una rotta per i pacchetti IP in *partenza* verso l'indirizzo IP di *d*
-            interno al livello *k*.
-        *   Per ogni MAC address *m* di diretto vicino che l'identità conosce:
-            *   Il sistema imposta una rotta per i pacchetti IP provenienti da *m* in *inoltro* verso
-                l'indirizzo IP di *d* interno al livello *k* per i pacchetti IP.
-        *   Di nuovo solo per l'identità principale nel network namespace default
-            e solo per la tabella `ntk`, per la rotta che punta all'indirizzo IP interno
-            al livello *k* di *d* come *src* preferito dovrà essere indicato l'indirizzo
-            IP di *n* interno al livello *k*.
+        *   Analogamente, per l'indirizzo IP anonimizzante, esegue `ip route add unreachable $dest.anonymizing table ntk_from_$m`.
+    *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
+        *   Se si tratta dell'identità principale:
+            *   Esegue `ip route add unreachable $dest.internal[k] table ntk`.  
+                Se la destinazione è raggiungibile, in questa tabella va indicato nella rotta l'indirizzo
+                preferito come mittente (`src`). Questa volta si deve usare `local_ip_set.internal[k]`.
+        *   Per ogni arco-qspn noto al manager di questa identità, indichiamo con *m* il relativo `peer_mac`:
+            *   Esegue `ip route add unreachable $dest.internal[k] table ntk_from_$m`.
 
 ## <a name="Indirizzi_del_sistema"></a> Indirizzi IP dell'identità principale del sistema
 

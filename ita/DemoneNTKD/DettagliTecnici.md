@@ -140,8 +140,8 @@ In un sistema, il network stack default deve essere in grado di comunicare con i
 (in un dato momento) nella stessa rete Netsukuku. Cioè, vogliamo che le applicazioni in esecuzione nel
 sistema (che di default operano nel network stack default) siano in grado di comunicare nella rete.
 Quindi, il sistema deve avere nel network stack default un indirizzo IPv4 associato all'indirizzo
-Netsukuku dell'identità principale e le rotte necessarie a instradare pacchetti IP (generati localmente
-o da inoltrare) verso gli indirizzi IPv4 associati a qualsiasi altro indirizzo Netsukuku.
+Netsukuku *reale* della sua identità principale e le rotte necessarie a instradare pacchetti IP (generati localmente
+o da inoltrare) verso gli indirizzi IPv4 associati a qualsiasi altro indirizzo Netsukuku *reale*.
 
 Negli altri network stack, invece, non opera alcun programma. Nemmeno lo stesso demone *ntkd*.
 Quindi in essi nessuna applicazione ha bisogno di inviare o ricevere pacchetti IP. Il sistema
