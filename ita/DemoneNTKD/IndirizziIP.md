@@ -1,17 +1,8 @@
 # Demone NTKD - Indirizzi IP
 
-1.  [Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IPv4](#Mappatura_indirizzi_ip)
-1.  [Identità](#Identita)
-    1.  [Assegnazione indirizzi IP](#Indirizzi_ip_propri)
-    1.  [Assegnazione rotte](#Assegnazione_rotte)
-1.  [Indirizzi IP di ogni identità nel sistema](#Indirizzi_del_sistema)
-1.  [Rotte nelle tabelle di routing](#Rotte_nelle_tabelle_di_routing)
-    1.  [Source NATting](#Source_natting)
-    1.  [Routing](#Routing)
-    1.  [Mappatura di una sottorete](#Net_mapping)
-1.  [Calcolo degli indirizzi IP](#Calcolo)
+**TODO TOC**
 
-## <a name="Mappatura_indirizzi_ip"></a>Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IPv4
+## <a name="Mappatura_indirizzi_ip"></a>Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IP
 
 Lo spazio di indirizzi Netsukuku (quello costituito dagli indirizzi *reali* che sono assegnati alle
 identità *principali*) va mappato in un range di indirizzi IP che si
@@ -63,13 +54,9 @@ associa ad un indirizzo Netsukuku *reale* un numero di indirizzi IP:
     Anche per il livello 0 si calcola un tale indirizzo IP. Questo indirizzo ha un significato
     simile a `localhost` nel senso che identifica come destinazione lo stesso sistema mittente.
 
-Ricordiamo che un indirizzo Netsukuku identifica un *nodo del grafo*, cioè una specifica identità
-all'interno di un *sistema*. Però in ogni sistema, in ogni momento, esiste una ed una sola
-*identità principale*, che è l'unica che detiene un indirizzo Netsukuku *reale*.
-
 Gli algoritmi di calcolo dei vari tipi di indirizzo IP sono descritti più sotto.
 
-## <a name="Identita"></a> Identità
+## <a name="Identita"></a> Indirizzi di interesse per una identità
 
 Come abbiamo ricordato [qui](DettagliTecnici.md#Ipv4), l'identità principale del sistema ha un indirizzo
 Netsukuku *reale*. Essa assegna degli indirizzi IPv4 locali nel network stack default. Inoltre assegna
@@ -133,14 +120,38 @@ Questo si fa solo con l'identità *principale*.
 *   Il sistema nel network namespace default si assegna l'indirizzo IP globale.
     Cioè `local_ip_set.global`.
 *   Se il sistema è gateway per una sottorete autonoma, nel network namespace default aggiunge
-    le regole di NETMAP basate sulle componenti di *n* ai livelli maggiore o uguale a `subnetlevel`.
+    le regole di NETMAP basate sulle componenti di *n* ai livelli maggiore o uguale a `subnetlevel`. **TODO**
 *   Il sistema può (opzionalmente) fare da anonimizzatore. Cioè aggiunge nel network namespace default
-    la regola di SNAT che (nei pacchetti IP con destinazione nel range degli indirizzi anonimizzanti)
+    la regola di SNAT che (nei pacchetti IP con destinazione nel range degli indirizzi anonimizzanti
+    calcolato con `ip_anonymizing_range()`)
     sostituisce al vero mittente il suo indirizzo IP globale. Cioè `local_ip_set.global`.
 *   Il sistema può (opzionalmente) assegnarsi il suo indirizzo IP globale anonimizzante.
     Cioè `local_ip_set.anonymizing`.
 
-### <a name="Assegnazione_rotte"></a> Assegnazione rotte
+Quando diciamo che il sistema si assegna un indirizzo IP `$ipaddr` nel network namespace default intendiamo
+dire che lo assegna a ognuna delle interfacce di rete che il demone *ntkd* gestisce. Cioè che
+esegue per ogni `$dev` il seguente comando:
+
+```
+ip address add $ipaddr dev $dev
+```
+
+Queste operazioni sono fatte dal programma *ntkd* in determinate circostanze:
+
+*   All'avvio del programma. In questo momento si costituisce la prima identità nel sistema, che è
+    in quel momento la principale. Sulla base del suo indirizzo Netsukuku si eseguono tutti i
+    comandi `ip address add` come detto prima.
+*   Quando l'identità principale si duplica. In questo momento la vecchia identità diventa di connettività
+    e il posto di identità principale viene preso dalla nuova identità con un nuovo indirizzo Netsukuku.
+    Questo è (potenzialmente) diverso dal precedente a partire da un certo livello: il `host_gnode_level`
+    della migrazione (o ingresso) che ha prodotto la duplicazione dell'identità.  
+    Sulla base di questa variazione ci sarà una serie di comandi `ip address del` (opportunamente preceduti
+    da una serie di comandi `ip route del` nella tabella `ntk` perché in essa sono indicati quegli indirizzi
+    locali come `src`) e poi una serie di comandi `ip address add`.
+*   Al termine del programma. In questo momento si rimuove la corrente identità principale del sistema.
+    Sulla base del suo indirizzo Netsukuku si eseguono tutti i comandi `ip address del` come detto prima.
+
+### <a name="Assegnazione_rotte"></a> Assegnazione rotte verso indirizzi IP destinazioni
 
 Questo si fa con ogni identità.
 
@@ -167,13 +178,15 @@ Questo si fa con ogni identità.
             Anche in questo caso, se la destinazione è raggiungibile va indicato nella rotta l'indirizzo
             preferito come mittente (`src`). Si deve usare di nuovo `local_ip_set.global`.
     *   Per ogni arco-qspn noto al manager di questa identità, indichiamo con *m* il relativo `peer_mac`:
-        *   Esegue `ip route add unreachable $dest.global table ntk_from_$m`.  
+        *   Esegue, nel network namespace associato, `ip route add unreachable $dest.global table ntk_from_$m`.  
+            Nella tabella `ntk_from_$m` ci sono le rotte per i pacchetti IP in *inoltro*.  
             Viene impostata la rotta identificata dal miglior percorso noto per quella
             destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
             La destinazione è *non raggiungibile* per i pacchetti IP
             in *inoltro* provenienti da *m* se non esiste nella rete la destinazione `hc`, oppure se
             l'identità non conosce nessun percorso verso `hc` che non passi per il
-            massimo distinto g-nodo di *m* per *n*.
+            massimo distinto g-nodo di *m* per *n*.  
+            In questa tabella non va mai indicato nella rotta l'indirizzo preferito come mittente (`src`).
         *   Analogamente, per l'indirizzo IP anonimizzante, esegue `ip route add unreachable $dest.anonymizing table ntk_from_$m`.
     *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
         *   Se si tratta dell'identità principale:
@@ -181,35 +194,11 @@ Questo si fa con ogni identità.
                 Se la destinazione è raggiungibile, in questa tabella va indicato nella rotta l'indirizzo
                 preferito come mittente (`src`). Questa volta si deve usare `local_ip_set.internal[k]`.
         *   Per ogni arco-qspn noto al manager di questa identità, indichiamo con *m* il relativo `peer_mac`:
-            *   Esegue `ip route add unreachable $dest.internal[k] table ntk_from_$m`.
+            *   Esegue, nel network namespace associato, `ip route add unreachable $dest.internal[k] table ntk_from_$m`.
 
-## <a name="Indirizzi_del_sistema"></a> Indirizzi IP dell'identità principale del sistema
+#### Rotte nelle tabelle di routing
 
-Come abbiamo visto prima, in un sistema possono esistere diverse identità. Ogni identità detiene un
-indirizzo Netsukuku. Ma solo l'identità *principale* del sistema, sulla base del suo indirizzo Netsukuku,
-si assegna alcuni indirizzi IPv4 che gli permetteranno di comunicare con il resto della rete.
-
-Vediamo come queste impostazioni si configurano in un sistema Linux e quindi quali operazioni fa il programma *qspnclient*.
-
-In un sistema Linux il sistema si assegna un indirizzo IP associandolo ad una interfaccia di rete.
-
-Fatta questa premessa, come si comporta il programma?
-
-Il programma **qspnclient** sa quando può cambiare l'indirizzo Netsukuku dell'identità *principale* del
-sistema:
-
-*   All'avvio del programma. In questo momento si costituisce la prima identità nel sistema, che è
-    in quel momento la principale; ad essa viene associato il primo indirizzo Netsukuku che è completamente *reale*.
-*   Quando l'identità principale si duplica. In questo momento la vecchia identità diventa di connettività
-    e il posto di identità principale viene preso dalla nuova identità; ad essa viene associato un
-    nuovo indirizzo Netsukuku che è completamente *reale*.
-
-In queste occasioni il programma **qspnclient** computa gli indirizzi IP che si deve assegnare il
-sistema. Li associa tutti a ognuna delle interfacce di rete reali.
-
-## <a name="Rotte_nelle_tabelle_di_routing"></a> Rotte nelle tabelle di routing
-
-Il programma deve istruire le policy di routing del sistema (che di norma significa impostare delle
+Il programma *ntkd* deve istruire le policy di routing del sistema (che di norma significa impostare delle
 rotte nelle tabelle di routing) in modo da garantire questi comportamenti:
 
 *   Se un processo locale vuole inviare un pacchetto ad un indirizzo IP *x* nello spazio destinato alla rete Netsukuku:
@@ -266,12 +255,12 @@ rete Netsukuku, purché utilizzino questo sistema come ultimo gateway verso l'es
 * * *
 
 Vediamo come queste impostazioni si configurano in un sistema Linux e quindi quali operazioni fa
-il programma *qspnclient*.
+il programma *ntkd*.
 
 Abbiamo già avuto modo di evidenziare che un sistema Linux è in grado di replicare il suo
 intero network stack in molti distinti network namespace. E che i moduli che stiamo esaminando
 assumono come requisito una capacità di questo tipo. Nella trattazione che segue parliamo sempre
-di concetti (come le tabelle di routing, l'assegnazione degli indirizzi alle interfacce di rete,
+di concetti (come le tabelle di routing,
 la manipolazione dei pacchetti, ...) che sono da riferirsi ad un particolare network stack.
 
 Esaminiamo prima l'aspetto del source natting, che permette al sistema (se lo vuole fare) di
@@ -279,7 +268,7 @@ mascherare il source dei pacchetti che hanno una destinazione *anonimizzante*. P
 del routing. Infine esaminiamo l'aspetto del net mapping, che permette ad un sistema di fare
 efficacemente da gateway verso una sottorete a gestione autonoma.
 
-### <a name="Source_natting"></a> Source NATting
+#### Source NATting
 
 Il [source NATting](https://en.wikipedia.org/wiki/Network_address_translation) in un sistema Linux
 può essere realizzato istruendo il kernel con il comando `iptables` (utilizzando una regola con
@@ -304,7 +293,7 @@ L'opzione di rendere anonimi i pacchetti che transitano per il sistema nel perco
 
 *   **NOTA**: La seguente spiegazione sui motivi per cui l'operazione è opzionale va spostata in un
     documento che affronta ad alto livello le implicazioni sul detenere un sistema nella rete Netsukuku. Il documento
-    presente si limita a illustrare i dettagli implementativi del programma *qspnclient* o del demone *ntkd*.  
+    presente si limita a illustrare i dettagli implementativi del demone *ntkd*.  
     Questa azione è opzionale perché il proprietario di un sistema può avere remore a nascondere il vero mittente
     di un messaggio prendendo il suo posto. In realtà questo timore sarebbe infondato, vediamo perché. Per far
     funzionare bene l'operazione di contatto anonimo da parte del client, occorre che il sistema che fa da server
@@ -322,31 +311,29 @@ L'opzione di rendere anonimi i pacchetti che transitano per il sistema nel perco
     di memoria venissero meno, in questo caso la comunicazione in corso ne verrebbe compromessa.
 
 Se il sistema decide di implementare il source natting, calcola lo spazio di indirizzi che indicano una
-risorsa da raggiungere in forma anonima. Una volta calcolato il numero di bit necessari a codificare
-un indirizzo Netsukuku *reale* nella topologia della nostra rete, va considerato che nei successivi
-2 bit in testa va codificato (per gli indirizzi IP globali *anonimizzanti*) il numero 2, in binario `|1|0|`.
+risorsa da raggiungere in forma anonima con `ip_anonymizing_range()`.
 
-Facciamo un esempio. Supponiamo di destinare alla rete Netsukuku tutta la classe 10.0.0.0/8 di IPv4.
-Consideriamo una topologia di rete con 4 livelli. Diamo 2 bit al livello 3, 4 bit al livello 2, 8 bit
-ai livelli 1 e 0. Sono soddisfatti i vincoli esposti sopra.
-
-In questo esempio, il range di indirizzi che individuano a livello globale una risorsa da
-raggiungere in forma anonima è `10.128.0.0/10`.
-
-Supponiamo che l'indirizzo Netsukuku del nostro sistema in questa topologia sia 3·10·123·45.
-L'indirizzo IP globale del sistema è 10.58.123.45. L'indirizzo IP globale *anonimizzante* del sistema è 10.186.123.45.
-
-Allora il programma istruisce il kernel di modificare i pacchetti destinati al range `10.128.0.0/10`
-indicando come nuovo indirizzo mittente il suo indirizzo globale (non quello *anonimizzante*). Il comando è il seguente:
+Il programma istruisce il kernel di modificare i pacchetti destinati a quel range
+indicando come nuovo indirizzo mittente il suo indirizzo globale. Cioè `local_ip_set.global`. Il comando è il seguente:
 
 ```
    iptables -t nat -A POSTROUTING -d 10.128.0.0/10 -j SNAT --to 10.58.123.45
 ```
 
-Quando il programma termina, se aveva istruito il kernel per fare il source natting, rimuove le regole
-che aveva messe nella catena `POSTROUTING` della tabella `nat`.
+Queste operazioni sono fatte dal programma *ntkd* in determinate circostanze:
 
-### <a name="Routing"></a> Routing
+*   All'avvio del programma. In questo momento si costituisce la prima identità nel sistema, che è
+    in quel momento la principale. Sulla base del suo indirizzo Netsukuku si calcola `local_ip_set.global`
+    e si esegue il comando `iptables ... -A` come detto prima.
+*   Quando l'identità principale si duplica. In questo momento la vecchia identità diventa di connettività
+    e il posto di identità principale viene preso dalla nuova identità con un nuovo indirizzo Netsukuku.
+    Questo è (potenzialmente) diverso dal precedente a partire da un certo livello: il `host_gnode_level`
+    della migrazione (o ingresso) che ha prodotto la duplicazione dell'identità.  
+    Sulla base di questa variazione ci sarà un comando `iptables ... -D` e poi un comando `iptables ... -A`.
+*   Al termine del programma. In questo momento si rimuove la corrente identità principale del sistema.
+    Sulla base del suo indirizzo Netsukuku si esegue il comando `iptables ... -D` come detto prima.
+
+#### Routing
 
 In un sistema Linux le rotte vengono memorizzate in diverse tabelle. Queste tabelle hanno un
 identificativo che è un numero da 0 a 255. Hanno anche un nome descrittivo: l'associazione del
@@ -436,7 +423,7 @@ Quando il programma ha finito di usare una tabella (ad esempio se un arco che co
 oppure se il programma termina) svuota la tabella, poi rimuove la regola, poi rimuove il record
 relativo dal file `/etc/iproute2/rt_tables`.
 
-### <a name="Net_mapping"></a> Mappatura di una sottorete
+#### Mappatura di una sottorete
 
 Fra le possibilità offerte da `iptables` c'è l'estensione
 [NETMAP](https://www.netfilter.org/documentation/HOWTO/netfilter-extensions-HOWTO-4.html#ss4.4)
