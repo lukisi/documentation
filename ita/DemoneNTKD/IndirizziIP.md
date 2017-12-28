@@ -82,9 +82,31 @@ Questo si fa solo per l'identità *principale*.
 *   Per ogni livello *k* da 0 a *l* - 1:
     *   Calcola `local_ip_set.internal[k] = ip_internal_node(n, inside_level=k)`.
 *   Calcola `local_ip_set.global = ip_global_node(n)`.
-*   Calcola `local_ip_set.netmap_xxx = ip_netmap_xxx(n)`.
-*   Calcola `local_ip_set.netmap_yyy = ip_netmap_yyy(n)`.
 *   Calcola `local_ip_set.anonymizing = ip_anonymizing_node(n)`.
+*   Calcola `local_ip_set.anonymizing_range = ip_anonymizing_range()`.  
+    Si tratta del range di indirizzi IP anonimizzanti che comprende tutta la rete.
+
+Se *subnetlevel* > 0 si aggiunge:
+
+*   Calcola `local_ip_set.netmap_range1 = ip_netmap_range1()`.  
+    Si tratta del range di indirizzi IP interni al livello *subnetlevel* che contiene tutti i
+    nodi della sottorete autonoma.
+*   Per ogni livello *k* da *subnetlevel* a *l* - 2:
+    *   Sia *g* il g-nodo di livello *k* + 1 di cui fa parte *n* (e tutta la sottorete autonoma).
+    *   Calcola `local_ip_set.netmap_range2[k] = ip_netmap_range2(n, inside_level=k)`.  
+        Si tratta del range di indirizzi IP interni a *g* che rappresenta la sottorete autonoma.  
+        Si basa sulle posizioni di *n* da *subnetlevel* a *k*.
+    *   Calcola `local_ip_set.netmap_range3[k] = ip_netmap_range3(inside_level=k)`.  
+        Si tratta del range di indirizzi IP interni a *g* che comprende tutti i nodi in *g*.
+*   Per il livello *l* - 1:
+    *   Calcola `local_ip_set.netmap_range2_upper = ip_netmap_range2_upper(n)`.  
+        Si tratta del range di indirizzi IP globali che rappresenta la sottorete autonoma.  
+        Si basa sulle posizioni di *n* da *subnetlevel* in su.
+    *   Calcola `local_ip_set.netmap_range3_upper = ip_netmap_range3_upper()`.  
+        Si tratta del range di indirizzi IP globali che comprende tutta la rete.
+*   Calcola `local_ip_set.netmap_range4 = ip_netmap_range4(n)`.  
+    Si tratta del range di indirizzi IP anonimizzanti che rappresenta la sottorete autonoma.  
+    Si basa sulle posizioni di *n* da *subnetlevel* in su.
 
 ### <a name=""></a> Calcolo indirizzi IP destinazioni
 
@@ -108,9 +130,11 @@ Questo si fa con ogni identità.
     *   Per *k* che scende da *l* - 1 a *i* + 1:
         *   Calcola `dest_ip_set[hc].internal[k] = ip_internal_gnode(hc_addr, inside_level=k)`.
 
-### <a name="Indirizzi_ip_propri"></a> Assegnazione indirizzi IP locali
+### <a name="Indirizzi_ip_propri"></a> Utilizzo indirizzi IP locali
 
 Questo si fa solo con l'identità *principale*.
+
+#### Assegnazione indirizzi locali
 
 *   Indichiamo con *l* il numero di livelli nella topologia.
 *   Indichiamo con *subnetlevel* il livello del g-nodo rappresentato dalla sottorete autonoma.
@@ -119,12 +143,6 @@ Questo si fa solo con l'identità *principale*.
         Cioè `local_ip_set.internal[k]`.
 *   Il sistema nel network namespace default si assegna l'indirizzo IP globale.
     Cioè `local_ip_set.global`.
-*   Se il sistema è gateway per una sottorete autonoma, nel network namespace default aggiunge
-    le regole di NETMAP basate sulle componenti di *n* ai livelli maggiore o uguale a `subnetlevel`. **TODO**
-*   Il sistema può (opzionalmente) fare da anonimizzatore. Cioè aggiunge nel network namespace default
-    la regola di SNAT che (nei pacchetti IP con destinazione nel range degli indirizzi anonimizzanti
-    calcolato con `ip_anonymizing_range()`)
-    sostituisce al vero mittente il suo indirizzo IP globale. Cioè `local_ip_set.global`.
 *   Il sistema può (opzionalmente) assegnarsi il suo indirizzo IP globale anonimizzante.
     Cioè `local_ip_set.anonymizing`.
 
@@ -150,6 +168,136 @@ Queste operazioni sono fatte dal programma *ntkd* in determinate circostanze:
     locali come `src`) e poi una serie di comandi `ip address add`.
 *   Al termine del programma. In questo momento si rimuove la corrente identità principale del sistema.
     Sulla base del suo indirizzo Netsukuku si eseguono tutti i comandi `ip address del` come detto prima.
+
+#### Regole di Source NATting
+
+Il sistema può (opzionalmente) fare da anonimizzatore. Cioè: quando viene usato per instradare un
+pacchetto IP verso un indirizzo IP di tipo anonimizzante, maschera l'indirizzo IP del mittente
+con il suo indirizzo IP globale.
+
+Il [source NATting](https://en.wikipedia.org/wiki/Network_address_translation) in un sistema Linux
+può essere realizzato istruendo il kernel con il comando `iptables` (utilizzando una regola con
+l'estensione `SNAT` nella catena `POSTROUTING` della tabella `nat`). Quando un pacchetto
+da inoltrare rientra nei parametri di questa regola (un esempio di parametro che si può usare è
+l'indirizzo di destinazione del pacchetto che rientra in un dato range) allora il kernel modifica
+l'indirizzo mittente nel pacchetto sostituendolo con uno dei suoi indirizzi pubblici. Inoltre compie
+una serie di altre operazioni volte a mantenere inalterate il più possibile le caratteristiche della
+comunicazione (ad esempio la connessione stabilita dal protocollo TCP).  
+Ad esempio, con il comando «`iptables -t nat -A POSTROUTING -d 10.128.0.0/9 -j SNAT --to 10.1.2.3`»
+si ottiene che tutti i pacchetti da inoltrare alle destinazioni 10.128.0.0/9 vanno rimappati al mio indirizzo 10.1.2.3
+
+Il programma *ntkd* all'avvio, opzionalmente, istruisce il kernel per il source natting. Con questa configurazione
+il sistema si rende disponibile ad anonimizzare i pacchetti che riceve e che vanno inoltrati verso una
+destinazione che accetta richieste anonime.  
+L'opzione di rendere anonimi i pacchetti che transitano per il sistema nel percorso verso un'altra destinazione
+è distinta e indipendente dall'opzione di accettare richieste anonime.
+
+Il programma ha già calcolato in `local_ip_set.anonymizing_range` lo spazio di indirizzi che indicano una
+risorsa da raggiungere in forma anonima. Il programma istruisce il kernel di modificare i pacchetti destinati a quel range
+indicando come nuovo indirizzo mittente il suo indirizzo globale. Cioè `local_ip_set.global`. Il comando è il seguente:
+
+```
+   iptables -t nat -A POSTROUTING -d $anonymizing_range -j SNAT --to $global
+```
+
+Queste operazioni sono fatte dal programma *ntkd* in determinate circostanze:
+
+*   All'avvio del programma. In questo momento si costituisce la prima identità nel sistema, che è
+    in quel momento la principale. Sulla base del suo indirizzo Netsukuku si calcola `local_ip_set.global`
+    e si esegue il comando `iptables -t nat -A` come detto prima.
+*   Quando l'identità principale si duplica. In questo momento la vecchia identità diventa di connettività
+    e il posto di identità principale viene preso dalla nuova identità con un nuovo indirizzo Netsukuku.
+    Questo è (potenzialmente) diverso dal precedente a partire da un certo livello: il `host_gnode_level`
+    della migrazione (o ingresso) che ha prodotto la duplicazione dell'identità.  
+    Sulla base di questa variazione ci sarà un comando `iptables -t nat -D` e poi un comando `iptables -t nat -A`.
+*   Al termine del programma. In questo momento si rimuove la corrente identità principale del sistema.
+    Sulla base del suo indirizzo Netsukuku si esegue il comando `iptables -t nat -D` come detto prima.
+
+#### Mappatura di una sottorete autonoma
+
+Il sistema può fare da gateway verso la rete Netsukuku per una sottorete a gestione autonoma.
+
+Fra le possibilità offerte da `iptables` c'è l'estensione
+[NETMAP](https://www.netfilter.org/documentation/HOWTO/netfilter-extensions-HOWTO-4.html#ss4.4)
+che ci permette di creare una mappatura 1:1 tra due reti. Cioè di modificare la parte `network` di
+un indirizzo IP mantenendo inalterata la parte `host`.  
+Abbinata alla catena `PREROUTING` della tabella `nat` questa estensione permette di cambiare l'indirizzo
+IP di destinazione di un pacchetto, mentre abbinata alla catena `POSTROUTING` della stessa tabella `nat`
+permette di cambiare l'indirizzo del mittente.  
+Si può vedere un esempio a questo [link](https://capcorne.wordpress.com/2009/03/24/natting-a-network-range-with-netmapiptables).
+
+Se il sistema vuole fare da gateway per una sottorete a gestione
+autonoma, il programma *ntkd* deve assicurarsi che ci siano queste regole:
+
+*   Indichiamo con *subnetlevel* il livello del g-nodo rappresentato dalla sottorete autonoma. Quindi abbiamo *subnetlevel* > 0.
+*   Indichiamo con *l* il numero di livelli nella topologia.
+*   Indichiamo con *n* l'indirizzo Netsukuku dell'identità principale del sistema.
+*   Indichiamo con *pos_n(i)* l'identificativo al livello *i* dell'indirizzo Netsukuku *n*.
+*   Per *i* che sale da *subnetlevel* a *l* - 2:
+    *   Per i pacchetti IP che passano per questo sistema e sono destinati ad
+        un indirizzo IP di tipo interno di livello *i* + 1 che identifica un nodo
+        interno alla mia sottorete autonoma (di livello *subnetlevel*) e che quindi
+        necessariamente provengono dall'esterno della sottorete, esegui la rimappatura
+        dell'IP di destinazione affinché risulti nel range degli indirizzi IP di tipo
+        interno di livello *subnetlevel*.  
+        Cioè: esegue `iptables -t nat -A PREROUTING -d $netmap_range2[i] -j NETMAP --to $netmap_range1`.
+    *   Per i pacchetti IP che passano per questo sistema, che hanno per IP di mittente
+        un indirizzo IP di tipo interno di livello *subnetlevel* (che cioè
+        provengono dall'interno della sottorete autonoma) e che sono destinati ad
+        un indirizzo IP di tipo interno di livello *i* + 1, esegui la rimappatura
+        dell'IP di mittente affinché risulti nel range degli indirizzi IP
+        di tipo interno di livello *i* + 1 e identifichi un nodo
+        interno alla mia sottorete autonoma.  
+        Cioè: esegue `iptables -t nat -A POSTROUTING -d $netmap_range3[i] -s $netmap_range1 -j NETMAP --to $netmap_range2[i]`.
+*   Per i pacchetti IP che passano per questo sistema e sono destinati ad
+    un indirizzo IP di tipo globale che identifica un nodo
+    interno alla mia sottorete autonoma (di livello *subnetlevel*) e che quindi
+    necessariamente provengono dall'esterno della sottorete, esegui la rimappatura
+    dell'IP di destinazione affinché risulti nel range degli indirizzi IP
+    di tipo interno di livello *subnetlevel*.  
+    Cioè: esegue `iptables -t nat -A PREROUTING -d $netmap_range2_upper -j NETMAP --to $netmap_range1`.
+*   Per i pacchetti IP che passano per questo sistema, che hanno per IP di mittente
+    un indirizzo IP di tipo interno di livello *subnetlevel* (che cioè
+    provengono dall'interno della sottorete autonoma) e che sono destinati ad
+    un indirizzo IP di tipo globale, esegui la rimappatura
+    dell'IP di mittente affinché risulti nel range degli indirizzi IP
+    di tipo globale e identifichi un nodo
+    interno alla mia sottorete autonoma.  
+    Cioè: esegue `iptables -t nat -A POSTROUTING -d $netmap_range3_upper -s $netmap_range1 -j NETMAP --to $netmap_range2_upper`.
+*   Se si vuole che ogni sistema nella sottorete autonoma ammetta di essere contattato in forma anonima:
+    *   Per i pacchetti IP che passano per questo sistema e sono destinati ad
+        un indirizzo IP di tipo anonimizzante che identifica un nodo
+        interno alla mia sottorete autonoma (di livello *subnetlevel*) e che quindi
+        necessariamente provengono dall'esterno della sottorete, esegui la rimappatura
+        dell'IP di destinazione affinché risulti nel range degli indirizzi IP
+        di tipo interno di livello *subnetlevel*.  
+        Cioè: esegue `iptables -t nat -A PREROUTING -d $netmap_range4 -j NETMAP --to $netmap_range1`.  
+        Non è possibile ammettere che qualche nodo sia contattabile in forma anonima
+        senza di fatto renderlo possibile a tutti; in quanto l'indirizzo anonimizzante di
+        destinazione viene rimappato all'indirizzo interno esattamente come viene
+        rimappato l'indirizzo globale.
+*   Naturalmente, il gateway permette ai sistemi interni di contattare un sistema esterno in forma anonima. Quindi:
+    *   Per i pacchetti IP che passano per questo sistema, che hanno per IP di mittente
+        un indirizzo IP di tipo interno di livello *subnetlevel* (che cioè
+        provengono dall'interno della sottorete autonoma) e che sono destinati ad
+        un indirizzo IP di tipo anonimizzante, esegui la rimappatura
+        dell'IP di mittente affinché risulti nel range degli indirizzi IP
+        di tipo globale e identifichi un nodo
+        interno alla mia sottorete autonoma.  
+        Cioè: esegue `iptables -t nat -A POSTROUTING -d $anonymizing_range -s $netmap_range1 -j NETMAP --to $netmap_range2_upper`.
+
+Queste operazioni sono fatte dal programma *ntkd* in determinate circostanze:
+
+*   All'avvio del programma. In questo momento si costituisce la prima identità nel sistema, che è
+    in quel momento la principale. Sulla base del suo indirizzo Netsukuku il programma *ntkd* produce i
+    comandi `iptables -t nat -A` e `iptables -t nat -D` necessari.
+*   Quando l'identità principale si duplica. In questo momento la vecchia identità diventa di connettività
+    e il posto di identità principale viene preso dalla nuova identità con un nuovo indirizzo Netsukuku.
+    Questo è (potenzialmente) diverso dal precedente a partire da un certo livello: il `host_gnode_level`
+    della migrazione (o ingresso) che ha prodotto la duplicazione dell'identità.  
+    Sulla base di questa variazione il programma *ntkd* produce i comandi `iptables -t nat -A` e `iptables -t nat -D` necessari.
+*   Al termine del programma. In questo momento si rimuove la corrente identità principale del sistema.
+    Sulla base del suo indirizzo Netsukuku il programma *ntkd* produce i comandi `iptables -t nat -D` necessari.
 
 ### <a name="Assegnazione_rotte"></a> Assegnazione rotte verso indirizzi IP destinazioni
 
@@ -263,75 +411,11 @@ assumono come requisito una capacità di questo tipo. Nella trattazione che segu
 di concetti (come le tabelle di routing,
 la manipolazione dei pacchetti, ...) che sono da riferirsi ad un particolare network stack.
 
-Esaminiamo prima l'aspetto del source natting, che permette al sistema (se lo vuole fare) di
-mascherare il source dei pacchetti che hanno una destinazione *anonimizzante*. Poi esaminiamo l'aspetto
-del routing. Infine esaminiamo l'aspetto del net mapping, che permette ad un sistema di fare
-efficacemente da gateway verso una sottorete a gestione autonoma.
+Abbiamo già visto come si impostano le regole di source natting per il mascheramento dei client
+che vogliono restare anonimi (premettendo che il server lo consenta) e quelle di net mapping
+per permettere l'accesso di una sottorete a gestione autonoma.
 
-#### Source NATting
-
-Il [source NATting](https://en.wikipedia.org/wiki/Network_address_translation) in un sistema Linux
-può essere realizzato istruendo il kernel con il comando `iptables` (utilizzando una regola con
-l'estensione `SNAT` nella catena `POSTROUTING` della tabella `nat`). Quando un pacchetto
-da inoltrare rientra nei parametri di questa regola (un esempio di parametro che si può usare è
-l'indirizzo di destinazione del pacchetto che rientra in un dato range) allora il kernel modifica
-l'indirizzo mittente nel pacchetto sostituendolo con uno dei suoi indirizzi pubblici. Inoltre compie
-una serie di altre operazioni volte a mantenere inalterate il più possibile le caratteristiche della
-comunicazione (ad esempio la connessione stabilita dal protocollo TCP).
-
-Ad esempio, con il comando «`iptables -t nat -A POSTROUTING -d 10.128.0.0/9 -j SNAT --to 10.1.2.3`»
-si ottiene che tutti i pacchetti da inoltrare alle destinazioni 10.128.0.0/9 vanno rimappati al mio indirizzo 10.1.2.3
-
-Fatta questa premessa, come si comporta il programma?
-
-Il programma, all'avvio, opzionalmente, istruisce il kernel per il source natting. Con questa configurazione
-il sistema si rende disponibile ad anonimizzare i pacchetti che riceve e che vanno inoltrati verso una
-destinazione che accetta richieste anonime.
-
-L'opzione di rendere anonimi i pacchetti che transitano per il sistema nel percorso verso un'altra destinazione
-è distinta e indipendente dall'opzione di accettare richieste anonime, che è stata discussa sopra.
-
-*   **NOTA**: La seguente spiegazione sui motivi per cui l'operazione è opzionale va spostata in un
-    documento che affronta ad alto livello le implicazioni sul detenere un sistema nella rete Netsukuku. Il documento
-    presente si limita a illustrare i dettagli implementativi del demone *ntkd*.  
-    Questa azione è opzionale perché il proprietario di un sistema può avere remore a nascondere il vero mittente
-    di un messaggio prendendo il suo posto. In realtà questo timore sarebbe infondato, vediamo perché. Per far
-    funzionare bene l'operazione di contatto anonimo da parte del client, occorre che il sistema che fa da server
-    (fornisce un servizio) si assegni anche gli indirizzi per essere contattato in forma anonima. Se fa questa
-    operazione opzionale, significa che è pronto a ricevere alcune richieste dalle quali saprà di non
-    poter risalire al mittente. Sarà quindi responsabile di rispondere o meno a tali richieste e non
-    potrà far ricadere tale responsabilità sugli altri sistemi.  
-    Anche considerando quindi non rischiosa l'azione di implementare nel proprio sistema il source natting,
-    l'azione è opzionale perché il sistema che la implementa si carica di un onere che costa un po' in
-    termini di memoria. Se il sistema quindi ha scarse risorse (si intende molto scarse, come pochi mega
-    di RAM) conviene che non la implementi.  
-    Va considerato che se un sistema decide di non implementare questa azione, comunque il meccanismo di
-    trasmissione anonima risulta efficace se nel percorso tra il mittente e il destinatario almeno un sistema è
-    disposto a implementarla. Invece, se un sistema decide di implementare l'azione e ad un certo punto le sue risorse
-    di memoria venissero meno, in questo caso la comunicazione in corso ne verrebbe compromessa.
-
-Se il sistema decide di implementare il source natting, calcola lo spazio di indirizzi che indicano una
-risorsa da raggiungere in forma anonima con `ip_anonymizing_range()`.
-
-Il programma istruisce il kernel di modificare i pacchetti destinati a quel range
-indicando come nuovo indirizzo mittente il suo indirizzo globale. Cioè `local_ip_set.global`. Il comando è il seguente:
-
-```
-   iptables -t nat -A POSTROUTING -d 10.128.0.0/10 -j SNAT --to 10.58.123.45
-```
-
-Queste operazioni sono fatte dal programma *ntkd* in determinate circostanze:
-
-*   All'avvio del programma. In questo momento si costituisce la prima identità nel sistema, che è
-    in quel momento la principale. Sulla base del suo indirizzo Netsukuku si calcola `local_ip_set.global`
-    e si esegue il comando `iptables ... -A` come detto prima.
-*   Quando l'identità principale si duplica. In questo momento la vecchia identità diventa di connettività
-    e il posto di identità principale viene preso dalla nuova identità con un nuovo indirizzo Netsukuku.
-    Questo è (potenzialmente) diverso dal precedente a partire da un certo livello: il `host_gnode_level`
-    della migrazione (o ingresso) che ha prodotto la duplicazione dell'identità.  
-    Sulla base di questa variazione ci sarà un comando `iptables ... -D` e poi un comando `iptables ... -A`.
-*   Al termine del programma. In questo momento si rimuove la corrente identità principale del sistema.
-    Sulla base del suo indirizzo Netsukuku si esegue il comando `iptables ... -D` come detto prima.
+Rimane ora solo l'aspetto del routing.
 
 #### Routing
 
@@ -422,83 +506,6 @@ devono avere come campo gateway (gw) l'indirizzo di scheda del vicino.
 Quando il programma ha finito di usare una tabella (ad esempio se un arco che conosceva non è più presente,
 oppure se il programma termina) svuota la tabella, poi rimuove la regola, poi rimuove il record
 relativo dal file `/etc/iproute2/rt_tables`.
-
-#### Mappatura di una sottorete
-
-Fra le possibilità offerte da `iptables` c'è l'estensione
-[NETMAP](https://www.netfilter.org/documentation/HOWTO/netfilter-extensions-HOWTO-4.html#ss4.4)
-che ci permette di creare una mappatura 1:1
-tra due reti. Cioè di modificare la parte `network` di un indirizzo IP mantenendo inalterata la parte `host`.
-
-Abbinata alla catena `PREROUTING` della tabella `nat` questa estensione permette di cambiare l'indirizzo
-IP di destinazione di un pacchetto, mentre abbinata alla catena `POSTROUTING` della stessa tabella `nat`
-permette di cambiare l'indirizzo del mittente.  
-Si può vedere un esempio a questo [link](https://capcorne.wordpress.com/2009/03/24/natting-a-network-range-with-netmapiptables).
-
-Fatta questa premessa, come si comporta il programma?
-
-Se il sistema vuole fare da gateway per una sottorete a gestione
-autonoma, il programma **qspnclient** deve assicurarsi che ci siano queste regole:
-
-*   Indichiamo con *subnetlevel* il livello del g-nodo rappresentato dalla sottorete autonoma. Quindi abbiamo *subnetlevel* > 0.
-*   Indichiamo con *l* il numero di livelli nella topologia.
-*   Indichiamo con *n* l'indirizzo Netsukuku dell'identità principale del sistema.
-*   Indichiamo con *pos_n(i)* l'identificativo al livello *i* dell'indirizzo Netsukuku *n*.
-*   Per *i* che sale da *subnetlevel* a *l* - 1:
-    *   Se *i* < *l* - 1:
-        *   Per i pacchetti IP che passano per questo sistema e sono destinati ad
-            un indirizzo IP di tipo interno di livello *i* + 1 che identifica un nodo
-            interno alla mia sottorete autonoma (di livello *subnetlevel*) e che quindi
-            necessariamente provengono dall'esterno della sottorete, esegui la rimappatura
-            dell'IP di destinazione affinché risulti nel range degli indirizzi IP di tipo
-            interno di livello *subnetlevel*.
-        *   Per i pacchetti IP che passano per questo sistema, che hanno per IP di mittente
-            un indirizzo IP di tipo interno di livello *subnetlevel* (che cioè
-            provengono dall'interno della sottorete autonoma) e che sono destinati ad
-            un indirizzo IP di tipo interno di livello *i* + 1, esegui la rimappatura
-            dell'IP di mittente affinché risulti nel range degli indirizzi IP
-            di tipo interno di livello *i* e identifichi un nodo
-            interno alla mia sottorete autonoma.
-    *   Altrimenti (cioè per *i* = *l* - 1):
-        *   Per i pacchetti IP che passano per questo sistema e sono destinati ad
-            un indirizzo IP di tipo globale che identifica un nodo
-            interno alla mia sottorete autonoma (di livello *subnetlevel*) e che quindi
-            necessariamente provengono dall'esterno della sottorete, esegui la rimappatura
-            dell'IP di destinazione affinché risulti nel range degli indirizzi IP
-            di tipo interno di livello *subnetlevel*.
-        *   Per i pacchetti IP che passano per questo sistema, che hanno per IP di mittente
-            un indirizzo IP di tipo interno di livello *subnetlevel* (che cioè
-            provengono dall'interno della sottorete autonoma) e che sono destinati ad
-            un indirizzo IP di tipo globale, esegui la rimappatura
-            dell'IP di mittente affinché risulti nel range degli indirizzi IP
-            di tipo globale e identifichi un nodo
-            interno alla mia sottorete autonoma.
-        *   Se si vuole che ogni sistema nella sottorete autonoma ammetta di essere contattato in forma anonima:
-            *   Per i pacchetti IP che passano per questo sistema e sono destinati ad
-                un indirizzo IP di tipo anonimizzante che identifica un nodo
-                interno alla mia sottorete autonoma (di livello *subnetlevel*) e che quindi
-                necessariamente provengono dall'esterno della sottorete, esegui la rimappatura
-                dell'IP di destinazione affinché risulti nel range degli indirizzi IP
-                di tipo interno di livello *subnetlevel*.  
-                Non è possibile ammettere che qualche nodo sia contattabile in forma anonima
-                senza di fatto renderlo possibile a tutti; in quanto l'indirizzo anonimizzante di
-                destinazione viene rimappato all'indirizzo interno esattamente come viene
-                rimappato l'indirizzo globale.
-        *   Naturalmente, il gateway permette ai sistemi interni di contattare un sistema esterno in forma anonima. Quindi:
-            *   Per i pacchetti IP che passano per questo sistema, che hanno per IP di mittente
-                un indirizzo IP di tipo interno di livello *subnetlevel* (che cioè
-                provengono dall'interno della sottorete autonoma) e che sono destinati ad
-                un indirizzo IP di tipo anonimizzante, esegui la rimappatura
-                dell'IP di mittente affinché risulti nel range degli indirizzi IP
-                di tipo globale e identifichi un nodo
-                interno alla mia sottorete autonoma.
-
-Per assicurare questo, il programma **qspnclient** deve intervenire all'inizio (cioè quando l'identità
-principale del sistema assume il suo primo indirizzo Netsukuku) e ogni volta che l'identità principale
-del sistema cambia (un'altra identità diventa la principale).
-
-In tutte queste occasioni il programma **qspnclient**, conoscendo l'indirizzo Netsukuku precedente e quello nuovo dell'identità
-principale del sistema, produce i comandi `iptables -t nat -A` e `iptables -t nat -D` necessari.
 
 ## <a name="Calcolo"></a> Calcolo degli indirizzi IP
 
