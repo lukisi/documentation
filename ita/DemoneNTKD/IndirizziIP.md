@@ -115,11 +115,11 @@ Sia *g* l'indirizzo Netsukuku di un g-nodo di livello *i*. L'indirizzo completo 
 
 Il valore *g<sub>i</sub>* viene riportato nell'indirizzo IP che stiamo componendo partendo dal
 bit 𝛴 *<sub>0 ≤ k ≤ i-1</sub>* *g-exp(k)* per un numero di *g-exp*(i) bit. I bit meno significativi
-sono messi a 0. Quei bit non saranno comunque presi in considerazione a causa dal prefisso di routing
+sono messi a 0. Quei bit non saranno comunque presi in considerazione a causa dal suffisso di routing
 della notazione CIDR, trattandosi dell'indirizzo IP di un intero g-nodo considerato come una IP subnet.
 
 I valori dei bit più alti si calcolano come visto prima per l'indirizzo di un singolo nodo. Infine si
-aggiunge, come accennato, il prefisso di routing, ottenuto come 32 - 𝛴 *<sub>0 ≤ k ≤ i-1</sub>* *g-exp(k)*.
+aggiunge, come accennato, il suffisso di routing, ottenuto come 32 - 𝛴 *<sub>0 ≤ k ≤ i-1</sub>* *g-exp(k)*.
 
 #### Indirizzo IP di un nodo interno ad un suo g-nodo
 
@@ -143,6 +143,7 @@ Sia *h* un suo g-nodo superiore di livello *k*. Quindi *h* ha indirizzo *g<sub>l
 Per ogni valore *t* da *i* a *k* - 1, il valore di *g<sub>t</sub>* è riportato come visto prima nei relativi
 bit dell'indirizzo IP che stiamo componendo. Il valore *k* viene riportato nei bit che sarebbero stati
 destinati all'identificativo di livello più alto, cioè *g<sub>l-1</sub>*. Gli altri bit sono lasciati a 0.
+Si aggiunge, come prima, il suffisso di routing.
 
 I due bit più alti li impostiamo a `|0|1|`.
 
@@ -158,7 +159,7 @@ dell'indirizzo IP che stiamo componendo.
 I due bit più alti li impostiamo a `|1|0|`.
 
 Nel caso di un g-nodo, per produrre un indirizzo anonimizzante in notazione CIDR si procede in modo
-analogo, aggiungendo il prefisso come visto prima.
+analogo, aggiungendo il suffisso come visto prima.
 
 ## <a name="Identita"></a> Indirizzi di interesse per una identità
 
@@ -569,6 +570,9 @@ relativo dal file `/etc/iproute2/rt_tables`.
 
 #### Operazioni della prima identità principale
 
+All'avvio del demone *ntkd* viene creata la prima identità principale. Essa forma una nuova rete e
+non ha alcun arco-qspn.
+
 *   Indichiamo con *l* il numero di livelli nella topologia.
 *   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
     *   Indichiamo con `dest = dest_ip_set[hc]`.
@@ -610,7 +614,42 @@ relativo dal file `/etc/iproute2/rt_tables`.
         *   Per ogni arco-qspn noto al manager di questa identità, indichiamo con *m* il relativo `peer_mac`:
             *   Esegue, nel network namespace associato, `ip route add unreachable $dest.internal[k] table ntk_from_$m`.
 
+Nell'algoritmo abbiamo incluso le operazioni da fare sulla base dei propri archi-qspn, anche se abbiamo
+detto che la prima identità principale non ha alcun arco-qspn.
+
 #### Operazioni sulla duplicazione di una identità
+
+Ad un certo punto l'identità principale del sistema si duplica.  
+In questo evento l'identità principale *id0* viene duplicata in *id1*. Questo avviene perché l'identità
+*id1* migra/entra in una diversa rete, nella quale viene ospitata in un g-nodo esistente di livello `host_gnode_level`.
+Mentre l'identità *id0* resta (temporaneamente) dov'era diventando una identità di connettività con indirizzo
+virtuale al livello `guest_gnode_level`.
+
+Viene creato un nuovo network namespace *ntkv0* che sarà gestito da *id0* mentre il default viene ora gestito
+da *id1*.
+
+Nel network namespace *ntkv0* non vengono assegnati indirizzi IP locali.  
+Nel network namespace *ntkv0* vanno aggiunte tutte le rotte verso i g-nodi destinazione che rispetto all'indirizzo
+di *id1* sono di livello maggiore o uguale a `guest_gnode_level`.
+
+Nel network namespace default vengono rimosse le rotte verso i g-nodi destinazione che rispetto al
+precedente indirizzo di *id0* erano di livello maggiore o uguale a `guest_gnode_level`.  
+Riguardo i g-nodi destinazione che rispetto al precedente indirizzo di *id0* erano di livello minore
+di `guest_gnode_level`, essi sono gli stessi per il nuovo indirizzo di *id1* quanto a rappresentazione
+in coordinate gerarchiche. Ma nel network namespace default vanno rimosse le rotte verso i relativi
+indirizzi IP interni ai livelli superiori di `guest_gnode_level` (e globali).  
+Poi nel network namespace default vengono rimossi gli indirizzi IP locali interni ai livelli maggiori
+o uguali a `host_gnode_level` (e globali) che erano stati computati dall'identità *id0* sulla base del suo
+precedente indirizzo Netsukuku. Di seguito nel network namespace default vengono aggiunti gli indirizzi IP
+locali interni ai livelli maggiori o uguali a `host_gnode_level` (e globali) che sono ora computati
+dall'identità *id1* sulla base del suo nuovo indirizzo Netsukuku.  
+Nel network namespace default vanno aggiunte (inizialmente `unreachable`) tutte le rotte verso i g-nodi
+destinazione che rispetto all'indirizzo di *id1* sono di livello maggiore o uguale a `guest_gnode_level`.  
+Riguardo i g-nodi destinazione che sono di livello minore di `guest_gnode_level` rispetto al nuovo
+indirizzo di *id1* (come lo erano rispetto al precedente indirizzo di *id0*), nel network namespace default
+vanno aggiunte (come fossero nuove) le rotte verso i relativi indirizzi IP interni ai livelli superiori
+di `guest_gnode_level` (e globali). Tali rotte però non sono da inizializzare `unreachable`, bensì
+possono già avere un `gateway` e un indirizzo `src`.
 
 ## <a name="Esempio"></a> Esempio
 
