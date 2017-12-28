@@ -1,8 +1,15 @@
 # Demone NTKD - Indirizzi IP
 
-**TODO TOC**
+1.  [Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IP](#Mappatura)
+    1.  [Calcolo degli indirizzi IP](#Calcolo)
+1.  [Indirizzi di interesse per una identità](#Identita)
+    1.  [Calcolo indirizzi IP locali](#Computo_locali)
+    1.  [Calcolo indirizzi IP destinazioni](#Computo_destinazioni)
+    1.  [Utilizzo indirizzi IP locali](#Utilizzo_locali)
+    1.  [Utilizzo indirizzi IP destinazioni](#Utilizzo_destinazioni)
+1.  [Esempio](#Esempio)
 
-## <a name="Mappatura_indirizzi_ip"></a>Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IP
+## <a name="Mappatura"></a> Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IP
 
 Lo spazio di indirizzi Netsukuku (quello costituito dagli indirizzi *reali* che sono assegnati alle
 identità *principali*) va mappato in un range di indirizzi IP che si
@@ -54,7 +61,104 @@ associa ad un indirizzo Netsukuku *reale* un numero di indirizzi IP:
     Anche per il livello 0 si calcola un tale indirizzo IP. Questo indirizzo ha un significato
     simile a `localhost` nel senso che identifica come destinazione lo stesso sistema mittente.
 
-Gli algoritmi di calcolo dei vari tipi di indirizzo IP sono descritti più sotto.
+### <a name="Calcolo"></a> Calcolo degli indirizzi IP
+
+Illustriamo come si calcolano gli indirizzi IP locali di un nodo del grafo, cioè quelli che l'identità *principale*
+di un sistema vuole assegnarsi nel network namespace default.
+
+Illustriamo anche come si calcolano gli indirizzi IP con notazione CIDR che rappresentano un g-nodo destinazione.
+Ogni identità (la principale o una di connettività) è interessata a calcolare questi indirizzi IP per inserirli
+nelle tabelle di routing del proprio network namespace, ma solo per i g-nodi che sono visibili nella sua mappa,
+cioè quelli che sono rappresentabili anche come coordinate gerarchiche relative al proprio indirizzo di nodo.
+
+Ricordiamo i vincoli sopra esposti nella scelta della topologia della rete. In particolare abbiamo detto
+che bisogna lasciare 2 bit liberi nello spazio degli indirizzi IP.
+
+I due bit subito più alti del numero di bit necessari a codificare un indirizzo Netsukuku *reale*
+sono riservati. Ad esempio, supponiamo di definire una topologia che sfrutta tutti i 22 bit disponibili
+nella classe 10.0.0.0/8 di IPv4. Quindi per codificare un indirizzo Netsukuku *reale* si usano i
+bit da 0 a 21. Allora questi due bit subito più alti di cui parliamo sono il 23 e il 22.
+
+Il numero riportato in questi due bit indica il tipo di indirizzo IP:
+
+*   0 - In binario `|0|0|`. Indirizzo IP globale.
+*   1 - In binario `|0|1|`. Indirizzo IP interno ad un g-nodo.
+*   2 - In binario `|1|0|`. Indirizzo IP globale anonimizzante.
+*   3 - In binario `|1|1|`. Riservato ad usi futuri.
+
+Indichiamo con *l* il numero dei livelli. Indichiamo con *gsize(i)* la dimensione dei g-nodi di livello
+*i* + 1, che abbiamo detto è una potenza di 2. Indichiamo con *g-exp(i)* l'esponente della potenza
+di 2 equivalente a *gsize(i)*.
+
+Una volta scelti i valori di *l* e di *g-exp(i)* rispettando i vincoli prima ricordati, vediamo come si
+calcolano i vari tipi di indirizzo IP partendo da un indirizzo Netsukuku (di nodo o di g-nodo).
+
+#### Indirizzo IP globale di un nodo
+
+Sia *n* l'indirizzo Netsukuku di un nodo. Indichiamo con *n<sub>0</sub>* l'identificativo del nodo
+all'interno del suo g-nodo di livello 1. E a seguire con *n<sub>i</sub>* l'identificativo del g-nodo di
+livello *i* a cui appartiene *n* all'interno del suo g-nodo di livello *i* + 1. L'indirizzo completo sarà
+*n<sub>l-1</sub>·...·n<sub>1</sub>·n<sub>0</sub>*.
+
+Il valore *n<sub>0</sub>* viene riportato nei bit meno significativi dell'indirizzo IP che stiamo
+componendo, cioè partendo dal bit 0 per un numero di *g-exp*(0) bit. Il valore *n<sub>1</sub>* viene
+riportato nei successivi bit, cioè partendo da *g-exp*(0) per un numero di *g-exp*(1) bit. E così di
+seguito, l'identificativo *n<sub>i</sub>* (con *i* che arriva fino a *l* - 1) viene riportato nei bit
+partendo da 𝛴 *<sub>0 ≤ k ≤ i-1</sub>* *g-exp(k)* per un numero di *g-exp(i)* bit.
+
+I due bit più alti (quelli riservati per indicare il tipo di indirizzo IP) li impostiamo a `|0|0|`.
+
+#### Indirizzo IP globale di un g-nodo
+
+Sia *g* l'indirizzo Netsukuku di un g-nodo di livello *i*. L'indirizzo completo sarà
+*g<sub>l-1</sub>·...·g<sub>i</sub>*.
+
+Il valore *g<sub>i</sub>* viene riportato nell'indirizzo IP che stiamo componendo partendo dal
+bit 𝛴 *<sub>0 ≤ k ≤ i-1</sub>* *g-exp(k)* per un numero di *g-exp*(i) bit. I bit meno significativi
+sono messi a 0. Quei bit non saranno comunque presi in considerazione a causa dal prefisso di routing
+della notazione CIDR, trattandosi dell'indirizzo IP di un intero g-nodo considerato come una IP subnet.
+
+I valori dei bit più alti si calcolano come visto prima per l'indirizzo di un singolo nodo. Infine si
+aggiunge, come accennato, il prefisso di routing, ottenuto come 32 - 𝛴 *<sub>0 ≤ k ≤ i-1</sub>* *g-exp(k)*.
+
+#### Indirizzo IP di un nodo interno ad un suo g-nodo
+
+Sia *n* un nodo con indirizzo *n<sub>l-1</sub>·...·n<sub>1</sub>·n<sub>0</sub>*. Sia *g* il suo g-nodo
+di livello *i* con 0 ≤ *i* < *l*. Quindi *g* ha indirizzo *n<sub>l-1</sub>·...·n<sub>i</sub>*. Vogliamo
+comporre un indirizzo IP di *n* che sia univoco internamente a *g*.
+
+I valori da *n<sub>0</sub>* a *n<sub>i-1</sub>* sono riportati come visto prima nei relativi bit
+dell'indirizzo IP che stiamo componendo. Il valore *i* viene riportato nei bit che sarebbero stati
+destinati all'identificativo di livello più alto, cioè *n<sub>l-1</sub>*. Gli altri bit, quelli che
+avrebbero ospitato gli identificativi da *i* a *l* - 2, sono lasciati a 0.
+
+I due bit più alti li impostiamo a `|0|1|`.
+
+#### Indirizzo IP di un g-nodo interno ad un suo g-nodo superiore
+
+Sia *g* un g-nodo di livello *i* con indirizzo *g<sub>l-1</sub>·...·g<sub>i</sub>* con *i* < *l* - 1.
+Sia *h* un suo g-nodo superiore di livello *k*. Quindi *h* ha indirizzo *g<sub>l-1</sub>·...·g<sub>k</sub>*, con
+*k* > *i*. Vogliamo comporre un indirizzo IP in notazione CIDR di *g* che sia univoco internamente a *h*.
+
+Per ogni valore *t* da *i* a *k* - 1, il valore di *g<sub>t</sub>* è riportato come visto prima nei relativi
+bit dell'indirizzo IP che stiamo componendo. Il valore *k* viene riportato nei bit che sarebbero stati
+destinati all'identificativo di livello più alto, cioè *g<sub>l-1</sub>*. Gli altri bit sono lasciati a 0.
+
+I due bit più alti li impostiamo a `|0|1|`.
+
+#### Indirizzo IP di un nodo o g-nodo contattabile in forma anonima
+
+Sia *n* un nodo con indirizzo *n<sub>l-1</sub>·...·n<sub>1</sub>·n<sub>0</sub>*. Vogliamo comporre
+un indirizzo IP per tale risorsa tale che un client lo possa usare per contattare il nodo mantenendo
+l'anonimato. Chiamiamo un tale indirizzo *anonimizzante*.
+
+I valori da *n<sub>0</sub>* a *n<sub>l-1</sub>* sono riportati come visto prima nei relativi bit
+dell'indirizzo IP che stiamo componendo.
+
+I due bit più alti li impostiamo a `|1|0|`.
+
+Nel caso di un g-nodo, per produrre un indirizzo anonimizzante in notazione CIDR si procede in modo
+analogo, aggiungendo il prefisso come visto prima.
 
 ## <a name="Identita"></a> Indirizzi di interesse per una identità
 
@@ -71,7 +175,7 @@ delle rotte nelle tabelle solo per pacchetti IP da inoltrare. Queste
 rotte hanno come possibile destinazione g-nodi di livello maggiore o uguale a *i* che possono essere espressi in
 coordinate gerarchiche relative al suo indirizzo Netsukuku.
 
-### <a name=""></a> Calcolo indirizzi IP locali
+### <a name="Computo_locali"></a> Calcolo indirizzi IP locali
 
 Questo si fa solo per l'identità *principale*.
 
@@ -108,7 +212,7 @@ Se *subnetlevel* > 0 si aggiunge:
     Si tratta del range di indirizzi IP anonimizzanti che rappresenta la sottorete autonoma.  
     Si basa sulle posizioni di *n* da *subnetlevel* in su.
 
-### <a name=""></a> Calcolo indirizzi IP destinazioni
+### <a name="Computo_destinazioni"></a> Calcolo indirizzi IP destinazioni
 
 Questo si fa con ogni identità.
 
@@ -130,7 +234,7 @@ Questo si fa con ogni identità.
     *   Per *k* che scende da *l* - 1 a *i* + 1:
         *   Calcola `dest_ip_set[hc].internal[k] = ip_internal_gnode(hc_addr, inside_level=k)`.
 
-### <a name="Indirizzi_ip_propri"></a> Utilizzo indirizzi IP locali
+### <a name="Utilizzo_locali"></a> Utilizzo indirizzi IP locali
 
 Questo si fa solo con l'identità *principale*.
 
@@ -299,50 +403,9 @@ Queste operazioni sono fatte dal programma *ntkd* in determinate circostanze:
 *   Al termine del programma. In questo momento si rimuove la corrente identità principale del sistema.
     Sulla base del suo indirizzo Netsukuku il programma *ntkd* produce i comandi `iptables -t nat -D` necessari.
 
-### <a name="Assegnazione_rotte"></a> Assegnazione rotte verso indirizzi IP destinazioni
+### <a name="Utilizzo_destinazioni"></a> Utilizzo indirizzi IP destinazioni
 
 Questo si fa con ogni identità.
-
-*   Indichiamo con *l* il numero di livelli nella topologia.
-*   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
-    *   Indichiamo con `dest = dest_ip_set[hc]`.
-    *   Se si tratta dell'identità principale:
-        *   Esegue `ip route add unreachable $dest.global table ntk`.  
-            Nella tabella `ntk` nel solo network namespace default ci sono le rotte per i
-            pacchetti IP in *partenza*.  
-            Se l'identità è a conoscenza di percorsi per una destinazione, allora il programma
-            imposta nella tabella il primo gateway del miglior percorso. Altrimenti il programma
-            dichiara nella tabella che la destinazione è *non raggiungibile*.  
-            Se la destinazione è raggiungibile, in questa tabella va indicato nella rotta l'indirizzo
-            preferito come mittente (`src`), che serve se un processo locale vuole inviare un pacchetto
-            IP. Si deve usare `local_ip_set.global`.  
-            In realtà, la tabella `ntk` nel network namespace default gestito dall'identità principale
-            del sistema verrà usata anche per i pacchetti IP in *inoltro* da un MAC address che l'identità
-            non conosce. Questo va bene, perché la ricezione di tali pacchetti IP da inoltrare si dovrebbe
-            poter verificare solo sul network namespace default e solo se il sistema viene usato consapevolmente
-            come gateway: ad esempio se questo sistema è un gateway per una sottorete a gestione autonoma, oppure
-            se questo sistema viene usato come NAT per una rete privata.
-        *   Analogamente, per l'indirizzo IP anonimizzante, esegue `ip route add unreachable $dest.anonymizing table ntk`.  
-            Anche in questo caso, se la destinazione è raggiungibile va indicato nella rotta l'indirizzo
-            preferito come mittente (`src`). Si deve usare di nuovo `local_ip_set.global`.
-    *   Per ogni arco-qspn noto al manager di questa identità, indichiamo con *m* il relativo `peer_mac`:
-        *   Esegue, nel network namespace associato, `ip route add unreachable $dest.global table ntk_from_$m`.  
-            Nella tabella `ntk_from_$m` ci sono le rotte per i pacchetti IP in *inoltro*.  
-            Viene impostata la rotta identificata dal miglior percorso noto per quella
-            destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
-            La destinazione è *non raggiungibile* per i pacchetti IP
-            in *inoltro* provenienti da *m* se non esiste nella rete la destinazione `hc`, oppure se
-            l'identità non conosce nessun percorso verso `hc` che non passi per il
-            massimo distinto g-nodo di *m* per *n*.  
-            In questa tabella non va mai indicato nella rotta l'indirizzo preferito come mittente (`src`).
-        *   Analogamente, per l'indirizzo IP anonimizzante, esegue `ip route add unreachable $dest.anonymizing table ntk_from_$m`.
-    *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
-        *   Se si tratta dell'identità principale:
-            *   Esegue `ip route add unreachable $dest.internal[k] table ntk`.  
-                Se la destinazione è raggiungibile, in questa tabella va indicato nella rotta l'indirizzo
-                preferito come mittente (`src`). Questa volta si deve usare `local_ip_set.internal[k]`.
-        *   Per ogni arco-qspn noto al manager di questa identità, indichiamo con *m* il relativo `peer_mac`:
-            *   Esegue, nel network namespace associato, `ip route add unreachable $dest.internal[k] table ntk_from_$m`.
 
 #### Rotte nelle tabelle di routing
 
@@ -400,6 +463,12 @@ per gli indirizzi IP interni al g-nodo di livello della sottorete autonoma stess
 autonoma potranno comunque comunicare (sia contattare, sia essere contattati) con tutti gli altri nodi della
 rete Netsukuku, purché utilizzino questo sistema come ultimo gateway verso l'esterno.
 
+Abbiamo già visto come si impostano le regole di source natting per il mascheramento dei client
+che vogliono restare anonimi (premettendo che il server lo consenta) e quelle di net mapping
+per permettere l'accesso di una sottorete a gestione autonoma.
+
+Rimane ora solo l'aspetto del routing.
+
 * * *
 
 Vediamo come queste impostazioni si configurano in un sistema Linux e quindi quali operazioni fa
@@ -410,14 +479,6 @@ intero network stack in molti distinti network namespace. E che i moduli che sti
 assumono come requisito una capacità di questo tipo. Nella trattazione che segue parliamo sempre
 di concetti (come le tabelle di routing,
 la manipolazione dei pacchetti, ...) che sono da riferirsi ad un particolare network stack.
-
-Abbiamo già visto come si impostano le regole di source natting per il mascheramento dei client
-che vogliono restare anonimi (premettendo che il server lo consenta) e quelle di net mapping
-per permettere l'accesso di una sottorete a gestione autonoma.
-
-Rimane ora solo l'aspetto del routing.
-
-#### Routing
 
 In un sistema Linux le rotte vengono memorizzate in diverse tabelle. Queste tabelle hanno un
 identificativo che è un numero da 0 a 255. Hanno anche un nome descrittivo: l'associazione del
@@ -461,10 +522,9 @@ che nella tabella `main` di ogni network namespace siano memorizzate rotte diret
 verso ogni suo diretto vicino (più precisamente verso ogni *identità* sua vicina). In queste rotte
 sono indicati gli indirizzi di scheda delle proprie interfacce e di quelle dei vicini.
 
-Il programma, sempre su ogni network namespace, crea una tabella `ntk` con identificativo `YYY`, dove `YYY`
+Il programma, solo sul network namespace default, crea una tabella `ntk` con identificativo `YYY`, dove `YYY`
 è il primo identificativo libero nel file `/etc/iproute2/rt_tables`. In essa mette tutte le rotte
-delle possibili destinazioni IP in base all'indirizzo Netsukuku dell'identità che gestisce quel
-namespace.
+delle possibili destinazioni IP in base all'indirizzo Netsukuku dell'identità principale.
 
 Il ruolo fondamentale della tabella `ntk` è svolto nel network namespace default. I processi locali
 nel sistema che vogliono trasmettere agli altri sistemi nella rete sono serviti da questa tabella.
@@ -498,7 +558,7 @@ fra i suoi hop il *massimo distinto g-nodo* del vicino collegato a quell'arco, a
 mette su questa tabella il gateway per il miglior percorso tra questi. Altrimenti mette la rotta come `unreachable`.
 
 Sulla base degli eventi segnalati dal modulo QSPN, e se necessario richiamando i suoi metodi pubblici, il
-programma *qspnclient* popola e mantiene le rotte nelle tabelle `ntk` e `ntk_from_XXX`. I percorsi
+programma *ntkd* popola e mantiene le rotte nelle tabelle `ntk` e `ntk_from_XXX`. I percorsi
 segnalati dal modulo QSPN contengono sempre un arco che parte dal sistema corrente come passo iniziale e da tale arco
 si può risalire all'indirizzo di scheda del vicino. Le rotte nelle tabelle `ntk` e `ntk_from_XXX` infatti
 devono avere come campo gateway (gw) l'indirizzo di scheda del vicino.
@@ -507,169 +567,58 @@ Quando il programma ha finito di usare una tabella (ad esempio se un arco che co
 oppure se il programma termina) svuota la tabella, poi rimuove la regola, poi rimuove il record
 relativo dal file `/etc/iproute2/rt_tables`.
 
-## <a name="Calcolo"></a> Calcolo degli indirizzi IP
+#### Operazioni della prima identità principale
 
-Illustriamo come si calcolano gli indirizzi IP locali di un nodo del grafo, cioè quelli che l'identità *principale*
-di un sistema vuole assegnarsi nel network namespace default.
+*   Indichiamo con *l* il numero di livelli nella topologia.
+*   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
+    *   Indichiamo con `dest = dest_ip_set[hc]`.
+    *   Se si tratta dell'identità principale:
+        *   Esegue `ip route add unreachable $dest.global table ntk`.  
+            Nella tabella `ntk` nel solo network namespace default ci sono le rotte per i
+            pacchetti IP in *partenza*.  
+            Se l'identità è a conoscenza di percorsi per una destinazione, allora il programma
+            imposta nella tabella il primo gateway del miglior percorso. Altrimenti il programma
+            dichiara nella tabella che la destinazione è *non raggiungibile*.  
+            Se la destinazione è raggiungibile, in questa tabella va indicato nella rotta l'indirizzo
+            preferito come mittente (`src`), che serve se un processo locale vuole inviare un pacchetto
+            IP. Si deve usare `local_ip_set.global`.  
+            In realtà, la tabella `ntk` nel network namespace default gestito dall'identità principale
+            del sistema verrà usata anche per i pacchetti IP in *inoltro* da un MAC address che l'identità
+            non conosce. Questo va bene, perché la ricezione di tali pacchetti IP da inoltrare si dovrebbe
+            poter verificare solo sul network namespace default e solo se il sistema viene usato consapevolmente
+            come gateway: ad esempio se questo sistema è un gateway per una sottorete a gestione autonoma, oppure
+            se questo sistema viene usato come NAT per una rete privata.
+        *   Analogamente, per l'indirizzo IP anonimizzante, esegue `ip route add unreachable $dest.anonymizing table ntk`.  
+            Anche in questo caso, se la destinazione è raggiungibile va indicato nella rotta l'indirizzo
+            preferito come mittente (`src`). Si deve usare di nuovo `local_ip_set.global`.
+    *   Per ogni arco-qspn noto al manager di questa identità, indichiamo con *m* il relativo `peer_mac`:
+        *   Esegue, nel network namespace associato, `ip route add unreachable $dest.global table ntk_from_$m`.  
+            Nella tabella `ntk_from_$m` ci sono le rotte per i pacchetti IP in *inoltro*.  
+            Viene impostata la rotta identificata dal miglior percorso noto per quella
+            destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
+            La destinazione è *non raggiungibile* per i pacchetti IP
+            in *inoltro* provenienti da *m* se non esiste nella rete la destinazione `hc`, oppure se
+            l'identità non conosce nessun percorso verso `hc` che non passi per il
+            massimo distinto g-nodo di *m* per *n*.  
+            In questa tabella non va mai indicato nella rotta l'indirizzo preferito come mittente (`src`).
+        *   Analogamente, per l'indirizzo IP anonimizzante, esegue `ip route add unreachable $dest.anonymizing table ntk_from_$m`.
+    *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
+        *   Se si tratta dell'identità principale:
+            *   Esegue `ip route add unreachable $dest.internal[k] table ntk`.  
+                Se la destinazione è raggiungibile, in questa tabella va indicato nella rotta l'indirizzo
+                preferito come mittente (`src`). Questa volta si deve usare `local_ip_set.internal[k]`.
+        *   Per ogni arco-qspn noto al manager di questa identità, indichiamo con *m* il relativo `peer_mac`:
+            *   Esegue, nel network namespace associato, `ip route add unreachable $dest.internal[k] table ntk_from_$m`.
 
-Illustriamo anche come si calcolano gli indirizzi IP con notazione CIDR che rappresentano un g-nodo destinazione.
-Ogni identità (la principale o una di connettività) è interessata a calcolare questi indirizzi IP per inserirli
-nelle tabelle di routing del proprio network namespace, ma solo per i g-nodi che sono visibili nella sua mappa,
-cioè quelli che sono rappresentabili anche come coordinate gerarchiche relative al proprio indirizzo di nodo.
+#### Operazioni sulla duplicazione di una identità
 
-Ricordiamo che nel documento di analisi abbiamo precisato dei vincoli nella
-scelta della topologia della rete:
+## <a name="Esempio"></a> Esempio
 
-*   La dimensione di ogni g-nodo, detta *gsize*, deve essere una potenza di 2.
-*   La somma degli esponenti di tutti i livelli (cioè il numero di bit necessari a codificare
-    un indirizzo Netsukuku *reale*) non deve superare *t* - 2, dove *t* è il numero di bit
-    a disposizione nella classe di indirizzi IP che si intende destinare alla rete Netsukuku.  
-    In altre parole, bisogna lasciare 2 bit liberi nello spazio degli indirizzi IP.  
-    Ad esempio, se si destina alla rete Netsukuku la classe 10.0.0.0/8 di IPv4, tale
-    somma non deve superare il numero 22.
-*   La *gsize* del livello più alto deve essere maggiore o uguale al numero dei livelli.
-
-I due bit subito più alti del numero di bit necessari a codificare un indirizzo Netsukuku *reale*
-sono riservati. Ad esempio, supponiamo di definire una topologia che sfrutta tutti i 22 bit disponibili
-nella classe 10.0.0.0/8 di IPv4. Quindi per codificare un indirizzo Netsukuku *reale* si usano i
-bit da 0 a 21. Allora questi due bit subito più alti di cui parliamo sono il 23 e il 22.
-
-Il numero riportato in questi due bit indica il tipo di indirizzo IP:
-
-*   0 - In binario `|0|0|`. Indirizzo IP globale.
-*   1 - In binario `|0|1|`. Indirizzo IP interno ad un g-nodo.
-*   2 - In binario `|1|0|`. Indirizzo IP globale anonimizzante.
-*   3 - In binario `|1|1|`. Riservato ad usi futuri.
-
-Indichiamo con *l* il numero dei livelli. Indichiamo con *gsize(i)* la dimensione dei g-nodi di livello
-*i* + 1, che abbiamo detto è una potenza di 2. Indichiamo con *g-exp(i)* l'esponente della potenza
-di 2 equivalente a *gsize(i)*.
-
-Una volta scelti i valori di *l* e di *g-exp(i)* rispettando i vincoli prima ricordati, vediamo come si
-calcolano i vari tipi di indirizzo IP partendo da un indirizzo Netsukuku (di nodo o di g-nodo).
-
-### <a name="Indirizzo_globale_nodo"></a>Indirizzo IP globale di un nodo
-
-Sia *n* l'indirizzo Netsukuku di un nodo. Indichiamo con *n<sub>0</sub>* l'identificativo del nodo
-all'interno del suo g-nodo di livello 1. E a seguire con *n<sub>i</sub>* l'identificativo del g-nodo di
-livello *i* a cui appartiene *n* all'interno del suo g-nodo di livello *i* + 1. L'indirizzo completo sarà
-*n<sub>l-1</sub>·...·n<sub>1</sub>·n<sub>0</sub>*.
-
-Il valore *n<sub>0</sub>* viene riportato nei bit meno significativi dell'indirizzo IP che stiamo
-componendo, cioè partendo dal bit 0 per un numero di *g-exp*(0) bit. Il valore *n<sub>1</sub>* viene
-riportato nei successivi bit, cioè partendo da *g-exp*(0) per un numero di *g-exp*(1) bit. E così di
-seguito, l'identificativo *n<sub>i</sub>* (con *i* che arriva fino a *l* - 1) viene riportato nei bit
-partendo da 𝛴 *<sub>0 ≤ k ≤ i-1</sub>* *g-exp(k)* per un numero di *g-exp(i)* bit.
-
-I due bit più alti (quelli riservati per indicare il tipo di indirizzo IP) li impostiamo a `|0|0|`.
-
-#### Esempio
-
-Consideriamo una topologia di rete con 4 livelli. Diamo 2 bit al livello 3, 4 bit al livello 2, 8 bit
-ai livelli 1 e 0. Sono soddisfatti i due vincoli esposti sopra.
-
-Consideriamo il nodo *n* con indirizzo Netsukuku 3·10·123·45. L'indirizzo IP globale di *n* è 10.58.123.45.
-
-### <a name="Indirizzo_globale_gnodo"></a>Indirizzo IP globale di un g-nodo
-
-Sia *g* l'indirizzo Netsukuku di un g-nodo di livello *i*. L'indirizzo completo sarà
-*g<sub>l-1</sub>·...·g<sub>i</sub>*.
-
-Il valore *g<sub>i</sub>* viene riportato nell'indirizzo IP che stiamo componendo partendo dal
-bit 𝛴 *<sub>0 ≤ k ≤ i-1</sub>* *g-exp(k)* per un numero di *g-exp*(i) bit. I bit meno significativi
-sono messi a 0. Quei bit non saranno comunque presi in considerazione a causa dal prefisso di routing
-della notazione CIDR, trattandosi dell'indirizzo IP di un intero g-nodo considerato come una IP subnet.
-
-I valori dei bit più alti si calcolano come visto prima per l'indirizzo di un singolo nodo. Infine si
-aggiunge, come accennato, il prefisso di routing, ottenuto come 32 - 𝛴 *<sub>0 ≤ k ≤ i-1</sub>* *g-exp(k)*.
-
-#### Esempio
-
-Consideriamo il nodo *n* di prima nella topologia di rete di prima. Prendiamo in esame un g-nodo che
-esso vuole indirizzare, ad esempio *g* = (2, 1) cioè il g-nodo di livello 2 e identificativo 1 che
-appartiene al suo stesso g-nodo di livello 3.
-
-L'indirizzo Netsukuku di *g* è 3·1. L'indirizzo IP globale di *g* in notazione CIDR è 10.49.0.0/16.
-
-### <a name="Indirizzo_interno_nodo"></a>Indirizzo IP di un nodo interno ad un suo g-nodo
-
-Sia *n* un nodo con indirizzo *n<sub>l-1</sub>·...·n<sub>1</sub>·n<sub>0</sub>*. Sia *g* il suo g-nodo
-di livello *i* con 0 ≤ *i* < *l*. Quindi *g* ha indirizzo *n<sub>l-1</sub>·...·n<sub>i</sub>*. Vogliamo
-comporre un indirizzo IP di *n* che sia univoco internamente a *g*.
-
-I valori da *n<sub>0</sub>* a *n<sub>i-1</sub>* sono riportati come visto prima nei relativi bit
-dell'indirizzo IP che stiamo componendo. Il valore *i* viene riportato nei bit che sarebbero stati
-destinati all'identificativo di livello più alto, cioè *n<sub>l-1</sub>*. Gli altri bit, quelli che
-avrebbero ospitato gli identificativi da *i* a *l* - 2, sono lasciati a 0.
-
-I due bit più alti li impostiamo a `|0|1|`.
-
-#### Esempio
-
-Consideriamo il nodo *n* di prima nella topologia di rete di prima. Aggiungiamo anche il nodo *m* con
-indirizzo Netsukuku 3·10·67·89.
-
-Fin da subito il nodo *n* si è assegnato, oltre all'indirizzo IP globale 10.58.123.45, anche l'indirizzo
-IP interno al g-nodo di livello 2, che è 10.96.123.45. Analogamente, il nodo *m* si è assegnato, oltre
-all'indirizzo IP globale 10.58.67.89, anche l'indirizzo IP interno al g-nodo di livello 2, che è 10.96.67.89.
-
-### <a name="Indirizzo_interno_gnodo"></a>Indirizzo IP di un g-nodo interno ad un suo g-nodo superiore
-
-Sia *g* un g-nodo di livello *i* con indirizzo *g<sub>l-1</sub>·...·g<sub>i</sub>* con *i* < *l* - 1.
-Sia *h* un suo g-nodo superiore di livello *k*. Quindi *h* ha indirizzo *g<sub>l-1</sub>·...·g<sub>k</sub>*, con
-*k* > *i*. Vogliamo comporre un indirizzo IP in notazione CIDR di *g* che sia univoco internamente a *h*.
-
-Per ogni valore *t* da *i* a *k* - 1, il valore di *g<sub>t</sub>* è riportato come visto prima nei relativi
-bit dell'indirizzo IP che stiamo componendo. Il valore *k* viene riportato nei bit che sarebbero stati
-destinati all'identificativo di livello più alto, cioè *g<sub>l-1</sub>*. Gli altri bit sono lasciati a 0.
-
-I due bit più alti li impostiamo a `|0|1|`.
-
-#### Esempio
-
-Consideriamo i nodi *n* e *m* di prima. Dal punto di vista di *n*, il nodo *m* si trova nel g-nodo
-*g* 3·10·67.
-
-Il nodo *n* ha in comune con *g* il g-nodo direttamente superiore *h* 3·10. Il g-nodo *g* all'interno di
-*h* viene individuato con l'indirizzo IP 10.96.67.0/24. Quindi *n* imposta nelle tabelle di routing una rotta
-per 10.96.67.0/24 a causa del percorso che gli è noto verso la destinazione *g*.
-
-Inoltre il nodo *n* ha in comune con *g* il g-nodo *h'* 3. Il g-nodo *g* all'interno di
-*h'* viene individuato con l'indirizzo IP 10.122.67.0/24. Quindi *n* imposta nelle tabelle di routing anche una rotta
-per 10.122.67.0/24 a causa del medesimo percorso verso *g*.
-
-### <a name="Indirizzo_anonimizzante"></a>Indirizzo IP di un nodo o g-nodo contattabile in forma anonima
-
-Sia *n* un nodo con indirizzo *n<sub>l-1</sub>·...·n<sub>1</sub>·n<sub>0</sub>*. Vogliamo comporre
-un indirizzo IP per tale risorsa tale che un client lo possa usare per contattare il nodo mantenendo
-l'anonimato. Chiamiamo un tale indirizzo *anonimizzante*.
-
-I valori da *n<sub>0</sub>* a *n<sub>l-1</sub>* sono riportati come visto prima nei relativi bit
-dell'indirizzo IP che stiamo componendo.
-
-I due bit più alti li impostiamo a `|1|0|`.
-
-Nel caso di un g-nodo, per produrre un indirizzo anonimizzante in notazione CIDR si procede in modo
-analogo, aggiungendo il prefisso come visto prima.
-
-#### Esempio
-
-Consideriamo il nodo *n* di prima. L'indirizzo IP globale anonimizzante di *n* è 10.186.123.45.
-
-Se il nodo *n* ammette la possibilità di venire contattato in forma anonima (questa è una sua scelta) si
-assegna anche questo indirizzo.
-
-Inoltre, siccome il nodo *n* conosce un percorso per il g-nodo *g* 3·10·67, imposta nelle tabelle di
-routing anche una rotta per 10.186.67.0/24. Questo lo fa indipendentemente dal fatto che si sia
-assegnato o meno il suo indirizzo anonimizzante. In ogni caso, quando il nodo *n* usa la rotta verso
-10.186.67.0/24, usa come indirizzo IP *src* il suo indirizzo globale 10.58.123.45.
-
-## Dimensione massima della mappa di un nodo del grafo
-
-Prendiamo in esame l'esempio di topologia usato sopra. Cioè una rete con 4 livelli. In essa abbiamo
+Prendiamo ad esempio una rete con 4 livelli. In essa abbiamo
 2 bit al livello 3, 4 bit al livello 2, 8 bit ai livelli 1 e 0.
 
-Gli indirizzi validi sono 2<sup>22</sup>, cioè circa 4 milioni.
+Gli indirizzi validi sono 2<sup>22</sup>, cioè circa 4 milioni. Vediamo qual è la dimensione massima
+della mappa di un nodo del grafo.
 
 Il numero di indirizzi Netsukuku che ogni nodo dovrà al massimo memorizzare come destinazioni
 nella sua mappa di percorsi è di 1×3 + 1×15 + 2×255 = 528. Infatti la *gsize* del livello 3
@@ -683,17 +632,9 @@ in quanto il suo stesso g-nodo di livello 1 non sarà mai una destinazione. Allo
 0 è 256; ma per tale livello ogni nodo dovrà memorizzare al massimo 255 diversi singoli nodi destinazione
 in quanto esso stesso non sarà mai una destinazione.
 
-**Nota:** La topologia portata ad esempio qui sopra era volutamente semplice. Il numero di possibili indirizzi Netsukuku di
-destinazione rimane molto alto. La suddivisione ottimale (che riduce al minimo tale numero) verrà descritta dopo.
-
-## Esempio
-
-Abbiamo già descritto nel documento di analisi quali sono i tipi di indirizzo IP che un
-*nodo del grafo* assegna a se stesso sulla base del suo indirizzo Netsukuku. Abbiamo anche visto quali
-indirizzi IP vengono aggiunti come destinazioni nelle tabelle di routing del kernel sulla
-base delle conoscenze nella sua mappa.
-
-Riportiamo un esempio di questi calcoli.
+**Nota:** La topologia portata ad esempio qui sopra è volutamente semplice. Il numero di possibili indirizzi Netsukuku di
+destinazione rimane molto alto. La suddivisione ottimale (che riduce al minimo tale numero) verrà descritta alla fine di
+questo paragrafo.
 
 Prendiamo 3 nodi. Il nodo *n* è quello di cui esaminiamo le tabelle di  routing. Il nodo *m* è un
 nodo con cui *n* ha un qualche g-nodo in comune. Il nodo *o* è un nodo con cui *n* non ha in comune nemmeno
@@ -869,7 +810,7 @@ Per esempio il nodo *n*:
 Infine, i nodi che sono disposti a anonimizzare i vicini che ne fanno richiesta, impostano le regole di
 masquerade del firewall come descritto nel documento di analisi.
 
-## Disposizione ottimale
+### Suddivisione ottimale
 
 Per ridurre al minimo il numero massimo di rotte da memorizzare in uno spazio a 24 bit come
 la classe 10.0.0.0/8 si proceda come illustrato di seguito.
