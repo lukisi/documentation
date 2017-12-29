@@ -1,7 +1,7 @@
 # Demone NTKD - Dettagli Tecnici
 
 1.  [Interazioni con la libreria RPC](#RPC_Library)
-1.  [Calcolo indirizzi IPv4](#Ipv4)
+1.  [Indirizzi IP](#Indirizzi_IP)
 
 ## <a name="RPC_Library"></a>Interazioni con la libreria RPC
 
@@ -125,9 +125,9 @@ chiamata `StubFactory` che consente al modulo di ottenere una istanza della clas
 stesso.  
 Per questo il programma *ntkd* fornisce per ogni modulo una classe stub proxy.
 
-## <a name="Ipv4"></a>Calcolo indirizzi IPv4
+## <a name="Indirizzi_IP"></a>Indirizzi IP
 
-Esaminiamo quali indirizzi IPv4 relativi ad un dato indirizzo Netsukuku in una data topologia
+Esaminiamo quali indirizzi IP relativi ad un dato indirizzo Netsukuku in una data topologia
 di rete debbano essere computati dal programma e usati in qualche modo nel network stack *default* e
 negli altri.  
 Iniziamo col ricordare che un sistema può avere diverse identità. Sempre ha una identità *principale*
@@ -139,43 +139,43 @@ di connettività ha sempre un indirizzo Netsukuku in cui almeno una componente �
 In un sistema, il network stack default deve essere in grado di comunicare con i sistemi che sono
 (in un dato momento) nella stessa rete Netsukuku. Cioè, vogliamo che le applicazioni in esecuzione nel
 sistema (che di default operano nel network stack default) siano in grado di comunicare nella rete.
-Quindi, il sistema deve avere nel network stack default un indirizzo IPv4 associato all'indirizzo
+Quindi, il sistema deve avere nel network stack default un indirizzo IP associato all'indirizzo
 Netsukuku *reale* della sua identità principale e le rotte necessarie a instradare pacchetti IP (generati localmente
-o da inoltrare) verso gli indirizzi IPv4 associati a qualsiasi altro indirizzo Netsukuku *reale*.
+o da inoltrare) verso gli indirizzi IP associati a qualsiasi altro indirizzo Netsukuku *reale*.
 
 Negli altri network stack, invece, non opera alcun programma. Nemmeno lo stesso demone *ntkd*.
 Quindi in essi nessuna applicazione ha bisogno di inviare o ricevere pacchetti IP. Il sistema
 deve avere tali network stack soltanto per instradare correttamente pacchetti IP ricevuti
 da un altro sistema e indirizzati ad un altro sistema. Quindi in questi network stack,
-il sistema non deve avere un indirizzo IPv4 associato all'indirizzo Netsukuku della relativa identità,
-ma soltanto le rotte necessarie a instradare pacchetti IP (da inoltrare) verso indirizzi IPv4
+il sistema non deve avere un indirizzo IP associato all'indirizzo Netsukuku della relativa identità,
+ma soltanto le rotte necessarie a instradare pacchetti IP (da inoltrare) verso indirizzi IP
 associati a qualsiasi altro indirizzo Netsukuku.
 
-### Indirizzi IPv4 locali
+### Indirizzi IP locali
 
 Consideriamo l'identità principale che opera nel network stack default, poiché abbiamo detto che
-è la sola che deve assegnare un indirizzo IPv4 al sistema. Essa ha un indirizzo Netsukuku *reale*
+è la sola che deve assegnare un indirizzo IP al sistema. Essa ha un indirizzo Netsukuku *reale*
 in tutte le componenti.
 
-Con la funzione `ip_global_node` essa computa l'indirizzo IPv4 associato al suo indirizzo Netsukuku.
+Con la funzione `ip_global_node` essa computa l'indirizzo IP associato al suo indirizzo Netsukuku.
 Questo indirizzo IP è quello con cui globalmente, nella rete Netsukuku a cui appartiene, il sistema
 può essere identificato.
 
-Con la funzione `ip_anonymizing_node` essa computa l'indirizzo IPv4 associato al suo indirizzo Netsukuku.
+Con la funzione `ip_anonymizing_node` essa computa l'indirizzo IP associato al suo indirizzo Netsukuku.
 Anche questo indirizzo IP identifica a livello globale questo sistema. Ma questo indirizzo inoltre
 codifica l'informazione che il client desidera rimanere anonimo.
 
-Con la funzione `ip_internal_node`, per ogni livello *i* da 1 a `levels-1`, essa computa l'indirizzo IPv4
+Con la funzione `ip_internal_node`, per ogni livello *i* da 1 a `levels-1`, essa computa l'indirizzo IP
 associato al suo indirizzo Netsukuku internamente al suo g-nodo di livello *i*.
 Questo indirizzo IP è quello con cui localmente, nel g-nodo di livello *i* a cui appartiene, il sistema
 può essere identificato; esso rimarrebbe tale anche se il suo intero g-nodo di livello *i* (o uno di
 livello superiore) migrasse o entrasse in una diversa rete Netsukuku.
 
-Tutti questi indirizzi IPv4 (il globale, l'anonimizzante e gli interni dal livello 1 al
+Tutti questi indirizzi IP (il globale, l'anonimizzante e gli interni dal livello 1 al
 livello `levels-1`) devono essere associati nel network stack default ad ognuna delle interfacce
 di rete gestite dal demone *ntkd*.
 
-### Indirizzi IPv4 nelle tabelle di routing
+### Indirizzi IP nelle tabelle di routing
 
 Consideriamo una identità (può essere la principale o una di connettività) che ha un certo indirizzo
 Netsukuku. La mappa gerarchica delle possibili destinazioni che il modulo QSPN mantiene, ognuna con
@@ -203,10 +203,10 @@ abbiamo che esso è il g-nodo di livello 2 le cui componenti a livello più alto
 al livello 2 la componente è 3. Ai livelli più alti abbiamo le stesse componenti del nostro indirizzo.
 
 Per ogni indirizzo Netsukuku destinazione così calcolato, l'identità deve computare vari indirizzi
-IPv4 (il globale, l'anonimizzante e gli interni dal livello 1 al livello `levels-1`). Questa
+IP (il globale, l'anonimizzante e gli interni dal livello 1 al livello `levels-1`). Questa
 operazione la fa con le funzioni `ip_global_gnode`, `ip_anonymizing_gnode` e `ip_internal_gnode`.
 
-Per ogni indirizzo IPv4 così calcolato, nel network stack default va aggiunta
+Per ogni indirizzo IP così calcolato, nel network stack default va aggiunta
 una rotta in ogni tabella di routing che il demone *ntkd* gestisce. Vedremo che si tratta della
 tabella `ntk` per i pacchetti generati localmente e di varie tabelle `ntk_from_XXX` per i pacchetti
 da inoltrare; ma questo dettaglio non ci interessa adesso che spieghiamo il computo degli indirizzi IP.
@@ -232,12 +232,15 @@ destinazioni sono questi g-nodi:
 *   a livello 4: (4,0), (4,2), (4,3)
 
 Di nuovo, per ognuna di queste destinazioni espressa in forma gerarchica, l'identità ha modo di computare
-l'indirizzo Netsukuku del g-nodo destinazione e quindi i vari indirizzi IPv4, cioè
+l'indirizzo Netsukuku del g-nodo destinazione e quindi i vari indirizzi IP, cioè
 il globale, l'anonimizzante e gli interni dal livello `i+1` al livello `levels-1`.  
-Per ogni indirizzo IPv4 così calcolato, nel relativo network stack, questa identità aggiunge
+Per ogni indirizzo IP così calcolato, nel relativo network stack, questa identità aggiunge
 una rotta in ogni tabella di routing che il demone *ntkd* gestisce. Vedremo che si tratta solo
 delle tabelle `ntk_from_XXX` per i pacchetti da inoltrare.
 
+Ulteriori dettagli sul modo di computare gli indirizzi IP associati ad un indirizzo Netsukuku e
+sulle operazioni che ogni identità deve fare sul network namespace che gestisce saranno
+illustrati nel documento [Indirizzi IP](IndirizziIP.md).
 
 **TODO**
 
@@ -246,7 +249,7 @@ All'avvio:
 Il programma aggiunge la 'rule' di guardare la tabella ntk.
 
 Il programma esamina la sua prima identità principale.
-Basandosi sul suo indirizzo Netsukuku, computa gli indirizzi IPv4 suoi e
+Basandosi sul suo indirizzo Netsukuku, computa gli indirizzi IP suoi e
 delle possibili destinazioni. Li memorizza nella identità.
 
 Imposta gli indirizzi locali sul kernel.
@@ -257,7 +260,7 @@ Aggiunge le rotte alle possibili destinazioni sulla tabella ntk.
 Al termine:
 
 Il programma esamina la sua corrente identità principale.
-Avendo memorizzato in essa gli indirizzi IPv4 suoi e
+Avendo memorizzato in essa gli indirizzi IP suoi e
 delle possibili destinazioni, li recupera.
 
 Rimuove la 'rule' di guardare la tabella ntk.

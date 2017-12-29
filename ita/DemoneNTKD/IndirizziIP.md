@@ -357,7 +357,7 @@ Per esempio il nodo *n*:
 *   Aggiunge la rotta `10.160.0.0/12 src 10.58.123.45`.
 
 Infine, i nodi che sono disposti a anonimizzare i vicini che ne fanno richiesta, impostano le regole di
-masquerade del firewall come descritto nel documento di analisi.
+source NATting come descritto [sotto](#Source_natting).
 
 #### Suddivisione ottimale
 
@@ -483,7 +483,7 @@ Queste operazioni sono fatte dal programma *ntkd* in determinate circostanze:
 *   Al termine del programma. In questo momento si rimuove la corrente identità principale del sistema.
     Sulla base del suo indirizzo Netsukuku si eseguono tutti i comandi `ip address del` come detto prima.
 
-#### Regole di Source NATting
+#### <a name="Source_natting"></a> Regole di Source NATting
 
 Il sistema può (opzionalmente) fare da anonimizzatore. Cioè: quando viene usato per instradare un
 pacchetto IP verso un indirizzo IP di tipo anonimizzante, maschera l'indirizzo IP del mittente

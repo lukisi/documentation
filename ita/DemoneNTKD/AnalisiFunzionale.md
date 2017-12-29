@@ -400,7 +400,7 @@ Sulla base dell'indirizzo Netsukuku assegnato ad una certa identità nel sistema
 indirizzi IPv4 che andranno assegnati al sistema corrente, precisamente nel network namespace associato
 a quella identità.  
 Le modalità di calcolo degli indirizzi IPv4 sulla base dell'indirizzo Netsukuku vengono illustrate
-nel [documento di dettaglio](DettagliTecnici.md#Ipv4).
+nel [documento di dettaglio](DettagliTecnici.md#Indirizzi_IP).
 
 **TODO**
 
