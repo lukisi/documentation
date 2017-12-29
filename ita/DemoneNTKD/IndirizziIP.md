@@ -2,12 +2,12 @@
 
 1.  [Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IP](#Mappatura)
     1.  [Calcolo degli indirizzi IP](#Calcolo)
+    1.  [Esempio](#Esempio)
 1.  [Indirizzi di interesse per una identità](#Identita)
     1.  [Calcolo indirizzi IP locali](#Computo_locali)
     1.  [Calcolo indirizzi IP destinazioni](#Computo_destinazioni)
     1.  [Utilizzo indirizzi IP locali](#Utilizzo_locali)
     1.  [Utilizzo indirizzi IP destinazioni](#Utilizzo_destinazioni)
-1.  [Esempio](#Esempio)
 
 ## <a name="Mappatura"></a> Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IP
 
@@ -161,6 +161,216 @@ I due bit più alti li impostiamo a `|1|0|`.
 Nel caso di un g-nodo, per produrre un indirizzo anonimizzante in notazione CIDR si procede in modo
 analogo, aggiungendo il suffisso come visto prima.
 
+### <a name="Esempio"></a> Esempio
+
+Prendiamo ad esempio una rete con 4 livelli. In essa abbiamo
+2 bit al livello 3, 4 bit al livello 2, 8 bit ai livelli 1 e 0.
+
+Gli indirizzi validi sono 2<sup>22</sup>, cioè circa 4 milioni. Vediamo qual è la dimensione massima
+della mappa di un nodo del grafo.
+
+Il numero di indirizzi Netsukuku che ogni nodo dovrà al massimo memorizzare come destinazioni
+nella sua mappa di percorsi è di 1×3 + 1×15 + 2×255 = 528. Infatti la *gsize* del livello 3
+(cioè il numero massimo di g-nodi di livello 3 dentro lo stesso g-nodo di livello 4)
+è 4; ma per tale livello ogni nodo dovrà memorizzare al massimo 3 diversi g-nodi destinazione di livello 3
+in quanto il suo stesso g-nodo di livello 3 non sarà mai una destinazione. Allo stesso modo la *gsize* del livello
+2 è 16; ma per tale livello ogni nodo dovrà memorizzare al massimo 15 diversi g-nodi destinazione di livello 2
+in quanto il suo stesso g-nodo di livello 2 non sarà mai una destinazione. Allo stesso modo la *gsize* del livello
+1 è 256; ma per tale livello ogni nodo dovrà memorizzare al massimo 255 diversi g-nodi destinazione di livello 1
+in quanto il suo stesso g-nodo di livello 1 non sarà mai una destinazione. Allo stesso modo la *gsize* del livello
+0 è 256; ma per tale livello ogni nodo dovrà memorizzare al massimo 255 diversi singoli nodi destinazione
+in quanto esso stesso non sarà mai una destinazione.
+
+**Nota:** La topologia portata ad esempio qui sopra è volutamente semplice. Il numero di possibili indirizzi Netsukuku di
+destinazione rimane molto alto. La suddivisione ottimale (che riduce al minimo tale numero) verrà descritta alla fine di
+questo paragrafo.
+
+Prendiamo 3 nodi. Il nodo *n* è quello di cui esaminiamo le tabelle di  routing. Il nodo *m* è un
+nodo con cui *n* ha un qualche g-nodo in comune. Il nodo *o* è un nodo con cui *n* non ha in comune nemmeno
+il g-nodo più alto. Vediamo quali informazioni mantiene il nodo *n*.
+
+#### Nodo *n*
+
+Per il nodo *n* sia l'indirizzo Netsukuku 3·10·123·45.
+
+Computiamo il nostro IP globale e i 3 IP validi internamente ad un g-nodo.
+
+```
+Globale di *n*:
+[0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
+   3                   1 1
+  10                       1 0 1 0
+ 123                                 0 1 1 1 1 0 1 1
+  45                                                   0 0 1 0 1 1 0 1
+ = 10.58.123.45
+
+Interno di *n* nel suo g-nodo di livello 3:
+[0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
+  livello g-nodo       1 1
+  10                       1 0 1 0
+ 123                                 0 1 1 1 1 0 1 1
+  45                                                   0 0 1 0 1 1 0 1
+ = 10.122.123.45
+
+Interno di *n* nel suo g-nodo di livello 2:
+[0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
+  livello g-nodo       1 0
+   N/A                     0 0 0 0
+ 123                                 0 1 1 1 1 0 1 1
+  45                                                   0 0 1 0 1 1 0 1
+ = 10.96.123.45
+
+Interno di *n* nel suo g-nodo di livello 1:
+[0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
+  livello g-nodo       0 1
+   N/A                     0 0 0 0
+   N/A                               0 0 0 0 0 0 0 0
+  45                                                   0 0 1 0 1 1 0 1
+ = 10.80.0.45
+```
+
+*n* si assegna quindi questi IP:
+
+*   il globale: 10.58.123.45
+*   l'interno nel livello 3: 10.122.123.45
+*   l'interno nel livello 2: 10.96.123.45
+*   l'interno nel livello 1: 10.80.0.45
+
+#### Nodo *m*
+
+Per il nodo *m* sia l'indirizzo Netsukuku 3·10·67·89.
+
+Computiamo il suo indirizzo IP globale e quello interno al g-nodo di livello 2 (quello in comune con *n*).
+
+```
+Globale di *m*:
+[0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
+   3                   1 1
+  10                       1 0 1 0
+  67                                 0 1 0 0 0 0 1 1
+  89                                                   0 1 0 1 1 0 0 1
+ = 10.58.67.89
+
+Interno di *m* nel suo g-nodo di livello 2:
+[0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
+  livello g-nodo       1 0
+   N/A                     0 0 0 0
+  67                                 0 1 0 0 0 0 1 1
+  89                                                   0 1 0 1 1 0 0 1
+ = 10.96.67.89
+```
+
+Quando *n* riceve un ETP che contiene il g-nodo con *m* esso lo vede come (1, 67) cioè come g-nodo *g*
+di livello 1 appartenente al suo stesso g-nodo di livello 2 e con identificativo 67 (a livello 1).
+
+Per il g-nodo *g* l'indirizzo Netsukuku è 3·10·67.
+
+Il nodo *n* computa:
+
+```
+Globale di *g*:
+[0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[0|0|0|0|0|0|0|0]
+   3                   1 1
+  10                       1 0 1 0
+  67                                 0 1 0 0 0 0 1 1
+ = 10.58.67.0/24
+
+Interno di *g* nel suo g-nodo di livello 2:
+[0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[0|0|0|0|0|0|0|0]
+  livello g-nodo       1 0
+   N/A                     0 0 0 0
+  67                                 0 1 0 0 0 0 1 1
+ = 10.96.67.0/24
+```
+
+Quindi *n* imposta:
+
+*   la rotta globale: 10.58.67.0/24 via xx dev yy src 10.58.123.45
+*   la rotta interna al g-nodo di livello 2: 10.96.67.0/24 via xx dev yy src 10.96.123.45
+
+Ipotiziamo ora di sfruttare il momento della risoluzione *hostname → IP address* per intervenire sulle
+operazioni del nodo *n* quando questo vuole iniziare una connessione (o una trasmissione) con il
+nodo *m*. Supponiamo che il nodo *m* abbia registrato per se il nome "morfeo".
+
+Quando il nodo *n* richiede la risoluzione del nome "morfeo.ntk" il resolver cerca nel database
+ANDNA il nome "morfeo" e trova l'indirizzo Netsukuku 3·10·67·89.
+
+Invece di computare il relativo indirizzo IP globale 10.58.67.89, il resolver vede rispetto al proprio indirizzo
+Netsukuku (quello dell'identità principale) qual'è il minimo comune g-nodo (in questo caso 2) e computa
+il relativo indirizzo IP interno in quel g-nodo: 10.96.67.89.
+
+Questo nella route table corrisponde a 10.96.67.0/24 quindi *n* manda il pacchetto al suo gateway
+indicando come proprio IP 10.96.123.45.
+
+Una volta realizzata una connessione TCP tra questi due indirizzi IP, questa connessione continuerebbe a funzionare anche
+se un g-nodo di livello superiore migrasse, anche gradualmente un nodo alla volta, ad un altra posizione di pari livello.
+
+Ad esempio se il g-nodo 3·5 migrasse dal g-nodo 3 al g-nodo 1 assumendo in esso l'identificativo 1·2.
+Oppure se il g-nodo 3 in blocco facesse ingresso in una diversa rete assumendo in essa l'identificativo (di livello 3) 1.
+
+Va detto che il nodo *n* sarà comunque in grado di inviare pacchetti e/o realizzare una connessione TCP direttamente
+con l'indirizzo IP globale se lo conosce, cioè 10.58.67.89, ma in questo caso la connessione si romperebbe durante una tale migrazione.
+
+La risoluzione inversa non subirebbe alterazioni. Quando il nodo *n* vuole sapere il nome dell'host che
+ha indirizzo IP 10.96.67.89 (oppure 10.58.67.89) il resolver lo contatta e riceve la lista di nomi
+che il nodo *m* ha registrato.
+
+#### Nodo *o*
+
+Per il nodo *o* sia l'indirizzo Netsukuku 2·10·237·242.
+
+Computiamo solo il suo indirizzo IP globale poiché l'unico g-nodo comune con *n* è il 4 (intera rete).
+
+```
+Globale di *o*:
+ = 10.42.237.242
+```
+
+Quando *n* riceve un ETP che contiene il g-nodo con *o* esso lo vede come (3, 2) cioè come g-nodo *h*
+di livello 3 con identificativo 2.
+
+Per il g-nodo *h* l'indirizzo Netsukuku è 2.
+
+Il nodo *n* computa:
+
+```
+Globale di *h*:
+[0|0|0|0|1|0|1|0].[0|0|?|?|0|0|0|0].[0|0|0|0|0|0|0|0].[0|0|0|0|0|0|0|0]
+   2                   1 0
+ = 10.32.0.0/12
+```
+
+Quindi *n* imposta solo la rotta globale: 10.32.0.0/12 via xx dev yy src 10.58.123.45
+
+#### Richiesta di anonimato
+
+Un nodo, opzionalmente, può dichiararsi disposto ad accettare richieste in forma anonima. Se intende
+farlo, il nodo si assegna anche un altro indirizzo globale, identico al primo, ma con il bit *anonimizzante* impostato.
+
+Ogni nodo, invece, per ogni destinazione di cui viene a conoscenza, aggiunge una rotta verso
+l'indirizzo IP *anonimizzante* relativo.
+
+Per esempio il nodo *n*:
+
+*   Opzionalmente, si assegna l'indirizzo IP `10.186.123.45`.
+*   Aggiunge la rotta `10.186.67.0/24 src 10.58.123.45`.
+*   Aggiunge la rotta `10.160.0.0/12 src 10.58.123.45`.
+
+Infine, i nodi che sono disposti a anonimizzare i vicini che ne fanno richiesta, impostano le regole di
+masquerade del firewall come descritto nel documento di analisi.
+
+#### Suddivisione ottimale
+
+Per ridurre al minimo il numero massimo di rotte da memorizzare in uno spazio a 24 bit come
+la classe 10.0.0.0/8 si proceda come illustrato di seguito.
+
+Abbiamo 24 bit a disposizione. Tolti 2 per le codifiche viste nel presente documento, abbiamo 22 bit.
+Diamo 4 bit al livello alto; abbiamo così un *gsize* del livello più alto capace di rappresentare fino
+a 16 livelli. Per sfruttarli tutti facciamo i livelli da 14 a 3 da 1 bit e i livelli 2, 1 e 0 da 2 bit.
+
+Il numero di indirizzi Netsukuku che ogni nodo dovrà al massimo memorizzare come destinazioni nella
+sua mappa di percorsi è di 1×15 + 12×1 + 3×3 = 36. Resta invariato che il numero massimo di nodi nella rete è 2<sup>22</sup>.
+
 ## <a name="Identita"></a> Indirizzi di interesse per una identità
 
 Come abbiamo ricordato [qui](DettagliTecnici.md#Ipv4), l'identità principale del sistema ha un indirizzo
@@ -242,7 +452,6 @@ Questo si fa solo con l'identità *principale*.
 #### Assegnazione indirizzi locali
 
 *   Indichiamo con *l* il numero di livelli nella topologia.
-*   Indichiamo con *subnetlevel* il livello del g-nodo rappresentato dalla sottorete autonoma.
 *   Per ogni livello *k* da 0 a *l* - 1:
     *   Il sistema nel network namespace default si assegna l'indirizzo IP interno al livello *k*.
         Cioè `local_ip_set.internal[k]`.
@@ -568,16 +777,29 @@ Quando il programma ha finito di usare una tabella (ad esempio se un arco che co
 oppure se il programma termina) svuota la tabella, poi rimuove la regola, poi rimuove il record
 relativo dal file `/etc/iproute2/rt_tables`.
 
-#### Operazioni della prima identità principale
+#### Situazione obiettivo di una generica identità
 
-All'avvio del demone *ntkd* viene creata la prima identità principale. Essa forma una nuova rete e
-non ha alcun arco-qspn.
+Una generica identità gestisce un network namespace.
+
+La prima identità principale eredita il default network namespace "pulito". Cioè come si trova all'avvio del
+programma.
+
+Una nuova identità principale nasce quando la precedente identità principale si duplica. La nuova identità
+principale eredita il default network namespace dalla precedente identità principale.
+
+Quando una identità (che era principale o di connettività) diventa di connettività per via di una duplicazione
+essa ottiene un nuovo network namespace "vuoto".
+
+Una nuova identità di connettività nasce quando una precedente identità di connettività si duplica. La nuova identità
+di connettività eredita un network namespace (non default) dalla precedente identità di connettività.
+
+Mostriamo a quale stato deve essere portato un network namespace da una generica identità.
 
 *   Indichiamo con *l* il numero di livelli nella topologia.
 *   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
     *   Indichiamo con `dest = dest_ip_set[hc]`.
     *   Se si tratta dell'identità principale:
-        *   Esegue `ip route add unreachable $dest.global table ntk`.  
+        *   Deve esserci una rotta verso `$dest.global` nella tabella `ntk`.  
             Nella tabella `ntk` nel solo network namespace default ci sono le rotte per i
             pacchetti IP in *partenza*.  
             Se l'identità è a conoscenza di percorsi per una destinazione, allora il programma
@@ -592,11 +814,16 @@ non ha alcun arco-qspn.
             poter verificare solo sul network namespace default e solo se il sistema viene usato consapevolmente
             come gateway: ad esempio se questo sistema è un gateway per una sottorete a gestione autonoma, oppure
             se questo sistema viene usato come NAT per una rete privata.
-        *   Analogamente, per l'indirizzo IP anonimizzante, esegue `ip route add unreachable $dest.anonymizing table ntk`.  
+        *   Analogamente, per l'indirizzo IP anonimizzante,
+            deve esserci una rotta verso `$dest.anonymizing` nella tabella `ntk`.  
             Anche in questo caso, se la destinazione è raggiungibile va indicato nella rotta l'indirizzo
             preferito come mittente (`src`). Si deve usare di nuovo `local_ip_set.global`.
+        *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
+            *   Deve esserci una rotta verso `$dest.internal[k]` nella tabella `ntk`.  
+                Se la destinazione è raggiungibile, in questa tabella va indicato nella rotta l'indirizzo
+                preferito come mittente (`src`). Questa volta si deve usare `local_ip_set.internal[k]`.
     *   Per ogni arco-qspn noto al manager di questa identità, indichiamo con *m* il relativo `peer_mac`:
-        *   Esegue, nel network namespace associato, `ip route add unreachable $dest.global table ntk_from_$m`.  
+        *   Deve esserci, nel network namespace associato, una rotta verso `$dest.global` nella tabella `ntk_from_$m`.  
             Nella tabella `ntk_from_$m` ci sono le rotte per i pacchetti IP in *inoltro*.  
             Viene impostata la rotta identificata dal miglior percorso noto per quella
             destinazione che non passi per il massimo distinto g-nodo di *m* per *n*.  
@@ -605,17 +832,77 @@ non ha alcun arco-qspn.
             l'identità non conosce nessun percorso verso `hc` che non passi per il
             massimo distinto g-nodo di *m* per *n*.  
             In questa tabella non va mai indicato nella rotta l'indirizzo preferito come mittente (`src`).
-        *   Analogamente, per l'indirizzo IP anonimizzante, esegue `ip route add unreachable $dest.anonymizing table ntk_from_$m`.
-    *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
-        *   Se si tratta dell'identità principale:
-            *   Esegue `ip route add unreachable $dest.internal[k] table ntk`.  
-                Se la destinazione è raggiungibile, in questa tabella va indicato nella rotta l'indirizzo
-                preferito come mittente (`src`). Questa volta si deve usare `local_ip_set.internal[k]`.
-        *   Per ogni arco-qspn noto al manager di questa identità, indichiamo con *m* il relativo `peer_mac`:
-            *   Esegue, nel network namespace associato, `ip route add unreachable $dest.internal[k] table ntk_from_$m`.
+        *   Analogamente, per l'indirizzo IP anonimizzante,
+            deve esserci, nel network namespace associato, una rotta verso `$dest.anonymizing` nella tabella `ntk_from_$m`.
+        *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
+            *   Deve esserci, nel network namespace associato, una rotta verso `$dest.internal[k]` nella tabella `ntk_from_$m`.
 
-Nell'algoritmo abbiamo incluso le operazioni da fare sulla base dei propri archi-qspn, anche se abbiamo
-detto che la prima identità principale non ha alcun arco-qspn.
+#### Operazioni della prima identità principale all'avvio
+
+All'avvio del demone *ntkd* viene creata la prima identità principale. Essa forma una nuova rete e
+non ha alcun arco-qspn.
+
+*   Indichiamo con *l* il numero di livelli nella topologia.
+*   Indichiamo con *subnetlevel* il livello del g-nodo rappresentato dalla sottorete autonoma.
+*   Abbiamo in `devs` l'elenco delle interfacce di rete gestite.
+*   Abbiamo in `local_ip_set` gli indirizzi locali computati sulla base del suo primo indirizzo Netsukuku.
+*   Abbiamo in `dest_ip_set` gli indirizzi destinazione computati sulla base del suo primo indirizzo Netsukuku.
+*   Per ogni `dev` in `devs`:
+    *   Per ogni livello *k* da 0 a *l* - 1:
+        *   Esegue `ip address add $local_ip_set.internal[k] dev $dev`.
+    *   Esegue `ip address add $local_ip_set.global dev $dev`.
+    *   Esegue (opzionalmente) `ip address add $local_ip_set.anonymizing dev $dev`.
+*   Esegue (opzionalmente) `iptables -t nat -A POSTROUTING -d $local_ip_set.anonymizing_range -j SNAT --to $local_ip_set.global`.
+*   Se *subnetlevel* > 0:
+    *   Per *i* che sale da *subnetlevel* a *l* - 2:
+        *   Esegue `iptables -t nat -A PREROUTING -d $local_ip_set.netmap_range2[i] -j NETMAP --to $local_ip_set.netmap_range1`.
+        *   Esegue `iptables -t nat -A POSTROUTING -d $local_ip_set.netmap_range3[i] -s $local_ip_set.netmap_range1 -j NETMAP --to $local_ip_set.netmap_range2[i]`.
+    *   Esegue `iptables -t nat -A PREROUTING -d $local_ip_set.netmap_range2_upper -j NETMAP --to $local_ip_set.netmap_range1`.
+    *   Esegue `iptables -t nat -A POSTROUTING -d $local_ip_set.netmap_range3_upper -s $local_ip_set.netmap_range1 -j NETMAP --to $local_ip_set.netmap_range2_upper`.
+    *   Esegue (opzionalmente) `iptables -t nat -A PREROUTING -d $local_ip_set.netmap_range4 -j NETMAP --to $local_ip_set.netmap_range1`.
+    *   Esegue `iptables -t nat -A POSTROUTING -d $local_ip_set.anonymizing_range -s $local_ip_set.netmap_range1 -j NETMAP --to $local_ip_set.netmap_range2_upper`.
+*   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
+    *   Indichiamo con `dest = dest_ip_set[hc]`.
+    *   Esegue `ip route add unreachable $dest.global table ntk`.
+    *   Esegue `ip route add unreachable $dest.anonymizing table ntk`.
+    *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
+        *   Esegue `ip route add unreachable $dest.internal[k] table ntk`.
+
+#### Operazioni di una nuova identità principale alla sua nascita per duplicazione
+
+Una nuova identità principale nasce quando la precedente identità principale si duplica. La nuova identità
+principale eredita il default network namespace dalla precedente identità principale.
+
+*   Indichiamo con *l* il numero di livelli nella topologia.
+*   Indichiamo con *subnetlevel* il livello del g-nodo rappresentato dalla sottorete autonoma.
+*   Abbiamo in `devs` l'elenco delle interfacce di rete gestite.
+*   Indichiamo con `host_gnode_level` il livello del g-nodo esistente in cui la nuova identità
+    migra/entra in una diversa rete.
+*   Indichiamo con `guest_gnode_level` il livello del g-nodo insieme al quale, in blocco, la nuova identità
+    migra/entra in una diversa rete.
+*   Abbiamo in `prev_local_ip_set` gli indirizzi locali computati sulla base dell'indirizzo Netsukuku
+    della precedente identità.
+*   Abbiamo in `prev_dest_ip_set` gli indirizzi destinazione computati sulla base dell'indirizzo Netsukuku
+    della precedente identità.
+*   Abbiamo in `local_ip_set` gli indirizzi locali computati sulla base dell'indirizzo Netsukuku
+    della nuova identità.
+*   Abbiamo in `dest_ip_set` gli indirizzi destinazione computati sulla base dell'indirizzo Netsukuku
+    della nuova identità.
+*   Per ogni g-nodo `hc` in `prev_dest_ip_set.keys`, se `hc.lvl` >= `guest_gnode_level`:
+    *   Indichiamo con `prev_dest = prev_dest_ip_set[hc]`.
+    *   **TODO**
+*   Esegue (opzionalmente) `iptables -t nat -D POSTROUTING -d $prev_local_ip_set.anonymizing_range -j SNAT --to $prev_local_ip_set.global`.
+*   Per ogni `dev` in `devs`:
+    *   Per ogni livello *k* da `host_gnode_level` - 1 a *l* - 1:
+        *   Esegue `ip address del ${prev_local_ip_set.internal[k]}/32 dev $dev`.
+        *   Esegue `ip address add $local_ip_set.internal[k] dev $dev`.
+    *   Esegue `ip address del ${prev_local_ip_set.global}/32 dev $dev`.
+    *   Esegue `ip address add $local_ip_set.global dev $dev`.
+    *   Esegue (opzionalmente) `ip address del ${prev_local_ip_set.anonymizing}/32 dev $dev`.
+    *   Esegue (opzionalmente) `ip address add $local_ip_set.anonymizing dev $dev`.
+*   Esegue (opzionalmente) `iptables -t nat -A POSTROUTING -d $local_ip_set.anonymizing_range -j SNAT --to $local_ip_set.global`.
+
+
 
 #### Operazioni sulla duplicazione di una identità
 
@@ -650,214 +937,4 @@ indirizzo di *id1* (come lo erano rispetto al precedente indirizzo di *id0*), ne
 vanno aggiunte (come fossero nuove) le rotte verso i relativi indirizzi IP interni ai livelli superiori
 di `guest_gnode_level` (e globali). Tali rotte però non sono da inizializzare `unreachable`, bensì
 possono già avere un `gateway` e un indirizzo `src`.
-
-## <a name="Esempio"></a> Esempio
-
-Prendiamo ad esempio una rete con 4 livelli. In essa abbiamo
-2 bit al livello 3, 4 bit al livello 2, 8 bit ai livelli 1 e 0.
-
-Gli indirizzi validi sono 2<sup>22</sup>, cioè circa 4 milioni. Vediamo qual è la dimensione massima
-della mappa di un nodo del grafo.
-
-Il numero di indirizzi Netsukuku che ogni nodo dovrà al massimo memorizzare come destinazioni
-nella sua mappa di percorsi è di 1×3 + 1×15 + 2×255 = 528. Infatti la *gsize* del livello 3
-(cioè il numero massimo di g-nodi di livello 3 dentro lo stesso g-nodo di livello 4)
-è 4; ma per tale livello ogni nodo dovrà memorizzare al massimo 3 diversi g-nodi destinazione di livello 3
-in quanto il suo stesso g-nodo di livello 3 non sarà mai una destinazione. Allo stesso modo la *gsize* del livello
-2 è 16; ma per tale livello ogni nodo dovrà memorizzare al massimo 15 diversi g-nodi destinazione di livello 2
-in quanto il suo stesso g-nodo di livello 2 non sarà mai una destinazione. Allo stesso modo la *gsize* del livello
-1 è 256; ma per tale livello ogni nodo dovrà memorizzare al massimo 255 diversi g-nodi destinazione di livello 1
-in quanto il suo stesso g-nodo di livello 1 non sarà mai una destinazione. Allo stesso modo la *gsize* del livello
-0 è 256; ma per tale livello ogni nodo dovrà memorizzare al massimo 255 diversi singoli nodi destinazione
-in quanto esso stesso non sarà mai una destinazione.
-
-**Nota:** La topologia portata ad esempio qui sopra è volutamente semplice. Il numero di possibili indirizzi Netsukuku di
-destinazione rimane molto alto. La suddivisione ottimale (che riduce al minimo tale numero) verrà descritta alla fine di
-questo paragrafo.
-
-Prendiamo 3 nodi. Il nodo *n* è quello di cui esaminiamo le tabelle di  routing. Il nodo *m* è un
-nodo con cui *n* ha un qualche g-nodo in comune. Il nodo *o* è un nodo con cui *n* non ha in comune nemmeno
-il g-nodo più alto. Vediamo quali informazioni mantiene il nodo *n*.
-
-### Nodo *n*
-
-Per il nodo *n* sia l'indirizzo Netsukuku 3·10·123·45.
-
-Computiamo il nostro IP globale e i 3 IP validi internamente ad un g-nodo.
-
-```
-Globale di *n*:
-[0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-   3                   1 1
-  10                       1 0 1 0
- 123                                 0 1 1 1 1 0 1 1
-  45                                                   0 0 1 0 1 1 0 1
- = 10.58.123.45
-
-Interno di *n* nel suo g-nodo di livello 3:
-[0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello g-nodo       1 1
-  10                       1 0 1 0
- 123                                 0 1 1 1 1 0 1 1
-  45                                                   0 0 1 0 1 1 0 1
- = 10.122.123.45
-
-Interno di *n* nel suo g-nodo di livello 2:
-[0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello g-nodo       1 0
-   N/A                     0 0 0 0
- 123                                 0 1 1 1 1 0 1 1
-  45                                                   0 0 1 0 1 1 0 1
- = 10.96.123.45
-
-Interno di *n* nel suo g-nodo di livello 1:
-[0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello g-nodo       0 1
-   N/A                     0 0 0 0
-   N/A                               0 0 0 0 0 0 0 0
-  45                                                   0 0 1 0 1 1 0 1
- = 10.80.0.45
-```
-
-*n* si assegna quindi questi IP:
-
-*   il globale: 10.58.123.45
-*   l'interno nel livello 3: 10.122.123.45
-*   l'interno nel livello 2: 10.96.123.45
-*   l'interno nel livello 1: 10.80.0.45
-
-### Nodo *m*
-
-Per il nodo *m* sia l'indirizzo Netsukuku 3·10·67·89.
-
-Computiamo il suo indirizzo IP globale e quello interno al g-nodo di livello 2 (quello in comune con *n*).
-
-```
-Globale di *m*:
-[0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-   3                   1 1
-  10                       1 0 1 0
-  67                                 0 1 0 0 0 0 1 1
-  89                                                   0 1 0 1 1 0 0 1
- = 10.58.67.89
-
-Interno di *m* nel suo g-nodo di livello 2:
-[0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[?|?|?|?|?|?|?|?]
-  livello g-nodo       1 0
-   N/A                     0 0 0 0
-  67                                 0 1 0 0 0 0 1 1
-  89                                                   0 1 0 1 1 0 0 1
- = 10.96.67.89
-```
-
-Quando *n* riceve un ETP che contiene il g-nodo con *m* esso lo vede come (1, 67) cioè come g-nodo *g*
-di livello 1 appartenente al suo stesso g-nodo di livello 2 e con identificativo 67 (a livello 1).
-
-Per il g-nodo *g* l'indirizzo Netsukuku è 3·10·67.
-
-Il nodo *n* computa:
-
-```
-Globale di *g*:
-[0|0|0|0|1|0|1|0].[0|0|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[0|0|0|0|0|0|0|0]
-   3                   1 1
-  10                       1 0 1 0
-  67                                 0 1 0 0 0 0 1 1
- = 10.58.67.0/24
-
-Interno di *g* nel suo g-nodo di livello 2:
-[0|0|0|0|1|0|1|0].[0|1|?|?|?|?|?|?].[?|?|?|?|?|?|?|?].[0|0|0|0|0|0|0|0]
-  livello g-nodo       1 0
-   N/A                     0 0 0 0
-  67                                 0 1 0 0 0 0 1 1
- = 10.96.67.0/24
-```
-
-Quindi *n* imposta:
-
-*   la rotta globale: 10.58.67.0/24 via xx dev yy src 10.58.123.45
-*   la rotta interna al g-nodo di livello 2: 10.96.67.0/24 via xx dev yy src 10.96.123.45
-
-Ipotiziamo ora di sfruttare il momento della risoluzione *hostname → IP address* per intervenire sulle
-operazioni del nodo *n* quando questo vuole iniziare una connessione (o una trasmissione) con il
-nodo *m*. Supponiamo che il nodo *m* abbia registrato per se il nome "morfeo".
-
-Quando il nodo *n* richiede la risoluzione del nome "morfeo.ntk" il resolver cerca nel database
-ANDNA il nome "morfeo" e trova l'indirizzo Netsukuku 3·10·67·89.
-
-Invece di computare il relativo indirizzo IP globale 10.58.67.89, il resolver vede rispetto al proprio indirizzo
-Netsukuku (quello dell'identità principale) qual'è il minimo comune g-nodo (in questo caso 2) e computa
-il relativo indirizzo IP interno in quel g-nodo: 10.96.67.89.
-
-Questo nella route table corrisponde a 10.96.67.0/24 quindi *n* manda il pacchetto al suo gateway
-indicando come proprio IP 10.96.123.45.
-
-Una volta realizzata una connessione TCP tra questi due indirizzi IP, questa connessione continuerebbe a funzionare anche
-se un g-nodo di livello superiore migrasse, anche gradualmente un nodo alla volta, ad un altra posizione di pari livello.
-
-Ad esempio se il g-nodo 3·5 migrasse dal g-nodo 3 al g-nodo 1 assumendo in esso l'identificativo 1·2.
-Oppure se il g-nodo 3 in blocco facesse ingresso in una diversa rete assumendo in essa l'identificativo (di livello 3) 1.
-
-Va detto che il nodo *n* sarà comunque in grado di inviare pacchetti e/o realizzare una connessione TCP direttamente
-con l'indirizzo IP globale se lo conosce, cioè 10.58.67.89, ma in questo caso la connessione si romperebbe durante una tale migrazione.
-
-La risoluzione inversa non subirebbe alterazioni. Quando il nodo *n* vuole sapere il nome dell'host che
-ha indirizzo IP 10.96.67.89 (oppure 10.58.67.89) il resolver lo contatta e riceve la lista di nomi
-che il nodo *m* ha registrato.
-
-### Nodo *o*
-
-Per il nodo *o* sia l'indirizzo Netsukuku 2·10·237·242.
-
-Computiamo solo il suo indirizzo IP globale poiché l'unico g-nodo comune con *n* è il 4 (intera rete).
-
-```
-Globale di *o*:
- = 10.42.237.242
-```
-
-Quando *n* riceve un ETP che contiene il g-nodo con *o* esso lo vede come (3, 2) cioè come g-nodo *h*
-di livello 3 con identificativo 2.
-
-Per il g-nodo *h* l'indirizzo Netsukuku è 2.
-
-Il nodo *n* computa:
-
-```
-Globale di *h*:
-[0|0|0|0|1|0|1|0].[0|0|?|?|0|0|0|0].[0|0|0|0|0|0|0|0].[0|0|0|0|0|0|0|0]
-   2                   1 0
- = 10.32.0.0/12
-```
-
-Quindi *n* imposta solo la rotta globale: 10.32.0.0/12 via xx dev yy src 10.58.123.45
-
-### Richiesta di anonimato
-
-Un nodo, opzionalmente, può dichiararsi disposto ad accettare richieste in forma anonima. Se intende
-farlo, il nodo si assegna anche un altro indirizzo globale, identico al primo, ma con il bit *anonimizzante* impostato.
-
-Ogni nodo, invece, per ogni destinazione di cui viene a conoscenza, aggiunge una rotta verso
-l'indirizzo IP *anonimizzante* relativo.
-
-Per esempio il nodo *n*:
-
-*   Opzionalmente, si assegna l'indirizzo IP `10.186.123.45`.
-*   Aggiunge la rotta `10.186.67.0/24 src 10.58.123.45`.
-*   Aggiunge la rotta `10.160.0.0/12 src 10.58.123.45`.
-
-Infine, i nodi che sono disposti a anonimizzare i vicini che ne fanno richiesta, impostano le regole di
-masquerade del firewall come descritto nel documento di analisi.
-
-### Suddivisione ottimale
-
-Per ridurre al minimo il numero massimo di rotte da memorizzare in uno spazio a 24 bit come
-la classe 10.0.0.0/8 si proceda come illustrato di seguito.
-
-Abbiamo 24 bit a disposizione. Tolti 2 per le codifiche viste nel presente documento, abbiamo 22 bit.
-Diamo 4 bit al livello alto; abbiamo così un *gsize* del livello più alto capace di rappresentare fino
-a 16 livelli. Per sfruttarli tutti facciamo i livelli da 14 a 3 da 1 bit e i livelli 2, 1 e 0 da 2 bit.
-
-Il numero di indirizzi Netsukuku che ogni nodo dovrà al massimo memorizzare come destinazioni nella
-sua mappa di percorsi è di 1×15 + 12×1 + 3×3 = 36. Resta invariato che il numero massimo di nodi nella rete è 2<sup>22</sup>.
 
