@@ -896,7 +896,7 @@ principale eredita il default network namespace dalla precedente identità princ
 *   Abbiamo in `new_peermacs` l'elenco dei MAC address che la vecchia identità non aveva come archi-qspn ma
     la nuova identità adesso li ha. Può essere perché:  
     *   La nuova identità ha fatto ingresso in una diversa rete. L'identità del vicino era già nella nuova rete.
-        Quindi la mia vecchia identità non aveva un arco-qspn e ora ce l'ha.
+        Quindi la mia vecchia identità non aveva un arco-qspn e ora la mia nuova identità ce l'ha.
 *   Abbiamo in `new_tids` l'elenco dei table-id rispettivi per i MAC address in `new_peermacs`. Forse non serve.
 *   Abbiamo in `both_peermacs` l'elenco dei MAC address che la vecchia identità aveva come archi-qspn e
     la nuova identità anche li ha. Può essere perché:  
@@ -979,37 +979,123 @@ principale eredita il default network namespace dalla precedente identità princ
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
             *   Esegue `ip route add unreachable $dest.internal[k] table $table`.
 
-#### Operazioni sulla duplicazione di una identità
+#### Operazioni di una identità che diventa di connettività e ottiene un nuovo network namespace (vuoto)
 
-Ad un certo punto l'identità principale del sistema si duplica.  
-In questo evento l'identità principale *id0* viene duplicata in *id1*. Questo avviene perché l'identità
-*id1* migra/entra in una diversa rete, nella quale viene ospitata in un g-nodo esistente di livello `host_gnode_level`.
-Mentre l'identità *id0* resta (temporaneamente) dov'era diventando una identità di connettività con indirizzo
-virtuale al livello `guest_gnode_level`.
+Quando una identità (che era principale o di connettività) diventa di connettività per via di una duplicazione
+essa ottiene un nuovo network namespace "vuoto".
 
-Viene creato un nuovo network namespace *ntkv0* che sarà gestito da *id0* mentre il default viene ora gestito
-da *id1*.
+Ricordiamo che tutte le operazioni eseguite nell'algoritmo qui sotto sono da intendersi eseguite nel
+network namespace `$ns` gestito adesso dall'identità. Cioè va premesso `ip netns exec $ns` al comando.
 
-Nel network namespace *ntkv0* non vengono assegnati indirizzi IP locali.  
-Nel network namespace *ntkv0* vanno aggiunte tutte le rotte verso i g-nodi destinazione che rispetto all'indirizzo
-di *id1* sono di livello maggiore o uguale a `guest_gnode_level`.
+*   Indichiamo con *l* il numero di livelli nella topologia.
+*   Abbiamo in `dest_ip_set` gli indirizzi destinazione computati sulla base del nuovo indirizzo Netsukuku
+    dell'identità, che è virtuale.
+*   Abbiamo in `peermacs` l'elenco dei MAC address che l'identità ha adesso come archi-qspn. Può essere che:  
+    *   La nuova identità ha fatto ingresso in una diversa rete. L'identità del vicino era nella stessa
+        rete (quindi aveva un arco-qspn con la mia vecchia identità) ma non era nel blocco che è entrato.
+        In questo caso la vecchia identità che rimane (temporaneamente) nella vecchia rete ha adesso un
+        arco-qspn con la stessa identità del vicino che ha lo stesso MAC di prima.
+    *   La nuova identità ha fatto ingresso in una diversa rete. L'identità del vicino era già nella nuova rete.
+        Quindi la mia vecchia identità non aveva un arco-qspn e ora nemmeno ce l'ha.
+    *   La nuova identità ha fatto ingresso in una diversa rete. L'identità del vicino era nella stessa
+        rete (quindi aveva un arco-qspn con la mia vecchia identità) ed era nel blocco che è entrato.
+        In questo caso la vecchia identità che rimane (temporaneamente) nella vecchia rete ha adesso un
+        arco-qspn con la stessa identità del vicino che ha un nuovo MAC.
+    *   La nuova identità ha fatto una semplice migrazione. L'identità del vicino era nella stessa
+        rete (quindi aveva un arco-qspn con la mia vecchia identità) ma non era nel blocco
+        che è migrato. In questo caso la vecchia identità che rimane nel vecchio g-nodo ha adesso un
+        arco-qspn con la stessa identità del vicino che ha lo stesso MAC di prima.
+    *   La nuova identità ha fatto una semplice migrazione. L'identità del vicino era nella stessa
+        rete (quindi aveva un arco-qspn con la mia vecchia identità) ed era nel blocco
+        che è migrato. In questo caso la vecchia identità che rimane nel vecchio g-nodo ha adesso un
+        arco-qspn con la nuova identità del vicino che ha un nuovo MAC.
+*   Per ogni `$m` in `peermacs` sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id:
+    *   Esegue `iptables -t mangle -A PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
+    *   Esegue `ip rule add fwmark $tid table $table`.
+    *   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
+        *   Indichiamo con `dest = dest_ip_set[hc]`.
+        *   Esegue `ip route add unreachable $dest.global table $table`.
+        *   Esegue `ip route add unreachable $dest.anonymizing table $table`.
+        *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
+            *   Esegue `ip route add unreachable $dest.internal[k] table $table`.
 
-Nel network namespace default vengono rimosse le rotte verso i g-nodi destinazione che rispetto al
-precedente indirizzo di *id0* erano di livello maggiore o uguale a `guest_gnode_level`.  
-Riguardo i g-nodi destinazione che rispetto al precedente indirizzo di *id0* erano di livello minore
-di `guest_gnode_level`, essi sono gli stessi per il nuovo indirizzo di *id1* quanto a rappresentazione
-in coordinate gerarchiche. Ma nel network namespace default vanno rimosse le rotte verso i relativi
-indirizzi IP interni ai livelli superiori di `guest_gnode_level` (e globali).  
-Poi nel network namespace default vengono rimossi gli indirizzi IP locali interni ai livelli maggiori
-o uguali a `host_gnode_level` (e globali) che erano stati computati dall'identità *id0* sulla base del suo
-precedente indirizzo Netsukuku. Di seguito nel network namespace default vengono aggiunti gli indirizzi IP
-locali interni ai livelli maggiori o uguali a `host_gnode_level` (e globali) che sono ora computati
-dall'identità *id1* sulla base del suo nuovo indirizzo Netsukuku.  
-Nel network namespace default vanno aggiunte (inizialmente `unreachable`) tutte le rotte verso i g-nodi
-destinazione che rispetto all'indirizzo di *id1* sono di livello maggiore o uguale a `guest_gnode_level`.  
-Riguardo i g-nodi destinazione che sono di livello minore di `guest_gnode_level` rispetto al nuovo
-indirizzo di *id1* (come lo erano rispetto al precedente indirizzo di *id0*), nel network namespace default
-vanno aggiunte (come fossero nuove) le rotte verso i relativi indirizzi IP interni ai livelli superiori
-di `guest_gnode_level` (e globali). Tali rotte però non sono da inizializzare `unreachable`, bensì
-possono già avere un `gateway` e un indirizzo `src`.
+#### Operazioni di una nuova identità di connettività alla sua nascita per duplicazione
+
+Una nuova identità di connettività nasce quando una precedente identità di connettività si duplica. La nuova identità
+di connettività eredita un network namespace (non default) dalla precedente identità di connettività.
+
+Ricordiamo che tutte le operazioni eseguite nell'algoritmo qui sotto sono da intendersi eseguite nel
+network namespace `$ns` ereditato dall'identità. Cioè va premesso `ip netns exec $ns` al comando.
+
+*   Indichiamo con *l* il numero di livelli nella topologia.
+*   Indichiamo con `host_gnode_level` il livello del g-nodo esistente in cui la nuova identità
+    migra/entra in una diversa rete.
+*   Indichiamo con `guest_gnode_level` il livello del g-nodo insieme al quale, in blocco, la nuova identità
+    migra/entra in una diversa rete.
+*   Abbiamo in `prev_dest_ip_set` gli indirizzi destinazione computati sulla base dell'indirizzo Netsukuku
+    della precedente identità.
+*   Abbiamo in `dest_ip_set` gli indirizzi destinazione computati sulla base dell'indirizzo Netsukuku
+    della nuova identità.
+*   Abbiamo in `prev_peermacs` l'elenco dei MAC address che la vecchia identità aveva come archi-qspn ma
+    la nuova identità non li ha più. Può essere perché:  
+    *   La nuova identità ha fatto ingresso in una diversa rete. L'identità del vicino era nella stessa
+        rete (quindi aveva un arco-qspn con la mia vecchia identità) ma non era nel blocco che è entrato.
+*   Abbiamo in `prev_tids` l'elenco dei table-id rispettivi per i MAC address in `prev_peermacs`. Forse non serve.
+*   Abbiamo in `new_peermacs` l'elenco dei MAC address che la vecchia identità non aveva come archi-qspn ma
+    la nuova identità adesso li ha. Può essere perché:  
+    *   La nuova identità ha fatto ingresso in una diversa rete. L'identità del vicino era già nella nuova rete.
+        Quindi la mia vecchia identità non aveva un arco-qspn e ora la mia nuova identità ce l'ha.
+*   Abbiamo in `new_tids` l'elenco dei table-id rispettivi per i MAC address in `new_peermacs`. Forse non serve.
+*   Abbiamo in `both_peermacs` l'elenco dei MAC address che la vecchia identità aveva come archi-qspn e
+    la nuova identità anche li ha. Può essere perché:  
+    *   La nuova identità ha fatto ingresso in una diversa rete. L'identità del vicino era nella stessa
+        rete (quindi aveva un arco-qspn con la mia vecchia identità) ed era nel blocco che è entrato. Quindi
+        la nuova identità del vicino (con cui la mia nuova identità avrà un arco) ha lo stesso MAC.
+    *   La nuova identità ha fatto una semplice migrazione. L'identità del vicino era nella stessa
+        rete (quindi aveva un arco-qspn con la mia vecchia identità). Sia che fosse stata nel blocco
+        che è migrato, sia che non lo fosse, comunque la mia nuova identità avrà un arco-qspn con lo
+        stesso MAC.
+*   Per ogni g-nodo `hc` in `prev_dest_ip_set.keys`:
+    *   Indichiamo con `prev_dest = prev_dest_ip_set[hc]`.
+    *   Esegue `ip route del $prev_dest.global table ntk`.
+    *   Esegue `ip route del $prev_dest.anonymizing table ntk`.
+    *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1,  
+        se `hc.lvl` >= `guest_gnode_level`:
+        *   Esegue `ip route del $prev_dest.internal[k] table ntk`.
+*   Per ogni `$m` in `both_peermacs` sia `$table` = `ntk_from_$m`:
+    *   Per ogni g-nodo `hc` in `prev_dest_ip_set.keys`:
+        *   Indichiamo con `prev_dest = prev_dest_ip_set[hc]`.
+        *   Esegue `ip route del $prev_dest.global table $table`.
+        *   Esegue `ip route del $prev_dest.anonymizing table $table`.
+        *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1,  
+            se `hc.lvl` >= `guest_gnode_level`:
+            *   Esegue `ip route del $prev_dest.internal[k] table $table`.
+*   Per ogni `$m` in `prev_peermacs` sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id:
+    *   Esegue `ip route flush table $table`.
+    *   Esegue `ip rule del fwmark $tid table $table`.
+    *   Esegue `iptables -t mangle -D PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
+*   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
+    *   Indichiamo con `dest = dest_ip_set[hc]`.
+    *   Esegue `ip route add unreachable $dest.global table ntk`.
+    *   Esegue `ip route add unreachable $dest.anonymizing table ntk`.
+    *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1,  
+        se `hc.lvl` >= `guest_gnode_level`:
+        *   Esegue `ip route add unreachable $dest.internal[k] table ntk`.
+*   Per ogni `$m` in `both_peermacs` sia `$table` = `ntk_from_$m`:
+    *   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
+        *   Indichiamo con `dest = dest_ip_set[hc]`.
+        *   Esegue `ip route add unreachable $dest.global table $table`.
+        *   Esegue `ip route add unreachable $dest.anonymizing table $table`.
+        *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1,  
+            se `hc.lvl` >= `guest_gnode_level`:
+            *   Esegue `ip route add unreachable $dest.internal[k] table $table`.
+*   Per ogni `$m` in `new_peermacs` sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id:
+    *   Esegue `iptables -t mangle -A PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
+    *   Esegue `ip rule add fwmark $tid table $table`.
+    *   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
+        *   Indichiamo con `dest = dest_ip_set[hc]`.
+        *   Esegue `ip route add unreachable $dest.global table $table`.
+        *   Esegue `ip route add unreachable $dest.anonymizing table $table`.
+        *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
+            *   Esegue `ip route add unreachable $dest.internal[k] table $table`.
 
