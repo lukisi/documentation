@@ -373,7 +373,7 @@ sua mappa di percorsi è di 1×15 + 12×1 + 3×3 = 36. Resta invariato che
 
 ## <a name="Identita"></a> Indirizzi di interesse per una identità
 
-Come abbiamo ricordato [qui](DettagliTecnici.md#Ipv4), l'identità principale del sistema ha un indirizzo
+Come abbiamo ricordato [qui](DettagliTecnici.md#Indirizzi_IP), l'identità principale del sistema ha un indirizzo
 Netsukuku *reale*. Essa assegna degli indirizzi IPv4 locali nel network stack default. Inoltre assegna
 delle rotte nelle tabelle sia per pacchetti IP generati localmente che per pacchetti IP da inoltrare. Queste
 rotte hanno come possibile destinazione tutti i g-nodi di qualsiasi livello che possono essere espressi in
@@ -888,21 +888,96 @@ principale eredita il default network namespace dalla precedente identità princ
     della nuova identità.
 *   Abbiamo in `dest_ip_set` gli indirizzi destinazione computati sulla base dell'indirizzo Netsukuku
     della nuova identità.
-*   Per ogni g-nodo `hc` in `prev_dest_ip_set.keys`, se `hc.lvl` >= `guest_gnode_level`:
+*   Abbiamo in `prev_peermacs` l'elenco dei MAC address che la vecchia identità aveva come archi-qspn ma
+    la nuova identità non li ha più. Può essere perché:  
+    *   La nuova identità ha fatto ingresso in una diversa rete. L'identità del vicino era nella stessa
+        rete (quindi aveva un arco-qspn con la mia vecchia identità) ma non era nel blocco che è entrato.
+*   Abbiamo in `prev_tids` l'elenco dei table-id rispettivi per i MAC address in `prev_peermacs`. Forse non serve.
+*   Abbiamo in `new_peermacs` l'elenco dei MAC address che la vecchia identità non aveva come archi-qspn ma
+    la nuova identità adesso li ha. Può essere perché:  
+    *   La nuova identità ha fatto ingresso in una diversa rete. L'identità del vicino era già nella nuova rete.
+        Quindi la mia vecchia identità non aveva un arco-qspn e ora ce l'ha.
+*   Abbiamo in `new_tids` l'elenco dei table-id rispettivi per i MAC address in `new_peermacs`. Forse non serve.
+*   Abbiamo in `both_peermacs` l'elenco dei MAC address che la vecchia identità aveva come archi-qspn e
+    la nuova identità anche li ha. Può essere perché:  
+    *   La nuova identità ha fatto ingresso in una diversa rete. L'identità del vicino era nella stessa
+        rete (quindi aveva un arco-qspn con la mia vecchia identità) ed era nel blocco che è entrato. Quindi
+        la nuova identità del vicino (con cui la mia nuova identità avrà un arco) ha lo stesso MAC.
+    *   La nuova identità ha fatto una semplice migrazione. L'identità del vicino era nella stessa
+        rete (quindi aveva un arco-qspn con la mia vecchia identità). Sia che fosse stata nel blocco
+        che è migrato, sia che non lo fosse, comunque la mia nuova identità avrà un arco-qspn con lo
+        stesso MAC.
+*   Per ogni g-nodo `hc` in `prev_dest_ip_set.keys`:
     *   Indichiamo con `prev_dest = prev_dest_ip_set[hc]`.
-    *   **TODO**
+    *   Esegue `ip route del $prev_dest.global table ntk`.
+    *   Esegue `ip route del $prev_dest.anonymizing table ntk`.
+    *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1,  
+        se `hc.lvl` >= `guest_gnode_level`:
+        *   Esegue `ip route del $prev_dest.internal[k] table ntk`.
+*   Per ogni `$m` in `both_peermacs` sia `$table` = `ntk_from_$m`:
+    *   Per ogni g-nodo `hc` in `prev_dest_ip_set.keys`:
+        *   Indichiamo con `prev_dest = prev_dest_ip_set[hc]`.
+        *   Esegue `ip route del $prev_dest.global table $table`.
+        *   Esegue `ip route del $prev_dest.anonymizing table $table`.
+        *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1,  
+            se `hc.lvl` >= `guest_gnode_level`:
+            *   Esegue `ip route del $prev_dest.internal[k] table $table`.
+*   Per ogni `$m` in `prev_peermacs` sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id:
+    *   Esegue `ip route flush table $table`.
+    *   Esegue `ip rule del fwmark $tid table $table`.
+    *   Esegue `iptables -t mangle -D PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
+*   Se *subnetlevel* > 0:
+    *   Per ogni livello *k* da `host_gnode_level` a *l* - 2:
+        *   Esegue `iptables -t nat -D PREROUTING -d $prev_local_ip_set.netmap_range2[k] -j NETMAP --to $prev_local_ip_set.netmap_range1`.
+        *   Esegue `iptables -t nat -D POSTROUTING -d $prev_local_ip_set.netmap_range3[k] -s $prev_local_ip_set.netmap_range1 -j NETMAP --to $prev_local_ip_set.netmap_range2[k]`.
+    *   Esegue `iptables -t nat -D PREROUTING -d $prev_local_ip_set.netmap_range2_upper -j NETMAP --to $prev_local_ip_set.netmap_range1`.
+    *   Esegue `iptables -t nat -D POSTROUTING -d $prev_local_ip_set.netmap_range3_upper -s $prev_local_ip_set.netmap_range1 -j NETMAP --to $prev_local_ip_set.netmap_range2_upper`.
+    *   Esegue (opzionalmente) `iptables -t nat -D PREROUTING -d $prev_local_ip_set.netmap_range4 -j NETMAP --to $prev_local_ip_set.netmap_range1`.
+    *   Esegue `iptables -t nat -D POSTROUTING -d $prev_local_ip_set.anonymizing_range -s $prev_local_ip_set.netmap_range1 -j NETMAP --to $prev_local_ip_set.netmap_range2_upper`.
 *   Esegue (opzionalmente) `iptables -t nat -D POSTROUTING -d $prev_local_ip_set.anonymizing_range -j SNAT --to $prev_local_ip_set.global`.
 *   Per ogni `dev` in `devs`:
-    *   Per ogni livello *k* da `host_gnode_level` - 1 a *l* - 1:
+    *   Per ogni livello *k* da `host_gnode_level` a *l* - 1:
         *   Esegue `ip address del ${prev_local_ip_set.internal[k]}/32 dev $dev`.
-        *   Esegue `ip address add $local_ip_set.internal[k] dev $dev`.
     *   Esegue `ip address del ${prev_local_ip_set.global}/32 dev $dev`.
-    *   Esegue `ip address add $local_ip_set.global dev $dev`.
     *   Esegue (opzionalmente) `ip address del ${prev_local_ip_set.anonymizing}/32 dev $dev`.
+*   Per ogni `dev` in `devs`:
+    *   Per ogni livello *k* da `host_gnode_level` a *l* - 1:
+        *   Esegue `ip address add $local_ip_set.internal[k] dev $dev`.
+    *   Esegue `ip address add $local_ip_set.global dev $dev`.
     *   Esegue (opzionalmente) `ip address add $local_ip_set.anonymizing dev $dev`.
 *   Esegue (opzionalmente) `iptables -t nat -A POSTROUTING -d $local_ip_set.anonymizing_range -j SNAT --to $local_ip_set.global`.
-
-
+*   Se *subnetlevel* > 0:
+    *   Per ogni livello *k* da `host_gnode_level` a *l* - 2:
+        *   Esegue `iptables -t nat -A PREROUTING -d $local_ip_set.netmap_range2[k] -j NETMAP --to $local_ip_set.netmap_range1`.
+        *   Esegue `iptables -t nat -A POSTROUTING -d $local_ip_set.netmap_range3[k] -s $local_ip_set.netmap_range1 -j NETMAP --to $local_ip_set.netmap_range2[k]`.
+    *   Esegue `iptables -t nat -A PREROUTING -d $local_ip_set.netmap_range2_upper -j NETMAP --to $local_ip_set.netmap_range1`.
+    *   Esegue `iptables -t nat -A POSTROUTING -d $local_ip_set.netmap_range3_upper -s $local_ip_set.netmap_range1 -j NETMAP --to $local_ip_set.netmap_range2_upper`.
+    *   Esegue (opzionalmente) `iptables -t nat -A PREROUTING -d $local_ip_set.netmap_range4 -j NETMAP --to $local_ip_set.netmap_range1`.
+    *   Esegue `iptables -t nat -A POSTROUTING -d $local_ip_set.anonymizing_range -s $local_ip_set.netmap_range1 -j NETMAP --to $local_ip_set.netmap_range2_upper`.
+*   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
+    *   Indichiamo con `dest = dest_ip_set[hc]`.
+    *   Esegue `ip route add unreachable $dest.global table ntk`.
+    *   Esegue `ip route add unreachable $dest.anonymizing table ntk`.
+    *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1,  
+        se `hc.lvl` >= `guest_gnode_level`:
+        *   Esegue `ip route add unreachable $dest.internal[k] table ntk`.
+*   Per ogni `$m` in `both_peermacs` sia `$table` = `ntk_from_$m`:
+    *   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
+        *   Indichiamo con `dest = dest_ip_set[hc]`.
+        *   Esegue `ip route add unreachable $dest.global table $table`.
+        *   Esegue `ip route add unreachable $dest.anonymizing table $table`.
+        *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1,  
+            se `hc.lvl` >= `guest_gnode_level`:
+            *   Esegue `ip route add unreachable $dest.internal[k] table $table`.
+*   Per ogni `$m` in `new_peermacs` sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id:
+    *   Esegue `iptables -t mangle -A PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
+    *   Esegue `ip rule add fwmark $tid table $table`.
+    *   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
+        *   Indichiamo con `dest = dest_ip_set[hc]`.
+        *   Esegue `ip route add unreachable $dest.global table $table`.
+        *   Esegue `ip route add unreachable $dest.anonymizing table $table`.
+        *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
+            *   Esegue `ip route add unreachable $dest.internal[k] table $table`.
 
 #### Operazioni sulla duplicazione di una identità
 
