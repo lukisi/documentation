@@ -793,6 +793,49 @@ essa ottiene un nuovo network namespace "vuoto".
 Una nuova identità di connettività nasce quando una precedente identità di connettività si duplica. La nuova identità
 di connettività eredita un network namespace (non default) dalla precedente identità di connettività.
 
+L'identità principale di un sistema (non le altre) può ricevere un nuovo arco-qspn perché il modulo Neighbohood
+ha realizzato un nuovo arco fisico. In questo caso il modulo Identities viene avvisato dal programma *ntkd* e forma
+un nuovo arco-identità tra le due identità principali.  
+Di seguito alla nascita del nuovo arco-identità segnalata dal modulo Identities, il modulo Hooking viene avvisato e
+se le identità appartengono alla stessa rete il modulo Hooking segnala che occorre associare un arco-qspn a
+quell'arco-identità. Quindi il programma *ntkd* aggiunge un arco-qspn al modulo QSPN della sua identità interessata;
+inoltre deve creare una nuova tabella di routing `ntk_from_xxx` nel network namespace della sua identità interessata
+e aggiungervi tutte le rotte possibili come unreachable.
+
+Una identità (principale o di connettività) può ricevere un nuovo arco-qspn perché l'identità di un sistema
+vicino con il quale aveva un arco-identità si duplica. In questo caso il modulo Identities aggiunge il
+nuovo arco-identità in autonomia.  
+Idem come sopra:
+Di seguito alla nascita del nuovo arco-identità segnalata dal modulo Identities, il modulo Hooking viene avvisato e
+se le identità appartengono alla stessa rete il modulo Hooking segnala che occorre associare un arco-qspn a
+quell'arco-identità. Quindi il programma *ntkd* aggiunge un arco-qspn al modulo QSPN della sua identità interessata;
+inoltre deve creare una nuova tabella di routing `ntk_from_xxx` nel network namespace della sua identità interessata
+e aggiungervi tutte le rotte possibili come unreachable.
+
+Per una identità (principale o di connettività) può succedere che ad un suo arco-identità vengano modificati
+il `peer_mac` e il `peer_linklocal` perché l'identità del vicino si duplica. In questo caso il modulo Identities
+segnala per prima cosa che il vecchio arco-identità è stato modificato. In seguito, se si verifica, segnala che
+un nuovo arco-identità è stato aggiunto (che avrà gli stessi `peer_mac` e `peer_linklocal` che erano prima del
+vecchio arco-identità).  
+Di seguito alla variazione di `peer_mac` e `peer_linklocal` di un arco-identità segnalata dal modulo Identities,
+se l'arco-identità aveva associato a sé un arco-qspn, il programma *ntkd*:
+
+*   Aggiorna tutte le rotte che avevano questo arco-qspn come gateway, perché ora ha un nuovo `peer_linklocal`.
+*   Crea una nuova tabella `ntk_from_xxx` nel network namespace di questa identità con il nuovo `peer_mac`. Vi aggiunge
+    tutte le rotte come erano prima nella vecchia tabella `ntk_from_yyy` con il vecchio `peer_mac`. Sia quelle
+    unreachable che quelle valorizzate.
+*   Non sapendo se ci sarà un nuovo arco-identità con il vecchio `peer_mac` e nemmeno se in quel caso ci sarà un
+    arco-qspn associato, deve rimuovere la vecchia tabella `ntk_from_yyy` dal network namespace di questa identità.
+
+Per una identità (principale o di connettività) può succedere che un suo arco-identità venga rimosso. ... **TODO**
+
+In seguito, sulla base degli ETP ricevuti il modulo QSPN associato ad una identità aggiorna le conoscenze della
+sua mappa ed emette dei segnali. Sulla base di questi segnali l'identità deve aggiornare le rotte nel relativo
+network namespace.
+
+Quando una identità muore deve semplicemente rimuovere il relativo network namespace. Fatta eccezione per l'identità
+principale che alla sua morte, cioè alla terminazione del programma, deve ripulire il default network namespace.
+
 Mostriamo a quale stato deve essere portato un network namespace da una generica identità.
 
 *   Indichiamo con *l* il numero di livelli nella topologia.
