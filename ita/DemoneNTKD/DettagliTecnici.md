@@ -203,13 +203,13 @@ abbiamo che esso è il g-nodo di livello 2 le cui componenti a livello più alto
 al livello 2 la componente è 3. Ai livelli più alti abbiamo le stesse componenti del nostro indirizzo.
 
 Per ogni indirizzo Netsukuku destinazione così calcolato, l'identità deve computare vari indirizzi
-IP (il globale, l'anonimizzante e gli interni dal livello 1 al livello `levels-1`). Questa
+IP (il globale, l'anonimizzante e gli interni dal livello direttamente maggiore al livello `levels-1`). Questa
 operazione la fa con le funzioni `ip_global_gnode`, `ip_anonymizing_gnode` e `ip_internal_gnode`.
 
 Per ogni indirizzo IP così calcolato, nel network stack default va aggiunta
 una rotta in ogni tabella di routing che il demone *ntkd* gestisce. Vedremo che si tratta della
 tabella `ntk` per i pacchetti generati localmente e di varie tabelle `ntk_from_XXX` per i pacchetti
-da inoltrare; ma questo dettaglio non ci interessa adesso che spieghiamo il computo degli indirizzi IP.
+da inoltrare.
 
 #### Identità di connettività
 

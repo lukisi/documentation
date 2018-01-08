@@ -4,8 +4,7 @@
     1.  [Calcolo degli indirizzi IP](#Calcolo)
     1.  [Esempio](#Esempio)
 1.  [Indirizzi di interesse per una identità](#Identita)
-    1.  [Calcolo indirizzi IP locali](#Computo_locali)
-    1.  [Calcolo indirizzi IP destinazioni](#Computo_destinazioni)
+    1.  [Calcolo indirizzi IP locali e destinazioni](#Computo)
     1.  [Utilizzo indirizzi IP locali](#Utilizzo_locali)
     1.  [Utilizzo indirizzi IP destinazioni](#Utilizzo_destinazioni)
 
@@ -386,9 +385,21 @@ delle rotte nelle tabelle solo per pacchetti IP da inoltrare. Queste
 rotte hanno come possibile destinazione g-nodi di livello maggiore o uguale a *i* che possono essere espressi in
 coordinate gerarchiche relative al suo indirizzo Netsukuku.
 
-### <a name="Computo_locali"></a> Calcolo indirizzi IP locali
+### <a name="Computo"></a> Calcolo indirizzi IP locali e destinazioni
 
-Questo si fa solo per l'identità *principale*.
+Il computo degli indirizzi IP locali e delle possibili destinazioni associate ad una identità si fa quando
+nasce l'identità stessa. Queste informazioni restano valide finché l'identità vive, oppure fino a quando
+non si duplica. Se si duplica vanno in parte alterate.
+
+Le strutture dati associate ad una identità che rappresentano queste informazioni sono `local_ip_set`
+e `dest_ip_set`.
+
+Vediamo nel dettaglio tutte le possibili situazioni.
+
+#### Calcolo indirizzi IP locali
+
+Questo si fa quando nasce una identità *principale*. Cioè all'avvio quando nasce la prima identità principale, oppure
+quando si duplica una identità che era al momento la principale.
 
 *   Indichiamo con *l* il numero di livelli nella topologia.
 *   Indichiamo con *subnetlevel* il livello del g-nodo rappresentato dalla sottorete autonoma.
@@ -423,9 +434,10 @@ Se *subnetlevel* > 0 si aggiunge:
     Si tratta del range di indirizzi IP anonimizzanti che rappresenta la sottorete autonoma.  
     Si basa sulle posizioni di *n* da *subnetlevel* in su.
 
-### <a name="Computo_destinazioni"></a> Calcolo indirizzi IP destinazioni
+#### Calcolo indirizzi IP destinazioni
 
-Questo si fa con ogni identità.
+Questo si fa quando nasce una generica identità. Cioè all'avvio quando nasce la prima identità principale, oppure
+quando si duplica una generica identità.
 
 *   Indichiamo con *l* il numero di livelli nella topologia.
 *   Indichiamo con *subnetlevel* il livello del g-nodo rappresentato dalla sottorete autonoma.
@@ -444,6 +456,33 @@ Questo si fa con ogni identità.
     *   Calcola `dest_ip_set[hc].anonymizing = ip_anonymizing_gnode(hc_addr)`.
     *   Per *k* che scende da *l* - 1 a *i* + 1:
         *   Calcola `dest_ip_set[hc].internal[k] = ip_internal_gnode(hc_addr, inside_level=k)`.
+
+#### Variazioni quando si diventa di connettività
+
+Questo si fa quando una generica identità (che poteva essere principale o di connettività) si duplica
+e la originale diventa di connettività per un dato livello.
+
+*   Indichiamo con *l* il numero di livelli nella topologia.
+*   Indichiamo con *n* l'indirizzo Netsukuku dell'identità.
+*   Indichiamo con *pos_n(i)* l'identificativo al livello *i* dell'indirizzo Netsukuku *n*.
+*   Indichiamo con *prev_lvl* il livello in cui la componente da reale è appena divenuta *virtuale*.
+    Esso sicuramente è il livello più alto in cui l'elemento *pos_n(i)* è virtuale, poiché soltanto
+    un g-nodo *reale* può migrare.
+*   Indichiamo con *prev_pos* l'identificativo al livello *prev_lvl* che era dell'identità in
+    precedenza.
+*   Poni `local_ip_set = null`.
+*   Per *i* = `$prev_lvl`,  
+    per *j* = `$prev_pos`,  
+    *   Indichiamo con *hc* il g-nodo (*i*, *j*).
+    *   Calcola `hc_addr` l'indirizzo Netsukuku equivalente *hc* rispetto a *n*.  
+        Cioè: `hc_addr = n.slice(i+1); hc_addr.insert_at(0,j)`;
+    *   Calcola `dest_ip_set[hc].global = ip_global_gnode(hc_addr)`.
+    *   Calcola `dest_ip_set[hc].anonymizing = ip_anonymizing_gnode(hc_addr)`.
+    *   Per *k* che scende da *l* - 1 a *i* + 1:
+        *   Calcola `dest_ip_set[hc].internal[k] = ip_internal_gnode(hc_addr, inside_level=k)`.
+*   Per ogni *hc* in `dest_ip_set.keys`,  
+    se `hc.lvl < prev_lvl`:
+    *   Rimuovi *hc* dalle possibili destinazioni, cioè esegui `dest_ip_set.unset(hc)`.
 
 ### <a name="Utilizzo_locali"></a> Utilizzo indirizzi IP locali
 
@@ -1141,4 +1180,37 @@ network namespace `$ns` ereditato dall'identità. Cioè va premesso `ip netns ex
         *   Esegue `ip route add unreachable $dest.anonymizing table $table`.
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
             *   Esegue `ip route add unreachable $dest.internal[k] table $table`.
+
+#### Operazioni quando il modulo Hooking segnala che occorre associare un arco-qspn a un arco-identità
+
+Il programma *ntkd* può trovarsi a gestire il segnale `add_qspn_arc` dal modulo Hooking associato
+all'identità principale o ad una identità di connettività.
+
+Ricordiamo che tutte le operazioni eseguite nell'algoritmo qui sotto sono da intendersi eseguite nel
+network namespace `$ns` gestito dall'identità. Cioè, se si tratta di una identità di connettività che quindi
+gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al comando.
+
+**TODO** il programma *ntkd* aggiunge un arco-qspn al modulo QSPN della sua identità interessata;
+inoltre deve creare una nuova tabella di routing `ntk_from_xxx` nel network namespace della sua identità interessata
+e aggiungervi tutte le rotte possibili come unreachable.
+
+#### Operazioni quando il modulo Identities segnala che un arco-identità esistente è stato modificato.
+
+TODO
+
+#### un arco-identità viene rimosso ...
+
+TODO
+
+#### Operazioni quando il modulo QSPN segnala variazioni nella mappa di una identità
+
+TODO
+
+#### una identità di connettività viene rimossa ...
+
+TODO
+
+#### Operazioni della corrente identità principale all'uscita del programma
+
+TODO
 
