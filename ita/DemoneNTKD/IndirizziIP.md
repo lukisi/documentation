@@ -389,7 +389,8 @@ coordinate gerarchiche relative al suo indirizzo Netsukuku.
 
 Il computo degli indirizzi IP locali e delle possibili destinazioni associate ad una identità si fa quando
 nasce l'identità stessa. Queste informazioni restano valide finché l'identità vive, oppure fino a quando
-non si duplica. Se si duplica vanno in parte alterate.
+non si duplica. Quando una identità si duplica le informazioni ad essa associate vanno in parte alterate:
+infatti l'indirizzo Netsukuku dell'identità originale cambia prendendo una componente virtuale.
 
 Le strutture dati associate ad una identità che rappresentano queste informazioni sono `local_ip_set`
 e `dest_ip_set`.
@@ -1190,19 +1191,74 @@ Ricordiamo che tutte le operazioni eseguite nell'algoritmo qui sotto sono da int
 network namespace `$ns` gestito dall'identità. Cioè, se si tratta di una identità di connettività che quindi
 gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al comando.
 
-**TODO** il programma *ntkd* aggiunge un arco-qspn al modulo QSPN della sua identità interessata;
-inoltre deve creare una nuova tabella di routing `ntk_from_xxx` nel network namespace della sua identità interessata
-e aggiungervi tutte le rotte possibili come unreachable.
+*   Indichiamo con *l* il numero di livelli nella topologia.
+*   Abbiamo in `dest_ip_set` gli indirizzi destinazione computati sulla base dell'indirizzo Netsukuku
+    dell'identità.
+*   Indichiamo con `$m` il `peer_mac` del nuovo arco-qspn.
+*   Sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id:
+*   Esegue `iptables -t mangle -A PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
+*   Esegue `ip rule add fwmark $tid table $table`.
+*   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
+    *   Indichiamo con `dest = dest_ip_set[hc]`.
+    *   Esegue `ip route add unreachable $dest.global table $table`.
+    *   Esegue `ip route add unreachable $dest.anonymizing table $table`.
+    *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
+        *   Esegue `ip route add unreachable $dest.internal[k] table $table`.
+
+#### Operazioni quando il modulo QSPN segnala variazioni nella mappa di una identità
+
+Quando il modulo QSPN segnala delle variazioni relative ad un percorso, cioè quando emette uno dei
+segnali `path_added`, `path_changed` o `path_removed`, tale segnale prevede una istanza di
+`IQspnNodePath p`. Con il codice `HCoord hc = p.i_qspn_get_hops().last().i_qspn_get_hcoord();`
+da questa si può ottenere la destinazione interessata sotto forma di coordinate gerarchiche. Al
+ricevere uno qualsiasi di questi segnali il programma *ntkd* deve interrogare il modulo QSPN per
+vedere quali siano i migliori percorsi per la destinazione `hc` e tenere aggiornate di conseguenza
+tutte le tabelle di routing.
+
+TODO
 
 #### Operazioni quando il modulo Identities segnala che un arco-identità esistente è stato modificato.
 
+Il programma *ntkd* può trovarsi a gestire il segnale `identity_arc_changed` dal modulo Identities associato
+all'identità principale o ad una identità di connettività.  
+Questo segnale individua un particolare arco-identità che collega l'identità interessata ad una
+identità in un sistema diretto vicino. Se associato a questo arco-identità il programma aveva creato
+un arco-qspn per questa identità, allora questo evento deve essere gestito dal programma *ntkd*
+con alcune operazioni.
+
+Ricordiamo che tutte le operazioni eseguite nell'algoritmo qui sotto sono da intendersi eseguite nel
+network namespace `$ns` gestito dall'identità. Cioè, se si tratta di una identità di connettività che quindi
+gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al comando.
+
+*   Indichiamo con *l* il numero di livelli nella topologia.
+*   Abbiamo in `dest_ip_set` gli indirizzi destinazione computati sulla base dell'indirizzo Netsukuku
+    dell'identità.
+*   Indichiamo con `$new_mac` il `peer_mac` nuovo dell'arco-qspn.
+*   Indichiamo con `$new_linklocal` il `peer_linklocal` nuovo dell'arco-qspn.
+*   Indichiamo con `$prev_mac` il `peer_mac` precedente dell'arco-qspn.
+*   Indichiamo con `$prev_linklocal` il `peer_linklocal` precedente dell'arco-qspn.
+
+
 TODO
+
+
+Per una identità (principale o di connettività) può succedere che ad un suo arco-identità vengano modificati
+il `peer_mac` e il `peer_linklocal` perché l'identità del vicino si duplica. In questo caso il modulo Identities
+segnala per prima cosa che il vecchio arco-identità è stato modificato. In seguito, se si verifica, segnala che
+un nuovo arco-identità è stato aggiunto (che avrà gli stessi `peer_mac` e `peer_linklocal` che erano prima del
+vecchio arco-identità).  
+Di seguito alla variazione di `peer_mac` e `peer_linklocal` di un arco-identità segnalata dal modulo Identities,
+se l'arco-identità aveva associato a sé un arco-qspn, il programma *ntkd*:
+
+*   Aggiorna tutte le rotte che avevano questo arco-qspn come gateway, perché ora ha un nuovo `peer_linklocal`.
+*   Crea una nuova tabella `ntk_from_xxx` nel network namespace di questa identità con il nuovo `peer_mac`. Vi aggiunge
+    tutte le rotte come erano prima nella vecchia tabella `ntk_from_yyy` con il vecchio `peer_mac`. Sia quelle
+    unreachable che quelle valorizzate.
+*   Non sapendo se ci sarà un nuovo arco-identità con il vecchio `peer_mac` e nemmeno se in quel caso ci sarà un
+    arco-qspn associato, deve rimuovere la vecchia tabella `ntk_from_yyy` dal network namespace di questa identità.
+
 
 #### un arco-identità viene rimosso ...
-
-TODO
-
-#### Operazioni quando il modulo QSPN segnala variazioni nella mappa di una identità
 
 TODO
 

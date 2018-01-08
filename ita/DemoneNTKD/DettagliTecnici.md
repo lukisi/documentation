@@ -242,32 +242,3 @@ Ulteriori dettagli sul modo di computare gli indirizzi IP associati ad un indiri
 sulle operazioni che ogni identità deve fare sul network namespace che gestisce saranno
 illustrati nel documento [Indirizzi IP](IndirizziIP.md).
 
-**TODO**
-
-All'avvio:
-
-Il programma aggiunge la 'rule' di guardare la tabella ntk.
-
-Il programma esamina la sua prima identità principale.
-Basandosi sul suo indirizzo Netsukuku, computa gli indirizzi IP suoi e
-delle possibili destinazioni. Li memorizza nella identità.
-
-Imposta gli indirizzi locali sul kernel.
-
-Aggiunge le rotte alle possibili destinazioni sulla tabella ntk.
-
-
-Al termine:
-
-Il programma esamina la sua corrente identità principale.
-Avendo memorizzato in essa gli indirizzi IP suoi e
-delle possibili destinazioni, li recupera.
-
-Rimuove la 'rule' di guardare la tabella ntk.
-
-Svuota la tabella ntk.
-
-Rimuove gli indirizzi locali dal kernel.
-
-
-

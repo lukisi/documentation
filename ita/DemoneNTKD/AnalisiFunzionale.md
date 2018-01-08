@@ -396,10 +396,11 @@ di QspnManager con il costruttore `enter_net` o `migrate` (non più con `create_
 Queste decisioni saranno prese a fronte di segnalazioni ricevute dal modulo Hooking. Ne parleremo quindi
 in seguito.
 
-Sulla base dell'indirizzo Netsukuku assegnato ad una certa identità nel sistema verranno calcolati gli
-indirizzi IPv4 che andranno assegnati al sistema corrente, precisamente nel network namespace associato
-a quella identità.  
-Le modalità di calcolo degli indirizzi IPv4 sulla base dell'indirizzo Netsukuku vengono illustrate
+Inoltre il programma *ntkd* si mette in ascolto dei segnali emessi dal modulo QSPN per essere aggiornato
+sulle conoscenze del *nodo del grafo* rappresentato da una identità. Sulla base di queste conoscenze il
+programma dovrà tenere aggiornate le policy di routing del sistema.
+
+Tutte le operazioni che il programma deve fare a tal proposito vengono illustrate
 nel [documento di dettaglio](DettagliTecnici.md#Indirizzi_IP).
 
 **TODO**
