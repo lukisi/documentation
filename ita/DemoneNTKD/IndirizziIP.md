@@ -919,11 +919,14 @@ se l'arco-identità aveva associato a sé un arco-qspn, il programma *ntkd*:
 
 [Operazioni](#Operazioni_changed_arc)
 
-Per una identità (principale o di connettività) può succedere che un suo arco-identità venga rimosso. ... **TODO**
+Per una identità (principale o di connettività) può succedere che un suo arco-identità venga rimosso.
+... **TODO**
 
-Quando una identità muore deve semplicemente rimuovere il relativo network namespace. Fatta eccezione per l'identità
-principale che alla sua morte, cioè alla terminazione del programma, deve ripulire il default network namespace.
-[Operazioni](#Operazioni_p_stop)
+Quando una identità di connettività muore, il programma *ntkd* deve semplicemente rimuovere il relativo network
+namespace. [Operazioni](#Operazioni_c_stop)
+
+Prima di terminare, il programma *ntkd* deve ripulire il default network namespace che era gestito dall'ultima identità
+principale. [Operazioni](#Operazioni_p_stop)
 
 #### <a name="Operazioni_p_start"></a> Operazioni della prima identità principale all'avvio
 
@@ -949,6 +952,7 @@ non ha alcun arco-qspn.
     *   Esegue `iptables -t nat -A POSTROUTING -d $local_ip_set.netmap_range3_upper -s $local_ip_set.netmap_range1 -j NETMAP --to $local_ip_set.netmap_range2_upper`.
     *   Esegue (opzionalmente) `iptables -t nat -A PREROUTING -d $local_ip_set.netmap_range4 -j NETMAP --to $local_ip_set.netmap_range1`.
     *   Esegue `iptables -t nat -A POSTROUTING -d $local_ip_set.anonymizing_range -s $local_ip_set.netmap_range1 -j NETMAP --to $local_ip_set.netmap_range2_upper`.
+*   Esegue `ip rule add table ntk`.
 *   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
     *   Indichiamo con `dest = dest_ip_set[hc]`.
     *   Esegue `ip route add unreachable $dest.global table ntk`.
@@ -1014,6 +1018,7 @@ principale eredita il default network namespace dalla precedente identità princ
     *   Esegue `ip route flush table $table`.
     *   Esegue `ip rule del fwmark $tid table $table`.
     *   Esegue `iptables -t mangle -D PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
+    *   Decrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
 *   Se *subnetlevel* > 0:
     *   Per ogni livello *k* da `host_gnode_level` a *l* - 2:
         *   Esegue `iptables -t nat -D PREROUTING -d $prev_local_ip_set.netmap_range2[k] -j NETMAP --to $prev_local_ip_set.netmap_range1`.
@@ -1060,6 +1065,7 @@ principale eredita il default network namespace dalla precedente identità princ
 *   Per ogni `$m` in `new_peermacs` sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id:
     *   Esegue `iptables -t mangle -A PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
     *   Esegue `ip rule add fwmark $tid table $table`.
+    *   Incrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
     *   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
         *   Indichiamo con `dest = dest_ip_set[hc]`.
         *   Esegue `ip route add unreachable $dest.global table $table`.
@@ -1100,6 +1106,7 @@ network namespace `$ns` gestito adesso dall'identità. Cioè va premesso `ip net
 *   Per ogni `$m` in `peermacs` sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id:
     *   Esegue `iptables -t mangle -A PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
     *   Esegue `ip rule add fwmark $tid table $table`.
+    *   Incrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
     *   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
         *   Indichiamo con `dest = dest_ip_set[hc]`.
         *   Esegue `ip route add unreachable $dest.global table $table`.
@@ -1155,6 +1162,7 @@ network namespace `$ns` ereditato dall'identità. Cioè va premesso `ip netns ex
     *   Esegue `ip route flush table $table`.
     *   Esegue `ip rule del fwmark $tid table $table`.
     *   Esegue `iptables -t mangle -D PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
+    *   Decrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
 *   Per ogni `$m` in `both_peermacs` sia `$table` = `ntk_from_$m`:
     *   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
         *   Indichiamo con `dest = dest_ip_set[hc]`.
@@ -1166,6 +1174,7 @@ network namespace `$ns` ereditato dall'identità. Cioè va premesso `ip netns ex
 *   Per ogni `$m` in `new_peermacs` sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id:
     *   Esegue `iptables -t mangle -A PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
     *   Esegue `ip rule add fwmark $tid table $table`.
+    *   Incrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
     *   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
         *   Indichiamo con `dest = dest_ip_set[hc]`.
         *   Esegue `ip route add unreachable $dest.global table $table`.
@@ -1189,6 +1198,7 @@ gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al co
 *   Sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id:
 *   Esegue `iptables -t mangle -A PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
 *   Esegue `ip rule add fwmark $tid table $table`.
+*   Incrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
 *   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
     *   Indichiamo con `dest = dest_ip_set[hc]`.
     *   Esegue `ip route add unreachable $dest.global table $table`.
@@ -1265,7 +1275,7 @@ gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al co
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
             *   Esegue `ip route change $dest.internal[k] via $gw_ip dev $gw_dev table ntk_from_$m`.
 
-#### <a name="Operazioni_changed_arc"></a> Operazioni quando il modulo Identities segnala che un arco-identità esistente è stato modificato.
+#### <a name="Operazioni_changed_arc"></a> Operazioni quando il modulo Identities segnala che un arco-identità esistente è stato modificato
 
 Il programma *ntkd* può trovarsi a gestire il segnale `identity_arc_changed` dal modulo Identities associato
 all'identità principale o ad una identità di connettività.  
@@ -1312,6 +1322,7 @@ gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al co
 *   Sia `$m` = `new_mac`, sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id.
 *   Esegue `iptables -t mangle -A PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
 *   Esegue `ip rule add fwmark $tid table $table`.
+*   Incrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
 *   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
     *   Indichiamo con `dest = dest_ip_set[hc]`.
     *   Esegue `ip route add unreachable $dest.global table $table`.
@@ -1331,16 +1342,57 @@ gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al co
 *   Esegue `ip route flush table $table`.
 *   Esegue `ip rule del fwmark $tid table $table`.
 *   Esegue `iptables -t mangle -D PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
+*   Decrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
 
 #### <a name="Operazioni_1"></a> un arco-identità viene rimosso ...
 
 TODO
 
-#### <a name="Operazioni_1"></a> una identità di connettività viene rimossa ...
+#### <a name="Operazioni_c_stop"></a> Operazioni quando una identità di connettività viene rimossa
 
-TODO
+Una identità di connettività viene rimossa. Aveva in gestione un network namespace diverso dal default.
+
+Nell'algoritmo qui sotto indichiamo esplicitamente se i comandi sono eseguiti nel
+network namespace `$ns` gestito dall'identità.
+
+*   Abbiamo in `ns` il network namespace gestito dall'identità.
+*   Abbiamo in `devs` l'elenco delle speudo-interfacce di rete gestite dall'identità.
+*   Abbiamo in `peermacs` l'elenco dei MAC address che l'identità aveva come archi-qspn.
+*   Per ogni `dev` in `$devs`:
+    *   Esegue `ip netns exec $ns ip link delete $dev type macvlan`.
+*   Esegue `ip netns del $ns`.
+*   Per ogni *m* in `peermacs`:
+    *   Decrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
 
 #### <a name="Operazioni_p_stop"></a> Operazioni della corrente identità principale all'uscita del programma
 
-TODO
+Prima di terminare, quando ormai esiste nel sistema la sola identità principale che gestisce il
+network namespace default, il programma deve ripulirlo.
+
+*   Indichiamo con *l* il numero di livelli nella topologia.
+*   Indichiamo con *subnetlevel* il livello del g-nodo rappresentato dalla sottorete autonoma.
+*   Abbiamo in `devs` l'elenco delle interfacce di rete gestite.
+*   Abbiamo in `local_ip_set` gli indirizzi locali della corrente identità principale.
+*   Abbiamo in `dest_ip_set` gli indirizzi destinazione della corrente identità principale.
+*   Abbiamo in `peermacs` l'elenco dei MAC address che l'identità aveva come archi-qspn.
+*   Esegue `ip rule del table ntk`.
+*   Esegue `ip route flush table ntk`.
+*   Per ogni `$m` in `peermacs` sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id:
+    *   Esegue `ip rule del table ntk_from_$m`.
+    *   Esegue `ip route flush table ntk_from_$m`.
+    *   Rimuove l'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
+*   Se *subnetlevel* > 0:
+    *   Per ogni livello *k* da *subnetlevel* a *l* - 2:
+        *   Esegue `iptables -t nat -D PREROUTING -d $local_ip_set.netmap_range2[k] -j NETMAP --to $local_ip_set.netmap_range1`.
+        *   Esegue `iptables -t nat -D POSTROUTING -d $local_ip_set.netmap_range3[k] -s $local_ip_set.netmap_range1 -j NETMAP --to $local_ip_set.netmap_range2[k]`.
+    *   Esegue `iptables -t nat -D PREROUTING -d $local_ip_set.netmap_range2_upper -j NETMAP --to $local_ip_set.netmap_range1`.
+    *   Esegue `iptables -t nat -D POSTROUTING -d $local_ip_set.netmap_range3_upper -s $local_ip_set.netmap_range1 -j NETMAP --to $local_ip_set.netmap_range2_upper`.
+    *   Esegue (opzionalmente) `iptables -t nat -D PREROUTING -d $local_ip_set.netmap_range4 -j NETMAP --to $local_ip_set.netmap_range1`.
+    *   Esegue `iptables -t nat -D POSTROUTING -d $local_ip_set.anonymizing_range -s $local_ip_set.netmap_range1 -j NETMAP --to $local_ip_set.netmap_range2_upper`.
+*   Esegue (opzionalmente) `iptables -t nat -D POSTROUTING -d $local_ip_set.anonymizing_range -j SNAT --to $local_ip_set.global`.
+*   Per ogni `dev` in `devs`:
+    *   Per ogni livello *k* da 0 a *l* - 1:
+        *   Esegue `ip address del ${local_ip_set.internal[k]}/32 dev $dev`.
+    *   Esegue `ip address del ${local_ip_set.global}/32 dev $dev`.
+    *   Esegue (opzionalmente) `ip address del ${local_ip_set.anonymizing}/32 dev $dev`.
 
