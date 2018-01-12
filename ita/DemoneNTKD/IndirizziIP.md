@@ -452,7 +452,7 @@ quando si duplica una generica identità.
     se *pos_n(i)* ≠ *j*:
     *   Indichiamo con *hc* il g-nodo (*i*, *j*).
     *   Calcola `hc_addr` l'indirizzo Netsukuku equivalente *hc* rispetto a *n*.  
-        Cioè: `hc_addr = n.slice(i+1); hc_addr.insert_at(0,j)`;
+        Cioè: `hc_addr = n.slice(i+1); hc_addr.insert_at(0,j);`.
     *   Calcola `dest_ip_set[hc].global = ip_global_gnode(hc_addr)`.
     *   Calcola `dest_ip_set[hc].anonymizing = ip_anonymizing_gnode(hc_addr)`.
     *   Per *k* che scende da *l* - 1 a *i* + 1:
@@ -1004,7 +1004,7 @@ principale eredita il default network namespace dalla precedente identità princ
     *   Esegue `ip route del $prev_dest.global table ntk`.
     *   Esegue `ip route del $prev_dest.anonymizing table ntk`.
     *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1,  
-        se `hc.lvl` >= `guest_gnode_level`:
+        se *k* >= `guest_gnode_level`:
         *   Esegue `ip route del $prev_dest.internal[k] table ntk`.
 *   Per ogni `$m` in `both_peermacs` sia `$table` = `ntk_from_$m`:
     *   Per ogni g-nodo `hc` in `prev_dest_ip_set.keys`:
@@ -1012,7 +1012,7 @@ principale eredita il default network namespace dalla precedente identità princ
         *   Esegue `ip route del $prev_dest.global table $table`.
         *   Esegue `ip route del $prev_dest.anonymizing table $table`.
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1,  
-            se `hc.lvl` >= `guest_gnode_level`:
+            se *k* >= `guest_gnode_level`:
             *   Esegue `ip route del $prev_dest.internal[k] table $table`.
 *   Per ogni `$m` in `prev_peermacs` sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id:
     *   Esegue `ip route flush table $table`.
@@ -1052,7 +1052,7 @@ principale eredita il default network namespace dalla precedente identità princ
     *   Esegue `ip route add unreachable $dest.global table ntk`.
     *   Esegue `ip route add unreachable $dest.anonymizing table ntk`.
     *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1,  
-        se `hc.lvl` >= `guest_gnode_level`:
+        se *k* >= `guest_gnode_level`:
         *   Esegue `ip route add unreachable $dest.internal[k] table ntk`.
 *   Per ogni `$m` in `both_peermacs` sia `$table` = `ntk_from_$m`:
     *   Per ogni g-nodo `hc` in `dest_ip_set.keys`:
@@ -1060,7 +1060,7 @@ principale eredita il default network namespace dalla precedente identità princ
         *   Esegue `ip route add unreachable $dest.global table $table`.
         *   Esegue `ip route add unreachable $dest.anonymizing table $table`.
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1,  
-            se `hc.lvl` >= `guest_gnode_level`:
+            se *k* >= `guest_gnode_level`:
             *   Esegue `ip route add unreachable $dest.internal[k] table $table`.
 *   Per ogni `$m` in `new_peermacs` sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id:
     *   Esegue `iptables -t mangle -A PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
@@ -1156,7 +1156,7 @@ network namespace `$ns` ereditato dall'identità. Cioè va premesso `ip netns ex
         *   Esegue `ip route del $prev_dest.global table $table`.
         *   Esegue `ip route del $prev_dest.anonymizing table $table`.
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1,  
-            se `hc.lvl` >= `guest_gnode_level`:
+            se *k* >= `guest_gnode_level`:
             *   Esegue `ip route del $prev_dest.internal[k] table $table`.
 *   Per ogni `$m` in `prev_peermacs` sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id:
     *   Esegue `ip route flush table $table`.
@@ -1169,7 +1169,7 @@ network namespace `$ns` ereditato dall'identità. Cioè va premesso `ip netns ex
         *   Esegue `ip route add unreachable $dest.global table $table`.
         *   Esegue `ip route add unreachable $dest.anonymizing table $table`.
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1,  
-            se `hc.lvl` >= `guest_gnode_level`:
+            se *k* >= `guest_gnode_level`:
             *   Esegue `ip route add unreachable $dest.internal[k] table $table`.
 *   Per ogni `$m` in `new_peermacs` sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id:
     *   Esegue `iptables -t mangle -A PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
