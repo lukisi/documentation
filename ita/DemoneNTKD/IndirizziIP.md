@@ -939,10 +939,11 @@ non ha alcun arco-qspn.
 *   Abbiamo in `local_ip_set` gli indirizzi locali computati sulla base del suo primo indirizzo Netsukuku.
 *   Abbiamo in `dest_ip_set` gli indirizzi destinazione computati sulla base del suo primo indirizzo Netsukuku.
 *   Per ogni `dev` in `devs`:
-    *   Per ogni livello *k* da 0 a *l* - 1:
+    *   Per ogni livello *k* da 1 a *l* - 1:
         *   Esegue `ip address add $local_ip_set.internal[k] dev $dev`.
     *   Esegue `ip address add $local_ip_set.global dev $dev`.
     *   Esegue (opzionalmente) `ip address add $local_ip_set.anonymizing dev $dev`.
+*   Esegue (per il livello 0) `ip address add $local_ip_set.internal[0] dev lo`.
 *   Esegue (opzionalmente) `iptables -t nat -A POSTROUTING -d $local_ip_set.anonymizing_range -j SNAT --to $local_ip_set.global`.
 *   Se *subnetlevel* > 0:
     *   Per *i* che sale da *subnetlevel* a *l* - 2:
@@ -1391,8 +1392,9 @@ network namespace default, il programma deve ripulirlo.
     *   Esegue `iptables -t nat -D POSTROUTING -d $local_ip_set.anonymizing_range -s $local_ip_set.netmap_range1 -j NETMAP --to $local_ip_set.netmap_range2_upper`.
 *   Esegue (opzionalmente) `iptables -t nat -D POSTROUTING -d $local_ip_set.anonymizing_range -j SNAT --to $local_ip_set.global`.
 *   Per ogni `dev` in `devs`:
-    *   Per ogni livello *k* da 0 a *l* - 1:
+    *   Per ogni livello *k* da 1 a *l* - 1:
         *   Esegue `ip address del ${local_ip_set.internal[k]}/32 dev $dev`.
     *   Esegue `ip address del ${local_ip_set.global}/32 dev $dev`.
     *   Esegue (opzionalmente) `ip address del ${local_ip_set.anonymizing}/32 dev $dev`.
+*   Esegue (per il livello 0) `ip address del ${local_ip_set.internal[0]}/32 dev lo`.
 
