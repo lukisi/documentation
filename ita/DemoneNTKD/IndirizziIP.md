@@ -1205,16 +1205,19 @@ gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al co
 
 #### <a name="Operazioni_map_update"></a> Operazioni quando il modulo QSPN segnala variazioni nella mappa di una identità
 
-Quando il modulo QSPN segnala delle variazioni relative ad un percorso, cioè quando emette uno dei
+Quando il modulo QSPN segnala delle variazioni relative ad un percorso, cioè quando
+una istanza `qspn_mgr` di QspnManager emette uno dei
 segnali `path_added`, `path_changed` o `path_removed`, tale segnale prevede una istanza di
 `IQspnNodePath p`. Con il codice `HCoord hc = p.i_qspn_get_hops().last().i_qspn_get_hcoord();`
-da questa si può ottenere la destinazione interessata sotto forma di coordinate gerarchiche. Al
-ricevere uno qualsiasi di questi segnali il programma *ntkd* deve interrogare il modulo QSPN per
-vedere quali siano i migliori percorsi per la destinazione `hc` e tenere aggiornate di conseguenza
-tutte le tabelle di routing.
+da questa si può ottenere la destinazione interessata sotto forma di coordinate gerarchiche
+relative all'indirizzo Netsukuku dell'identità a cui è associata l'istanza `qspn_mgr`.
 
-Il segnale è emesso da una determinata istanza di QspnManager, cioè è relativo ad una determinata
-identità del sistema, che può essere la principale o una di connettività.  
+Al ricevere uno qualsiasi di questi segnali il programma *ntkd* deve interrogare la stessa
+istanza `qspn_mgr` per vedere quali siano i migliori percorsi per
+la destinazione `hc` e tenere aggiornate di conseguenza tutte le tabelle di routing del network namespace
+associato alla medesima identità che è associata all'istanza `qspn_mgr`.  
+Questo lo fa con il metodo `paths = qspn_mgr.get_paths_to(hc);`.
+
 Se si tratta dell'identità principale, allora qualsiasi g-nodo di destinazione sia rappresentato
 da `hc` certamente è da indicare nelle tabelle di routing del network namespace default.  
 Assumiamo invece che si tratti di una identità di connettività. Indichiamo con `up_to` il livello
@@ -1224,17 +1227,31 @@ da indicare nelle tabelle di routing del network namespace associato all'identit
 rappresentati da un `hc` tale che `hc.lvl >= up_to`. O, in altre parole, le operazioni nell'algoritmo
 che segue sono necessarie solo se `hc` è in `dest_ip_set.keys`.
 
+Il programma *ntkd* sa che a quella particolare istanza `qspn_mgr` sono stati passati un certo
+set di archi. Per ognuno di essi:
+
+*   Sa individuare nella sua memoria una istanza `IQspnArc arc`.
+*   Sa recuperare da questa il MAC address del nodo vicino. Sia `string peer_mac`.
+*   Interroga il `qspn_mgr` con il metodo `get_naddr_for_arc(arc)` e trova l'indirizzo Netsukuku del vicino.
+*   Se tale indirizzo `peer_naddr` è noto:
+    *   Confrontandolo con il proprio indirizzo Netsukuku computa `HCoord peer_hc`,
+        il massimo distinto g-nodo.
+    *   Mette `peer_mac` nella lista `peer_mac_set`.
+    *   Mette `peer_hc` nella lista `peer_hc_set`.
+
+Ora con il g-nodo destinazione `hc`, la lista `paths`, le liste `peer_mac_set` e `peer_hc_set`,
+il programma ha quanto serve per eseguire l'algoritmo qui sotto.
+
 Ricordiamo che tutte le operazioni eseguite nell'algoritmo qui sotto sono da intendersi eseguite nel
 network namespace `$ns` gestito dall'identità. Cioè, se si tratta di una identità di connettività che quindi
 gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al comando.
 
 *   Indichiamo con *l* il numero di livelli nella topologia.
-*   Indichiamo con `qspn_mgr` il modulo QSPN associato a questa identità.
 *   Assert `hc` in `dest_ip_set.keys`.
 *   Assert `hc.lvl >= subnetlevel`.
 *   Indichiamo con `dest = dest_ip_set[hc]`.
 *   Se si tratta dell'identità principale:
-    *   Computa `IQspnNodePath? best_path = best_path(qspn_mgr, hc)`.  
+    *   Computa `IQspnNodePath? best_path = best_path(paths)`.  
         La funzione `best_path` trova il miglior percorso per un pacchetto IP generato localmente che vuole
         raggiungere `hc`. Può essere `null` che significa `unreachable`.
     *   Se `best_path == null`:
@@ -1250,27 +1267,26 @@ gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al co
         *   Esegue `ip route change $dest.anonymizing via $gw_ip dev $gw_dev table ntk src $local_ip_set.global`.
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
             *   Esegue `ip route change $dest.internal[k] via $gw_ip dev $gw_dev table ntk src $local_ip_set.internal[k]`.
-*   Per ogni arco-qspn `qspn_arc` noto al manager `qspn_mgr`, indichiamo con *m* il relativo `peer_mac`:
-    *   Sia `prev_naddr` l'indirizzo Netsukuku del nodo con cui siamo collegati tramite `qspn_arc`.
-    *   Computa `prev_hc` il massimo distinto g-nodo di `prev_naddr` per *n*.
-    *   Computa `IQspnNodePath? best_path = best_path_forward(qspn_mgr, hc, prev_hc)`.  
+*   Per ogni `peer_mac` in `peer_mac_set` e relativo `peer_hc` in `peer_hc_set`:
+    *   Sia `table` = `ntk_from_$peer_mac`.
+    *   Computa `IQspnNodePath? best_path = best_path_forward(paths, peer_hc)`.  
         La funzione `best_path_forward` trova il miglior percorso per un pacchetto IP da inoltrare, il quale
         è stato ricevuto da un vicino e che vuole raggiungere `hc`. Ma di esso sappiamo anche che nel suo
-        precedente tragitto è passato per il g-nodo `prev_hc`, per questo vogliamo individuare un percorso
+        precedente tragitto è passato per il g-nodo `peer_hc`, per questo vogliamo individuare un percorso
         che non includa di nuovo quel g-nodo. Può essere `null` che significa `unreachable`.
     *   Se `best_path == null`:
-        *   Esegue `ip route change unreachable $dest.global table ntk_from_$m`.
-        *   Esegue `ip route change unreachable $dest.anonymizing table ntk_from_$m`.
+        *   Esegue `ip route change unreachable $dest.global table $table`.
+        *   Esegue `ip route change unreachable $dest.anonymizing table $table`.
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
-            *   Esegue `ip route change unreachable $dest.internal[k] table ntk_from_$m`.
+            *   Esegue `ip route change unreachable $dest.internal[k] table $table`.
     *   Altrimenti:
         *   Computa `IQspnArc gw = best_path.i_qspn_get_arc();`.  
             Si tratta di una istanza di una classe nota al programma *ntkd* dalla quale esso può risalire
             all'indirizzo IP linklocal `gw_ip` e al nome della nostra interfaccia di rete `gw_dev`.
-        *   Esegue `ip route change $dest.global via $gw_ip dev $gw_dev table ntk_from_$m`.
-        *   Esegue `ip route change $dest.anonymizing via $gw_ip dev $gw_dev table ntk_from_$m`.
+        *   Esegue `ip route change $dest.global via $gw_ip dev $gw_dev table $table`.
+        *   Esegue `ip route change $dest.anonymizing via $gw_ip dev $gw_dev table $table`.
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
-            *   Esegue `ip route change $dest.internal[k] via $gw_ip dev $gw_dev table ntk_from_$m`.
+            *   Esegue `ip route change $dest.internal[k] via $gw_ip dev $gw_dev table $table`.
 
 #### <a name="Operazioni_changed_arc"></a> Operazioni quando il modulo Identities segnala che un arco-identità esistente è stato modificato
 
