@@ -985,12 +985,10 @@ principale eredita il default network namespace dalla precedente identità princ
     la nuova identità non li ha più. Può essere perché:  
     *   La nuova identità ha fatto ingresso in una diversa rete. L'identità del vicino era nella stessa
         rete (quindi aveva un arco-qspn con la mia vecchia identità) ma non era nel blocco che è entrato.
-*   Abbiamo in `prev_tids` l'elenco dei table-id rispettivi per i MAC address in `prev_peermacs`. Forse non serve.
 *   Abbiamo in `new_peermacs` l'elenco dei MAC address che la vecchia identità non aveva come archi-qspn ma
     la nuova identità adesso li ha. Può essere perché:  
     *   La nuova identità ha fatto ingresso in una diversa rete. L'identità del vicino era già nella nuova rete.
         Quindi la mia vecchia identità non aveva un arco-qspn e ora la mia nuova identità ce l'ha.
-*   Abbiamo in `new_tids` l'elenco dei table-id rispettivi per i MAC address in `new_peermacs`. Forse non serve.
 *   Abbiamo in `both_peermacs` l'elenco dei MAC address che la vecchia identità aveva come archi-qspn e
     la nuova identità anche li ha. Può essere perché:  
     *   La nuova identità ha fatto ingresso in una diversa rete. L'identità del vicino era nella stessa
@@ -1136,12 +1134,10 @@ network namespace `$ns` ereditato dall'identità. Cioè va premesso `ip netns ex
     la nuova identità non li ha più. Può essere perché:  
     *   La nuova identità ha fatto ingresso in una diversa rete. L'identità del vicino era nella stessa
         rete (quindi aveva un arco-qspn con la mia vecchia identità) ma non era nel blocco che è entrato.
-*   Abbiamo in `prev_tids` l'elenco dei table-id rispettivi per i MAC address in `prev_peermacs`. Forse non serve.
 *   Abbiamo in `new_peermacs` l'elenco dei MAC address che la vecchia identità non aveva come archi-qspn ma
     la nuova identità adesso li ha. Può essere perché:  
     *   La nuova identità ha fatto ingresso in una diversa rete. L'identità del vicino era già nella nuova rete.
         Quindi la mia vecchia identità non aveva un arco-qspn e ora la mia nuova identità ce l'ha.
-*   Abbiamo in `new_tids` l'elenco dei table-id rispettivi per i MAC address in `new_peermacs`. Forse non serve.
 *   Abbiamo in `both_peermacs` l'elenco dei MAC address che la vecchia identità aveva come archi-qspn e
     la nuova identità anche li ha. Può essere perché:  
     *   La nuova identità ha fatto ingresso in una diversa rete. L'identità del vicino era nella stessa
