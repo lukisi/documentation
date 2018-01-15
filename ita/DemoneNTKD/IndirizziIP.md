@@ -1393,16 +1393,9 @@ TODO
 #### <a name="Operazioni_c_stop"></a> Operazioni quando una identità di connettività viene rimossa
 
 Una identità di connettività viene rimossa. Aveva in gestione un network namespace diverso dal default.
+Il modulo Identities si occupa di rimuovere il namespace e le pseudo-interfacce.
 
-Nell'algoritmo qui sotto indichiamo esplicitamente se i comandi sono eseguiti nel
-network namespace `$ns` gestito dall'identità.
-
-*   Abbiamo in `ns` il network namespace gestito dall'identità.
-*   Abbiamo in `devs` l'elenco delle speudo-interfacce di rete gestite dall'identità.
 *   Abbiamo in `peermacs` l'elenco dei MAC address che l'identità aveva come archi-qspn.
-*   Per ogni `dev` in `$devs`:
-    *   Esegue `ip netns exec $ns ip link delete $dev type macvlan`.
-*   Esegue `ip netns del $ns`.
 *   Per ogni *m* in `peermacs`:
     *   Decrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
 
