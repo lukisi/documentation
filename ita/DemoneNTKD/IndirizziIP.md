@@ -1230,9 +1230,9 @@ che segue sono necessarie solo se `hc` è in `dest_ip_set.keys`.
 Il programma *ntkd* sa che a quella particolare istanza `qspn_mgr` sono stati passati un certo
 set di archi. Per ognuno di essi:
 
-*   Sa individuare nella sua memoria una istanza `IQspnArc arc`.
+*   Sa individuare nella sua memoria una istanza `IQspnArc qspn_arc`.
 *   Sa recuperare da questa il MAC address del nodo vicino. Sia `string peer_mac`.
-*   Interroga il `qspn_mgr` con il metodo `get_naddr_for_arc(arc)` e trova l'indirizzo Netsukuku del vicino.
+*   Interroga il `qspn_mgr` con il metodo `get_naddr_for_arc(qspn_arc)` e trova l'indirizzo Netsukuku del vicino.
 *   Se tale indirizzo `peer_naddr` è noto:
     *   Confrontandolo con il proprio indirizzo Netsukuku computa `HCoord peer_hc`,
         il massimo distinto g-nodo.
@@ -1251,16 +1251,16 @@ gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al co
 *   Assert `hc.lvl >= subnetlevel`.
 *   Indichiamo con `dest = dest_ip_set[hc]`.
 *   Se si tratta dell'identità principale:
-    *   Computa `IQspnNodePath? best_path = best_path(paths)`.  
+    *   Computa `IQspnNodePath? path = best_path(paths)`.  
         La funzione `best_path` trova il miglior percorso per un pacchetto IP generato localmente che vuole
         raggiungere `hc`. Può essere `null` che significa `unreachable`.
-    *   Se `best_path == null`:
+    *   Se `path == null`:
         *   Esegue `ip route change unreachable $dest.global table ntk`.
         *   Esegue `ip route change unreachable $dest.anonymizing table ntk`.
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
             *   Esegue `ip route change unreachable $dest.internal[k] table ntk`.
     *   Altrimenti:
-        *   Computa `IQspnArc gw = best_path.i_qspn_get_arc();`.  
+        *   Computa `IQspnArc gw = path.i_qspn_get_arc();`.  
             Si tratta di una istanza di una classe nota al programma *ntkd* dalla quale esso può risalire
             all'indirizzo IP linklocal `gw_ip` e al nome della nostra interfaccia di rete `gw_dev`.
         *   Esegue `ip route change $dest.global via $gw_ip dev $gw_dev table ntk src $local_ip_set.global`.
@@ -1269,18 +1269,18 @@ gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al co
             *   Esegue `ip route change $dest.internal[k] via $gw_ip dev $gw_dev table ntk src $local_ip_set.internal[k]`.
 *   Per ogni `peer_mac` in `peer_mac_set` e relativo `peer_hc` in `peer_hc_set`:
     *   Sia `table` = `ntk_from_$peer_mac`.
-    *   Computa `IQspnNodePath? best_path = best_path_forward(paths, peer_hc)`.  
+    *   Computa `IQspnNodePath? path = best_path_forward(paths, peer_hc)`.  
         La funzione `best_path_forward` trova il miglior percorso per un pacchetto IP da inoltrare, il quale
         è stato ricevuto da un vicino e che vuole raggiungere `hc`. Ma di esso sappiamo anche che nel suo
         precedente tragitto è passato per il g-nodo `peer_hc`, per questo vogliamo individuare un percorso
         che non includa di nuovo quel g-nodo. Può essere `null` che significa `unreachable`.
-    *   Se `best_path == null`:
+    *   Se `path == null`:
         *   Esegue `ip route change unreachable $dest.global table $table`.
         *   Esegue `ip route change unreachable $dest.anonymizing table $table`.
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
             *   Esegue `ip route change unreachable $dest.internal[k] table $table`.
     *   Altrimenti:
-        *   Computa `IQspnArc gw = best_path.i_qspn_get_arc();`.  
+        *   Computa `IQspnArc gw = path.i_qspn_get_arc();`.  
             Si tratta di una istanza di una classe nota al programma *ntkd* dalla quale esso può risalire
             all'indirizzo IP linklocal `gw_ip` e al nome della nostra interfaccia di rete `gw_dev`.
         *   Esegue `ip route change $dest.global via $gw_ip dev $gw_dev table $table`.
@@ -1292,10 +1292,46 @@ gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al co
 
 Il programma *ntkd* può trovarsi a gestire il segnale `identity_arc_changed` dal modulo Identities associato
 all'identità principale o ad una identità di connettività.  
-Questo segnale individua un particolare arco-identità che collega l'identità interessata ad una
+Questo segnale individua un particolare arco-identità `changed_arc` che collega l'identità interessata ad una
 identità in un sistema diretto vicino. Se associato a questo arco-identità il programma aveva creato
-un arco-qspn per questa identità, allora questo evento deve essere gestito dal programma *ntkd*
+un arco-qspn `changed_arc_qspn`, allora questo evento deve essere gestito dal programma *ntkd*
 con alcune operazioni.
+
+Il segnale è relativo ad una identità. Associata a questa abbiamo una istanza `qspn_mgr`. Ora il
+programma *ntkd* deve interrogare questa istanza `qspn_mgr` per vedere quali siano i migliori percorsi per
+tutte le possibili destinazioni.
+
+*   Per ogni `hc` in `dest_ip_set.keys`:
+    *   `paths[hc] = qspn_mgr.get_paths_to(hc)`.
+
+Il programma *ntkd* sa che a quella particolare istanza `qspn_mgr` sono stati passati un certo
+set di archi. Per ognuno di essi, tranne `changed_arc`:
+
+*   Sa individuare nella sua memoria una istanza `IQspnArc qspn_arc`.
+*   Sa recuperare da questa il MAC address del nodo vicino. Sia `string peer_mac`.
+*   Interroga il `qspn_mgr` con il metodo `get_naddr_for_arc(qspn_arc)` e trova l'indirizzo Netsukuku del vicino.
+*   Se tale indirizzo `peer_naddr` è noto:
+    *   Confrontandolo con il proprio indirizzo Netsukuku computa `HCoord peer_hc`,
+        il massimo distinto g-nodo.
+    *   Mette `peer_mac` nella lista `peer_mac_set`.
+    *   Mette `peer_hc` nella lista `peer_hc_set`.
+
+Invece per l'arco `changed_arc`, anch'esso passato all'istanza `qspn_mgr`, il programma *ntkd*:
+
+*   Abbiamo già individuato l'istanza `IQspnArc changed_arc_qspn`.
+*   Indichiamo con `$changed_arc_new_mac` il `peer_mac` nuovo dell'arco-qspn.
+*   Indichiamo con `$changed_arc_prev_mac` il `peer_mac` precedente dell'arco-qspn.
+*   Interroga il `qspn_mgr` con il metodo `get_naddr_for_arc(changed_arc_qspn)` e trova l'indirizzo Netsukuku del vicino
+    che memorizza in `changed_arc_peer_naddr`.
+*   Tale indirizzo deve essere noto. Se no significa che non era stato ancora ricevuto alcun ETP da quel
+    vicino prima che avesse avuto luogo il cambio di peermac. Quindi in questo caso tutte queste
+    operazioni sarebbero superflue e l'algoritmo può terminare.
+*   Confrontando tale indirizzo con il proprio indirizzo Netsukuku computa `HCoord changed_arc_peer_hc`,
+    il massimo distinto g-nodo.
+
+Ora con le liste `paths[hc]`, le liste `peer_mac_set` e `peer_hc_set`, l'istanza `changed_arc_qspn`,
+i valori `changed_arc_prev_mac`, `changed_arc_new_mac` e `changed_arc_peer_hc`,
+il programma ha quanto serve per eseguire l'algoritmo qui sotto.
 
 Ricordiamo che tutte le operazioni eseguite nell'algoritmo qui sotto sono da intendersi eseguite nel
 network namespace `$ns` gestito dall'identità. Cioè, se si tratta di una identità di connettività che quindi
@@ -1304,35 +1340,28 @@ gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al co
 *   Indichiamo con *l* il numero di livelli nella topologia.
 *   Abbiamo in `dest_ip_set` gli indirizzi destinazione computati sulla base dell'indirizzo Netsukuku
     dell'identità.
-*   Indichiamo con `IQspnArc arc` l'arco-qspn.
-*   Indichiamo con `$new_mac` il `peer_mac` nuovo dell'arco-qspn.
-*   Indichiamo con `$prev_mac` il `peer_mac` precedente dell'arco-qspn.
-*   Indichiamo con `qspn_mgr` il modulo QSPN associato a questa identità.
 *   Per ogni `hc` in `dest_ip_set.keys`:
     *   Indichiamo con `dest = dest_ip_set[hc]`.
     *   Se si tratta dell'identità principale:
-        *   Computa `IQspnNodePath? best_path = best_path(qspn_mgr, hc)`.
-        *   Se `best_path != null` AND `best_path.i_qspn_get_arc() == arc`:
-            *   Da `arc` il programma *ntkd* computa
+        *   Computa `IQspnNodePath? path = best_path(paths[hc])`.
+        *   Se `path != null` AND `path.i_qspn_get_arc() == changed_arc_qspn`:
+            *   Da `changed_arc_qspn` il programma *ntkd* computa
                 l'indirizzo IP linklocal `gw_ip` e il nome della nostra interfaccia di rete `gw_dev`.
             *   Esegue `ip route change $dest.global via $gw_ip dev $gw_dev table ntk src $local_ip_set.global`.
             *   Esegue `ip route change $dest.anonymizing via $gw_ip dev $gw_dev table ntk src $local_ip_set.global`.
             *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
                 *   Esegue `ip route change $dest.internal[k] via $gw_ip dev $gw_dev table ntk src $local_ip_set.internal[k]`.
-    *   Per ogni arco-qspn `qspn_arc` noto al manager `qspn_mgr` (eccetto `arc`), indichiamo con *m* il relativo `peer_mac`:
-        *   Sia `prev_naddr` l'indirizzo Netsukuku del nodo con cui siamo collegati tramite `qspn_arc`.
-        *   Computa `prev_hc` il massimo distinto g-nodo di `prev_naddr` per *n*.
-        *   Computa `IQspnNodePath? best_path = best_path_forward(qspn_mgr, hc, prev_hc)`.
-        *   Se `best_path != null` AND `best_path.i_qspn_get_arc() == arc`:
-            *   Da `arc` il programma *ntkd* computa
+    *   Per ogni `peer_mac` in `peer_mac_set` e relativo `peer_hc` in `peer_hc_set`:
+        *   Sia `table` = `ntk_from_$peer_mac`.
+        *   Computa `IQspnNodePath? path = best_path_forward(paths[hc], peer_hc)`.
+        *   Se `path != null` AND `path.i_qspn_get_arc() == changed_arc_qspn`:
+            *   Da `changed_arc_qspn` il programma *ntkd* computa
                 l'indirizzo IP linklocal `gw_ip` e il nome della nostra interfaccia di rete `gw_dev`.
-            *   Esegue `ip route change $dest.global via $gw_ip dev $gw_dev table ntk_from_$m`.
-            *   Esegue `ip route change $dest.anonymizing via $gw_ip dev $gw_dev table ntk_from_$m`.
+            *   Esegue `ip route change $dest.global via $gw_ip dev $gw_dev table $table`.
+            *   Esegue `ip route change $dest.anonymizing via $gw_ip dev $gw_dev table $table`.
             *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
-                *   Esegue `ip route change $dest.internal[k] via $gw_ip dev $gw_dev table ntk_from_$m`.
-*   Sia `prev_naddr` l'indirizzo Netsukuku del nodo con cui siamo collegati tramite `arc`.
-*   Computa `prev_hc` il massimo distinto g-nodo di `prev_naddr` per *n*.
-*   Sia `$m` = `new_mac`, sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id.
+                *   Esegue `ip route change $dest.internal[k] via $gw_ip dev $gw_dev table $table`.
+*   Sia `$m` = `changed_arc_new_mac`, sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id.
 *   Esegue `iptables -t mangle -A PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
 *   Esegue `ip rule add fwmark $tid table $table`.
 *   Incrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
@@ -1342,16 +1371,16 @@ gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al co
     *   Esegue `ip route add unreachable $dest.anonymizing table $table`.
     *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
         *   Esegue `ip route add unreachable $dest.internal[k] table $table`.
-    *   Computa `IQspnNodePath? best_path = best_path_forward(qspn_mgr, hc, prev_hc)`.
-    *   Se `best_path != null`:
-        *   Computa `IQspnArc gw = best_path.i_qspn_get_arc();`.  
+    *   Computa `IQspnNodePath? path = best_path_forward(paths[hc], changed_arc_peer_hc)`.
+    *   Se `path != null`:
+        *   Computa `IQspnArc gw = path.i_qspn_get_arc();`.  
             Si tratta di una istanza di una classe nota al programma *ntkd* dalla quale esso può risalire
             all'indirizzo IP linklocal `gw_ip` e al nome della nostra interfaccia di rete `gw_dev`.
         *   Esegue `ip route change $dest.global via $gw_ip dev $gw_dev table $table`.
         *   Esegue `ip route change $dest.anonymizing via $gw_ip dev $gw_dev table $table`.
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
             *   Esegue `ip route change $dest.internal[k] via $gw_ip dev $gw_dev table $table`.
-*   Sia `$m` = `prev_mac`, sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id.
+*   Sia `$m` = `changed_arc_prev_mac`, sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id.
 *   Esegue `ip route flush table $table`.
 *   Esegue `ip rule del fwmark $tid table $table`.
 *   Esegue `iptables -t mangle -D PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
