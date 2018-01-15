@@ -1413,9 +1413,10 @@ network namespace default, il programma deve ripulirlo.
 *   Esegue `ip rule del table ntk`.
 *   Esegue `ip route flush table ntk`.
 *   Per ogni `$m` in `peermacs` sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id:
-    *   Esegue `ip rule del table ntk_from_$m`.
-    *   Esegue `ip route flush table ntk_from_$m`.
-    *   Rimuove l'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
+    *   Esegue `ip rule del table $table`.
+    *   Esegue `ip route flush table $table`.
+    *   Esegue `iptables -t mangle -D PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
+    *   Decrementa i riferimenti e rimuove l'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
 *   Se *subnetlevel* > 0:
     *   Per ogni livello *k* da *subnetlevel* a *l* - 2:
         *   Esegue `iptables -t nat -D PREROUTING -d $local_ip_set.netmap_range2[k] -j NETMAP --to $local_ip_set.netmap_range1`.
