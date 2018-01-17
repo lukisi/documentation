@@ -144,7 +144,7 @@ Il programma fornisce nel costruttore i delegati per una serie di operazioni:
     default) e per le identità principali dei diretti vicini.
 *   Ottenere il/i dispatcher associati a una identità del sistema o al sistema.  
     Questo opera in sinergia con l'implementazione di `IRpcDelegate` che il programma *ntkd* passa alla
-    libreria *ntkdrpc*, come verrà illustrato nei [dettagli tecnici](DettagliTecnici.md).
+    libreria *ntkdrpc*, come verrà illustrato nei [dettagli tecnici](DettagliTecnici.md#RPC_Library).
 
 Poi il programma passa all'istanza di `NeighborhoodManager` tutte le interfacce di rete che vuole gestire. Per
 ognuna di esse il nome, il MAC e un delegato per misurare il RTT con un dato sistema vicino.
@@ -416,4 +416,42 @@ nel [documento di dettaglio](DettagliTecnici.md#Indirizzi_IP).
 ### <a name="Modulo_Hooking"></a>Modulo Hooking
 
 **TODO**
+
+#### Ingresso di una identità in una diversa rete
+
+Consideriamo le conoscenze del programma *ntkd* rispetto agli archi-identità di una identità `id` nel sistema.
+
+Per ogni `IdentityArc id_arc` in `id.identity_arcs` il programma sa dire (glie lo ha comunicato il modulo Hooking) se
+si tratta di un arco-identità principale; e in quel caso sa dire quale sia il network-id del peer (che è l'identità
+principale nel sistema diretto vicino).
+
+Inoltre, se il programma ha già associato all'arco-identità un `qspn_arc`, allora sa che il peer (che in questo caso
+potrebbe non essere l'identità principale) appartiene alla nostra stessa rete.
+
+Consideriamo ora il momento in cui il programma *ntkd* gestisce una sua identità `old_id` che si è duplicata
+in `new_id` per fare ingresso in un'altra rete di cui conosce il network-id.
+
+Relativamente ai suoi archi-identità che avevano un `qspn_arc`, il programma sa discernere se l'identità del peer
+ha preso parte all'ingresso in altra rete insieme con lui: lo capisce dai membri `prev_peer_*` di IdentityArc.
+
+In sostanza, il programma in questo momento sa discernere per ogni arco-identità di `old_id` se c'era un arco-qspn
+nella vecchia rete e se ci sarà un arco-qspn nella nuova rete per la relativa copia di arco-identità di `new_id`.
+
+Quindi prepara queste liste di coppie di IdentityArc, cioè di `IdentityArcPair`:
+
+*   Consideriamo una classe `IdentityArcPair` che contiene il membro `IdentityArc old_id_arc` e il
+    membro `IdentityArc new_id_arc`. Il primo viene valorizzato con una istanza di arco-identità
+    che appartiene a `old_id` e il secondo con la relativa copia che appartiene a `new_id`.
+*   `prev_arcs`: coppie in cui l'arco-identità `old_id_arc` aveva un arco-qspn nella vecchia rete e
+    l'arco-identità `new_id_arc` non avrà un arco-qspn nella nuova rete.  
+    L'identità del peer di `old_id` era nella stessa vecchia rete ma non era nel blocco che ha fatto
+    ingresso nella nuova rete.
+*   `new_arcs`: coppie in cui l'arco-identità `old_id_arc` non aveva un arco-qspn nella vecchia rete ma
+    l'arco-identità `new_id_arc` avrà un arco-qspn nella nuova rete.  
+    L'identità del peer di `old_id` era già nella nuova rete.
+*   `both_arcs`: coppie in cui l'arco-identità `old_id_arc` aveva un arco-qspn nella vecchia rete e
+    l'arco-identità `new_id_arc` avrà un arco-qspn nella nuova rete.  
+    L'identità del peer di `old_id` era nella stessa vecchia rete ed era nel blocco che ha fatto
+    ingresso nella nuova rete.
+
 
