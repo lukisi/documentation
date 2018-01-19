@@ -244,7 +244,10 @@ I dettagli memorizzati in tale classe sono:
 *   `string? prev_peer_linklocal`. Indirizzo IP link-local precedente del vicino. Valorizzato quando
     il modulo Identities segnala che l'identità del vicino collegato a noi su un esistente
     arco-identità ha cambiato i suoi parametri.
-*   `...`. Se attualmente l'arco-identità ha costituito un arco per il modulo Qspn... **TODO**
+*   `IQspnArc qspn_arc`. Una istanza di una classe che viene passata al modulo QSPN. Se è valorizzato
+    significa che il *peer* appartiene alla stessa rete di questa identità.
+*   `var network_id`. Identifica la rete a cui appartiene il *peer*. Se il programma ha questa informazione
+    essa gli è stata comunicata dal modulo Hooking. Questo può avvenire solo se questo è un arco-identità principale.
 *   `...`
 
 Quando il modulo Neighborhood segnala `neighborhood_arc_added`, cioè che un nuovo
