@@ -919,8 +919,47 @@ se l'arco-identità aveva associato a sé un arco-qspn, il programma *ntkd*:
 
 [Operazioni](#Operazioni_changed_arc)
 
-Per una identità (principale o di connettività) può succedere che un suo arco-identità venga rimosso.
-... **TODO**
+Per una identità (principale o di connettività) può succedere che un suo arco-identità vada rimosso.  
+Elenchiamo le modalità che possono portare alla rimozione dell'arco-identità.
+
+*   Il modulo QSPN ha rilevato un errore nelle sue comunicazioni tramite questo arco-identità. Questo
+    errore può indicare un difetto nell'arco fisico stesso (`StubError`), oppure nel protocollo di comunicazione
+    (`DeserializeError` o `QspnNotAcceptedError`) tra i due peer nel modulo QSPN. In ogni caso il modulo QSPN
+    emette un segnale `arc_removed` e il programma *ntkd* lo gestisce.  
+    Nel primo caso il programma *ntkd* rimuove tutto l'arco fisico dal modulo Neighbohood,
+    mentre nel secondo il programma *ntkd* rimuove solo l'arco-identità dal modulo Identities.  
+    Nel primo caso, quando il programma rimuove l'arco fisico dal modulo Neighbohood, di seguito
+    rimuove anche tutti gli archi-identità associati dal modulo Identities.
+*   Il modulo QSPN istruito da un nodo vicino (`got_destroy`) vuole rimuovere l'arco-identità. Anche qui
+    abbiamo che il modulo QSPN emette un segnale `arc_removed` e il programma *ntkd* lo
+    gestisce rimuovendo solo l'arco-identità dal modulo Identities.
+*   Il modulo QSPN istruito da un comando dato proprio dal programma *ntkd* nello stesso sistema
+    (`exit_network` o `remove_outer_arcs`) vuole rimuovere l'arco-identità. Anche qui abbiamo che
+    il modulo QSPN emette un segnale `arc_removed` e il programma *ntkd* lo
+    gestisce rimuovendo solo l'arco-identità dal modulo Identities.
+*   Un altro modulo segnala problemi nelle comunicazioni con un peer. Il programma *ntkd* gestisce la segnalazione
+    rimuovendo un arco-identità dal modulo Identities; oppure rimuovendo un arco fisico dal modulo Neighbohood e
+    tutti gli archi-identità ad esso associati dal modulo Identities.
+*   Il modulo Neighbohood si avvede con il suo radar che un arco fisico non è più disponibile, lo rimuove
+    e ovviamente lo segnala. Il programma *ntkd* gestisce la segnalazione
+    rimuovendo tutti gli archi-identità associati dal modulo Identities.
+*   Nella fase di terminazione (cleanup) il programma *ntkd* rimuove ogni identità di connettività dal modulo
+    Identities. Il modulo Identities per ognuna rimuove tutti i suoi archi-identità (i quali per definizione
+    sono tutti non principali).
+*   Nella fase di terminazione (cleanup) il programma *ntkd* riguardo l'identità principale (l'unica rimasta)
+    rimuove dal modulo Identities tutti i suoi archi-identità (per ogni arco fisico esiste in questo momento
+    almeno un arco-identità principale e possono esserci anche altri archi-identità non principali).
+
+Se a questo arco-identità era associato un arco-qspn, il programma *ntkd* deve fare alcune operazioni.  
+Deve prima di tutto notificare la rimozione al modulo QSPN e poi attendere affinché questo possa segnalare
+le variazioni che questo apporta alla mappa dei percorsi noti. Tali segnalazioni porteranno il programma
+*ntkd* stesso a modificare le tabelle di routing; alla fine nessuna destinazione avrà come gateway l'identità
+collegata alla nostra tramite l'arco-identità da rimuovere.  
+Poi il programma deve rimuovere l'arco-identità dal modulo Identities. Questo produrrà le operazioni che
+rimuovono la rotta diretta che collagava al gateway.  
+Infine il programma *ntkd* deve rimuovere la vecchia tabella `ntk_from_yyy` dal network namespace di questa identità.
+
+[Operazioni](#Operazioni_removed_arc)
 
 Quando una identità di connettività muore, il programma *ntkd* deve semplicemente rimuovere il relativo network
 namespace. [Operazioni](#Operazioni_c_stop)
@@ -1386,9 +1425,36 @@ gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al co
 *   Esegue `iptables -t mangle -D PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
 *   Decrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
 
-#### <a name="Operazioni_1"></a> un arco-identità viene rimosso ...
+#### <a name="Operazioni_removed_arc"></a> Operazioni quando viene richiesto al modulo Identities di rimuovere un arco-identità
 
-TODO
+Il programma *ntkd* può trovarsi a richiedere al modulo Identities di rimuovere un arco-identità `removed_arc`.  
+Se associato a questo arco-identità il programma aveva creato un arco-qspn `removed_arc_qspn`, allora il programma *ntkd*
+deve fare alcune operazioni.
+
+Ricordiamo che tutte le operazioni eseguite nell'algoritmo qui sotto sono da intendersi eseguite nel
+network namespace `$ns` gestito dall'identità. Cioè, se si tratta di una identità di connettività che quindi
+gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al comando.
+
+Questo evento è relativo ad una identità. Associata a questa abbiamo una istanza `qspn_mgr`.
+Prima ancora di rimuovere l'arco-identità `removed_arc` dal modulo Identities il programma *ntkd* deve
+rimuovere l'arco-qspn `removed_arc_qspn` dal modulo QSPN, cioè dall'istanza `qspn_mgr`.
+
+Questa operazione porterà il modulo QSPN a ricalcolare i migliori percorsi verso tutte le destinazioni
+possibili e ad emettere segnali appropriati per quelli che sono cambiati.
+
+Ci vorrà del tempo affinché tutti siano gestiti. Presumiamo di individuare un tempo sufficiente. Allora il
+programma attende questo tempo prima di procedere con le operazioni.
+
+Poi il programma *ntkd* rimuove l'arco-identità `removed_arc` dal modulo Identities. Questo porterà
+alla rimozione della rotta diretta verso il gateway. Ormai dovrebbero non esserci più rotte che
+usavano questo gateway.
+
+*   Sia `$removed_arc_peermac` il `peer_mac` dell'arco-identità `removed_arc`.
+*   Sia `$m` = `removed_arc_peermac`, sia `$table` = `ntk_from_$m`, sia `$tid` il relativo table-id.
+*   Esegue `ip route flush table $table`.
+*   Esegue `ip rule del fwmark $tid table $table`.
+*   Esegue `iptables -t mangle -D PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
+*   Decrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
 
 #### <a name="Operazioni_c_stop"></a> Operazioni quando una identità di connettività viene rimossa
 
