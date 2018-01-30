@@ -7,6 +7,7 @@
     1.  [Calcolo indirizzi IP locali e destinazioni](#Computo)
     1.  [Utilizzo indirizzi IP locali](#Utilizzo_locali)
     1.  [Utilizzo indirizzi IP destinazioni](#Utilizzo_destinazioni)
+1.  [Requisiti iniziali e pulizia](#Cleanup)
 
 ## <a name="Mappatura"></a> Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IP
 
@@ -1498,4 +1499,336 @@ network namespace default, il programma deve ripulirlo.
     *   Esegue `ip address del ${local_ip_set.global}/32 dev $dev`.
     *   Esegue (opzionalmente) `ip address del ${local_ip_set.anonymizing}/32 dev $dev`.
 *   Esegue (per il livello 0) `ip address del ${local_ip_set.internal[0]}/32 dev lo`.
+
+## <a name="Cleanup"></a> Requisiti iniziali e pulizia
+
+Sulla base di quanto detto prima, delineiamo quali sono i requisiti iniziali, cioè in quale situazione il programma
+*ntkd* si aspetta che si trovi il sistema al suo avvio.
+
+Tale situazione verrà naturalmente modificata dal programma durante le sue operazioni. Prima di terminare il programma
+farà in modo che la situazione torni come era all'inizio. Ma se per qualche errore il programma *ntkd* terminasse senza
+aver riportato il sistema nella situazione iniziale, ci sarà utile una utility che faccia le pulizie.
+
+Il programma, naturalmente, deve poter gestire il network namespace default. Oltre a questo,
+il programma richiede di poter creare e gestire network namespace con il nome `ntkv0`, `ntkv1`, e così via.
+Quindi all'inizio non devono esistere namespace con questi nomi.
+
+Il programma deve poter creare per ogni interfaccia di rete da gestire una pseudo-interfaccia per ogni
+network namespace. Queste hanno un nome composto dal nome del namespace e quello dell'interfaccia reale
+su cui sono costruite. Ad esempio, collegate all'interfaccia `eth1` possono esserci `ntkv0_eth1`, `ntkv1_eth1`, e così via.
+Quindi all'inizio non devono esistere pseudo-interfacce con questi nomi.
+
+Il programma richiede che il file `/etc/iproute2/rt_tables` riservi un numero di tabelle. All'inizio
+devono esserci queste righe:
+
+```
+251 ntk
+250 reserved_ntk_from_250
+249 reserved_ntk_from_249
+248 reserved_ntk_from_248
+247 reserved_ntk_from_247
+246 reserved_ntk_from_246
+245 reserved_ntk_from_245
+244 reserved_ntk_from_244
+243 reserved_ntk_from_243
+242 reserved_ntk_from_242
+241 reserved_ntk_from_241
+240 reserved_ntk_from_240
+239 reserved_ntk_from_239
+238 reserved_ntk_from_238
+237 reserved_ntk_from_237
+236 reserved_ntk_from_236
+235 reserved_ntk_from_235
+234 reserved_ntk_from_234
+233 reserved_ntk_from_233
+232 reserved_ntk_from_232
+231 reserved_ntk_from_231
+230 reserved_ntk_from_230
+229 reserved_ntk_from_229
+228 reserved_ntk_from_228
+227 reserved_ntk_from_227
+226 reserved_ntk_from_226
+225 reserved_ntk_from_225
+224 reserved_ntk_from_224
+223 reserved_ntk_from_223
+222 reserved_ntk_from_222
+221 reserved_ntk_from_221
+220 reserved_ntk_from_220
+219 reserved_ntk_from_219
+218 reserved_ntk_from_218
+217 reserved_ntk_from_217
+216 reserved_ntk_from_216
+215 reserved_ntk_from_215
+214 reserved_ntk_from_214
+213 reserved_ntk_from_213
+212 reserved_ntk_from_212
+211 reserved_ntk_from_211
+210 reserved_ntk_from_210
+209 reserved_ntk_from_209
+208 reserved_ntk_from_208
+207 reserved_ntk_from_207
+206 reserved_ntk_from_206
+205 reserved_ntk_from_205
+204 reserved_ntk_from_204
+203 reserved_ntk_from_203
+202 reserved_ntk_from_202
+201 reserved_ntk_from_201
+200 reserved_ntk_from_200
+```
+
+È richiesto anche che esista una copia `/etc/iproute2/rt_tables_orig` dal quale possa venire ripristinato
+il file in caso di necessità.
+
+Le tabelle elencate qui sopra (cioè dal 200 al 251, visto che quello che conta per il network stack del
+sistema operativo gestito da `iproute` sono i numeri delle tabelle) devono essere inizialmente vuote
+e non ci devono essere regole (`ip rule`) che le referenzino. Questo vale sia per il network namespace
+default che per gli altri gestiti (cioè `ntkv0`, `ntkv1`, e così via) ma degli altri abbiamo già detto che
+all'inizio non devono affatto esistere.
+
+Il programma *ntkd* deve poter assegnare nel network namespace default ad ogni interfaccia di rete
+che deve gestire un indirizzo IPv4 [link-local](https://en.wikipedia.org/wiki/Link-local_address), cioè nel
+range `169.254.0.0/16`. Quindi inizialmente a nessuna delle interfacce di rete da gestire devono
+essere associati indirizzi IP in questo range e nella tabella di routing `main` non devono esserci
+rotte dirette a indirizzi di questo range che passano attraverso le interfacce di rete da gestire.
+
+Sempre riguardo le interfacce di rete da gestire, inizialmente non devono esservi associati indirizzi IP
+che rientrano nel range di cui si occupa il programma *ntkd*, cioè il `10.0.0.0/8`. Il programma
+non impone che non esistano queste associazioni sulle altre interfacce di rete e nemmeno che non
+esistano rotte nelle altre tabelle di routing (cioè oltre a quelle dal 200 al 251, nelle quali ad
+esempio non è inclusa la `main`) che referenzino indirizzi nel range `10.0.0.0/8`.  
+In effetti una tale configurazione esente dal controllo del programma *ntkd* si rende necessaria
+nel caso in cui un sistema serva da gateway per una sottorete a gestione autonoma. Se ad esempio
+la sottorete autonoma si riserva la gestione di un g-nodo di livello `n` (con `n > 0`) allora
+il sistema, in autonomia senza interferenze da parte del programma *ntkd*, deve assegnarsi un
+indirizzo IP di tipo interno al g-nodo di livello `n` (su una interfaccia di rete
+non gestita dal programma *ntkd*) e deve fornire rotte verso gli altri indirizzi IP di tipo
+interno al g-nodo di livello `n` (in una tabella diversa da quelle dal 200 al 251).
+
+### Regole di iptables
+
+Nella tabella `nat`, nella catena `POSTROUTING`, il programma (opzionalmente) pone una regola `SNAT`
+per effettuare l'anonimizzazione di pacchetti richiesta dal client. Questo lo fa solo nel network namespace default.
+
+Nella tabella `nat`, nella catena `PREROUTING` e nella `POSTROUTING`, il programma (opzionalmente) pone
+alcune regole `NETMAP` per effettuare la rimappatura di pacchetti provenienti/destinati alla sottorete a
+gestione autonoma. Questo lo fa solo nel network namespace default.
+
+Nella tabella `mangle`, nella catena `PREROUTING`, il programma pone una regola `MARK` per ognuno
+degli archi-qspn che ha formato con un nodo (una identità nel sistema) diretto vicino. Questo lo
+fa in ogni network namespace che gestisce, cioè per ognuna delle identità che vivono in questo
+sistema. Tuttavia abbiamo già detto che all'inizio gli altri namespace gestiti non devono affatto esistere.
+
+Quindi all'inizio nel network namespace default non devono esserci regole di `iptables` che interferiscano
+con quelle che il programma gestisce.
+
+### Pulizia
+
+Forniamo un programma che fa pulizia, in caso il programma *ntkd* termini in modo anomalo. Ma dovrebbe
+essere sufficiente anche semplicemente riavviare il sistema dopo aver copiato in `/etc/iproute2/rt_tables`
+il file `/etc/iproute2/rt_tables_orig`.
+
+```
+Esegue:
+ ip netns list
+Ritorna una lista (forse vuota) di nomi separati da <LF>
+Se trova uno o più nomi ntkv* per ognuno va eseguito
+ ip netns del <nome>
+
+
+
+Esegue:
+ ip link show
+Ritorna una lista del tipo:
+
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP mode DEFAULT group default qlen 1000
+    link/ether 52:54:00:5a:d4:8d brd ff:ff:ff:ff:ff:ff
+3: eth1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ether 52:54:00:23:84:27 brd ff:ff:ff:ff:ff:ff
+4: eth2: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ether 52:54:00:48:fb:04 brd ff:ff:ff:ff:ff:ff
+6: ntkv0_eth1@eth1: <BROADCAST,MULTICAST,M-DOWN> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1
+    link/ether ba:e4:24:66:69:71 brd ff:ff:ff:ff:ff:ff
+
+Se trova uno o più nomi ntkv*_* (nell'esempio sopra ntkv0_eth1 senza il suffisso @eth1) per ognuno va eseguito
+ ip link delete <pseudo_dev> type macvlan
+
+
+
+Controllo delle tabelle: prima fase: correzioni.
+
+Esegue:
+ egrep '^251 ' /etc/iproute2/rt_tables
+Deve restituire
+ 251 ntk
+Altrimenti occorre eseguire
+ cp /etc/iproute2/rt_tables_orig /etc/iproute2/rt_tables
+
+Esegue:
+ egrep '^250 ' /etc/iproute2/rt_tables
+Se restituisce
+ 250 reserved_ntk_from_250
+è ok.
+Se restituisce
+ 250 ntk_from_XXX
+(dove XXX è un MAC, ad esempio 52:54:00:23:84:27) occorre eseguire
+ sed -i 's/250 ntk_from_XXX/250 reserved_ntk_from_250/' /etc/iproute2/rt_tables
+Se restituisce altro, occorre eseguire
+ cp /etc/iproute2/rt_tables_orig /etc/iproute2/rt_tables
+
+Quanto detto si ripete per 249, ..., 200
+A meno che non venga eseguito il comando che copia dal file *_orig. In quel caso ci si ferma e
+si passa subito alla verifica che ora descriviamo.
+
+
+
+Controllo delle tabelle: seconda fase: verifica.
+
+Esegue:
+ egrep '^251 ' /etc/iproute2/rt_tables
+Deve restituire
+ 251 ntk
+Altrimenti abortisce il programma.
+
+Esegue:
+ egrep '^250 ' /etc/iproute2/rt_tables
+Deve restituire
+ 250 reserved_ntk_from_250
+Altrimenti abortisce il programma.
+
+Quanto detto si ripete per 249, ..., 200
+
+
+
+Esegue:
+ ip route flush table 251
+ ip route flush table 250
+ ...
+ ip route flush table 200
+
+Queste tabelle devono esistere. Quindi questi comandi non possono restituire un errore, nemmeno
+se la tabella era già vuota.
+
+
+
+Esegue:
+ ip rule del table 251
+ ip rule del table 250
+ ...
+ ip rule del table 200
+
+Questi comandi possono restituire un errore. Significa che la regola già non
+esisteva, quindi il programma lo ignora.
+
+
+
+Consideriamo una ad una tutte le interfacce gestite. Poniamo sia `eth1`.
+Esegue:
+ ip route list
+Ritorna una lista del tipo:
+
+default via 192.168.122.1 dev eth0  proto dhcp  src 192.168.122.73  metric 100 
+169.254.1.2 dev eth1  scope link  src 169.254.52.73 
+192.168.122.0/24 dev eth0  proto kernel  scope link  src 192.168.122.73 
+192.168.122.1 dev eth0  proto dhcp  scope link  src 192.168.122.73  metric 100 
+
+Se trova una riga (o più d'una) del tipo:
+ 169.254.*.* dev eth1 * src 169.254.*.*
+Esegue:
+ ip route del 169.254.*.* dev eth1 src 169.254.*.*
+
+Esegue:
+ ip address show eth1
+Ritorna una lista del tipo:
+
+3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 52:54:00:23:84:27 brd ff:ff:ff:ff:ff:ff
+    inet 169.254.52.73/32 scope global eth1
+       valid_lft forever preferred_lft forever
+    inet 10.0.0.40/32 scope global eth1
+       valid_lft forever preferred_lft forever
+    inet 10.0.0.48/32 scope global eth1
+       valid_lft forever preferred_lft forever
+    inet 10.0.0.56/32 scope global eth1
+       valid_lft forever preferred_lft forever
+    inet 10.0.0.0/32 scope global eth1
+       valid_lft forever preferred_lft forever
+    inet6 fe80::5054:ff:fe23:8427/64 scope link 
+       valid_lft forever preferred_lft forever
+
+Se trova una riga (o più d'una) che contiene:
+ " inet 169.254.*.*/32 "
+Esegue:
+ ip address del 169.254.*.*/32 dev eth1
+
+Se trova una riga (o più d'una) che contiene:
+ " inet 10.*.*.*/32 "
+Esegue:
+ ip address del 10.*.*.*/32 dev eth1
+
+
+
+Esegue:
+ ip address show lo
+Ritorna una lista del tipo:
+
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet 10.0.0.32/32 scope global lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+
+Se trova una riga (o più d'una) che contiene:
+ " inet 10.*.*.*/32 "
+Esegue:
+ ip address del 10.*.*.*/32 dev lo
+
+
+
+Esegue:
+ iptables -L PREROUTING --table mangle -n
+
+Se trova una riga (o più d'una) del tipo:
+ "MARK * MAC {{mac}} MARK set {{tid}}"
+Esegue:
+ iptables -t mangle -D PREROUTING -m mac --mac-source {{mac}} -j MARK --set-mark {{tid}}
+
+
+
+Esegue:
+ iptables -L PREROUTING --table nat -n
+
+Se trova una riga (o più d'una) del tipo:
+ "NETMAP     all  --  0.0.0.0/0            {{dst_range}}        {{subnet_range}}"
+Esegue:
+ iptables -t nat -D PREROUTING -d {{dst_range}} -j NETMAP --to {{subnet_range}}
+
+
+
+Esegue:
+ iptables -L POSTROUTING --table nat -n
+
+Se trova una riga (o più d'una) del tipo:
+ "NETMAP     all  --  {{src_range}}         {{dst_range}}        {{subnet_range}}"
+Esegue:
+ iptables -t nat -D POSTROUTING -d {{dst_range}} -s {{src_range}} -j NETMAP --to {{subnet_range}}
+
+
+
+Esegue:
+ iptables -L POSTROUTING --table nat -n
+
+Se trova una riga (o più d'una) del tipo:
+ "SNAT       all  --  0.0.0.0/0            {{dst_range}}         to:{{local}}"
+Esegue:
+ iptables -t nat -D POSTROUTING -d {{dst_range}} -j SNAT --to {{local}}
+
+
+
+```
+
 
