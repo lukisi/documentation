@@ -260,6 +260,13 @@ Quindi, il nodo Coordinator prima di rispondere sulla base delle conoscenze che 
 il Qspn, accede alla memoria condivisa di *G* per vedere se non abbia da poco risposto ad una
 precedente richiesta e in questo caso risponde con lo stesso valore di prima.
 
+Sebbene la richiesta venga fatta come detto al Coordinator della rete *G*,
+in effetti l'informazione appartiene al modulo QSPN. Per questo viene utilizzato
+un delegato passato al modulo Coordinator dal suo utilizzatore sotto forma di una istanza dell'interfaccia
+INumberOfNodesHandler che ha il metodo `number_of_nodes`.  
+Tutti i delegati sono abilitati a rilanciare l'eccezione `HandlingImpossibleError` a fronte della
+quale il modulo Coordinator termina la tasklet che stava gestendo questa richiesta.
+
 In ogni caso, il nodo Coordinator prima di rispondere accede in scrittura (con relativa nuova
 tasklet che si occupa delle repliche) alla memoria condivisa di *G* per salvare la risposta che
 sta per dare, con un relativo timer di scadenza.
@@ -291,7 +298,9 @@ fare in modo che sia "tutta la rete" come entità atomica a venire interpellata.
 Sebbene la richiesta venga fatta come detto al Coordinator della rete *G*,
 in effetti la strategia di ingresso non è di pertinenza del modulo Coordinator. Per questo viene utilizzato
 un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IEvaluateEnterHandler
-che ha il metodo `evaluate_enter`.
+che ha il metodo `evaluate_enter`.  
+Tutti i delegati sono abilitati a rilanciare l'eccezione `HandlingImpossibleError` a fronte della
+quale il modulo Coordinator termina la tasklet che stava gestendo questa richiesta.
 
 La risposta ottenuta dal delegato contiene informazioni che non sono di pertinenza del modulo Coordinator.
 Si tratta di una istanza di Object che sappiamo essere serializzabile.
@@ -320,7 +329,9 @@ fare in modo che sia *g* come entità atomica a venire interpellata.
 
 Per rispondere, non essendo questa materia di competenza del modulo Coordinator, viene utilizzato
 un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IBeginEnterHandler
-che ha il metodo `begin_enter`.
+che ha il metodo `begin_enter`.  
+Tutti i delegati sono abilitati a rilanciare l'eccezione `HandlingImpossibleError` a fronte della
+quale il modulo Coordinator termina la tasklet che stava gestendo questa richiesta.
 
 La risposta ottenuta dal delegato contiene informazioni che non sono di pertinenza del modulo Coordinator.
 Si tratta di una istanza di Object che sappiamo essere serializzabile.
@@ -348,7 +359,9 @@ era stato interpellata all'avvio delle operazioni (con la richiesta).
 
 Per rispondere, non essendo questa materia di competenza del modulo Coordinator, viene utilizzato
 un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia ICompletedEnterHandler
-che ha il metodo `completed_enter`.
+che ha il metodo `completed_enter`.  
+Tutti i delegati sono abilitati a rilanciare l'eccezione `HandlingImpossibleError` a fronte della
+quale il modulo Coordinator termina la tasklet che stava gestendo questa richiesta.
 
 La risposta ottenuta dal delegato contiene informazioni che non sono di pertinenza del modulo Coordinator.
 Si tratta di una istanza di Object che sappiamo essere serializzabile.
@@ -376,7 +389,9 @@ era stato interpellata all'avvio delle operazioni (con la richiesta).
 
 Per rispondere, non essendo questa materia di competenza del modulo Coordinator, viene utilizzato
 un delegato passato al modulo dal suo utilizzatore sotto forma di una istanza dell'interfaccia IAbortEnterHandler
-che ha il metodo `abort_enter`.
+che ha il metodo `abort_enter`.  
+Tutti i delegati sono abilitati a rilanciare l'eccezione `HandlingImpossibleError` a fronte della
+quale il modulo Coordinator termina la tasklet che stava gestendo questa richiesta.
 
 La risposta ottenuta dal delegato contiene informazioni che non sono di pertinenza del modulo Coordinator.
 Si tratta di una istanza di Object che sappiamo essere serializzabile.
@@ -591,6 +606,14 @@ implementato dall'utilizzatore del modulo richiama il metodo `xyz` nel modulo Ho
 *   `Object abort_enter(int lvl, Object abort_enter_data)`.  
     L'esecuzione del metodo `abort_enter` del modulo Hooking nel nodo Coordinator segnala
     che il tentativo di ingresso è stato abortito.
+
+Se si verifica una situazione non gestibile lato server, cioè nell'esecuzione nel nodo Coordinator, il
+codice in questo modulo se ne avvede perché i delegati sono tutti abilitati a rilanciare l'eccezione
+`HandlingImpossibleError`. Ricevendo questa eccezione il codice in questo modulo termina la tasklet che
+stava gestendo questa richiesta.
+
+Se si verifica una situazione non gestibile lato client, cioè nell'esecuzione del metodo proxy, il
+codice in questo modulo rilancia l'eccezione `ProxyError`, comune a tutti i metodi proxy.
 
 Il modulo Coordinator fornisce inoltre nella classe CoordinatorManager metodi di accesso alla
 memoria condivisa di pertinenza del modulo Hooking.
