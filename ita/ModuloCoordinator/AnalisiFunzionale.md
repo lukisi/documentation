@@ -262,10 +262,7 @@ precedente richiesta e in questo caso risponde con lo stesso valore di prima.
 
 Sebbene la richiesta venga fatta come detto al Coordinator della rete *G*,
 in effetti l'informazione appartiene al modulo QSPN. Per questo viene utilizzato
-un delegato passato al modulo Coordinator dal suo utilizzatore sotto forma di una istanza dell'interfaccia
-INumberOfNodesHandler che ha il metodo `number_of_nodes`.  
-Tutti i delegati sono abilitati a rilanciare l'eccezione `HandlingImpossibleError` a fronte della
-quale il modulo Coordinator termina la tasklet che stava gestendo questa richiesta.
+il metodo `get_n_nodes` dell'interfaccia ICoordinatorMap.
 
 In ogni caso, il nodo Coordinator prima di rispondere accede in scrittura (con relativa nuova
 tasklet che si occupa delle repliche) alla memoria condivisa di *G* per salvare la risposta che
@@ -572,6 +569,7 @@ La risposta è una istanza di ReplicaResponse, che non ha membri.
 Il nodo quando crea una identità (la prima per avviare il sistema o le successive a seguito di ingressi
 o migrazioni) crea una istanza del modulo Coordinator fornendo:
 
+*   La topologia della rete.
 *   Se si tratta di una identità successiva alla prima, per ingresso o migrazione, il livello del g-nodo
     (di cui l'identità fa parte come nodo) che compie in blocco questa operazione
 *   Il livello a cui si è costituito un g-nodo nuovo.
@@ -802,7 +800,7 @@ Gli argomenti di questo metodo sono:
 L'esecuzione di `prepare_migration` del modulo Coordinator consiste in questo:
 
 Il nodo prepara la tupla `TupleGNode tuple` del suo g-nodo di livello *lvl*. Prepara inoltre l'identificativo
-`int fp_id` del suo fingerprint di livello *lvl*. **TODO** Usando i metodi di ICoordinatorMap?  
+`int fp_id` del suo fingerprint di livello *lvl*. Usando i metodi di ICoordinatorMap.  
 Prepara infine un valore random `int propagation_id` e lo memorizza anche in una lista `List<int> propagation_id_list`.
 
 Il nodo prepara uno stub per ognuno dei suoi diretti vicini e su ognuno chiama il metodo remoto
@@ -841,7 +839,7 @@ Gli argomenti di questo metodo sono:
 L'esecuzione di `finish_migration` del modulo Coordinator consiste in questo:
 
 Il nodo prepara la tupla `TupleGNode tuple` del suo g-nodo di livello *lvl*. Prepara inoltre l'identificativo
-`int fp_id` del suo fingerprint di livello *lvl*. **TODO** Usando i metodi di ICoordinatorMap?  
+`int fp_id` del suo fingerprint di livello *lvl*. Usando i metodi di ICoordinatorMap.  
 Prepara infine un valore random `int propagation_id` e lo memorizza anche in una lista `List<int> propagation_id_list`.
 
 Il nodo prepara uno stub di tipo broadcast per i suoi diretti vicini e su questo chiama il metodo remoto
@@ -880,7 +878,7 @@ Gli argomenti di questo metodo sono:
 L'esecuzione di `we_have_splitted` del modulo Coordinator consiste in questo:
 
 Il nodo prepara la tupla `TupleGNode tuple` del suo g-nodo di livello *lvl*. Prepara inoltre l'identificativo
-`int fp_id` del suo fingerprint di livello *lvl*. **TODO** Usando i metodi di ICoordinatorMap?  
+`int fp_id` del suo fingerprint di livello *lvl*. Usando i metodi di ICoordinatorMap.  
 Prepara infine un valore random `int propagation_id` e lo memorizza anche in una lista `List<int> propagation_id_list`.
 
 Il nodo prepara uno stub di tipo broadcast per i suoi diretti vicini e su questo chiama il metodo remoto
@@ -998,22 +996,25 @@ I metodi della classe CoordinatorClient sono:
 
 ### <a name="Classi_Interfacce">Interfacce
 
-La mappa delle posizioni *reali* libere ai vari livelli è un oggetto fornito dall'utilizzatore del
-modulo Coordinator. Di questo oggetto il modulo conosce l'interfaccia ICoordinatorMap. Tramite essa
-il modulo può:
+L'interfaccia ICoordinatorMap è definita dal modulo Coordinator.  
+Una istanza di tale interfaccia viene passata al modulo Coordinator nel metodo `bootstrap_completed`.
 
-*   Leggere il numero *l* dei livelli della topologia (metodo `get_levels`).
-*   Leggere la gsize di ogni livello *i* da 0 a *l* - 1 (metodo `get_gsize`).  
-    Precisiamo il significato di questo indice, restando coerenti con quanto stabilito nella
-    trattazione del modulo QSPN sebbene i due moduli siano indipendenti.  
-    Per ogni *i* da 0 a *l* - 1, *gsize(i)* è il numero massimo di g-nodi di livello *i* in un
-    g-nodo di livello *i* + 1.
+Tramite questa interfaccia il modulo ricava le informazioni che gli servono dalle conoscenze
+acquisite dal modulo QSPN. Invece le informazioni note a priori relativamente al grafo della
+rete, cioè i livelli e la topologia, sono passate direttamente al modulo nel costruttore.
+
+Tramite questa interfaccia, quindi, il modulo può:
+
 *   Leggere il numero approssimativo di singoli nodi nella rete secondo le conoscenze acquisite
-    dal nodo corrente tramite il Qspn (metodo `get_n_nodes`).  
+    dal nodo corrente tramite il Qspn (metodo `get_n_nodes`).
 *   Leggere l'elenco delle posizioni *reali* libere in ogni livello *i* da 0 a *l* - 1 (metodo `get_free_pos`).  
     Cioè le posizioni nel livello *i* che sono libere nel nostro g-nodo di livello *i* + 1. Questa
     informazione è quella che si basa sulla mappa del nodo corrente, senza considerare
     le prenotazioni pendenti.
+*   Leggere la propria posizione ad ogni livello *i* da 0 a *l* - 1 (metodo `get_my_pos`).  
+    Serve a costruire una tupla che identifica il proprio g-nodo di un dato livello.
+*   Leggere l'identificativo (`int fp_id`) del proprio g-nodo di livello *i* da 0 a *l* - 1 (metodo `get_fp_id`).  
+    Serve anch'esso a identificare il proprio g-nodo di un dato livello.
 
 ### <a name="Classi_Delegati">Delegati
 
