@@ -570,10 +570,17 @@ Il nodo quando crea una identità (la prima per avviare il sistema o le successi
 o migrazioni) crea una istanza del modulo Coordinator fornendo:
 
 *   La topologia della rete.
-*   Se si tratta di una identità successiva alla prima, per ingresso o migrazione, il livello del g-nodo
-    (di cui l'identità fa parte come nodo) che compie in blocco questa operazione
-*   Il livello a cui si è costituito un g-nodo nuovo.
-*   Se si tratta di una identità successiva alla prima, un riferimento alla istanza precedente del modulo Coordinator.
+*   Delegati per varie operazioni:
+    *   Richiamare metodi di un altro modulo per il quale il modulo Coordinator fornisce metodi proxy verso
+        il nodo Coordinator. Si vedano i metodi delle interfacce `IEvaluateEnterHandler`,
+        `IBeginEnterHandler`, `ICompletedEnterHandler` e `IAbortEnterHandler`.
+    *   Richiamare metodi di un altro modulo per il quale il modulo Coordinator fornisce metodi di propagazione
+        dentro un proprio g-nodo. Si vedano i metodi dell'interfaccia `IPropagationHandler`.
+    *   Ottenere oggetti stub per comunicare con i diretti vicini. Si vedano i metodi dell'interfaccia `IStubFactory`.
+*   Se si tratta di una identità successiva alla prima, per ingresso o migrazione, occorre fornire:
+    *   Il livello del g-nodo (di cui l'identità fa parte come nodo) che compie in blocco questa operazione.
+    *   Il livello del g-nodo che ha riservato un posto per noi.
+    *   Un riferimento alla istanza precedente del modulo Coordinator.
 
 Durante le sue operazioni, il modulo viene informato quando il nodo ha completato la fase di bootstrap.
 In quello stesso momento gli vengono forniti:
@@ -803,10 +810,14 @@ Il nodo prepara la tupla `TupleGNode tuple` del suo g-nodo di livello *lvl*. Pre
 `int fp_id` del suo fingerprint di livello *lvl*. Usando i metodi di ICoordinatorMap.  
 Prepara infine un valore random `int propagation_id` e lo memorizza anche in una lista `List<int> propagation_id_list`.
 
-Il nodo prepara uno stub per ognuno dei suoi diretti vicini e su ognuno chiama il metodo remoto
-`void execute_prepare_migration(tuple, fp_id, propagation_id, lvl, prepare_migration_data)`. Tale metodo nella classe stub
-ogni volta attende che il destinatario ha completato. Quando ha terminato, chiama un delegato
-implementato dall'utilizzatore del modulo Coordinator che richiama il metodo `void prepare_migration(lvl, prepare_migration_data)` nel
+Il nodo prepara uno stub per ognuno dei suoi diretti vicini con il metodo `get_stub_for_each_neighbor`
+dell'interfaccia `IStubFactory` passata dall'utilizzatore del modulo Coordinator. Ottiene molteplici oggetti
+stub che trasmettono messaggi unicast e attendono la risposta.  
+Su ognuno di questi stub (può farlo in parallelo su diverse tasklet) il nodo chiama il metodo remoto
+`void execute_prepare_migration(tuple, fp_id, propagation_id, lvl, prepare_migration_data)`.  
+Quando tutti hanno terminato (attende eventualmente il completamento di tutte le tasklet) il nodo
+chiama il metodo `prepare_migration` dell'interfaccia `IPropagationHandler`. Esso è un delegato passato
+dall'utilizzatore del modulo Coordinator, la cui implementazione richiama il metodo `void prepare_migration(lvl, prepare_migration_data)` nel
 modulo Hooking. Infine avvia una tasklet che dopo aver atteso un tempo sicuro (2 minuti) rimuoverà
 `propagation_id` da `propagation_id_list`. Nel frattempo il metodo `prepare_migration` del modulo Coordinator
 restituisce il controllo al chiamante.
@@ -842,10 +853,14 @@ Il nodo prepara la tupla `TupleGNode tuple` del suo g-nodo di livello *lvl*. Pre
 `int fp_id` del suo fingerprint di livello *lvl*. Usando i metodi di ICoordinatorMap.  
 Prepara infine un valore random `int propagation_id` e lo memorizza anche in una lista `List<int> propagation_id_list`.
 
-Il nodo prepara uno stub di tipo broadcast per i suoi diretti vicini e su questo chiama il metodo remoto
-`void execute_finish_migration(tuple, fp_id, propagation_id, lvl, finish_migration_data)`. Tale metodo nella classe stub
-non attende alcuna risposta. Subito dopo, avvia una tasklet che subito chiama un delegato
-implementato dall'utilizzatore del modulo Coordinator che richiama il metodo `void finish_migration(lvl, finish_migration_data)` nel
+Il nodo prepara uno stub per tutti i suoi diretti vicini con il metodo `get_stub_for_all_neighbors`
+dell'interfaccia `IStubFactory` passata dall'utilizzatore del modulo Coordinator. Ottiene un oggetto
+stub che trasmette un messaggio broadcast senza attendere risposta.  
+Su questo stub il nodo chiama il metodo remoto
+`void execute_finish_migration(tuple, fp_id, propagation_id, lvl, finish_migration_data)`.  
+Subito dopo, il nodo avvia una tasklet in cui subito chiama il metodo `finish_migration` dell'interfaccia
+`IPropagationHandler`. Esso è un delegato passato dall'utilizzatore del modulo Coordinator, la cui
+implementazione richiama il metodo `void finish_migration(lvl, finish_migration_data)` nel
 modulo Hooking. Infine avvia una tasklet che dopo aver atteso un tempo sicuro (2 minuti) rimuoverà
 `propagation_id` da `propagation_id_list`. Nel frattempo il metodo `finish_migration` del modulo Coordinator
 restituisce il controllo al chiamante.
@@ -881,10 +896,14 @@ Il nodo prepara la tupla `TupleGNode tuple` del suo g-nodo di livello *lvl*. Pre
 `int fp_id` del suo fingerprint di livello *lvl*. Usando i metodi di ICoordinatorMap.  
 Prepara infine un valore random `int propagation_id` e lo memorizza anche in una lista `List<int> propagation_id_list`.
 
-Il nodo prepara uno stub di tipo broadcast per i suoi diretti vicini e su questo chiama il metodo remoto
-`void execute_we_have_splitted(tuple, fp_id, propagation_id, lvl, we_have_splitted_data)`. Tale metodo nella classe stub
-non attende alcuna risposta. Subito dopo, avvia una tasklet che subito chiama un delegato
-implementato dall'utilizzatore del modulo Coordinator che richiama il metodo `void we_have_splitted(lvl, we_have_splitted_data)` nel
+Il nodo prepara uno stub per tutti i suoi diretti vicini con il metodo `get_stub_for_all_neighbors`
+dell'interfaccia `IStubFactory` passata dall'utilizzatore del modulo Coordinator. Ottiene un oggetto
+stub che trasmette un messaggio broadcast senza attendere risposta.  
+Su questo stub il nodo chiama il metodo remoto
+`void execute_we_have_splitted(tuple, fp_id, propagation_id, lvl, we_have_splitted_data)`.  
+Subito dopo, il nodo avvia una tasklet in cui subito chiama il metodo `we_have_splitted` dell'interfaccia
+`IPropagationHandler`. Esso è un delegato passato dall'utilizzatore del modulo Coordinator, la cui
+implementazione richiama il metodo `void we_have_splitted(lvl, we_have_splitted_data)` nel
 modulo Hooking. Infine avvia una tasklet che dopo aver atteso un tempo sicuro (2 minuti) rimuoverà
 `propagation_id` da `propagation_id_list`. Nel frattempo il metodo `we_have_splitted` del modulo Coordinator
 restituisce il controllo al chiamante.
@@ -1060,6 +1079,42 @@ I metodi previsti dall'interfaccia IAbortEnterHandler sono:
 
 *   `Object abort_enter(int lvl, Object abort_enter_data)`  
     Con questo metodo si richiama il metodo `abort_enter` del modulo Hooking. Vedi [qui](../ModuloHooking/AnalisiFunzionale.md).
+
+* * *
+
+L'interfaccia IPropagationHandler è definita dal modulo Coordinator.  
+Una istanza di tale interfaccia viene passata al modulo Coordinator nel costruttore.
+
+I metodi previsti dall'interfaccia IPropagationHandler sono:
+
+*   `void prepare_migration(int lvl, Object prepare_migration_data)`  
+    Questo metodo viene chiamato quando un nostro diretto vicino richiede l'esecuzione del nostro metodo
+    remoto `execute_prepare_migration`. Oppure quando il nostro stesso nodo ha iniziato la propagazione.  
+    Con questo metodo si richiama il metodo `prepare_migration` del modulo Hooking.
+    Vedi [qui](../ModuloHooking/AnalisiFunzionale.md).
+*   `void finish_migration(int lvl, Object finish_migration_data)`  
+    Questo metodo viene chiamato quando un nostro diretto vicino richiede l'esecuzione del nostro metodo
+    remoto `execute_finish_migration`. Oppure quando il nostro stesso nodo ha iniziato la propagazione.  
+    Con questo metodo si richiama il metodo `finish_migration` del modulo Hooking.
+    Vedi [qui](../ModuloHooking/AnalisiFunzionale.md).
+*   `void we_have_splitted(int lvl, Object we_have_splitted_data)`  
+    Questo metodo viene chiamato quando un nostro diretto vicino richiede l'esecuzione del nostro metodo
+    remoto `execute_we_have_splitted`. Oppure quando il nostro stesso nodo ha iniziato la propagazione.  
+    Con questo metodo si richiama il metodo `we_have_splitted` del modulo Hooking.
+    Vedi [qui](../ModuloHooking/AnalisiFunzionale.md).
+
+* * *
+
+L'interfaccia IStubFactory è definita dal modulo Coordinator.  
+Una istanza di tale interfaccia viene passata al modulo Coordinator nel costruttore.
+
+Si usano i suoi metodi per ottenere oggetti stub per comunicare con i diretti vicini, tramite un
+messaggio unicast che attende una risposta o tramite un messaggio broadcast che non attende risposta.
+
+I metodi previsti dall'interfaccia IStubFactory sono:
+
+*   `Gee.List<ICoordinatorManagerStub> get_stub_for_each_neighbor()`
+*   `ICoordinatorManagerStub get_stub_for_all_neighbors()`
 
 ### <a name="Classi_Strutture">Strutture dati
 
