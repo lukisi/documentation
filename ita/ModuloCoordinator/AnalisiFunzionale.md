@@ -400,7 +400,7 @@ Essa ha il solo membro:
 
 #### <a name="Get_hooking_memory"></a>Lettura memoria di pertinenza del modulo Hooking
 
-Le richieste esposte sopra (EvaluateEnter, BeginEnter, CompletedEnter) fanno sì che il modulo Hooking in
+Le richieste esposte sopra (EvaluateEnter, BeginEnter, CompletedEnter, AbortEnter) fanno sì che il modulo Hooking in
 esecuzione in un qualsiasi singolo nodo possa far eseguire alcuni suoi metodi nel nodo Coordinator di tutta la rete
 o di un g-nodo.  
 L'altro requisito è che tali metodi in esecuzione nel nodo Coordinator possano accedere in lettura/scrittura
@@ -408,7 +408,7 @@ alla memoria condivisa di tutta la rete, per alcune informazioni di pertinenza d
 A questo servono le due richieste che ora esponiamo, GetHookingMemory e SetHookingMemory.
 
 Queste richieste possono essere avviate solo dallo stesso nodo Coordinator. Infatti le richieste viste sopra
-(EvaluateEnter, BeginEnter, CompletedEnter) non coinvolgono mai il reperimento di un record: cioè non sono
+(EvaluateEnter, BeginEnter, CompletedEnter, AbortEnter) non coinvolgono mai il reperimento di un record: cioè non sono
 di tipo *insert*, *read-only*, *update*, *replica-valore* o *replica-cancellazione*. Quindi non saranno demandate
 ad altri nodi, nemmeno nel caso in cui il Coordinator non è ancora esaustivo.
 
@@ -960,22 +960,26 @@ I metodi della classe CoordinatorClient sono:
 
 *   `int get_n_nodes()` - chiede al Coordinator della rete il numero di nodi in tutta la rete.  
     Vedi la relativa [richiesta](#Numero_nodi_nella_rete).
-*   `Object evaluate_enter(int lvl, Object evaluate_enter_data)` -
+*   `Object evaluate_enter(int lvl, Object evaluate_enter_data) throws ProxyError` -
     chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
+    Il client può trovarsi nella situazione di essere servito da un altro nodo che risponde male,
+    quindi questa possibilità deve essere sempre gestita. In particolare nei metodi che servono
+    da proxy per il modulo Hooking lasciamo che sia esso a gestirla. Per questo prevediamo per
+    ognuno di essi l'eccezione `ProxyError`.  
     Vedi la relativa [richiesta](#Valuta_ingresso).
-*   `Object begin_enter(int lvl, Object begin_enter_data)` -
+*   `Object begin_enter(int lvl, Object begin_enter_data) throws ProxyError` -
     chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
     Vedi la relativa [richiesta](#Avvio_ingresso).
-*   `Object completed_enter(int lvl, Object completed_enter_data)` -
+*   `Object completed_enter(int lvl, Object completed_enter_data) throws ProxyError` -
     chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
     Vedi la relativa [richiesta](#Confermato_ingresso).
-*   `Object abort_enter(int lvl, Object abort_enter_data)` -
+*   `Object abort_enter(int lvl, Object abort_enter_data) throws ProxyError` -
     chiede al Coordinator del g-nodo di livello *lvl* di eseguire il delegato del metodo.  
     Vedi la relativa [richiesta](#Abortito_ingresso).
-*   `Object get_hooking_memory(int lvl)` - recupera la porzione di dati di pertinenza
+*   `Object get_hooking_memory(int lvl) throws ProxyError` - recupera la porzione di dati di pertinenza
     del modulo Hooking nella memoria condivisa del g-nodo di livello *lvl*.  
     Vedi la relativa [richiesta](#Get_hooking_memory).
-*   `void set_hooking_memory(Object data, int lvl)` - modifica la porzione di dati di pertinenza
+*   `void set_hooking_memory(Object data, int lvl) throws ProxyError` - modifica la porzione di dati di pertinenza
     del modulo Hooking nella memoria condivisa del g-nodo di livello *lvl*.  
     Vedi la relativa [richiesta](#Set_hooking_memory).
 *   `void reserve(int lvl, int reserve_request_id, out int new_pos, out int new_eldership)` -
@@ -984,13 +988,6 @@ I metodi della classe CoordinatorClient sono:
 *   `void delete_reserve(int lvl, int reserve_request_id)` -
     chiede al Coordinator del g-nodo di livello *lvl* di eliminare la prenotazione di un posto.  
     Vedi la relativa [richiesta](#Cancella_prenotazione).
-*   `void make_replicas(int lvl)` - dopo aver apportato delle variazioni al contenuto della
-    memoria condivisa del g-nodo di livello *lvl*, il nodo attuale Coordinator avvia una
-    nuova tasklet e su questa chiama su una sua istanza di classe client questo metodo.  
-    L'implementazione di questo metodo non chiama il metodo protetto `call` della classe base
-    PeerClient, come avviene per gli altri metodi di CoordinatorClient, bensì chiama
-    i metodi `begin_replica` e `next_replica` del modulo PeerServices.
-    Vedi la relativa [richiesta](#Replica).
 
 ## <a name="Classi_e_interfacce"></a>Classi e interfacce
 
