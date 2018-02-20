@@ -268,7 +268,10 @@ Il demone *ntkd* costruisce una istanza di QspnManager fornendo:
     per copiare i relativi *identificativi di arco*. Servono anche per copiare correttamente i percorsi
     noti verso destinazioni in *w’*.
 *   `List<IQspnNaddr> internal_arc_peer_naddr_set` - Per gli archi di cui sopra, gli indirizzi Netsukuku
-    del vicino in *w’*. Questa lista deve avere la stessa lunghezza della precedente.
+    del vicino in *w’*. Questa lista deve avere la stessa lunghezza della precedente.  
+    Siccome a cambiare indirizzo Netsukuku sono tutti i membri del g-nodo *w’*, tutti i vicini di *n’* interni a *w’* hanno
+    cambiato il proprio. Poiché il modulo permette di vedere l'indirizzo Netsukuku del vicino collegato ad un dato arco
+    (con il metodo *get_naddr_for_arc*) questa informazione va aggiornata nella memoria del modulo.
 *   `List<IQspnArc> external_arc_set` - Gli archi tra il nodo *n’* e i suoi vicini in *G* ma non in *w’*.
 *   `IQspnNaddr my_naddr` - L'indirizzo Netsukuku del nodo *n’*.
 *   `IQspnFingerprint my_fingerprint` - Il fingerprint a livello 0 del nodo *n’*.
@@ -277,8 +280,8 @@ Il demone *ntkd* costruisce una istanza di QspnManager fornendo:
     Infatti tali destinazioni sono copiate dalle destinazioni interne a *w* conosciute da *n*. Ma ai fingerprint
     di questi g-nodi devono essere aggiornate le anzianità dei livelli maggiori o uguali a *k*.
 *   `IQspnStubFactory stub_factory` - La stub factory per le comunicazioni con i vicini.
-*   `int hooking_gnode_level` - Il livello *k* del g-nodo *w* che sta facendo il suo ingresso in *G*, 0 se era il singolo nodo *n*.
-*   `int into_gnode_level` - Il livello *hl* del g-nodo *g* in cui *w* sta facendo ingresso.
+*   `int guest_gnode_level` - Il livello *k* del g-nodo *w* che sta facendo il suo ingresso in *G*, 0 se era il singolo nodo *n*.
+*   `int host_gnode_level` - Il livello *hl* del g-nodo *g* in cui *w* sta facendo ingresso.
 *   `QspnManager previous_identity` - Il manager precedente. La nuova istanza di QspnManager copia da esso
     nella mappa i percorsi noti verso i g-nodi di livello inferiore a *k* (perché sono in *w*).  
     Grazie a questi percorsi la nuova istanza calcola i fingerprint dal livello 1 al livello *k* (se *k* è maggiore di 0).  
@@ -297,10 +300,6 @@ Anche ad una istanza di QspnManager costruita in questo modo, il demone *ntkd* s
 *   `arc_add (IQspnArc arc)`.
 *   `arc_is_changed (IQspnArc changed_arc)`.
 *   `arc_remove (IQspnArc removed_arc)`.
-
-Siccome a cambiare indirizzo Netsukuku sono tutti i membri del g-nodo *w’*, tutti i vicini di *n’* interni a *w’* hanno
-cambiato il proprio. Poiché il modulo permette di vedere l'indirizzo Netsukuku del vicino collegato ad un dato arco
-(con il metodo *get_naddr_for_arc*) questa informazione va aggiornata nella memoria del modulo.
 
 #### <a name="Dismissione_precedente"></a>Dismissione della precedente identità
 
@@ -413,7 +412,10 @@ Costruisce una istanza di QspnManager fornendo:
     per copiare i relativi *identificativi di arco*. Servono anche per copiare correttamente i percorsi
     noti verso destinazioni in *w’*.
 *   `List<IQspnNaddr> internal_arc_peer_naddr_set` - Per gli archi di cui sopra, gli indirizzi Netsukuku
-    del vicino in *w’*. Questa lista deve avere la stessa lunghezza della precedente.
+    del vicino in *w’*. Questa lista deve avere la stessa lunghezza della precedente.  
+    Siccome a cambiare indirizzo Netsukuku sono tutti i membri del g-nodo *w’*, tutti i vicini di *n’* interni a *w’* hanno
+    cambiato il proprio. Poiché il modulo permette di vedere l'indirizzo Netsukuku del vicino collegato ad un dato arco
+    (con il metodo *get_naddr_for_arc*) questa informazione va aggiornata nella memoria del modulo.
 *   `List<IQspnArc> external_arc_set` - Gli archi tra il nodo *n’* e i suoi vicini nella rete che non sono in *w’*.
 *   `IQspnNaddr my_naddr` - L'indirizzo Netsukuku del nodo *n’*.
 *   `IQspnFingerprint my_fingerprint` - Il fingerprint a livello 0 del nodo *n’*.
@@ -422,8 +424,8 @@ Costruisce una istanza di QspnManager fornendo:
     Infatti tali destinazioni sono copiate dalle destinazioni interne a *w* conosciute da *n*. Ma ai fingerprint
     di questi g-nodi devono essere aggiornate le anzianità dei livelli maggiori o uguali a *k*.
 *   `IQspnStubFactory stub_factory` - La stub factory per le comunicazioni con i vicini.
-*   `int hooking_gnode_level` - Il livello *k* del g-nodo *w* che sta facendo la migrazione, 0 se era il singolo nodo *n*.
-*   `int into_gnode_level` - Il livello *hl* del g-nodo *h* in cui *w* sta migrando.
+*   `int guest_gnode_level` - Il livello *k* del g-nodo *w* che sta facendo la migrazione, 0 se era il singolo nodo *n*.
+*   `int host_gnode_level` - Il livello *hl* del g-nodo *h* in cui *w* sta migrando.
 *   `QspnManager previous_identity` - Il manager precedente. La nuova istanza di QspnManager copia da esso
     nella mappa i percorsi noti verso i g-nodi di livello inferiore a *k* (perché sono in *w*).  
     Grazie a questi percorsi la nuova istanza calcola i fingerprint dal livello 1 al livello *k* (se *k* è maggiore di 0).  
@@ -452,17 +454,13 @@ Anche ad una istanza di QspnManager costruita in questo modo, il demone *ntkd* s
 *   `arc_is_changed (IQspnArc changed_arc)`.
 *   `arc_remove (IQspnArc removed_arc)`.
 
-Siccome a cambiare indirizzo Netsukuku sono tutti i membri del g-nodo *w’*, tutti i vicini di *n’* interni a *w’* hanno
-cambiato il proprio. Poiché il modulo permette di vedere l'indirizzo Netsukuku del vicino collegato ad un dato arco
-(con il metodo *get_naddr_for_arc*) questa informazione va aggiornata nella memoria del modulo.
-
 #### <a name="Modifica_precedente"></a>Modifica della precedente identità in g in una identità di connettività
 
 Con i dati suddetti relativi alla migrazione il demone *ntkd* sull'istanza di QspnManager *n* chiama il metodo
 *make_connectivity*. Con questa chiamata segnala al modulo che questa diventa una identità *di connettività*. Gli argomenti passati sono:
 
-*   Il livello *hl* della migrazione. Cioè il livello del g-nodo ospitante.
-*   Il livello *j* della migrazione. Cioè il livello del massimo distinto g-nodo fra la nuova posizione
+*   Il livello `connectivity_from_level` della migrazione. Cioè il livello subito superiore al g-nodo ospite.
+*   Il livello `connectivity_to_level` della migrazione. Cioè il livello del massimo distinto g-nodo fra la nuova posizione
     dentro il g-nodo ospitante e la vecchia posizione che ora è di connettività.
 *   Una callback per modificare il proprio indirizzo Netsukuku e quelli dei vicini interni a *w*.  
     Cambia l'indirizzo Netsukuku di *n*. In realtà l'unica cosa che cambia in esso è il nuovo identificativo *virtuale* al
@@ -471,10 +469,10 @@ Con i dati suddetti relativi alla migrazione il demone *ntkd* sull'istanza di Qs
     Cambiano analogamente gli indirizzi Netsukuku dei vicini che erano interni a *w*. Poiché il modulo permette di vedere
     l'indirizzo Netsukuku del vicino collegato ad un dato arco (con il metodo *get_naddr_for_arc*)
     anche questa informazione va aggiornata nella memoria del modulo.
-*   Una callback per modificare il proprio fingerprint di nodo (a livello 0) e i fingerprint dei g-nodi destinazione che
-    conosce interni a *w*.  
-    Cambia, infatti, per tutti i nodi all'interno di *w*, l'anzianità del proprio g-nodo di livello *k*, cioè l'anzianità
-    di *w* dentro *g*. Essa diventa *nulla*, cioè tale che confrontata con quella di qualunque altro g-nodo risulta più giovane.
+*   Un nuovo fingerprint di nodo (a livello 0).  
+    In effetti è identico al precedente se non per l'anzianità del proprio
+    g-nodo di livello  *k*, cioè l'anzianità di *w* dentro *g*. Essa diventa *nulla*, cioè tale che confrontata con
+    quella di qualunque altro g-nodo risulta più giovane.
 
 Verrà avviata tra pochi istanti la trasmissione di un ETP a tutti i vicini di *n* esterni a *w*. In esso va segnalata
 soltanto la rimozione del percorso verso il vecchio identificativo *reale* di *w* al livello *k*.
