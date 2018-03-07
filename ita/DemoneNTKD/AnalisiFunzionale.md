@@ -223,7 +223,9 @@ Altri dettagli memorizzati in tale classe sono:
     identità di connettività questo valore può andare da 1 a `levels-1`.
 *   `int connectivity_to_level`. Se è 0 significa che è l'identità principale. Se è una
     identità di connettività questo valore può andare da `int connectivity_from_level` a `levels-1`.
-*   `AddressManagerForIdentity addr_man`. Lo skeleton radice da usare per i moduli di identità.
+*   `IdentitySkeleton identity_skeleton`. Lo skeleton radice da usare per i moduli di identità.
+*   `weak QspnManager qspn_mgr`. Un riferimento all'istanza del modulo Qspn relativa a questa identità.
+*   `weak PeersManager peers_mgr`. Un riferimento all'istanza del modulo PeerServices relativa a questa identità.
 *   `List<IdentityArc> identity_arcs`. Lista degli archi-identità.
 *   `...`
 
@@ -244,9 +246,9 @@ I dettagli memorizzati in tale classe sono:
 *   `string? prev_peer_linklocal`. Indirizzo IP link-local precedente del vicino. Valorizzato quando
     il modulo Identities segnala che l'identità del vicino collegato a noi su un esistente
     arco-identità ha cambiato i suoi parametri.
-*   `IQspnArc qspn_arc`. Una istanza di una classe che viene passata al modulo QSPN. Se è valorizzato
+*   `IQspnArc? qspn_arc`. Una istanza di una classe che viene passata al modulo QSPN. Se è valorizzato
     significa che il *peer* appartiene alla stessa rete di questa identità.
-*   `var network_id`. Identifica la rete a cui appartiene il *peer*. Se il programma ha questa informazione
+*   `int64? network_id`. Identifica la rete a cui appartiene il *peer*. Se il programma ha questa informazione
     essa gli è stata comunicata dal modulo Hooking. Questo può avvenire solo se questo è un arco-identità principale.
 *   `...`
 
@@ -409,6 +411,35 @@ nel [documento di dettaglio](DettagliTecnici.md#Indirizzi_IP).
 **TODO**
 
 ### <a name="Modulo_PeerServices"></a>Modulo PeerServices
+
+Il modulo PeerServices ha il ruolo di registrare i servizi peer-to-peer ai quali un nodo partecipa attivamente
+e di propagare le informazioni necessarie all'instradamento dei pacchetti delle comunicazioni peer-to-peer.  
+Il programma *ntkd* da parte sua deve soltanto registrare nella classe PeersManager (associata ad ogni identità)
+i servizi peer-to-peer ai quali il nodo (la suddetta identità) partecipa attivamente.  
+
+Il programma *ntkd* associa ad ogni identità nel sistema una istanza di PeersManager. Tale istanza resta in vita
+finché resta in vita l'identità.
+
+All'avvio, il programma *ntkd* ha il semplice compito di creare in autonomia la prima istanza di PeersManager e
+associarla alla prima identità del sistema. Per questo deve fornire:
+
+*   Un'interfaccia per reperire le informazioni sulla mappa dei percorsi e sui gateway.  
+    Serve anche per trasmettere pacchetti al gateway per l'instradamento dei pacchetti delle comunicazioni
+    peer-to-peer dal client verso il server.
+*   Un delegato per trasmettere pacchetti ai diretti vicini per la propagazione delle mappe di partecipazione.
+*   Un delegato per aprire una connessione dal server sul client.
+
+Successivamente il programma *ntkd* potrà registrare le istanze dei servizi a cui il nodo partecipa attivamente.
+
+Il programma *ntkd* potrà duplicare una sua identità e di conseguenza creare una nuova istanza di PeersManager
+fornendo in questo caso anche:
+
+*   L'istanza del modulo che era associata alla precedente identità.
+*   Il livello del g-nodo ospite.
+*   Il livello del g-nodo ospitante.
+
+Queste decisioni saranno prese a fronte di segnalazioni ricevute dal modulo Hooking. Ne parleremo quindi
+in seguito.
 
 **TODO**
 
