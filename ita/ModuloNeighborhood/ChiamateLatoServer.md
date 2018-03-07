@@ -34,7 +34,11 @@ Poi la APP a seconda dei casi:
 
 *   **caso 1.** Prepara una lista vuota di IAddressManagerSkeleton.  
     Chiama `Neighborhood.get_dispatcher(source_id, unicast_id, peer_address, null)`. Se questo restituisce una istanza la aggiunge alla lista.  
-    Restituisce la lista.
+    Restituisce la lista.  
+    *Nota:* In realtà nel caso di un TcpclientCallerInfo rientra anche un messaggio che arrivi non da un diretto vicino ma da un nodo che ci raggiunge
+    tramite un indirizzo IP routabile. Un esempio di questo è un messaggio di risposta di un hash-node contattato dal modulo PeerServices. Questi
+    casi però non ci interessano in questo documento perché non sono di pertinenza del modulo Neighborhood. Quindi la APP li gestisce per conto
+    suo senza consultare il modulo Neighborhood.
 *   **caso 2.** Prepara una lista vuota di IAddressManagerSkeleton.  
     Chiama `Neighborhood.get_dispatcher(source_id, unicast_id, peer_address, dev)`. Se questo restituisce una istanza la aggiunge alla lista.  
     Restituisce la lista.
