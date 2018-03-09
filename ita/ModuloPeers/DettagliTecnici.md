@@ -32,7 +32,7 @@ prodotta con questo framework per formalizzare i metodi remoti usati nel demone 
 
 Il sistema (così in seguito indicheremo il software che usa il modulo PeerServices, ossia il demone *ntkd*)
 per prima cosa inizializza il modulo richiamando il metodo statico
-`init` di PeersManager. In tale metodo viene anche passata l'istanza di INtkdTasklet per fornire
+`init` di PeersManager. In tale metodo viene anche passata l'istanza di ITasklet per fornire
 l'implementazione del sistema di tasklet.
 
 Subito dopo aver creato la sua prima identità, la quale esce immediatamente dalla fase di bootstrap come descritto

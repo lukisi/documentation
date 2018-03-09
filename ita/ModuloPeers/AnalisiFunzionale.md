@@ -160,9 +160,6 @@ modulo che era già associata alla vecchia identità.
 
 In ogni momento un nodo può fare al suo modulo PeerServices una richiesta relativa ad un servizio con un dato *p_id*.
 
-In realtà in ogni sistema, solo l'*identità principale* è abilitata a fare richieste al suo modulo PeerServices. Questa,
-nel suo indirizzo, ha tutte le componenti *reali*.
-
 Il modulo PeerServices saprà a chi indirizzare la richiesta. Infatti, se il servizio è non-opzionale per definizione
 esso è fra quelli registrati nel modulo, quindi il modulo lo conosce, sa che è non-opzionale e non ha bisogno di mappe di
 partecipazione per ricercare un suo hash-node. Se il servizio pur essendo opzionale è stato registrato nel modulo, anche in questo
@@ -190,6 +187,33 @@ server di una certa richiesta *r*, il modulo PeerServices fornisce al nodo *n* g
 la replica di *r* (ad esempio la memorizzazione di un dato) su un numero *q* di nodi partecipanti al servizio che
 sarebbero stati i più prossimi destinatari della richiesta *r* in caso di assenza del nodo *n*.
 
+* * *
+
+In ogni sistema, solo l'*identità principale* è abilitata a fare richieste come *client* di un servizio. Questa
+è l'unica che nel suo indirizzo ha tutte le componenti *reali*.
+
+Analogamente, solo un nodo che nel suo indirizzo ha tutte le componenti *reali* può risultare contattato come
+*server* per un qualsiasi servizio. Quindi solo l'*identità principale*, in ogni sistema, ha necessità di
+registrare nel modulo PeerServices l'intenzione di partecipare ai servizi.
+
+Invece durante l'instradamento e il calcolo distribuito della funzione *H<sub>t</sub>* qualsiasi nodo
+partecipa e deve avere le conoscenze necessarie, inclusi i nodi *virtuali*. Questo ruolo nella comunicazione
+peer-to-peer lo chiamiamo di *forwarder*. I concetti di *client*, *server* e *forwarder* sono meglio definiti
+più sotto.
+
+Bisogna notare che, quando qualche evento porta all'avvio di una richiesta su un servizio peer-to-peer, il
+programma si chiede qual è al momento l'identità principale nel sistema, perché da essa come client deve
+partire la richiesta. Deve inoltre verificare (o altrimenti attendere) che essa sia uscita dalla fase
+di bootstrap. (si veda [qui](../ModuloQspn/EsplorazioneRete.md#Ingresso_gnodo_in_rete))  
+Mentre il pacchetto della richiesta viene instradato verso il server è possibile che
+l'identità client divenga (da sola o insieme ad un g-nodo) una identità di connettività, mentre un
+suo duplicato diviene l'identità principale.  
+È quindi necessario che la porzione di codice che avvia una richiesta su un servizio peer-to-peer avendo
+individuato l'identità principale, si prepari a gestire l'evento (appositamente segnalato dal programma
+stesso) che trasforma la suddetta identità in una di connettività, se questo accade mentre la richiesta
+non è stata ancora completamente servita. Su questo evento, la richiesta sul servizio peer-to-peer
+andrà iniziata nuovamente da capo.
+
 ### <a name="Comunicazioni_peer_to_peer"></a>Comunicazioni peer-to-peer
 
 Le comunicazioni peer-to-peer rese possibili da questo modulo, ad alto livello si possono intendere in questo modo:
@@ -213,8 +237,15 @@ un suo vicino a cui comunica il *pacchetto-p2p*. Questo vicino diventa quindi un
 intermedio, chiamiamolo *forwarder*.
 
 Ogni nodo forwarder è chiamato a instradare il *pacchetto-p2p* trasmettendolo ad un altro suo vicino verso la
-destinazione finale, cioè il server. Un nodo forwarder che riceve un *pacchetto-p2p* si trova in una di 3 possibili
-situazioni:
+destinazione finale, cioè il server.
+
+Per prima cosa notiamo che, come corollario del fatto che se il client originante il *pacchetto-p2p* diviene di
+connettività farà ripartire la richiesta da capo, se un nodo forwarder nota che il suo indirizzo è virtuale
+(abbiamo detto infatti che il ruolo di forwarder è mantenuto anche da nodi virtuali)
+ad un livello superiore a quello del g-nodo comune a client e server, allora gli è permesso non processare
+ulteriormente il *pacchetto-p2p* stesso. Infatti significherebbe che il nodo client stesso è diventato di connettività.
+
+Altrimenti, un nodo forwarder che riceve un *pacchetto-p2p* si trova in una di 3 possibili situazioni:
 
 1.  Il nodo forwarder non fa parte del g-nodo indicato come destinazione nel pacchetto. Quindi deve solo trasmettere
     il *pacchetto-p2p* al suo diretto vicino più adeguato.
@@ -226,8 +257,10 @@ situazioni:
     il nodo server. Ovviamente nel nodo server il servizio *p* deve essere stato registrato nel modulo PeerServices,
     cioè il nodo server deve essere partecipante al servizio *p*.
 
-Per quanto riguarda il messaggio *server-client*, invece, il server ha conoscenza di tutto l'indirizzo del nodo
-client e quindi questa comunicazione può avvenire direttamente con una connessione TCP dal server al client.
+Per quanto riguarda il messaggio *server-client*, invece, il server ha conoscenza della parte bassa dell'indirizzo
+del nodo client, fino al livello del minimo comune g-nodo tra server e client. Quindi questa comunicazione può
+avvenire direttamente con una connessione TCP dal server al client tramite l'uso dei relativi indirizzi IP interni
+al g-nodo comune.
 
 Fatta questa premessa, scendiamo ancora di livello e vediamo quali operazioni ogni nodo coinvolto deve fare in
 termini di calcolo di *H<sub>t</sub>* e di *h<sub>p</sub>*.
@@ -262,20 +295,34 @@ componenti sono tutte *reali*.
 
 ## <a name="Requisiti"></a>Requisiti
 
+Abbiamo detto che un nodo che avvia una richiesta peer-to-peer come client è sicuramente
+una identità principale e ha completato la sua fase di bootstrap. Inoltre, se un pacchetto
+viene instradato ad una identità questo significa che per forza di cose questa aveva in precedenza
+inviato un ETP, quindi anche essa ha completato la sua fase di bootstrap.
+
+Quindi possiamo ammettere che il programma crea l'istanza del modulo PeerServices associata ad una sua identità
+soltanto dopo che questa è uscita dalla sua fase di bootstrap. Alla creazione dell'istanza del modulo PeerServices
+collegato ad una sua identità, il programma deve fornire al modulo:
+
 *   Mappa corrente dei percorsi noti.
 *   Factory per aprire una connessione TCP con un percorso interno ad un proprio  g-nodo verso un nodo di cui si
     conosce l'identificativo interno.
 *   Factory per ottenere uno stub per inviare un messaggio in broadcast (con callback per gli archi in cui il
     messaggio fallisce) o uno stub per inviare un messaggio su un arco in modo reliable.
 
-Inoltre, se non si tratta di un sistema appena avviato (cioè della prima identità del sistema, la quale nasce
-come unico nodo in una nuova rete) ma di una identità che viene creata per sostituire una precedente
-identità, cioè o in caso di ingresso in un'altra rete o in caso di migrazione in un altro g-nodo, il modulo
-deve conoscere:
+Inoltre, se non si tratta della prima identità del sistema, la quale nasce all'avvio del programma
+come unico nodo in una nuova rete, bensì di una identità che viene creata per sostituire una precedente
+identità, cioè o in caso di ingresso in un'altra rete o in caso di migrazione in un altro g-nodo, il programma deve
+fornire al modulo:
 
 *   L'istanza del modulo che era associata alla precedente identità.
 *   Il livello del g-nodo ospite.
 *   Il livello del g-nodo ospitante.
+
+Notiamo infine che soltanto dopo aver creato l'istanza di PeersManager e solo
+nel caso di una identità principale, il programma dovrà creare una istanza di ogni classe
+di servizio che eredita la PeerService.  
+Ne è un esempio l'istanza di CoordService che il modulo Coordinator usa internamente.
 
 ## <a name="Deliverables"></a>Deliverables
 
