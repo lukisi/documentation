@@ -448,6 +448,30 @@ cioè nella prima identità e quando si duplica la corrente identità principale
 
 ### <a name="Modulo_Coordinator"></a>Modulo Coordinator
 
+Il modulo Coordinator ha il ruolo di fare sì che un g-nodo di livello *l* agisca e possa essere trattato
+come una singola entità.  
+Parte di questo compito è realizzato mediante comuni messaggi scambiati tra nodi diretti vicini. Un'altra
+parte abbisogna di un servizio peer-to-peer distribuito all'interno del g-nodo stesso.
+
+Il programma *ntkd* associa ad ogni identità nel sistema una istanza di CoordinatorManager al momento della
+creazione stessa dell'identità. Infatti una parte dei compiti del modulo Coordinator, gestiti con
+i messaggi ai nodi diretti vicini, non dipende dall'aver completato il bootstrap né dall'essere
+una identità principale o di connettività.
+
+In seguito quando l'identità ha completato la sua fase di bootstrap, evento segnalato
+dal modulo Qspn, il programma chiama su questa istanza il metodo `bootstrap_completed` per comunicare
+l'istanza di PeersManager e l'interfaccia ICoordinatorMap che sono suoi requisiti; in questo
+momento il programma specifica anche se l'identità è la principale o meno: infatti questa informazione
+è essenziale per il modulo Coordinator, perché solo per l'identità principale ha senso costruire
+una istanza di CoordService, cioè registrare la classe per fare (eventualmente) da
+Coordinator di un g-nodo.  
+Inoltre, se l'identità nasce come principale e quindi questo viene comunicato all'istanza associata
+di CoordinatorManager, quando questa dovesse diventare di connettività questo evento verrà comunicato
+al CoordinatorManager con il metodo `gone_connectivity`: in esso il modulo Coordinator rimuove la
+sua istanza di CoordService.
+
+L'istanza di CoordinatorManager resta in vita finché resta in vita l'identità.
+
 **TODO**
 
 ### <a name="Modulo_Hooking"></a>Modulo Hooking
