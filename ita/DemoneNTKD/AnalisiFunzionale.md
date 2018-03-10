@@ -415,9 +415,10 @@ nel [documento di dettaglio](DettagliTecnici.md#Indirizzi_IP).
 Il modulo PeerServices ha il ruolo di registrare i servizi peer-to-peer ai quali un nodo partecipa attivamente
 e di propagare le informazioni necessarie all'instradamento dei pacchetti delle comunicazioni peer-to-peer.  
 Il programma *ntkd* da parte sua deve soltanto registrare nella classe PeersManager (associata ad ogni identità)
-i servizi peer-to-peer ai quali il nodo (la suddetta identità) partecipa attivamente.  
+i servizi peer-to-peer ai quali il nodo (la suddetta identità) partecipa attivamente.
 
-Il programma *ntkd* associa ad ogni identità nel sistema una istanza di PeersManager. Tale istanza resta in vita
+Il programma *ntkd* associa ad ogni identità nel sistema una istanza di PeersManager, ma solo dopo che
+detta istanza ha completato la sua fase di bootstrap (evento segnalato dal modulo Qspn). Tale istanza resta in vita
 finché resta in vita l'identità.
 
 All'avvio, il programma *ntkd* ha il semplice compito di creare in autonomia la prima istanza di PeersManager e
@@ -429,10 +430,8 @@ associarla alla prima identità del sistema. Per questo deve fornire:
 *   Un delegato per trasmettere pacchetti ai diretti vicini per la propagazione delle mappe di partecipazione.
 *   Un delegato per aprire una connessione dal server sul client.
 
-Successivamente il programma *ntkd* potrà registrare le istanze dei servizi a cui il nodo partecipa attivamente.
-
-Il programma *ntkd* potrà duplicare una sua identità e di conseguenza creare una nuova istanza di PeersManager
-fornendo in questo caso anche:
+Il programma *ntkd* potrà duplicare una sua identità e di conseguenza creare una nuova istanza di PeersManager,
+sempre attendendo che questa completi la sua fase di bootstrap, fornendo in questo caso anche:
 
 *   L'istanza del modulo che era associata alla precedente identità.
 *   Il livello del g-nodo ospite.
@@ -440,6 +439,10 @@ fornendo in questo caso anche:
 
 Queste decisioni saranno prese a fronte di segnalazioni ricevute dal modulo Hooking. Ne parleremo quindi
 in seguito.
+
+Successivamente il programma *ntkd* potrà registrare nel modulo PeerServices (cioè su una istanza di PeersManager)
+le istanze dei servizi a cui il nodo partecipa attivamente. Questo sarà necessario farlo solo sulla identità principale:
+cioè nella prima identità e quando si duplica la corrente identità principale.
 
 **TODO**
 
