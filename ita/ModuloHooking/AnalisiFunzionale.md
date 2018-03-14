@@ -678,9 +678,11 @@ Il nodo *n* riceve la relativa istanza di `CompletedEnterResult`.
 Ora il nodo *n* prosegue con l'ingresso vero e proprio. In modo simile a quanto dettagliato nella
 trattazione dell'esecuzione della migration-path.
 
-Per prima cosa il nodo *n* inventa un identificativo `migration_id`.  
+Per prima cosa il modulo Hooking del nodo *n* inventa un identificativo `migration_id`.  
 Attraverso la *propagazione con ritorno* del metodo `prepare_migration` fa in modo che tutti i singoli nodi di *g* ricevano questa
-informazione e avviino la prima parte delle operazioni di duplicazione dell'identità.
+informazione nel modulo Hooking. Al ricevere questa informazione il modulo Hooking emette il segnale `do_prepare_enter`
+e di conseguenza l'utilizzatore del modulo in tutti questi singoli nodi avvia la prima parte delle operazioni di
+duplicazione dell'identità.
 
 In `EntryData` abbiamo:
 
@@ -689,8 +691,10 @@ In `EntryData` abbiamo:
 
 Sappiamo che `host_gnode_level` ≥ *lvl* + 1.
 
-Il nodo *n* attraverso la *propagazione senza ritorno* del metodo `finish_migration` fa in modo che queste informazioni giungano a tutti
-i singoli nodi di *g*. Questi avviano la seconda parte delle operazioni di duplicazione dell'identità.
+Il modulo Hooking del nodo *n* attraverso la *propagazione senza ritorno* del metodo `finish_migration` fa in modo che queste
+informazioni giungano a tutti i singoli nodi di *g* nel modulo Hooking. Al ricevere questa informazione il modulo Hooking emette
+il segnale `do_finish_enter` e di conseguenza l'utilizzatore del modulo in tutti questi singoli nodi avvia la seconda parte
+delle operazioni di duplicazione dell'identità.  
 Il g-nodo *g* si duplica: viene creato il g-nodo isomorfo *g'* che entra nella nuova rete. Invece il vecchio *g*
 viene dismesso.
 
@@ -1768,7 +1772,8 @@ void finish_migration(lvl, finish_migration_data):
 
 Questi ultimi algoritmi sono stati brevemente delineati, ma in effetti questi non sono di pertinenza
 del modulo Hooking, bensì del suo utilizzatore. Quindi compito dei metodi `prepare_migration` e
-`finish_migration` del modulo Hooking è quello di emettere i relativi segnali.
+`finish_migration` del modulo Hooking è quello di emettere i relativi segnali `do_prepare_migration`
+e `do_finish_migration`.
 
 ## <a name="Split_gnodo"></a>Risoluzione di uno split di g-nodo
 
