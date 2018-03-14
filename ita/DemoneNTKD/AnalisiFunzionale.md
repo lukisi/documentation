@@ -484,20 +484,23 @@ Consideriamo le conoscenze del programma *ntkd* rispetto agli archi-identità di
 Esso ha memorizzato alcune informazioni su istanze di `IdentityArc` in `id.identity_arcs`.
 
 Se, riguardo un certo arco-identità, il programma ha già associato un arco-qspn, allora sa che l'identità
-collegata nel diretto vicino (il *peer* dell'arco-identità) appartiene alla nostra stessa rete.
-L'istanza di `IQspnArc` è stata memorizzata dal programma nel membro `qspn_arc` di `IdentityArc`.
+collegata nel diretto vicino (il *peer* dell'arco-identità) appartiene alla nostra stessa rete.  
+Il programma associa un arco-qspn ad un arco-identità (cioè crea una istanza di `IQspnArc` e la
+passa al relativo QspnManager oltre che memorizzarla nel membro `qspn_arc` di `IdentityArc`) o allo
+stesso momento della costruzione del QspnManager (per ingresso o migrazione) oppure in risposta
+al segnale `same_network` ricevuto dal modulo Hooking.
 
 Se invece il programma non ha associato un `qspn_arc`, quindi il *peer* non appartiene alla nostra stessa rete,
 soltanto nel caso che si tratti di un arco-identità principale (cioè se `id` è l'identità principale del nostro sistema
 e il *peer* di questo arco-identità è l'identità principale del sistema vicino) il programma sa dire quale sia
 il network-id della rete a cui appartiene il *peer*: questa informazione gli è stata comunicata dal modulo
-Hooking e il programma l'ha memorizzata nel membro `network_id` di `IdentityArc`.
+Hooking con il segnale `another_network` e il programma l'ha memorizzata nel membro `network_id` di `IdentityArc`.
 
-Consideriamo ora il momento in cui il programma *ntkd* gestisce una sua identità `old_id` che si è duplicata
-in `new_id` per fare ingresso in un'altra rete di cui conosce il network-id. Cioè subito dopo il
-completamento della chiamata `identity_mgr.add_identity`.
+Consideriamo ora il momento in cui il programma *ntkd* riceve dal modulo Hooking il segnale `do_finish_enter`.
+Con i dati di questo segnale il programma duplica una sua identità `old_id` in `new_id` per fare ingresso in
+un'altra rete di cui conosce l'identificativo `enter_into_network_id`.
 
-Relativamente ai suoi archi-identità che avevano un `qspn_arc`, il programma sa discernere se l'identità del peer
+Relativamente agli archi-identità di `old_id` che avevano un `qspn_arc`, il programma sa discernere se l'identità del peer
 ha preso parte all'ingresso in altra rete insieme con lui: lo capisce dai membri `prev_peer_*` di IdentityArc.
 
 In sostanza, il programma in questo momento sa discernere per ogni arco-identità di `old_id` se c'era un arco-qspn

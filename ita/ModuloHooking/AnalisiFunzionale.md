@@ -226,7 +226,7 @@ Il modulo Hooking del nodo *n* chiama il metodo remoto `retrieve_network_data` s
 una struttura dati che descrive *J* come è vista da *v*.  
 La struttura `NetworkData` contiene:
 
-*   `int64 netid` = Identificativo della rete *J*.
+*   `int64 network_id` = Identificativo della rete *J*.
 *   `List<int> gsizes` = Lista che descrive la topologia della rete *J*. Da essa si ricava `levels`.
 *   `int neighbor_n_nodes` = Numero di singoli nodi dentro la rete *J*.
 *   `List<int> neighbor_pos` = Per i valori *i* da 1 a `levels`, l'elemento `neighbor_pos[i-1]` è la
@@ -234,6 +234,8 @@ La struttura `NetworkData` contiene:
 
 Da questa prima operazione il modulo Hooking in autonomia capisce se l'identità diretta vicina
 appartiene ad una rete diversa. Ovviamente solo in questo caso procede con le successive operazioni.
+
+Per prima cosa il modulo Hooking emette il segnale `another_network` indicando il `network_id`.
 
 Le due reti sicuramente vogliono fondersi in una. Si preferisce che sia la più piccola, come numero di singoli nodi in tutta la rete,
 ad entrare nella più grande. Solo in caso di parità assoluta si ricorra all'identificativo della rete (che è un numero
@@ -281,7 +283,7 @@ Inoltre sceglie un identificativo univoco random per questa richiesta, `int eval
 Ora il modulo Hooking del nodo *n* prepara una nuova struttura dati con le informazioni di cui sopra
 istanziando un `EvaluateEnterData evaluate_enter_data`.  
 La classe EvaluateEnterData è definita nel modulo Hooking. Si tratta di una classe serializzabile. I membri di questa classe sono:
-`int64 netid`, `List<int> neighbor_pos`, `int min_lvl`, `int evaluate_enter_id`.  
+`int64 network_id`, `List<int> neighbor_pos`, `int min_lvl`, `int evaluate_enter_id`.  
 L'istanza `evaluate_enter_data` andrà passata ad un metodo del modulo Hooking nel nodo Coordinator della rete.
 
 Ora il modulo Hooking del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
@@ -686,6 +688,7 @@ duplicazione dell'identità.
 
 In `EntryData` abbiamo:
 
+*   `int64 network_id` - Identificativo della rete.
 *   `List<int> pos` - Posizioni ai livelli da `host_gnode_level` - 1 a `levels`.
 *   `List<int> elderships` - Anzianità ai livelli da `host_gnode_level` - 1 a `levels`.
 
