@@ -109,7 +109,9 @@ livello `ask_lvl` nell'altra rete.
 Ora la tasklet inventa un identificativo `enter_id`. Poi fa uso della collaborazione con il modulo
 Coordinator per avviare una *propagazione con ritorno* a tutti i singoli nodi del suo g-nodo di
 livello `ask_lvl`. Essi avviano la prima parte delle operazioni di duplicazione dell'identità usando
-l'identificativo `enter_id` comunicato dalla nostra tasklet.
+l'identificativo `enter_id` comunicato dalla nostra tasklet.  
+Quando questa *propagazione con ritorno* è completata, la tasklet fa sì che anche questa nostra
+identità avvii la prima parte delle operazioni di duplicazione. Lo fa emettendo il segnale `do_prepare_enter`.
 
 La tasklet di nuovo fa uso della collaborazione con il modulo Coordinator per avviare una *propagazione senza ritorno*
 a tutti i singoli nodi del suo g-nodo di livello `ask_lvl`. Essi avviano la seconda parte delle operazioni
@@ -121,11 +123,18 @@ dover assumere una posizione *di connettività*.
 Le informazioni che vanno comunicate ai singoli nodi in questa propagazione sono l'identificativo `enter_id`
 e quelle contenute in `entry_data`.
 
-Dopo aver dato il via alla *propagazione senza ritorno* la tasklet fa in modo che nella sua stessa
-identità venga operato questo ingresso. Lo fa emettendo il segnale `enter_network`. Poi,
+Dopo aver dato il via alla *propagazione senza ritorno* la tasklet fa in modo che anche in questa nostra
+identità venga operato questo ingresso. Lo fa emettendo il segnale `do_finish_enter`. Poi,
 essendo la sua identità destinata a venire dismessa, termina.
 
 ### <a name="Operazioni_su_propagazione"></a>Operazioni su richieste da altri nodi
 
-**TODO**
+I comandi che arrivano al modulo Hooking di una nostra identità attraverso i meccanismi di propagazione
+all'interno di un g-nodo sono:
+
+*   `prepare_enter`
+*   `finish_enter`
+*   `prepare_migration`
+*   `finish_migration`
+*   `we_have_splitted`
 
