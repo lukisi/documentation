@@ -634,6 +634,7 @@ Ma questo sicuramente non cambia le sue conoscenze ai livelli superiori.
 Il nodo *v* comunica al nodo *n* i dettagli per fare ingresso nel suo g-nodo nel posto che si è appena liberato.  
 La classe `EntryData` che il metodo remoto `search_migration_path` restituisce contiene questi campi:
 
+*   `int64 network_id` - Identificativo della rete *J*.
 *   `List<int> pos` - Posizioni ai livelli da `host_gnode_level` - 1 a `levels`.
 *   `List<int> elderships` - Anzianità ai livelli da `host_gnode_level` - 1 a `levels`.
 
@@ -680,9 +681,15 @@ Il nodo *n* riceve la relativa istanza di `CompletedEnterResult`.
 Ora il nodo *n* prosegue con l'ingresso vero e proprio. In modo simile a quanto dettagliato nella
 trattazione dell'esecuzione della migration-path.
 
-Per prima cosa il modulo Hooking del nodo *n* inventa un identificativo `migration_id`.  
-Attraverso la *propagazione con ritorno* del metodo `prepare_migration` fa in modo che tutti i singoli nodi di *g* ricevano questa
-informazione nel modulo Hooking. Al ricevere questa informazione il modulo Hooking emette il segnale `do_prepare_enter`
+Per prima cosa il modulo Hooking del nodo *n* inventa un identificativo `enter_id`.  
+Attraverso la *propagazione con ritorno* del metodo `prepare_enter` fa in modo che tutti i singoli nodi di *g* ricevano questa
+informazione nel modulo Hooking.  
+La classe PrepareEnterData è definita nel modulo Hooking. Si tratta di una classe serializzabile. I membri
+di questa classe sono:
+
+*   `int enter_id`
+
+Al ricevere questa informazione il modulo Hooking emette il segnale `do_prepare_enter`
 e di conseguenza l'utilizzatore del modulo in tutti questi singoli nodi avvia la prima parte delle operazioni di
 duplicazione dell'identità.
 
@@ -694,8 +701,15 @@ In `EntryData` abbiamo:
 
 Sappiamo che `host_gnode_level` ≥ *lvl* + 1.
 
-Il modulo Hooking del nodo *n* attraverso la *propagazione senza ritorno* del metodo `finish_migration` fa in modo che queste
-informazioni giungano a tutti i singoli nodi di *g* nel modulo Hooking. Al ricevere questa informazione il modulo Hooking emette
+Il modulo Hooking del nodo *n* attraverso la *propagazione senza ritorno* del metodo `finish_enter` fa in modo che queste
+informazioni giungano a tutti i singoli nodi di *g* nel modulo Hooking.  
+La classe FinishEnterData è definita nel modulo Hooking. Si tratta di una classe serializzabile. I membri
+di questa classe sono:
+
+*   `int enter_id`
+*   `EntryData entry_data`
+
+Al ricevere questa informazione il modulo Hooking emette
 il segnale `do_finish_enter` e di conseguenza l'utilizzatore del modulo in tutti questi singoli nodi avvia la seconda parte
 delle operazioni di duplicazione dell'identità.  
 Il g-nodo *g* si duplica: viene creato il g-nodo isomorfo *g'* che entra nella nuova rete. Invece il vecchio *g*

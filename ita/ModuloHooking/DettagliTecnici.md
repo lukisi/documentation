@@ -43,6 +43,8 @@ con la valutazione.
 
 ### Valutazione dell'ingresso
 
+Per prima cosa il modulo Hooking emette il segnale `another_network` indicando il `int64 network_id`.
+
 Se la valutazione suggerisce di non fare ingresso nell'altra rete, allora attende un tempo lungo (10 minuti) prima
 di ripetere le operazioni di esame dell'identità.
 
