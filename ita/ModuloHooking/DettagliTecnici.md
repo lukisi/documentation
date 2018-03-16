@@ -1,21 +1,37 @@
 # Modulo Hooking - Dettagli Tecnici
 
-1.  [Operazioni relative ad un arco-identità](#Operazioni_arco_identita)
+1.  [Associazione del modulo ad una identità](#Associazione_identita)
+    1.  [Operazioni su un proprio arco-identità](#Operazioni_arco_identita)
+    1.  [Operazioni su richieste da altri nodi](#Operazioni_su_propagazione)
 
-## <a name="Operazioni_arco_identita"></a>Operazioni relative ad un arco-identità
+## <a name="Associazione_identita"></a>Associazione del modulo ad una identità
 
-Il modulo Hooking inizia le sue attività relativamente ad una certa identità nel sistema.
-Cioè una istanza di `HookingManager` viene costruita quando si crea una identità nel
-sistema e a questa viene associata.  
+Una istanza di `HookingManager` viene costruita quando si crea una identità nel
+sistema e a questa viene associata.
+
 L'utilizzatore del modulo Hooking comunica poi a questa istanza di `HookingManager` la
 nascita e la rimozione di ogni arco-identità associato a quella identità nel sistema. Questo
 chiamando i metodi pubblici `add_arc` e `remove_arc` dell'istanza di `HookingManager`.
 
-Il modulo Hooking, quando aggiunge un arco-identità, avvia una nuova tasklet. In essa eseguirà
-tutte le operazioni relative a quell'arco-identità. Quando rimuove un arco-identità abortisce
-la tasklet relativa.
+Il modulo Hooking associato ad una identità, per ogni arco-identità che conosce, avvia
+una tasklet che ha il compito di dialogare con il diretto vicino su questo arco-identità.
+Da questo dialogo scaturiscono alcune operazioni di pertinenza del modulo Hooking che sono
+svolte nella stessa tasklet. E da queste operazioni deriva l'emissione di alcuni segnali
+che informano l'utilizzatore del modulo su operazioni da intraprendere.
 
-### Esame delle identità
+Altre operazioni di pertinenza del modulo Hooking possono essere richieste al modulo
+associato ad una identità attraverso meccanismi di propagazione di messaggi all'interno di
+un certo g-nodo. Quindi tali operazioni sono svolte non in questa tasklet ma direttamente
+all'arrivo del messaggio. Anche da queste operazioni deriva l'emissione di alcuni segnali
+che informano l'utilizzatore del modulo su operazioni da intraprendere.
+
+### <a name="Operazioni_arco_identita"></a>Operazioni su un proprio arco-identità
+
+Il modulo Hooking quando viene aggiunto un arco-identità, sul metodo `add_arc`, avvia una nuova tasklet.
+In essa eseguirà tutte le operazioni relative a quell'arco-identità. Quando viene rimosso un arco-identità,
+sul metodo `remove_arc`, il modulo abortisce la tasklet relativa.
+
+#### Esame delle identità
 
 La tasklet per prima cosa esamina il tipo di identità su cui è in esecuzione. Se si tratta di una
 identità *di connettività* la tasklet termina. Se si tratta di una identità *principale* (quindi
@@ -41,7 +57,7 @@ Le due reti, infatti, non potranno in alcun modo fondersi.
 Se l'identità vicina appartiene ad una rete diversa che ha la stessa topologia, allora la tasklet procede
 con la valutazione.
 
-### Valutazione dell'ingresso
+#### Valutazione dell'ingresso
 
 Per prima cosa il modulo Hooking emette il segnale `another_network` indicando il `int64 network_id`.
 
@@ -62,7 +78,7 @@ l'ingresso del suo g-nodo di quel livello tramite il suo arco-identità.
 La tasklet per prima cosa pone `ask_lvl = first_ask_lvl`. Poi inizia le operazioni di esecuzione
 dell'ingresso al livello `ask_lvl`.
 
-### Esecuzione dell'ingresso al livello ask_lvl
+#### Esecuzione dell'ingresso al livello ask_lvl
 
 La tasklet interroga il nodo Coordinator del suo g-nodo di livello `ask_lvl` chiamando il metodo
 `begin_enter` del modulo Coordinator con le modalità descritte nell'analisi.
@@ -90,10 +106,10 @@ Se invece il metodo remoto `search_migration_path(ask_lvl)` non rilancia eccezio
 riceve una istanza di `EntryData entry_data` con le informazioni necessarie all'ingresso del suo g-nodo di
 livello `ask_lvl` nell'altra rete.
 
-Ora la tasklet inventa un identificativo `migration_id`. Poi fa uso della collaborazione con il modulo
+Ora la tasklet inventa un identificativo `enter_id`. Poi fa uso della collaborazione con il modulo
 Coordinator per avviare una *propagazione con ritorno* a tutti i singoli nodi del suo g-nodo di
 livello `ask_lvl`. Essi avviano la prima parte delle operazioni di duplicazione dell'identità usando
-l'identificativo `migration_id` comunicato dalla nostra tasklet.
+l'identificativo `enter_id` comunicato dalla nostra tasklet.
 
 La tasklet di nuovo fa uso della collaborazione con il modulo Coordinator per avviare una *propagazione senza ritorno*
 a tutti i singoli nodi del suo g-nodo di livello `ask_lvl`. Essi avviano la seconda parte delle operazioni
@@ -102,9 +118,14 @@ Ricordiamo che in questa operazione non diamo nessuna importanza al mantenimento
 interna dei g-nodi della vecchia rete: cioè le precedenti identità vengono dismesse immediatamente senza
 dover assumere una posizione *di connettività*.
 
-Le informazioni che vanno comunicate ai singoli nodi in questa propagazione sono l'identificativo `migration_id`
+Le informazioni che vanno comunicate ai singoli nodi in questa propagazione sono l'identificativo `enter_id`
 e quelle contenute in `entry_data`.
 
 Dopo aver dato il via alla *propagazione senza ritorno* la tasklet fa in modo che nella sua stessa
-identità venga operata questa migrazione. Poi, essendo la sua identità destinata a venire dismessa, termina.
+identità venga operato questo ingresso. Lo fa emettendo il segnale `enter_network`. Poi,
+essendo la sua identità destinata a venire dismessa, termina.
+
+### <a name="Operazioni_su_propagazione"></a>Operazioni su richieste da altri nodi
+
+**TODO**
 
