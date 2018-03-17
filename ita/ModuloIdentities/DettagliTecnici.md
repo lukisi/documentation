@@ -105,9 +105,9 @@ dell'utilizzatore del modulo:
 
 La classe IdentityManager è provvista dei seguenti segnali per notificare degli eventi all'utilizzatore del modulo:
 
-*   `identity_arc_added(IIdmgmtArc arc, NodeID id, IIdmgmtIdentityArc id_arc)`.  
+*   `identity_arc_added(IIdmgmtArc arc, NodeID id, IIdmgmtIdentityArc id_arc, IIdmgmtIdentityArc? prev_id_arc=null)`.  
     Un arco-identità è stato aggiunto. Può avvenire su richiesta dell'utilizzatore o in autonomia.
-*   `identity_arc_changed(IIdmgmtArc arc, NodeID id, IIdmgmtIdentityArc id_arc)`.  
+*   `identity_arc_changed(IIdmgmtArc arc, NodeID id, IIdmgmtIdentityArc id_arc, bool only_neighbour_migrated=false)`.  
     Per un arco-identità esistente sono stati modificati i valori *peer_mac* e *peer_linklocal*. Può
     avvenire solo in autonomia.
 *   `identity_arc_removed(IIdmgmtArc arc, NodeID id, NodeID peer_nodeid)`.  
