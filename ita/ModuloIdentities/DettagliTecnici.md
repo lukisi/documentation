@@ -305,13 +305,19 @@ collegati. Quindi non ha senso proseguire le operazioni su altri eventuali archi
             *   Il manager nel sistema *a* cambia i dati dell'arco assegnato ad *id<sub>j</sub>* relativamente all'interfaccia remota:
                 *   *w<sub>0</sub>.peer_mac = peer_old_id_new_mac*.
                 *   *w<sub>0</sub>.peer_linklocal = peer_old_id_new_linklocal*.
-            *   Segnala al suo utilizzatore che c'è stato un cambio sui dati dell' arco-identità dovuto alla
-                migrazione sia di *id<sub>j</sub>* sia del suo vicino.
             *   Il manager nel sistema *a* cambia i dati dell'arco assegnato ad *id<sub>i</sub>* relativamente alla *identità* remota:
                 *   *w<sub>1</sub>.peer_nodeid* = Il NodeID di *b<sub>k</sub>*.
+        *   Segnala al suo utilizzatore, con il segnale `identity_arc_added`, il fatto che si è formato un nuovo arco-identità
+            *w<sub>1</sub>* che parte dall'identità *id<sub>i</sub>* sull'arco *arc*. Questo segnale riporta anche l'informazione
+            che l'arco-identità è il duplicato dell'arco-identità *w<sub>0</sub>* derivante dalla duplicazione di una identità
+            nel nostro sistema.
         *   Il manager nel sistema *a* tramite il netns-manager aggiunge alle tabelle nel network namespace
             *namespaces(id<sub>j</sub>)* la rotta verso *w<sub>0</sub>.peer_linklocal* partendo da *old_id_new_linklocal*
             su *handled_nics(id<sub>j</sub>)(arc.get_dev()).dev*.
+        *   Se *b<sub>j</sub>* ha partecipato alla migrazione:
+            *   Segnala al suo utilizzatore, con il segnale `identity_arc_changed`, che c'è stato un cambio sui dati dell'arco-identità
+                dovuto al fatto che sono state duplicate per migrazione sia l'identità *id<sub>j</sub>* sia quella
+                del suo vicino.
         *   **Quanto segue**, fino alla fine del ciclo 2, si riferisce al sistema *b*. Ovviamente ha senso solo ipotizzando che la
             comunicazione tra il sistema *a* e il sistema *b* sia stata portata a termine con successo.
         *   Il manager nel sistema *b* a sua volta, ora sa che l'identità *id<sub>j</sub>* in *a* ha migrato e ha
@@ -327,8 +333,11 @@ collegati. Quindi non ha senso proseguire le operazioni su altri eventuali archi
             *   Cambia i dati dell' arco-identità *b<sub>j</sub>*-*id<sub>j</sub>*, cioè MAC e linklocal.
             *   Aggiunge una rotta nelle tabelle di un suo namespace (quello gestito da *b<sub>j</sub>*) per
                 l'arco *b<sub>j</sub>*-*id<sub>j</sub>*.
-            *   Segnala al suo utilizzatore prima il fatto che c'è stato un cambio sui dati del vecchio arco-identità
-                dovuto alla migrazione del solo vicino. Poi il fatto che si è formato un nuovo arco-identità.
+            *   Segnala al suo utilizzatore, con il segnale `identity_arc_changed`, il fatto che c'è stato un cambio sui dati del
+                suo arco-identità dovuto al fatto che è stata duplicata per migrazione l'identità del suo vicino.
+            *   Segnala al suo utilizzatore, con il segnale `identity_arc_added`, il fatto che si è formato un nuovo arco-identità.
+                Questo segnale riporta anche l'informazione che l'arco-identità non deriva dalla duplicazione di una identità
+                nel nostro sistema.
     *   Se *arc_is_broken*:
         *   Avvia una tasklet in cui, fra un istante, si rimuove *arc* per `bad_link`.
 
@@ -464,9 +473,15 @@ Riguardo gli archi-identità aggiunti in autonomia dal modulo, nel dettaglio pos
     questo caso la sequenza di operazioni da fare è un po' diversa ed è stata dettagliata nella descrizione
     dei metodi *prepare_add_identity* e *add_identity*. In questo caso non si chiama il metodo *add_identity_arc*.
 
-Fatta questa premessa, il manager in questo metodo aggiunge il nuovo arco-identità alle sue associazioni. Se
-necessario, cioè se non si tratta dell'arco-identità principale di *arc*, usa il netns-manager per realizzare
+Fatta questa premessa, il manager in questo metodo aggiunge il nuovo arco-identità alle sue associazioni.
+
+Se necessario, cioè se non si tratta dell'arco-identità principale di *arc*, usa il netns-manager per realizzare
 un nuovo collegamento diretto.
+
+Infine segnala al suo utilizzatore (poiché di norma questo metodo è chiamato
+automaticamente dal metodo *add_arc*) che è stato aggiunto un arco, con il segnale `identity_arc_added`.
+Questo segnale riporta anche l'informazione che l'arco-identità non deriva dalla duplicazione di una identità
+nel nostro sistema.
 
 * * *
 
