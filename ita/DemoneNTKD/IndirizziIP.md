@@ -1059,7 +1059,7 @@ principale eredita il default network namespace dalla precedente identità princ
     *   Esegue `iptables -t mangle -D PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
     *   Decrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
 *   Se *subnetlevel* > 0:
-    *   Per ogni livello *k* da `host_gnode_level` a *l* - 2:
+    *   Per ogni livello *k* da *subnetlevel* a *l* - 2:
         *   Esegue `iptables -t nat -D PREROUTING -d $prev_local_ip_set.netmap_range2[k] -j NETMAP --to $prev_local_ip_set.netmap_range1`.
         *   Esegue `iptables -t nat -D POSTROUTING -d $prev_local_ip_set.netmap_range3[k] -s $prev_local_ip_set.netmap_range1 -j NETMAP --to $prev_local_ip_set.netmap_range2[k]`.
     *   Esegue `iptables -t nat -D PREROUTING -d $prev_local_ip_set.netmap_range2_upper -j NETMAP --to $prev_local_ip_set.netmap_range1`.
@@ -1079,7 +1079,7 @@ principale eredita il default network namespace dalla precedente identità princ
     *   Esegue (opzionalmente) `ip address add $local_ip_set.anonymizing dev $dev`.
 *   Esegue (opzionalmente) `iptables -t nat -A POSTROUTING -d $local_ip_set.anonymizing_range -j SNAT --to $local_ip_set.global`.
 *   Se *subnetlevel* > 0:
-    *   Per ogni livello *k* da `host_gnode_level` a *l* - 2:
+    *   Per ogni livello *k* da *subnetlevel* a *l* - 2:
         *   Esegue `iptables -t nat -A PREROUTING -d $local_ip_set.netmap_range2[k] -j NETMAP --to $local_ip_set.netmap_range1`.
         *   Esegue `iptables -t nat -A POSTROUTING -d $local_ip_set.netmap_range3[k] -s $local_ip_set.netmap_range1 -j NETMAP --to $local_ip_set.netmap_range2[k]`.
     *   Esegue `iptables -t nat -A PREROUTING -d $local_ip_set.netmap_range2_upper -j NETMAP --to $local_ip_set.netmap_range1`.
