@@ -208,7 +208,7 @@ Usiamo un esempio per illustrare cosa si intende con questa espressione.
 Sia un evento *e* che quando si verifica avvia una lunga elaborazione. All'inizio di questa elaborazione viene
 scritto a video il messaggio "elaborazione avviata" con un timestamp. Al termine della elaborazione viene scritto a
 video il messaggio "elaborazione terminata" con un timestamp. Supponiamo ora che questo evento *e* possa essere segnalato
-da due tasklet *t1* e *t2* che sono eseguite parallelemante. Supponiamo che la tasklet *t1* segnala l'evento
+da due tasklet *t1* e *t2* che sono eseguite parallelamente. Supponiamo che la tasklet *t1* segnala l'evento
 *e*. Poi mentre l'elaborazione è in corso, la tasklet *t2* segnala anch'essa l'evento *e*. Noi però, per qualche
 motivo, vogliamo che non si accavallino a video i messaggi di inizio e fine elaborazione; vogliamo che il messaggio
 di "elaborazione terminata" con il relativo timestamp sia sempre riferibile al messaggio di "elaborazione avviata"
@@ -242,9 +242,7 @@ La classe DispatchableTasklet fornisce questi metodi:
 
 ### <a name="Inizializzazione"></a>Inizializzazione
 
-I moduli del demone *ntkd* che fanno uso delle tasklet vengono "inizializzati" con alcune chiamate, fra cui il
-metodo `init_tasklet_system`. In esso il modulo principale fornisce le implementazioni delle interfacce usate per
-le comunicazioni allo schedulatore.
-
-Praticamente deve fornire una istanza di ITasklet.
+I moduli del demone *ntkd* che fanno uso delle tasklet vengono inizializzati con il metodo statico `init`, nel quale
+il modulo principale fornisce una istanza di ITasklet. In pratica in questo modo dichiara di poter fornire
+le implementazioni di tutte le interfacce viste sopra per le comunicazioni allo schedulatore.
 
