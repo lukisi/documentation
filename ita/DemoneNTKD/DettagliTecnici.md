@@ -89,8 +89,8 @@ fornita dal modulo Coordinator.
 `IHookingManagerSkeleton` Questa interfaccia è implementata dalla classe `HookingManager`
 fornita dal modulo Hooking.
 
-`IAddressManagerSkeleton` Questa interfaccia è implementata dalle classi `AddressManagerForNode`
-e `AddressManagerForIdentity` fornite dal programma *ntkd* stesso. In esse è implementato
+`IAddressManagerSkeleton` Questa interfaccia è implementata dalle classi `NodeSkeleton`
+e `IdentitySkeleton` fornite dal programma *ntkd* stesso. In esse è implementato
 il codice che restituisce le istanze skeleton dei suddetti moduli.
 
 ### Interfacce stub
@@ -123,7 +123,8 @@ Cioè l'istanza di (ad esempio) `IIdentityManagerStub` è valida finché resta i
 `IAddressManagerStub` a cui è legata. Invece nei moduli spesso si è ideata una interfaccia
 chiamata `StubFactory` che consente al modulo di ottenere una istanza della classe stub del modulo
 stesso.  
-Per questo il programma *ntkd* fornisce per ogni modulo una classe stub proxy.
+Per questo il programma *ntkd* fornisce per ogni modulo una classe stub proxy. Ad esempio
+la classe `IdentityManagerStubHolder`.
 
 ## <a name="Indirizzi_IP"></a>Indirizzi IP
 
