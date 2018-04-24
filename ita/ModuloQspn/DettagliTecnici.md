@@ -306,8 +306,24 @@ Anche ad una istanza di QspnManager costruita in questo modo, il demone *ntkd* s
 Una volta costruita la nuova istanza, il demone *ntkd* potrà dismettere (rimuovere ogni riferimento che deteneva) la
 vecchia istanza di QspnManager che gestisce l'identità *n*, la quale adesso sicuramente non è la *principale*.
 
-Prima di farlo, il demone *ntkd* chiama su di essa il metodo *destroy* per segnalare ai suoi diretti vicini esterni a
-*w* che sta uscendo dalla rete. Tale metodo esegue una chiamata broadcast a metodo remoto.
+Consideriamo cosa avviene quando il nostro nodo *n* sta facendo questo ingresso insieme al g-nodo *w* di livello *k*,
+quindi ha tra i suoi diretti vicini altri nodi che stanno facendo lo stesso ingresso. Prendiamo ad esempio il nodo *m*.  
+Il modulo *Identities* ha duplicato *n* in *n’* e *m* in *m’*. Ora supponiamo che il sistema dove vive *n* ha completato
+la costruzione dell'istanza di QspnManager di *n’*, mentre ancora il sistema dove vive *m* non ha completato
+la costruzione dell'istanza di QspnManager di *m’*.  
+Se immediatamente il sistema dove vive *n* dismette l'identità *n*, questo comporta la rimozione degli archi-identità
+tra *n* e *m*. Ora sarà impossibile per il sistema dove vive *m* completare correttamente la costruzione dell'istanza
+di QspnManager di *m’*. Ricordiamo che il costruttore `enter_net` (descritto poco sopra)
+richiede che sia ancora valido il QspnManager precedente (`previous_identity`) e che questi abbia nelle sue liste
+interne gli archi-qspn che lo rendevano parte del vecchio g-nodo *w*.
+
+Per evitare questa situazione occorre che, dopo la costruzione del nuovo QspnManager di *n’*, prima di dismettere
+la vecchia identità *n* si attenda un tempo sufficiente a presumere che i nostri diretti vicini abbiano costruito
+il loro nuovo QspnManager.
+
+Prima di dismettere *n*, il demone *ntkd* chiama sull'istanza di QspnManager che gestisce l'identità *n* il metodo *destroy*
+per segnalare ai suoi diretti vicini esterni a *w* che sta uscendo dalla rete. Tale metodo esegue una chiamata broadcast
+a metodo remoto.
 
 ### <a name="Migrazione"></a>Migrazione
 
