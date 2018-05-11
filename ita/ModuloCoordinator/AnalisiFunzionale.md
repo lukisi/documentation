@@ -471,6 +471,17 @@ Questa richiesta è di tipo *update*.
 Questa richiesta viene fatta al servizio Coordinator, in particolare al Coordinator di *g*, per
 fare in modo che sia *g* come entità atomica a venire interpellata.
 
+È chiaro che il livello debba essere maggiore di 0, nel senso che non si può occupare un posto
+all'interno di un g-nodo di livello 0, cioè di un nodo. Ma questa limitazione si amplia nel caso di
+un nodo che fa da gateway ad un g-nodo a gestione autonoma del routing.  
+È possibile che venga richiesto ad un singolo nodo di interrogare il Coordinator del suo g-nodo di
+livello `lvl` quando questo singolo nodo è un gateway per un g-nodo di livello `subnetlevel` e
+che `lvl` sia non maggiore di `subnetlevel`. Ma non si può occupare un posto (nemmeno un posto virtuale)
+all'interno di un g-nodo di livello `subnetlevel` o inferiore, cioè di un g-nodo a gestione autonoma del routing.  
+Qualora, dunque, dovesse pervenire una tale richiesta, la risposta da restituire al client del servizio
+sarà una istanza di ReserveEnterErrorResponse (una classe senza membri).  
+Il nodo Coordinator di *g* scopre di essere in questa situazione usando il metodo `can_reserve` di ICoordinatorMap.
+
 Per prima cosa il nodo Coordinator di *g* accede alla memoria condivisa di *g*. Nel membro `reserve_list`
 dell'istanza di `CoordGnodeMemory` associata al livello `lvl` vengono memorizzate
 in una lista di Booking le prenotazioni pendenti con la scadenza associata. Le prenotazioni scadute vengono adesso
@@ -1025,7 +1036,9 @@ Il metodo, attraverso la classe client del servizio CoordinatorClient, invia una
 #### Metodo reserve
 
 Il metodo `reserve` del modulo Coordinator viene chiamato per prenotare un posto (se possibile *reale*, altrimenti *virtuale*)
-nel proprio g-nodo di livello *lvl*.
+nel proprio g-nodo di livello *lvl*.  
+Può fallire (con l'eccezione `ReserveError`) se il livello richiesto è invalido, cioè non maggiore del
+livello `subnetlevel` o maggiore del numero di livelli della topologia della rete.
 
 Gli argomenti di questo metodo sono:
 
@@ -1093,7 +1106,7 @@ I metodi della classe CoordinatorClient sono:
 *   `void set_hooking_memory(Object data, int lvl) throws ProxyError` - modifica la porzione di dati di pertinenza
     del modulo Hooking nella memoria condivisa del g-nodo di livello *lvl*.  
     Vedi la relativa [richiesta](#Set_hooking_memory).
-*   `void reserve(int lvl, int reserve_request_id, out int new_pos, out int new_eldership)` -
+*   `void reserve(int lvl, int reserve_request_id, out int new_pos, out int new_eldership) throws ReserveError` -
     chiede al Coordinator del g-nodo di livello *lvl* di riservare un posto.  
     Vedi la relativa [richiesta](#Prenota_un_posto).
 *   `void delete_reserve(int lvl, int reserve_request_id)` -
@@ -1115,6 +1128,9 @@ Tramite questa interfaccia, quindi, il modulo può:
 
 *   Leggere il numero approssimativo di singoli nodi nella rete secondo le conoscenze acquisite
     dal nodo corrente tramite il Qspn (metodo `get_n_nodes`).
+*   Sapere se è possibile riservare un posto (*reale* o *virtuale*) al livello *i* da 0 a *l* - 1 (metodo `can_reserve`).  
+    Questo è impossibile (ad esempio) se siamo in effetti un nodo che fa da gateway per un g-nodo di
+    livello maggiore di *i*.
 *   Leggere l'elenco delle posizioni *reali* libere in ogni livello *i* da 0 a *l* - 1 (metodo `get_free_pos`).  
     Cioè le posizioni nel livello *i* che sono libere nel nostro g-nodo di livello *i* + 1. Questa
     informazione è quella che si basa sulla mappa del nodo corrente, senza considerare
