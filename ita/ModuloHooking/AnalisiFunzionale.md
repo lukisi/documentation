@@ -130,7 +130,7 @@ una rete a cui non apparteneva. Questo può rendersi necessario a fronte di due 
 *   Una rete *J* incontra una rete distinta *G*. Le due reti si erano formate indipendentemente.
 *   Un g-nodo *g* di livello *l*, con *g* ∈ *G*, si è "splittato", cioè non è più internamente connesso.
     Si sono quindi formate varie isole *g'*, *g''*, eccetera. Questo
-    mentre il suo g-nodo di livello superiore *h* risulta ancora internamente connesso. Allora
+    mentre il suo g-nodo di livello superiore *f* risulta ancora internamente connesso. Allora
     ogni isola che non contiene il nodo più anziano deve considerarsi come una distinta
     rete *J* (composta da un solo g-nodo di livello *l* o minore) che incontra *G*.
 
@@ -231,6 +231,11 @@ La struttura `NetworkData` contiene:
 *   `int neighbor_n_nodes` = Numero di singoli nodi dentro la rete *J*.
 *   `List<int> neighbor_pos` = Per i valori *i* da 1 a `levels`, l'elemento `neighbor_pos[i-1]` è la
     posizione al livello `i-1` di *v* dentro *g<sub>i</sub>(v)*.
+*   `int neighbor_min_level` = Livello minimo a cui il singolo nodo *v* è disposto a migrare. Infatti il nodo *v*
+    potrebbe essere un gateway verso una rete privata in cui si vogliono adottare diversi meccanismi di
+    assegnazione di indirizzi e routing. In questo caso il gateway potrebbe volere una assegnazione di un
+    g-nodo di livello tale da poter disporre di un certo spazio
+    (numero di bit) per gli indirizzi interni.
 
 Da questa prima operazione il modulo Hooking in autonomia capisce se l'identità diretta vicina
 appartiene ad una rete diversa. Ovviamente solo in questo caso procede con le successive operazioni.
@@ -283,7 +288,7 @@ Inoltre sceglie un identificativo univoco random per questa richiesta, `int eval
 Ora il modulo Hooking del nodo *n* prepara una nuova struttura dati con le informazioni di cui sopra
 istanziando un `EvaluateEnterData evaluate_enter_data`.  
 La classe EvaluateEnterData è definita nel modulo Hooking. Si tratta di una classe serializzabile. I membri di questa classe sono:
-`int64 network_id`, `List<int> neighbor_pos`, `int min_lvl`, `int evaluate_enter_id`.  
+`int64 network_id`, `List<int> neighbor_pos`, `int neighbor_min_level`, `int min_lvl`, `int evaluate_enter_id`.  
 L'istanza `evaluate_enter_data` andrà passata ad un metodo del modulo Hooking nel nodo Coordinator della rete.
 
 Ora il modulo Hooking del nodo *n* fa in modo che venga richiamato nel modulo Coordinator il
@@ -317,23 +322,24 @@ presumere che *G* sia la rete più piccola, poiché vuole entrare nell'altra. E 
 dare il tempo agli altri singoli nodi di *G*, che potrebbero venire in contatto a breve con l'altra rete
 in altri punti, di raggiungere il nodo Coordinator di *G* con la loro proposta.
 
+Il nodo Coordinator dell'intera rete *G* non ha particolari informazioni sui g-nodi (di livello inferiore al
+minimo comune g-nodo) a cui appartiene *n*. Ma tali informazioni comunque non gli sono necessarie.
+
 Oltre alle informazioni ricevute dal nodo *n*, il nodo Coordinator della rete *G* (sempre riferendoci
 al codice in esecuzione nel modulo Hooking) conosce il livello più basso `int max_lvl`
 tale che la rete *G* è composta da un solo g-nodo a quel livello. Questo valore è utile, perché
 se si raggiunge la prenotazione di una posizione a questo livello, l'intera rete *G* può entrare in *J*
 in blocco. Non è quindi necessario chiedere di più.
 
-Il nodo Coordinator dell'intera rete *G* non ha particolari informazioni sui g-nodi (di livello inferiore al
-minimo comune g-nodo) a cui appartiene *n*. Ma tali informazioni comunque non gli sono necessarie.
+Nell'individuare `max_lvl` il singolo nodo parte dal valore `subnetlevel`. Cioè parte da 0 normalmente, ma se
+è un gateway per una sottorete a gestione autonoma parte dal livello del g-nodo autonomo. Poi sale se esiste
+nella sua mappa una destinazione nota ad un livello maggiore o uguale a `max_lvl`.
 
-Bisogna individuare un livello a cui cercare di far entrare un g-nodo di *n* dentro un g-nodo di *v*.  
-Sicuramente il primo tentativo sarà di entrare in blocco. Cioè con il livello più piccolo tale che la rete *G* è
-costituita da un solo g-nodo, cioè `max_lvl`.
+Però `max_lvl` può raggiungere al massimo `levels - 1`, perché non è possibile far entrare in una
+rete esistente (o far migrare) un g-nodo di livello `levels`.
 
-Però se abbiamo `max_lvl = levels` allora possiamo tentare al massimo con `levels - 1`. Invece se
-abbiamo `max_lvl < min_lvl` allora dobbiamo tentare con `min_lvl`.
-
-Chiamiamo `first_ask_lvl` il livello del g-nodo con cui faremo il primo tentativo. Vedremo in seguito che se questo
+Il valore individuato `max_lvl` sarà il livello del g-nodo con cui faremo il primo tentativo. Va infatti messo
+in `first_ask_lvl` nella classe `EvaluateEnterResult` che il metodo alla fine ritornerà. Vedremo in seguito che se questo
 fallisce si potrà degradare, cioè tentare ingresso con un g-nodo di livello inferiore.
 
 Il compito del nodo Coordinator di *G* adesso è quello di memorizzare che è stata incontrata la rete *J* attraverso
@@ -431,6 +437,17 @@ del vicino *v* dentro *J*. Il modulo Hooking nel nodo Coordinator di *G* acceden
 alla lista di *valutazioni* vede che un certo numero di queste ha per nodo vicino un nodo che appartiene
 al g-nodo di *J* in cui *G* vorrebbe entrare. Deduce quindi il numero di archi che dovrebbero rompersi
 per far sì che il g-nodo divenga disconnesso.
+
+Inoltre si da minore preferenza (ma non si vietano) alle opzioni in cui il nodo di partenza della
+migration-path, cioè *v*, è un gateway con `evaluate_enter_data.neighbor_min_level` maggiore di `max_lvl`.
+Se si dovesse scegliere una tale opzione, il valore di `first_ask_lvl` dovrebbe essere
+`neighbor_min_level` anziché `max_lvl`.
+
+Le opzioni in cui il nodo di contatto, cioè *n*, è un gateway (con `evaluate_enter_data.min_level`
+maggiore di 0) hanno un handicap: se fosse impossibile nella rete ospite *J* trovare una
+migration-path al livello richiesto e quindi fosse necessario degradare (come vedremo in seguito) non
+lo si potrebbe fare tramite questo punto di contatto scendendo oltre il livello `min_level`. Vale la
+pena dare minore preferenza anche a queste opzioni.
 
 Diciamo che la soluzione eletta sia la *valutazione* `v`.
 
@@ -786,15 +803,15 @@ Cioè tutti i g-nodi di livello maggiore di *l* a cui appartiene *v* sono *satur
 Allora il g-nodo *g* non può entrare, cioè non è possibile assegnargli un indirizzo libero, in nessuno dei g-nodi di *v*.
 
 A meno di trovare un meccanismo (meno invasivo possibile per la rete *J*) che porti alla liberazione di uno dei posti ora
-occupati dentro il g-nodo di livello *l* + 1 a cui appartiene *v*. Questa seconda possibilità vale solo se
+occupati dentro un g-nodo di livello maggiore di *l* a cui appartiene *v*. Questa seconda possibilità vale solo se
 *l* ﹤ *levels* - 1.
 
 Quindi correggiamo il tiro. La richiesta che il nodo *n* fa al nodo *v* è la seguente: trova, se possibile, un meccanismo
-che permetta di liberare un posto nel tuo attuale g-nodo di livello *l* + 1 o superiore.
+che permetta di liberare un posto nel tuo attuale g-nodo di livello maggiore di *l*.
 
 Abbiamo detto "se possibile". Infatti è possibile che in tutta la rete *J* tutti gli indirizzi possibili per un g-nodo
 di livello *l* siano stati occupati.  
-In termini rigorosi: *size<sub>l</sub>(g<sub>levels</sub>(v)) = gsizes(l) \* gsizes(l+1) \* ... \* gsizes(levels-1)*.  
+In termini rigorosi: *size<sub>l</sub>(g<sub>levels</sub>(v)) = size<sub>l</sub>(J) = gsizes(l) \* gsizes(l+1) \* ... \* gsizes(levels-1)*.  
 Notare che questo, abbiamo detto sopra, non è possibile per il nodo *v* determinarlo autonomamente. Vedremo a breve come
 il nodo *v* possa determinare questa situazione.  
 In questo caso il nodo *v* comunicherà a *n* questa impossibilità e questi potrà decidere di tentare di far entrare
@@ -805,59 +822,82 @@ in *J*, ma l'esito della richiesta potrebbe essere che lo stesso nodo *v* migra 
 una identità *di connettività* come link per *g*.
 
 Come risponde il nodo *v* a questa richiesta?
-
-Indichiamo con *h* l'attuale g-nodo di livello *l* + 1 di *v*.  
-Il nodo *v* per riservare una posizione per *g* cerca la *shortest migration-path* che libera un posto in *h* o in
-un suo g-nodo superiore.
+Il nodo *v* per riservare una posizione per *g* cerca la *shortest migration-path* che libera un posto in
+uno dei g-nodi di *v* di livello maggiore di *l*. La chiamiamo *migration-path a livello l*.
 
 Specifichiamo rigorosamente cosa si intende per *migration-path*.
 
 ### <a name="Strategia_ingresso_Definizione_migration_path"></a>Definizione della migration-path
 
-Sia *h* un g-nodo di livello *l* + 1, con *l* da 0 a *levels* - 2. È possibile che sia
-*size<sub>l</sub>(h)* = *gsizes(l)*. Cioè *h* può essere saturo.
+Abbiamo detto che *l*, cioè il livello del g-nodo *g* che vuole entrare nella rete *J*, può avere un valore
+da 0 a *levels* - 2. Indichiamo con *P* = (*p<sub>1</sub>*, *p<sub>2</sub>*, ... *p<sub>m</sub>*)
+una migration-path, cioè una lista di g-nodi che soddisfa i requisiti che adesso vedremo.
 
-Definiamo *P* una migration-path a livello *l* che parte dal g-nodo *h* (di livello *l* + 1) se *P* è una
-lista di g-nodi che soddisfa questi requisiti:
+Questi g-nodi, se *m* ≥ 2, sono adiacenti ognuno al successivo. Sono tutti saturi, tranne l'ultimo che ha almeno
+una posizione riservabile.
+
+Il primo g-nodo, *p<sub>1</sub>*, è un g-nodo di livello *k<sub>1</sub>*, con *k<sub>1</sub>* ≥ *l* + 1.
+In esso una posizione di livello *k<sub>1</sub>* - 1 viene liberata (o semplicemente riservata se *m* = 1)
+per ospitare il g-nodo *g*.  
+Il primo g-nodo è anche quello adiacente al g-nodo *g* di livello *l* che vuole fare ingresso
+nella rete *J*. Cioè uno dei g-nodi di *v*. Indichiamo nel seguito questo primo g-nodo anche con *h*.
+
+Il secondo g-nodo, *p<sub>2</sub>*, se *m* ≥ 2, è un g-nodo di livello *k<sub>2</sub>*,
+con *k<sub>2</sub>* ≥ *k<sub>1</sub>*. In esso una posizione di livello *k<sub>2</sub>* - 1 viene
+liberata (o semplicemente riservata se *m* = 2) per ospitare il g-nodo di livello *k<sub>1</sub>* - 1 che
+migra per liberare un posto nel g-nodo *p<sub>1</sub>*.
+
+In generale, per ogni *i* da 2 a *m*, se *m* ≥ 2, il g-nodo *p<sub>i</sub>* è un g-nodo di livello *k<sub>i</sub>*,
+con *k<sub>i</sub>* ≥ *k<sub>i-1</sub>*. In esso una posizione di livello *k<sub>i</sub>* - 1 viene
+liberata (o semplicemente riservata se *m* = *i*) per ospitare il g-nodo di livello *k<sub>i-1</sub>* - 1 che
+migra per liberare un posto nel g-nodo *p<sub>i-1</sub>*.
+
+L'ultimo passo, cioè il g-nodo *p<sub>m</sub>*, è quello che risulta non saturo, cioè quello in cui
+non c'è bisogno di liberare una posizione di livello *k<sub>m</sub>* - 1 ma soltanto di riservarla.
+
+Definiamo *P* una migration-path che parte dal g-nodo *p<sub>1</sub>* (indicato anche con *h*) per ospitare in esso
+un g-nodo *g* di livello *l* se *P* è una lista di g-nodi che soddisfa questi requisiti:
 
 *   *P* = (*p<sub>1</sub>*, *p<sub>2</sub>*, ... *p<sub>m</sub>*).
-*   *p<sub>1</sub>* = *h*. Se *m* = 1, quindi *p<sub>1</sub>* = *p<sub>m</sub>*, allora *p<sub>1</sub>* può essere
-    *h* o un g-nodo di livello maggiore che contiene *h*.
+*   *p<sub>1</sub>* contiene *v*.
+*   Sia *k<sub>1</sub>* = *lvl(p<sub>1</sub>)*.
+*   *k<sub>1</sub>* > *l*.
 *   Per ogni *i* da 1 a *m* - 1:
     *   **Nota** può essere *m* = 1, quindi questo ciclo non viene mai valutato.
-    *   *lvl(p<sub>i</sub>)* = *lvl(h)* = *l* + 1.  
-        Inoltre è necessario che il g-nodo *p<sub>i</sub>* abbia tutte le posizioni *reali*, ai livelli
-        da *l* + 1 a *levels* - 1.
+    *   Sia *k<sub>i+1</sub>* = *lvl(p<sub>i+1</sub>)*.
+    *   *k<sub>i+1</sub>* ≥ *k<sub>i</sub>*.
+    *   Inoltre è necessario che il g-nodo *p<sub>i</sub>* abbia tutte le sue posizioni (ai
+        livelli da *k<sub>i</sub>* a *levels* - 1) *reali*.
     *   *p<sub>i+1</sub>* ∈ *𝛤<sub>l+1</sub>(p<sub>i</sub>)*, cioè *p<sub>i+1</sub>* è direttamente collegato a
-        *p<sub>i</sub>* nel grafo *[G]<sub>l+1</sub>*.  
-        Inoltre è necessario che il g-nodo di livello *l* in *p<sub>i</sub>* diretto vicino di
-        *p<sub>i+1</sub>* abbia la posizione *reale* al livello *l*.
-    *   *size<sub>l</sub>(p<sub>i</sub>)* = *gsizes(l)*, cioè *p<sub>i</sub>* è saturo.
-*   *lvl(p<sub>m</sub>)* = *k* ≥ *lvl(h)* = *l* + 1. Indichiamo con *k* il livello di *p<sub>m</sub>*.
-*   *size<sub>k-1</sub>(p<sub>m</sub>)* `<` *gsizes(k-1)*, cioè *p<sub>m</sub>* non è saturo.
+        *p<sub>i</sub>* nel grafo *[G]<sub>k(i)</sub>*.  
+    *   Inoltre è necessario che il g-nodo di livello *k<sub>i</sub>* - 1 in *p<sub>i</sub>* diretto vicino
+        di *p<sub>i+1</sub>* abbia la posizione *reale* al livello *k<sub>i</sub>* - 1.
+    *   *size<sub>k(i)-1</sub>(p<sub>i</sub>)* = *gsizes(k<sub>i</sub>-1)*, cioè *p<sub>i</sub>* è saturo.
+*   Abbiamo già detto che *k<sub>m</sub>* è il livello di *p<sub>m</sub>*.
+*   *size<sub>k(m)-1</sub>(p<sub>m</sub>)* `<` *gsizes(k<sub>m</sub>-1)*, cioè *p<sub>m</sub>* non è saturo.
 
 Usiamo una definizione che include anche una sorta di migration-path impropria, quella di lunghezza 0.
 
 ### <a name="Strategia_ingresso_Uso_migration_path"></a>Uso della migration-path
 
-Detto in altri termini, il nodo *v* deve cercare la shortest migration-path a livello *l* che parte da *h*. Cioè:
+Detto in altri termini, il nodo *v* deve cercare la shortest migration-path per fornire un posto ad un g-nodo
+di livello *l*. Cioè:
 
-*   un posto già libero nel suo g-nodo di livello *l* + 1, cioè in *h*; *oppure*
-*   un posto già libero in un suo g-nodo di livello maggiore; *oppure*
-*   la shortest migration-path per liberare un posto nel suo g-nodo di livello *l* + 1, cioè in *h*.
+*   un posto già libero in un suo g-nodo *h* di livello maggiore di *l*; *oppure*
+*   la shortest migration-path per liberare un posto in un suo g-nodo *h* di livello maggiore di *l*.
 
-Usare questa migration-path significa far migrare un border g-nodo di livello *l* (che ha
-una posizione *reale* al livello *l*) da ognuno dei g-nodi
-di livello *l* + 1 della lista *P* nel successivo in modo tale da liberare un posto nel primo g-nodo
-di livello *l* + 1 della lista *P*. Come *costo* abbiamo che viene occupato un ulteriore posto nell'ultimo g-nodo
-della lista *P*, il quale non era saturo, ma anche poteva essere di livello maggiore di *l* + 1.
+Usare questa migration-path significa far migrare da ognuno dei g-nodi *p<sub>i</sub>* (di livello *k<sub>i</sub>*)
+della lista *P* nel successivo *p<sub>i+1</sub>* un border g-nodo di livello subito inferiore
+(*k<sub>i</sub>* - 1) in modo tale da liberare alla fine un posto nel primo g-nodo, *p<sub>1</sub>*,
+che è di livello maggiore di *l*. Come *costo* abbiamo che viene occupato un ulteriore posto nell'ultimo g-nodo
+della lista *P*, il quale non era saturo.
 
 ### <a name="Strategia_ingresso_Caratteristiche_migration_path"></a>Caratteristiche della migration-path
 
 Una migration-path a livello *l* ha 2 caratteristiche importanti:
 
 *   *d* = *m* - 1  
-    distanza, cioè numero di migrazioni (di g-nodi di livello *l*) necessarie, con *d* ≥ 0.
+    distanza, cioè numero di migrazioni necessarie, con *d* ≥ 0.
 *   *hl*  
     host g-node level, cioè il livello dell'ultimo g-nodo della lista, con *levels* ≥ *hl* > *l*.
 
@@ -1494,8 +1534,8 @@ Conosciamo `mig_gnode_old_pos`, la posizione di *𝛽<sub>m-1</sub>* in *p<sub>m
 Sappiamo anche che è stato riservato un posto *virtuale* `conn_gnode_pos` in *p<sub>m-1</sub>* che verrà assegnato
 all'identità *di connettività* che *𝛽<sub>m-1</sub>* assume in *p<sub>m-1</sub>*. Esso è stato
 salvato nel membro `previous_gnode_new_conn_vir_pos` di SolutionStep.  
-Sappiamo anche che nel g-nodo *p<sub>m</sub>* di livello *k*, con *k* ≥ *l* + 1, è stato
-riservato un posto *reale*. Indichiamo con `final_mig_gnode_host_lvl` il livello *k*, con
+Sappiamo anche che nel g-nodo *p<sub>m</sub>* di livello *k<sub>m</sub>*, con *k<sub>m</sub>* ≥ *l* + 1, è stato
+riservato un posto *reale*. Indichiamo con `final_mig_gnode_host_lvl` il livello *k<sub>m</sub>*, con
 `final_mig_gnode_new_pos` la posizione in esso riservata e con `final_mig_gnode_new_eldership` la
 sua anzianità. Questi valori sono stati salvati nei membri `host_lvl`, `real_new_pos` e
 `real_new_eldership` di Solution.  
