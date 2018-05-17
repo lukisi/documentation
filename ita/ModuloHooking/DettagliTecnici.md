@@ -138,3 +138,58 @@ all'interno di un g-nodo sono:
 *   `finish_migration`
 *   `we_have_splitted`
 
+## <a name="Requisiti"></a>Requisiti
+
+### Delegati
+
+Al modulo Hooking (associato ad una nostra identità) deve essere fornito un delegato interrogando il quale sia
+possibile dire se l'identità associata è la principale.
+
+```
+bool is_main_id();
+```
+
+* * *
+
+Attraverso un delegato può ottenere uno stub per trasmettere un messaggio in modo reliable su un
+dato arco identità.
+
+```
+HookingManagerStub get_stub(IIdentityArc ia);
+```
+
+* * *
+
+Attraverso un delegato può richiedere al programma di chiamare (usando la collaborazione col modulo Coordinator)
+il metodo `evaluate_enter` sul nodo Coordinator del suo g-nodo di un dato livello.
+
+```
+int evaluate_enter() throws AskAgainError, IgnoreNetworkError;
+```
+
+Sul nodo Coordinator del g-nodo interessato il programma dovrà chiamare un corrispettivo metodo pubblico
+che il modulo Hooking deve quindi esporre.
+
+```
+public int evaluate_enter() throws AskAgainError, IgnoreNetworkError;
+```
+
+### Segnali
+
+Il modulo Hooking associato ad una nostra identità può emettere questi segnali:
+
+*   `same_network(IIdentityArc ia)`
+*   `another_network(IIdentityArc ia, int64 network_id)`
+*   `do_prepare_enter(int enter_id)`
+*   `do_finish_enter(int enter_id, int guest_gnode_level, EntryData entry_data, int go_connectivity_position)`
+*   `do_prepare_migration(/* TODO */)`
+*   `do_finish_migration(/* TODO */)`
+
+### Metodi remoti
+
+Tra diretti vicini i dialoghi sono espletati con questi metodi remoti:
+
+*   `retrieve_network_data()`
+*   ``
+*   ``
+
