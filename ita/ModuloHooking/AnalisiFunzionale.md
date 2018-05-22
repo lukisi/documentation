@@ -998,7 +998,7 @@ Prima di avviare l'algoritmo che restituirà una lista di soluzioni, il nodo *v*
 di un g-nodo di riservare un posto. Potrà essere usato alla fine per cancellare le prenotazioni superflue.
 Sarà spiegato nel dettaglio in seguito.
 
-Inoltre chiama `min_host_lvl = ask_lvl + 1` il livello minimo dentro cui riservare un posto nel primo g-nodo della
+Inoltre chiama `first_host_lvl = ask_lvl + 1` il livello minimo dentro cui riservare un posto nel primo g-nodo della
 migration-path.
 
 Inoltre chiama `ok_host_lvl = ask_lvl + 𝜀` il livello più alto che possa essere ritenuto *soddisfacente* come ultimo
@@ -1010,15 +1010,15 @@ con la ricerca di una eventuale soluzione migliore.
 La signature dell'algoritmo è la seguente:
 
 ```
-List<Solution> FindShortestMig(int reserve_request_id, int min_host_lvl, int ok_host_lvl)
+List<Solution> FindShortestMig(int reserve_request_id, int first_host_lvl, int ok_host_lvl)
 ```
 
 L'algoritmo è il seguente:
 
 ```
-Se (min_host_lvl ≤ subnetlevel) min_host_lvl = subnetlevel + 1
-Se (ok_host_lvl `<` min_host_lvl) ok_host_lvl = min_host_lvl
-TupleGNode v = make_tuple_from_level(min_host_lvl)
+Se (first_host_lvl ≤ subnetlevel) first_host_lvl = subnetlevel + 1
+Se (ok_host_lvl `<` first_host_lvl) ok_host_lvl = first_host_lvl
+TupleGNode v = make_tuple_from_level(first_host_lvl)
 int max_host_lvl = levels
 List<Solution> solutions = []
 int prev_sol_distance = -1
@@ -1042,17 +1042,21 @@ Mentre Q is not empty:
      prev_sol_distance * 1.3 ≤ current.get_distance():
        Esci dal ciclo.
   // Contatta un singolo nodo in `current.visiting_gnode`.
-  // Passa una tupla composta di `min_host_lvl`, `max_host_lvl`, `reserve_request_id`, `ok_host_lvl`.
+  // Passa una tupla composta di `max_host_lvl`, `ok_host_lvl`, `reserve_request_id`.
   // La risposta sarà una tupla composta di: `esito`, `min_host_lvl`, `final_host_lvl`, `real_new_pos`, `real_new_eldership`,
   // `set_adjacent`, `new_conn_vir_pos`, `new_eldership`.
-  Esito esito, int final_host_lvl, int real_new_pos, int real_new_eldership.
+  Esito esito, int min_host_lvl, int final_host_lvl, int real_new_pos, int real_new_eldership.
   Set<Pair<TupleGNode,int>> set_adjacent, int new_conn_vir_pos, int new_eldership.
   (esito, min_host_lvl, final_host_lvl, real_new_pos, real_new_eldership,
         set_adjacent, new_conn_vir_pos, new_eldership) =
-        ask_enter_net(current, min_host_lvl, max_host_lvl, reserve_request_id, ok_host_lvl)
-    // Questo algoritmo è eseguito nel singolo nodo contattato in `current.visiting_gnode`.
+        ask_enter_net(current, max_host_lvl, ok_host_lvl, reserve_request_id)
+    // Questo algoritmo è eseguito nel singolo nodo contattato in `current.visiting_gnode` passando per il
+    //  percorso indicato ricorsivamente in `current.parent...`. Il nodo destinazione
+    //  riceve i parametri `visiting_gnode, max_host_lvl, ok_host_lvl, reserve_request_id`.
     Se real_pos_up_to(my_pos) `<` levels:
       Instrada eccezione SearchMigrationPathError. Termina.
+    Assert visiting_gnode sono io.
+    int min_host_lvl = level(visiting_gnode).
     int pos, int eldership.
     bool ok = False.
     Mentre min_host_lvl ≤ max_host_lvl:
@@ -1148,8 +1152,7 @@ identifica un g-nodo che è stato visitato, il cui livello è sicuramente non mi
 Prende inoltre a parametro il livello `l`
 che risulta essere il livello minimo a cui quel g-nodo può richiedere una prenotazione, cioè
 tale che il metodo `reserve` del Coordinator non lanci una eccezione, cioè in definitiva il
-valore subito superiore a `subnetlevel` cioè al livello in cui quel g-nodo è un g-nodo a
-gestione autonoma del routing.  
+livello in cui quel g-nodo è un g-nodo a gestione autonoma del routing.  
 Questa funzione produce quindi una nuova istanza di `TupleGNode` che identifica il g-nodo
 di livello `l` che contiene il g-nodo `tuple`.
 
