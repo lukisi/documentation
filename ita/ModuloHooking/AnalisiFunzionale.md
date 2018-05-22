@@ -1043,8 +1043,9 @@ Mentre Q is not empty:
        Esci dal ciclo.
   // Contatta un singolo nodo in `current.visiting_gnode`.
   // Passa una tupla composta di `max_host_lvl`, `ok_host_lvl`, `reserve_request_id`.
-  // La risposta sarà una tupla composta di: `esito`, `min_host_lvl`, `final_host_lvl`, `real_new_pos`, `real_new_eldership`,
-  // `set_adjacent`, `new_conn_vir_pos`, `new_eldership`.
+  // La risposta sarà una tupla composta di: `esito`, `min_host_lvl`,
+  //  `final_host_lvl`, `real_new_pos`, `real_new_eldership`,
+  //  `set_adjacent`, `new_conn_vir_pos`, `new_eldership`.
   Esito esito, int min_host_lvl, int final_host_lvl, int real_new_pos, int real_new_eldership.
   Set<Pair<TupleGNode,int>> set_adjacent, int new_conn_vir_pos, int new_eldership.
   (esito, min_host_lvl, final_host_lvl, real_new_pos, real_new_eldership,
@@ -1292,11 +1293,16 @@ il g-nodo finale `current.visiting_gnode` come non ancora visitato: cioè potreb
 attraverso altre path.
 
 Proseguiamo ipotizzando che il percorso invece non contiene incongruenze.  
-Indichiamo con *w* il primo singolo nodo che si è incontrato in `current.visiting_gnode`.  
-Il nodo *w* nel pacchetto *di richiesta* ha ricevuto `min_host_lvl`, `max_host_lvl`, `reserve_request_id`, `ok_host_lvl`.
+Indichiamo con *w* il primo singolo nodo che si è incontrato in `current.visiting_gnode`. Cioè quello
+che una volta ricevuto il pacchetto, dopo aver verificato di essere il destinatario
+in `path_hops[1].visiting_gnode` e che il passo precedente era in `path_hops[1].previous_migrating_gnode`,
+rimuove il primo elemento dalla lista `path_hops` e si avvede che essa diventa vuota (non contiene più l'indice 1).  
+Il nodo *w*, prima di rimuovere l'ultimo elemento dalla lista `path_hops`, recupera il parametro
+`visiting_gnode`. Inoltre dal pacchetto *di richiesta* ha ricevuto i parametri `max_host_lvl`, `ok_host_lvl` e
+`reserve_request_id`.  
 Ora il nodo *w* prosegue con l'algoritmo, che spiegheremo a breve con maggiori dettagli.
-Intanto diciamo che alla fine il nodo *w* prepara un pacchetto *di risposta*
-e lo instrada verso *v*. Esso contiene `esito`, `final_host_lvl`, `real_new_pos`, `real_new_eldership`,
+Intanto diciamo che alla fine il nodo *w* prepara un pacchetto *di risposta* e lo instrada verso *v*.
+Esso contiene `esito`, `min_host_lvl`, `final_host_lvl`, `real_new_pos`, `real_new_eldership`,
 `set_adjacent`, `new_conn_vir_pos`, `new_eldership`.
 
 Riassumendo, i pacchetti contengono:
@@ -1305,10 +1311,9 @@ Riassumendo, i pacchetti contengono:
 SearchMigrationPathRequest:
   List<PathHop> path_hops
   TupleGNode v
-  int min_host_lvl
   int max_host_lvl
-  int reserve_request_id
   int ok_host_lvl
+  int reserve_request_id
 
 SearchMigrationPathError:
   TupleGNode v
@@ -1316,6 +1321,7 @@ SearchMigrationPathError:
 SearchMigrationPathResponse:
   TupleGNode v
   Esito esito
+  int? min_host_lvl
   int? final_host_lvl
   int? real_new_pos
   int? real_new_eldership
@@ -1333,6 +1339,9 @@ route_search_response()
 ```
 
 ##### Riserva un posto per la migrazione
+
+Il nodo *w* avendo ricevuto il parametro `visiting_gnode` può calcolare il livello del g-nodo che è
+chiamato a rappresentare. Mette il livello in `min_host_lvl`.
 
 Il nodo *w* ora deve chiedere al Coordinator del suo g-nodo di livello `min_host_lvl` di riservare un posto. Ma per fare questo
 è necessario, a causa delle attuali limitazioni del modulo PeerServices, che il nodo *w* abbia tutte le
