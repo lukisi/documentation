@@ -958,7 +958,8 @@ Vediamo in dettaglio l'algoritmo di questa ricerca.
 
 ### <a name="Strategia_ingresso_Algoritmo_ricerca"></a>Algoritmo di ricerca
 
-Premettiamo la definizione di alcune strutture dati che utilizzeremo.
+Come premessa per descrivere più agevolmente l'algoritmo di ricerca della migration-path
+definiamo alcune strutture dati.
 
 Definiamo una struttura dati con la quale identificare un g-nodo con posizioni *reali* e
 mantenere alcune informazioni relative.  
@@ -1051,8 +1052,8 @@ Mentre Q is not empty:
   (esito, min_host_lvl, final_host_lvl, real_new_pos, real_new_eldership,
         set_adjacent, new_conn_vir_pos, new_eldership) =
         ask_enter_net(current, max_host_lvl, ok_host_lvl, reserve_request_id)
-    // Questo algoritmo è eseguito nel singolo nodo contattato in `current.visiting_gnode` passando per il
-    //  percorso indicato ricorsivamente in `current.parent...`. Il nodo destinazione
+    // Questo algoritmo è eseguito nel singolo nodo contattato in `current.visiting_gnode` passando
+    //  per il percorso indicato ricorsivamente in `current.parent...`. Il nodo destinazione
     //  riceve i parametri `visiting_gnode, max_host_lvl, ok_host_lvl, reserve_request_id`.
     Se real_pos_up_to(my_pos) `<` levels:
       Instrada eccezione SearchMigrationPathError. Termina.
@@ -1088,8 +1089,8 @@ Mentre Q is not empty:
     Set<Pair<TupleGNode,int>> set_adjacent = new Set<Pair<TupleGNode,int>>
     Per i = min_host_lvl to levels - 1:
       // Vede quali g-nodi di livello i sono adiacenti al mio g-nodo di livello min_host_lvl
-      // e quale g-nodo di livello min_host_lvl-1 dentro il mio g-nodo di livello min_host_lvl sia il
-      // relativo border-g-nodo.
+      // e quale g-nodo di livello min_host_lvl-1 dentro il mio g-nodo di livello min_host_lvl
+      // sia il relativo border-g-nodo.
       Set<Pair<HCoord,int>> adjacent_hc_set = adj_to_me(i, min_host_lvl)
       Per ogni HCoord hc, int border_real_pos in adjacent_hc_set:
         // Produce TupleGNode del g-nodo adiacente
@@ -1116,7 +1117,7 @@ Mentre Q is not empty:
     prev_sol_distance = sol.get_distance()
     max_host_lvl = final_host_lvl - 1
   Per ogni TupleGNode n, int border_real_pos in set_adjacent:
-    // Notare che n è una tupla di livello maggiore o uguale a `min_host_lvl`.
+    // Notare che la tupla `n` indica un g-nodo di livello maggiore o uguale a `min_host_lvl`.
     Se level(n) > min_host_lvl:
       // Contatta un singolo nodo in `n` passando per il percorso in `current`.
       // Passa `requested_lvl = min_host_lvl`.
@@ -1126,14 +1127,32 @@ Mentre Q is not empty:
         Instrada risultato make_tuple_from_level(requested_lvl). Termina.
       Se ora n ha componenti non reali:
         Continue (prossima iterazione)
-    Se n is not in S:
-      S.add(n)
-      SolutionStep n_step = new SolutionStep(visiting_gnode=n,
-                                             previous_migrating_gnode=border_real_pos,
-                                             previous_gnode_new_conn_vir_pos=new_conn_vir_pos,
-                                             previous_gnode_new_eldership=new_eldership,
-                                             parent=current)
-      Q.enqueue(n_step)
+    // Adesso che la tupla `n` indica un g-nodo di livello `min_host_lvl` la possiamo aggiungere
+    //  come foglia del percorso `current` se non è stata già visitata da altri percorsi.
+    Se n NOT IN S:
+      // Però siccome il livello `min_host_lvl` può crescere durante un certo percorso
+      //  (perché in uno dei suoi passaggi si è incontrato un g-nodo a gestione autonoma
+      //  di più alto livello) dobbiamo verificare anche che non ci sia stato un g-nodo
+      //  contenuto in `n` già attraversato dal percorso `current`.
+      SolutionStep prev_step = current
+      bool in_prev_step = False
+      Mentre True:
+        TupleGNode prev_step_gnode = prev_step.visiting_gnode.
+        TupleGNode prev_step_gnode_bigger = make_tuple_up_to_level(prev_step_gnode, min_host_lvl)
+        Se prev_step_gnode_bigger.pos = n.pos:
+          in_prev_step = True
+          Esci dal ciclo.
+        Se prev_step.parent = null:
+          Esci dal ciclo.
+        prev_step = prev_step.parent
+      Se NOT in_prev_step:
+        S.add(n)
+        SolutionStep n_step = new SolutionStep(visiting_gnode=n,
+                                               previous_migrating_gnode=border_real_pos,
+                                               previous_gnode_new_conn_vir_pos=new_conn_vir_pos,
+                                               previous_gnode_new_eldership=new_eldership,
+                                               parent=current)
+        Q.enqueue(n_step)
 Restituisci solutions.
 ```
 
@@ -1149,13 +1168,8 @@ corrente nel modulo Hooking ha modo di vedere nella sua mappa gerarchica anche l
 del g-nodo che conosce come `hc`.
 
 La funzione `make_tuple_up_to_level(tuple, l)` prende a parametro una istanza di `TupleGNode` che
-identifica un g-nodo che è stato visitato, il cui livello è sicuramente non minore di `l`.
-Prende inoltre a parametro il livello `l`
-che risulta essere il livello minimo a cui quel g-nodo può richiedere una prenotazione, cioè
-tale che il metodo `reserve` del Coordinator non lanci una eccezione, cioè in definitiva il
-livello in cui quel g-nodo è un g-nodo a gestione autonoma del routing.  
-Questa funzione produce quindi una nuova istanza di `TupleGNode` che identifica il g-nodo
-di livello `l` che contiene il g-nodo `tuple`.
+identifica un g-nodo il cui livello è minore o uguale a `l`. Produce una nuova istanza
+di `TupleGNode` che identifica il g-nodo di livello `l` che contiene il g-nodo `tuple`.
 
 La funzione `level(n)` restituisce il livello del g-nodo identificato dalla tupla `n`.
 
@@ -1211,14 +1225,6 @@ Il significato dei vari membri per l'elemento *i*-esimo della lista è il seguen
     che dovrebbe risultare adiacente al g-nodo *p<sub>i</sub>*.  
     Nel primo elemento della lista questo membro è *null*.
 
-Il g-nodo indicato nell'elemento `path_hops[0].visiting_gnode` è quello a cui appartiene *v*, quindi
-non va "raggiunto".  
-Quando si raggiunge il g-nodo indicato nell'elemento `path_hops[1].visiting_gnode`, occorre verificare che
-il precedente singolo nodo sia del g-nodo `path_hops[1].previous_migrating_gnode`.  
-Deve inoltre essere vero che `path_hops[1].previous_migrating_gnode` è dentro `path_hops[0].visiting_gnode`
-al livello subito sotto.  
-E così via.
-
 Per tradurre il contenuto dell'istanza di SolutionStep nella lista di PathHop l'algoritmo è il seguente:
 
 ```
@@ -1270,36 +1276,40 @@ Quindi avremo:
 
 Prima si instrada il pacchetto *di richiesta* verso A, poi verso B, poi verso C e infine verso D.
 
-È importante verificare durante il percorso che non ci siano incongruenze con quanto era memorizzato
-in `current`. Vediamo come:  
-Il pacchetto *di richiesta* inizialmente contiene tutta la lista `path_hops` preparata prima. Ogni nodo che lo riceve verifica
-se fa parte del g-nodo corrente destinazione, cioè di `path_hops[1].visiting_gnode`, che all'inizio è A. Se non ne
-fa parte allora semplicemente instrada il pacchetto verso `path_hops[1].visiting_gnode`.  
-Una volta raggiunto il primo singolo nodo dentro il g-nodo A, questi deve verificare che il passo precedente era
-*w<sub>A</sub>*. Per questo nell'instradamento *della richiesta* ogni nodo, oltre al pacchetto, indica il proprio
-indirizzo completo. Questo indirizzo deve risultare in `path_hops[1].previous_migrating_gnode`. Se è così,
-allora il nodo toglie il primo elemento dalla lista `path_hops` e
-poi instrada il pacchetto *di richiesta* verso `path_hops[1].visiting_gnode`, che adesso è B.  
-Allo stesso modo, una volta raggiunto il primo singolo nodo dentro il g-nodo B, questi deve verificare che
-il passo precedente era *w<sub>B</sub>*, e così via.  
+Il g-nodo indicato nell'elemento `path_hops[0].visiting_gnode` è quello a cui appartiene *v*, quindi
+non va "raggiunto". Invece subito si ha come diretta destinazione da raggiungere il g-nodo indicato
+nell'elemento `path_hops[1].visiting_gnode`.
+
+Fintanto che non si è raggiunto tale g-nodo, ogni singolo nodo che riceve il pacchetto *di richiesta*
+verifica di essere all'interno del g-nodo `path_hops[0].visiting_gnode`.  
 Se un nodo scopre una incongruenza, allora il fatto viene comunicato al nodo mittente *v* dal nodo
 che lo ha scoperto: questi prepara un pacchetto *di eccezione* da instradare verso *v*. Per questo nel
 pacchetto *di richiesta* viene indicato l'indirizzo *completo* del nodo mittente *v* e non solo le posizioni
 interne al g-nodo comune con la destinazione finale.  
-In questo caso, indicato nell'algoritmo con l'eccezione SearchMigrationPathError,
-il nodo *v* stralcia completamente la path indicata da `current`, come se
+Quando un pacchetto *di eccezione* raggiunge il nodo *v*, come indicato nell'algoritmo con
+l'eccezione SearchMigrationPathError, questi stralcia completamente la path indicata da `current`, come se
 avesse restituito `esito=NO_SOLUTION` con `set_adjacent` vuoto. Ma al contempo ora considera
 il g-nodo finale `current.visiting_gnode` come non ancora visitato: cioè potrebbe visitarlo in seguito
 attraverso altre path.
 
-Proseguiamo ipotizzando che il percorso invece non contiene incongruenze.  
-Indichiamo con *w* il primo singolo nodo che si è incontrato in `current.visiting_gnode`. Cioè quello
-che una volta ricevuto il pacchetto, dopo aver verificato di essere il destinatario
-in `path_hops[1].visiting_gnode` e che il passo precedente era in `path_hops[1].previous_migrating_gnode`,
-rimuove il primo elemento dalla lista `path_hops` e si avvede che essa diventa vuota (non contiene più l'indice 1).  
-Il nodo *w*, prima di rimuovere l'ultimo elemento dalla lista `path_hops`, recupera il parametro
-`visiting_gnode`. Inoltre dal pacchetto *di richiesta* ha ricevuto i parametri `max_host_lvl`, `ok_host_lvl` e
-`reserve_request_id`.  
+Proseguiamo ipotizzando che la verifica ha esito positivo.  
+Quando si raggiunge il g-nodo indicato nell'elemento `path_hops[1].visiting_gnode`, occorre verificare che
+il precedente singolo nodo sia del g-nodo `path_hops[1].previous_migrating_gnode`.  
+Deve inoltre essere vero che `path_hops[1].previous_migrating_gnode` è dentro `path_hops[0].visiting_gnode`
+al livello subito sotto.  
+Anche in questa verifica, se viene rilevata una incongruenza, allora il nodo
+prepara un pacchetto *di eccezione* da instradare verso *v*.
+
+Dopo quest'altra verifica il nodo toglie il primo elemento dalla lista `path_hops` e
+poi instrada il pacchetto *di richiesta* verso `path_hops[1].visiting_gnode`.
+
+E così via. Se il percorso non contiene incongruenze arriveremo al punto in cui il pacchetto
+*di richiesta* raggiunge `path_hops[1].visiting_gnode` e la lista `path_hops` termina lì.
+
+Indichiamo con *w* il primo singolo nodo che si è incontrato nel g-nodo destinazione del
+pacchetto *di richiesta*.  
+Il nodo *w* recupera dal pacchetto il parametro `visiting_gnode` e i parametri `max_host_lvl`,
+`ok_host_lvl` e `reserve_request_id`.  
 Ora il nodo *w* prosegue con l'algoritmo, che spiegheremo a breve con maggiori dettagli.
 Intanto diciamo che alla fine il nodo *w* prepara un pacchetto *di risposta* e lo instrada verso *v*.
 Esso contiene `esito`, `min_host_lvl`, `final_host_lvl`, `real_new_pos`, `real_new_eldership`,
@@ -1421,7 +1431,15 @@ il cui livello è maggiore o uguale a `ask_lvl + 1`.
 ##### Risposta al nodo richiedente
 
 Il nodo *w* instrada verso il nodo *v* in un pacchetto *di risposta* la tupla composta di
-`esito`, `final_host_lvl`, `real_new_pos`, `real_new_eldership`, `set_adjacent`, `new_conn_vir_pos`, `new_eldership`.
+`esito`, `min_host_lvl`, `final_host_lvl`, `real_new_pos`, `real_new_eldership`, `set_adjacent`,
+`new_conn_vir_pos`, `new_eldership`.
+
+In particolare evidenziamo che il nodo *v* riceve il parametro di output `min_host_lvl`
+che è il livello minimo a cui il g-nodo `current.visiting_gnode` può richiedere una prenotazione,
+cioè tale che il metodo `reserve` del Coordinator non lanci una eccezione, cioè in definitiva il
+livello in cui quel g-nodo è un g-nodo a gestione autonoma del routing. Quindi il nodo *v* usa
+la funzione `make_tuple_up_to_level` per mantenere d'ora in poi in `current.visiting_gnode`
+proprio tale g-nodo.
 
 ##### I g-nodi adiacenti devono essere del livello richiesto
 
@@ -1469,7 +1487,19 @@ route_explore_response()
 ##### Prosegue l'algoritmo di ricerca in ampiezza della shortest migration-path
 
 Il nodo *v*, ricevuta la risposta (ed eventualmente dopo aver ottenuto i g-nodi adiacenti nel
-livello richiesto) prosegue con l'algoritmo di ricerca in ampiezza.
+livello richiesto) prosegue con l'algoritmo
+di [ricerca in ampiezza](https://en.wikipedia.org/wiki/Breadth-first_search).
+
+Tale algoritmo prevede che vengano accodati, nel set dei nodi da visitare che abbiamo indicato
+con `Q`, soltanto le foglie che non siano già state visitate.  
+Nel nostro caso, tali foglie sono dei g-nodi. Però bisogna considerare che la ricerca della
+migration-path parte con g-nodi di un certo livello. Ma nel seguito, ogni singolo percorso
+può passare a valutare g-nodi adiacenti di livello superiore, perché in uno dei suoi passaggi
+si è incontrato un g-nodo a gestione autonoma di più alto livello.  
+Per questo, prima di accodare come foglia il g-nodo `n` (uno dei g-nodi adiacenti a quello
+appena visitato) occorre non soltanto verificare che quel preciso g-nodo non sia nel set
+che abbiamo indicato con `S`, ma anche che nel percorso in esame `current` non si abbia
+già toccato un g-nodo contenuto nel g-nodo `n`.
 
 La ricerca si interrompe quando si trova una migration-path con un delta minore di `𝜀`,
 oppure quando dopo l'ultima migration-path trovata (sebbene con un delta *non soddisfacente*) sono stati fatti
