@@ -1425,39 +1425,37 @@ interessato la richiesta di avvertire il proprio Coordinator che una certa preno
 
 ##### Recupera i g-nodi adiacenti per proseguire la ricerca in ampiezza
 
-Vediamo ora come fa il nodo *w* a dire quali g-nodi di livello `ask_lvl + 1` sono adiacenti al
-suo g-nodo di livello `ask_lvl + 1`.  
-Questo viene fatto solo se non è stato trovato qui un posto *reale* ad un livello con delta
-*soddisfacente*.
+Vediamo ora come fa il nodo *w* a dire quali g-nodi di livello `min_host_lvl` sono adiacenti al
+suo g-nodo di livello `min_host_lvl`.
 
-Il nodo *w* sa quali sono i g-nodi di livello `ask_lvl + 1` interni al suo g-nodo di livello `ask_lvl + 2`,
-cioè quali HCoord di livello `ask_lvl + 1` sono presenti nella sua mappa dei percorsi.
-Tra questi sa dire quali (se ce ne sono) siano anche adiacenti al suo g-nodo di livello `ask_lvl + 1`: infatti esiste
-un percorso verso essi che non contiene passi intermedi di livello `ask_lvl + 1`. È anche necessario
-che l'ultimo passo intermedio di livello `ask_lvl` sia un HCoord con posizione *reale* a quel livello. Se non
-esiste un passo intermedio di livello `ask_lvl`, allora è necessario che lo stesso nodo *w* abbia
+Il nodo *w* sa quali sono i g-nodi di livello `min_host_lvl` interni al suo g-nodo di livello `min_host_lvl + 1`,
+cioè quali HCoord di livello `min_host_lvl` sono presenti nella sua mappa dei percorsi.
+Tra questi sa dire quali (se ce ne sono) siano anche adiacenti al suo g-nodo di livello `min_host_lvl`: infatti esiste
+un percorso verso essi che non contiene passi intermedi di livello `min_host_lvl`. È anche necessario
+che l'ultimo passo intermedio di livello `min_host_lvl - 1` sia un HCoord con posizione *reale* a quel livello. Se non
+esiste un passo intermedio di livello `min_host_lvl - 1`, allora è necessario che lo stesso nodo *w* abbia
 una posizione *reale* a quel livello.
 
-Generalizzando, il nodo *w* sa quali HCoord di livello `i` (con `i` da `ask_lvl + 1` fino a `levels - 1`)
-sono adiacenti al suo g-nodo di livello `ask_lvl + 1`: infatti esiste
-un percorso verso essi che non contiene passi intermedi di livello tra `ask_lvl + 1` e `i`
-e nel quale l'ultimo passo intermedio di livello `ask_lvl` (o lo stesso nodo *w*) abbia
+Generalizzando, il nodo *w* sa quali HCoord di livello `i` (con `i` da `min_host_lvl` fino a `levels - 1`)
+sono adiacenti al suo g-nodo di livello `min_host_lvl`: infatti esiste
+un percorso verso essi che non contiene passi intermedi di livello tra `min_host_lvl` e `i`
+e nel quale l'ultimo passo intermedio di livello `min_host_lvl - 1` (o lo stesso nodo *w*) abbia
 una posizione *reale* a quel livello.
 
 Questo è quanto realizzato dalla chiamata della funzione `adj_to_me`.  
-Essa viene reiterata per i valori di `i` da `ask_lvl + 1` fino a `levels - 1`. Per ogni chiamata
+Essa viene reiterata per i valori di `i` da `min_host_lvl` fino a `levels - 1`. Per ogni chiamata
 produce un set di coppie, di cui il primo elemento è un HCoord di livello `i` adiacente al
-g-nodo di livello `ask_lvl + 1` di *w*, e il secondo è la posizione (*reale*) del border-g-nodo
-di livello `ask_lvl` del g-nodo di livello `ask_lvl + 1` di *w*.
+g-nodo di livello `min_host_lvl` di *w*, e il secondo è la posizione (*reale*) del border-g-nodo
+di livello `min_host_lvl - 1` del g-nodo di livello `min_host_lvl` di *w*.
 
 Dato un HCoord di livello `i`, il nodo *w* sa produrre l'istanza `TupleGNode` del g-nodo di
 livello `i` con il metodo `make_tuple_from_hc` visto sopra.  
-Per gli HCoord di livello `ask_lvl + 1` questo è quello che serve. Per quelli di livello
+Per gli HCoord di livello `min_host_lvl` questo è quello che serve. Per quelli di livello
 superiore, invece, questa informazione non è sufficiente. Ma non
 possiamo affidare al nodo *w* il compito di contattare un singolo nodo in essi per scoprire
-la tupla completa del g-nodo di livello `ask_lvl + 1` in quanto il nodo *w* potrebbe non avere
+la tupla completa del g-nodo di livello `min_host_lvl` in quanto il nodo *w* potrebbe non avere
 tutte le componenti *reali*. In conclusione il nodo *w* ottiene un set di tuple
-il cui livello è maggiore o uguale a `ask_lvl + 1`.
+il cui livello è maggiore o uguale a `min_host_lvl`.
 
 ##### Risposta al nodo richiedente
 
@@ -1474,10 +1472,21 @@ proprio tale g-nodo.
 
 ##### I g-nodi adiacenti devono essere del livello richiesto
 
-Nel processare gli elementi della lista `set_adjacent` il nodo *v* (che ricordiamo ha un indirizzo
-con tutte le componenti *reali*) se si trova la tupla `n` di un g-nodo di livello maggiore di `ask_lvl + 1`
+Di seguito il nodo *v* prosegue con l'algoritmo
+di [ricerca in ampiezza](https://en.wikipedia.org/wiki/Breadth-first_search).
+
+Questo prevede delle valutazioni da fare sui nodi "figli" del nodo appena visitato, per decidere
+se aggiungerli al percorso in esame. Nel nostro caso questo significa valutare uno ad uno gli
+elementi del set dei g-nodi adiacenti al g-nodo appena visitato, per decidere se aggiungerli
+alla migration-path in esame.
+
+Prima di fare queste valutazioni occorre considerare che i g-nodi adiacenti ricevuti come risposta
+dal g-nodo appena visitato (gli elementi della lista `set_adjacent`) possono non essere del giusto livello.
+Il nodo *v* sa di aver contattato il g-nodo `current.visiting_gnode` che (ora) identifica un g-nodo
+di livello `min_host_lvl`. I g-nodi adiacenti nella lista `set_adjacent` possono essere di livello
+maggiore o uguale a `min_host_lvl`. Se si trova la tupla `n` di un g-nodo di livello maggiore di `min_host_lvl`
 instrada un *pacchetto di esplorazione* con meccanismi simili a quelli descritti per il *pacchetto di richiesta*
-per chiedere al primo singolo nodo che incontra in essi la tupla completa del g-nodo di livello `requested_lvl = ask_lvl + 1`.  
+per chiedere al primo singolo nodo che incontra in essi la tupla completa del g-nodo di livello `requested_lvl = min_host_lvl`.  
 Anche qui è necessario seguire tutto il percorso indicato da `current` e poi instradare verso `n`. Non è
 invece necessario che durante il tragitto si verifichi anche l'adiacenza come visto prima.  
 Il nodo che risponde alla richiesta dovrà instradare il *pacchetto di risposta esplorazione* al
@@ -1488,8 +1497,8 @@ non *reali* (è possibile ai livelli minori del livello della tupla `n` iniziale
 nodo *v* ignora questa tupla. Altrimenti la processa.
 
 Per intuizione crediamo (non è dimostrato al momento) che questo comportamento del nodo *v* gli permette di visitare gradualmente tutti
-i g-nodi di livello `ask_lvl + 1` della rete, sebbene ogni singolo g-nodo che esso contatta non sia
-in grado da solo di identificare tutti i g-nodi di livello `ask_lvl + 1` adiacenti a sé.
+i g-nodi di livello `min_host_lvl` della rete, sebbene ogni singolo g-nodo che esso contatta non sia
+in grado da solo di identificare tutti i g-nodi di livello `min_host_lvl` adiacenti a sé.
 
 Anche qui si usa la struttura `PathHop` per garantire il corretto instradamento. Si usa sempre la funzione
 `get_path_hops(current)` per avere la lista di passi e poi si aggiunge in coda l'elemento con
@@ -1517,8 +1526,7 @@ route_explore_response()
 
 ##### Prosegue l'algoritmo di ricerca in ampiezza della shortest migration-path
 
-Il nodo *v*, ricevuta la risposta (ed eventualmente dopo aver ottenuto i g-nodi adiacenti nel
-livello richiesto) prosegue con l'algoritmo
+Di seguito il nodo *v* prosegue con l'algoritmo
 di [ricerca in ampiezza](https://en.wikipedia.org/wiki/Breadth-first_search).
 
 Tale algoritmo prevede che vengano accodati, nel set dei nodi da visitare che abbiamo indicato
