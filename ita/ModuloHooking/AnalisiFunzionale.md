@@ -1298,18 +1298,18 @@ il precedente singolo nodo sia del g-nodo `path_hops[1].previous_migrating_gnode
 Deve inoltre essere vero che `path_hops[1].previous_migrating_gnode` è dentro `path_hops[0].visiting_gnode`
 al livello subito sotto.  
 Anche in questa verifica, se viene rilevata una incongruenza, allora il nodo
-prepara un pacchetto *di eccezione* da instradare verso *v*.
-
-Dopo quest'altra verifica il nodo toglie il primo elemento dalla lista `path_hops` e
+prepara un pacchetto *di eccezione* da instradare verso *v*.  
+Se invece la verifica ha esito positivo, il nodo toglie il primo elemento dalla lista `path_hops` e
 poi instrada il pacchetto *di richiesta* verso `path_hops[1].visiting_gnode`.
 
 E così via. Se il percorso non contiene incongruenze arriveremo al punto in cui il pacchetto
-*di richiesta* raggiunge `path_hops[1].visiting_gnode` e la lista `path_hops` termina lì.
+*di richiesta* raggiunge `path_hops[1].visiting_gnode` e la lista `path_hops` termina lì. Quindi dopo
+aver rimosso il primo elemento dalla lista `path_hops` essa non ha più un elemento di indice 1.
 
 Indichiamo con *w* il primo singolo nodo che si è incontrato nel g-nodo destinazione del
 pacchetto *di richiesta*.  
-Il nodo *w* recupera dal pacchetto il parametro `visiting_gnode` e i parametri `max_host_lvl`,
-`ok_host_lvl` e `reserve_request_id`.  
+Il nodo *w* recupera dal pacchetto il parametro `visiting_gnode` da `path_hops[0]` e gli altri
+parametri `max_host_lvl`, `ok_host_lvl` e `reserve_request_id`.  
 Ora il nodo *w* prosegue con l'algoritmo, che spiegheremo a breve con maggiori dettagli.
 Intanto diciamo che alla fine il nodo *w* prepara un pacchetto *di risposta* e lo instrada verso *v*.
 Esso contiene `esito`, `min_host_lvl`, `final_host_lvl`, `real_new_pos`, `real_new_eldership`,
@@ -1365,29 +1365,60 @@ come abbiamo visto prima che poteva accadere durante l'instradamento. Questo con
 originante *v* di ignorare il presente percorso e al contempo non escludere tutto il g-nodo
 dalla possibilità di essere visitato di nuovo.
 
-Il nodo *w*, agendo per conto dell'intero g-nodo `current.visiting_gnode` e collaborando con i Coordinator
-di quel g-nodo e dei suoi g-nodi superiori, ora cerca, partendo da `min_host_lvl`, quale sia il livello
-minimo in cui sia possibile avere una prenotazione *reale* o *virtuale*, cioè tale che il metodo `reserve`
-del modulo Coordinator non rilanci una eccezione (ricordando che questo dipende da `subnetlevel`)
-e lo memorizza come nuovo valore di `min_host_lvl` per questa migration-path che dovrà essere reso
-noto anche al nodo `v`.
+Adesso il nodo *w* deve agire per conto dell'intero g-nodo `visiting_gnode`. Deve vedere,
+partendo da `min_host_lvl` e arrivando al massimo a `max_host_lvl`, a quale livello
+minimo sia possibile prenotare un posto (*virtuale* o *reale*) e, se quello era *virtuale*,
+a quale livello minimo sia possibile prenotare un posto *reale*.  
+Queste informazioni le reperisce grazie alla collaborazione con il modulo Coordinator, di cui abbiamo parlato,
+resa possibile dall'utilizzatore del modulo.  
+Ricordiamo che i nodi che intendono fare da gateway per una sottorete a gestione autonoma fanno sì
+che tutto il loro g-nodo di livello `subnetlevel` non possa ospitare altri g-nodi. Quindi il livello
+minimo a cui possono richiedere la prenotazione di un posto (anche *virtuale*) è `subnetlevel + 1`.
+Questo comunque è un dettaglio dell'implementazione del modulo Coordinator. Il modulo Hooking sa solo
+che quando, avvalendosi della collaborazione con il modulo Coordinator, chiama il suo metodo `reserve`
+per un certo livello, questo può rilanciare una eccezione.
 
-Poi vede se c'è un posto disponibile al livello richiesto (cioè `min_host_lvl`) o a uno dei
-livelli superiori *ricercati* (cioè fino a `max_host_lvl`). Se non
-ne trova uno ad un livello *soddisfacente* (cioè fino a `ok_host_lvl`) comunque restituisce le
-informazioni (memorizzate in `new_conn_vir_pos` e `new_eldership`) necessarie alla migration-path,
-cioè un posto *virtuale* al livello `min_host_lvl` (eventualmente appena aggiornato) e una nuova anzianità.
+Il nodo *w*, man mano che fa questi tentativi, incrementa il valore di `min_host_lvl`. Così, se
+non fosse possibile prenotare alcuna posizione a nessun livello tra `min_host_lvl` e `max_host_lvl`,
+il risultato sarebbe che `min_host_lvl` diventa maggiore di `max_host_lvl`. A questo punto il nodo
+*w* non deve fare altro, ma solo rispondere al nodo *v*. Questi capisce l'esito dal fatto che
+`min_host_lvl > max_host_lvl`.
 
-Per sapere se c'è un posto al livello `lvl` viene usata la funzione `coord_reserve`, la quale è un delegato
-che chiama nel modulo Coordinator il metodo `reserve(lvl, reserve_request_id)`. Questo metodo
-invia la richiesta ReserveEnterRequest ([prenota un posto](../ModuloCoordinator/AnalisiFunzionale.md#Prenota_un_posto))
-al servizio Coordinator usando come chiave `lvl`. Come descritto nel relativo documento,
-questo serve a prenotare un posto. Dalla posizione prenotata si deduce se il g-nodo aveva a
-disposizione una posizione *reale* oppure no.
+Supponiamo invece che il nodo *w* trovi un livello minimo (comunque partendo dal valore iniziale
+di `min_host_lvl`) in cui ottiene una prenotazione. Tale livello è ora memorizzato in `min_host_lvl`.
 
+Se il risultato di questa prenotazione è una posizione *reale* essa viene memorizzata in
+`real_new_pos` e `real_new_eldership`. Inoltre il livello, equivalente a `min_host_lvl`,
+viene salvato anche in `final_host_lvl`. Non essendoci un livello inferiore a questo in cui
+sia stata prenotata una posizione *virtuale* (per cui si potrebbe far migrare un g-nodo) non
+serve affatto che il nodo *w* cerchi g-nodi adiacenti. Quindi a questo punto il nodo
+*w* non deve fare altro, ma solo rispondere al nodo *v*. Questi capisce l'esito dal fatto che
+`min_host_lvl = final_host_lvl`.
+
+Se invece il risultato della prima prenotazione (al livello `min_host_lvl`) è una posizione
+*virtuale* essa viene memorizzata in `new_conn_vir_pos` e `new_eldership`.
+
+Adesso il nodo *w* imposta `final_host_lvl = min_host_lvl + 1`. Partendo da questo livello e arrivando al
+massimo a `max_host_lvl`, vede a quale livello minimo sia possibile prenotare un posto *reale*.
+
+Il nodo *w*, man mano che fa questi tentativi, incrementa il valore di `final_host_lvl`. Così, se
+non fosse possibile prenotare una posizione *reale* a nessun livello tra `min_host_lvl` e `max_host_lvl`,
+il risultato sarebbe che `final_host_lvl` diventa maggiore di `max_host_lvl`. E da questo fatto
+l'esito sarebbe chiaro al nodo *v* quando riceverà la risposta.
+
+Supponiamo invece che il nodo *w* trovi un livello minimo (comunque partendo da `min_host_lvl + 1`) in
+cui ottiene una prenotazione *reale*. Tale livello è ora memorizzato in `final_host_lvl`.
+Il risultato di questa prenotazione viene memorizzato in `real_new_pos` e `real_new_eldership`.
+
+In seguito, come analizzeremo a breve, il nodo *w* cercherà i g-nodi adiacenti.
+
+Una nota sulla modalità con cui viene tentata la prenotazione di una posizione al livello `lvl`.
+Il nodo *w* usa la funzione `coord_reserve`, la quale è un delegato che chiama nel modulo
+Coordinator il metodo `reserve`. Tale funzione riceve l'identificativo `reserve_request_id`
+che il nodo *v* aveva inizialmente inventato e comunicato in tutti i pacchetti *di richiesta*.  
 Quando il nodo *v* coordina la ricerca di una migration-path, esso ottiene un insieme di
 soluzioni e solo una di esse viene adottata. Tutte le altre soluzioni contengono la prenotazione
-di una posizione *reale* in un certo g-nodo.
+di una posizione *reale* in un certo g-nodo.  
 Vedremo in seguito che il nodo *v* per ogni soluzione scartata dovrà inoltrare al g-nodo
 interessato la richiesta di avvertire il proprio Coordinator che una certa prenotazione pendente
 (identificabile con `reserve_request_id`) va cancellata.
