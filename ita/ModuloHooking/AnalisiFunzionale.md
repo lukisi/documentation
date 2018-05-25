@@ -1043,50 +1043,60 @@ Mentre Q is not empty:
      prev_sol_distance * 1.3 ≤ current.get_distance():
        Esci dal ciclo.
   // Contatta un singolo nodo in `current.visiting_gnode`.
-  // Passa una tupla composta di `max_host_lvl`, `ok_host_lvl`, `reserve_request_id`.
-  // La risposta sarà una tupla composta di: `esito`, `min_host_lvl`,
+  // Passa una tupla composta di `max_host_lvl`, `reserve_request_id`.
+  // La risposta sarà una tupla composta di: `min_host_lvl`,
   //  `final_host_lvl`, `real_new_pos`, `real_new_eldership`,
   //  `set_adjacent`, `new_conn_vir_pos`, `new_eldership`.
-  Esito esito, int min_host_lvl, int final_host_lvl, int real_new_pos, int real_new_eldership.
+  int min_host_lvl, int final_host_lvl, int real_new_pos, int real_new_eldership.
   Set<Pair<TupleGNode,int>> set_adjacent, int new_conn_vir_pos, int new_eldership.
-  (esito, min_host_lvl, final_host_lvl, real_new_pos, real_new_eldership,
+  (min_host_lvl, final_host_lvl, real_new_pos, real_new_eldership,
         set_adjacent, new_conn_vir_pos, new_eldership) =
-        ask_enter_net(current, max_host_lvl, ok_host_lvl, reserve_request_id)
+        ask_enter_net(current, max_host_lvl, reserve_request_id)
     // Questo algoritmo è eseguito nel singolo nodo contattato in `current.visiting_gnode` passando
     //  per il percorso indicato ricorsivamente in `current.parent...`. Il nodo destinazione
-    //  riceve i parametri `visiting_gnode, max_host_lvl, ok_host_lvl, reserve_request_id`.
+    //  riceve i parametri `visiting_gnode, max_host_lvl, reserve_request_id`.
     Se real_pos_up_to(my_pos) `<` levels:
       Instrada eccezione SearchMigrationPathError. Termina.
     Assert visiting_gnode sono io.
-    int min_host_lvl = level(visiting_gnode).
+    Prepara risultato:
+      .min_host_lvl = level(visiting_gnode)
+      .final_host_lvl = null
+      .real_new_pos = null
+      .real_new_eldership = null
+      .set_adjacent = null
+      .new_conn_vir_pos = null
+      .new_eldership = null
     int pos, int eldership.
     bool ok = False.
-    Mentre min_host_lvl ≤ max_host_lvl:
+    Mentre risultato.min_host_lvl ≤ max_host_lvl:
       // richiesta al proprio nodo Coordinator di livello min_host_lvl
-      pos, eldership = coord_reserve(min_host_lvl, reserve_request_id)
+      pos, eldership = coord_reserve(risultato.min_host_lvl, reserve_request_id)
       Se eccezione:
-        Incrementa di 1 min_host_lvl.
-        Continua ciclo.
-      ok = True.
+        Incrementa di 1 risultato.min_host_lvl.
+        Continue (prossima iterazione)
+      ok = True
+      Esci dal ciclo.
     Se NOT ok:
       // impossibile migrare ad un livello minore di max_host_lvl
-      set_adjacent = [].
-      Instrada risultato esito=NO_SOLUTION, set_adjacent. Termina.
-    int final_host_lvl = min_host_lvl.
-    Se pos `<` gsizes(final_host_lvl - 1):
-      Instrada risultato esito=GOAL, final_host_lvl, pos, eldership. Termina.
-    int new_conn_vir_pos = pos
-    int new_eldership = eldership
-    Mentre final_host_lvl `<` max_host_lvl:
-      final_host_lvl++
-      pos, eldership = coord_reserve(final_host_lvl, reserve_request_id)
+      Instrada risultato. Termina.
+    risultato.final_host_lvl = risultato.min_host_lvl
+    Se pos `<` gsizes(risultato.final_host_lvl - 1):
+      risultato.real_new_pos = pos
+      risultato.real_new_eldership = eldership
+      Instrada risultato. Termina.
+    risultato.new_conn_vir_pos = pos
+    risultato.new_eldership = eldership
+    risultato.final_host_lvl++
+    Mentre risultato.final_host_lvl ≤ max_host_lvl:
+      pos, eldership = coord_reserve(risultato.final_host_lvl, reserve_request_id)
       Se eccezione:
         assert_not_reached()
-      Se pos `<` gsizes(final_host_lvl - 1):
-        Se final_host_lvl ≤ ok_host_lvl:
-          Instrada risultato esito=GOAL, final_host_lvl, pos, eldership. Termina.
+      Se pos `<` gsizes(risultato.final_host_lvl - 1):
+        risultato.real_new_pos = pos
+        risultato.real_new_eldership = eldership
         Esci dal ciclo.
-    Set<Pair<TupleGNode,int>> set_adjacent = new Set<Pair<TupleGNode,int>>
+      risultato.final_host_lvl++
+    risultato.set_adjacent = new Set<Pair<TupleGNode,int>>
     Per i = min_host_lvl to levels - 1:
       // Vede quali g-nodi di livello i sono adiacenti al mio g-nodo di livello min_host_lvl
       // e quale g-nodo di livello min_host_lvl-1 dentro il mio g-nodo di livello min_host_lvl
@@ -1096,26 +1106,35 @@ Mentre Q is not empty:
         // Produce TupleGNode del g-nodo adiacente
         TupleGNode adj = make_tuple_from_hc(hc)
         // Aggiunge a quello i dati del border-g-nodo
-        set_adjacent.add(Pair(adj, border_real_pos))
-    Se pos `<` gsizes(final_host_lvl - 1)
-      Instrada risultato esito=SOLUTION, final_host_lvl, pos, eldership,
-                        set_adjacent, new_conn_vir_pos, new_eldership. Termina.
-    Altrimenti:
-      Instrada risultato esito=NO_SOLUTION,
-                        set_adjacent, new_conn_vir_pos, new_eldership. Termina.
+        risultato.set_adjacent.add(Pair(adj, border_real_pos))
+    Instrada risultato. Termina.
   Su eccezione SearchMigrationPathError:
     S.remove(current.visiting_gnode)
     Continue (prossima iterazione)
   current.visiting_gnode = make_tuple_up_to_level(current.visiting_gnode, min_host_lvl).
-  Se esito = GOAL:
+  Se min_host_lvl > max_host_lvl:
+    // nessuna possibilità per questa migration-path.
+    Continue (prossima iterazione)
+  Altrimenti-Se final_host_lvl ≤ ok_host_lvl:
+    // questa è una soluzione soddisfacente. non cercheremo altre migration-path.
     Solution sol = new Solution(current, final_host_lvl, real_new_pos, real_new_eldership)
     solutions.add(sol)
     Restituisci solutions.
-  Se esito = SOLUTION:
+  Altrimenti-Se min_host_lvl = final_host_lvl:
+    // questa è una soluzione. non è possibile proseguire oltre su questa migration-path.
     Solution sol = new Solution(current, final_host_lvl, real_new_pos, real_new_eldership)
     solutions.add(sol)
     prev_sol_distance = sol.get_distance()
     max_host_lvl = final_host_lvl - 1
+    Continue (prossima iterazione)
+  Altrimenti-Se final_host_lvl ≤ max_host_lvl:
+    // questa è una soluzione. vedremo gli adiacenti.
+    Solution sol = new Solution(current, final_host_lvl, real_new_pos, real_new_eldership)
+    solutions.add(sol)
+    prev_sol_distance = sol.get_distance()
+    max_host_lvl = final_host_lvl - 1
+  Altrimenti-Se final_host_lvl > max_host_lvl:
+    // questa non è una soluzione. vedremo gli adiacenti.
   Per ogni TupleGNode n, int border_real_pos in set_adjacent:
     // Notare che la tupla `n` indica un g-nodo di livello maggiore o uguale a `min_host_lvl`.
     Se level(n) > min_host_lvl:
@@ -1309,10 +1328,10 @@ aver rimosso il primo elemento dalla lista `path_hops` essa non ha più un eleme
 Indichiamo con *w* il primo singolo nodo che si è incontrato nel g-nodo destinazione del
 pacchetto *di richiesta*.  
 Il nodo *w* recupera dal pacchetto il parametro `visiting_gnode` da `path_hops[0]` e gli altri
-parametri `max_host_lvl`, `ok_host_lvl` e `reserve_request_id`.  
+parametri `max_host_lvl` e `reserve_request_id`.  
 Ora il nodo *w* prosegue con l'algoritmo, che spiegheremo a breve con maggiori dettagli.
 Intanto diciamo che alla fine il nodo *w* prepara un pacchetto *di risposta* e lo instrada verso *v*.
-Esso contiene `esito`, `min_host_lvl`, `final_host_lvl`, `real_new_pos`, `real_new_eldership`,
+Esso contiene `min_host_lvl`, `final_host_lvl`, `real_new_pos`, `real_new_eldership`,
 `set_adjacent`, `new_conn_vir_pos`, `new_eldership`.
 
 Riassumendo, i pacchetti contengono:
@@ -1322,7 +1341,6 @@ SearchMigrationPathRequest:
   List<PathHop> path_hops
   TupleGNode v
   int max_host_lvl
-  int ok_host_lvl
   int reserve_request_id
 
 SearchMigrationPathError:
@@ -1330,8 +1348,7 @@ SearchMigrationPathError:
 
 SearchMigrationPathResponse:
   TupleGNode v
-  Esito esito
-  int? min_host_lvl
+  int min_host_lvl
   int? final_host_lvl
   int? real_new_pos
   int? real_new_eldership
@@ -1365,15 +1382,17 @@ come abbiamo visto prima che poteva accadere durante l'instradamento. Questo con
 originante *v* di ignorare il presente percorso e al contempo non escludere tutto il g-nodo
 dalla possibilità di essere visitato di nuovo.
 
-Adesso il nodo *w* deve agire per conto dell'intero g-nodo `visiting_gnode`. Deve vedere,
-partendo da `min_host_lvl` e arrivando al massimo a `max_host_lvl`, a quale livello
-minimo sia possibile prenotare un posto (*virtuale* o *reale*) e, se quello era *virtuale*,
-a quale livello minimo sia possibile prenotare un posto *reale*.  
+Adesso il nodo *w* deve agire per conto dell'intero g-nodo `visiting_gnode` di livello `min_host_lvl`. Deve
+vedere, partendo da `min_host_lvl` e arrivando al massimo a `max_host_lvl`, a quale livello minimo il g-nodo
+a cui appartiene sia disposto a riservare un posto (*virtuale* o *reale*) del livello subito inferiore e, se
+quello era *virtuale*, a quale livello minimo il g-nodo a cui appartiene sia disposto a riservare un
+posto *reale* del livello subito inferiore.  
 Queste informazioni le reperisce grazie alla collaborazione con il modulo Coordinator, di cui abbiamo parlato,
-resa possibile dall'utilizzatore del modulo.  
-Ricordiamo che i nodi che intendono fare da gateway per una sottorete a gestione autonoma fanno sì
-che tutto il loro g-nodo di livello `subnetlevel` non possa ospitare altri g-nodi. Quindi il livello
-minimo a cui possono richiedere la prenotazione di un posto (anche *virtuale*) è `subnetlevel + 1`.
+resa possibile dall'utilizzatore del modulo. In pratica, usa la funzione `coord_reserve`, la quale è un delegato
+che chiama nel modulo Coordinator il metodo `reserve`.  
+Ricordiamo che i nodi che intendono fare da gateway per una sottorete a gestione autonoma fanno sì che tutto il
+loro g-nodo di livello `subnetlevel` non possa ospitare altri g-nodi. Quindi il livello minimo a cui possono
+richiedere la prenotazione di un posto (anche *virtuale*) del livello subito inferiore è `subnetlevel + 1`.
 Questo comunque è un dettaglio dell'implementazione del modulo Coordinator. Il modulo Hooking sa solo
 che quando, avvalendosi della collaborazione con il modulo Coordinator, chiama il suo metodo `reserve`
 per un certo livello, questo può rilanciare una eccezione.
