@@ -1305,15 +1305,15 @@ Se un nodo scopre una incongruenza, allora il fatto viene comunicato al nodo mit
 che lo ha scoperto: questi prepara un pacchetto *di eccezione* da instradare verso *v*. Per questo nel
 pacchetto *di richiesta* viene indicato l'indirizzo *completo* del nodo mittente *v* e non solo le posizioni
 interne al g-nodo comune con la destinazione finale.  
-Quando un pacchetto *di eccezione* raggiunge il nodo *v*, come indicato nell'algoritmo con
-l'eccezione SearchMigrationPathError, questi stralcia completamente la path indicata da `current`, come se
-avesse restituito `esito=NO_SOLUTION` con `set_adjacent` vuoto. Ma al contempo ora considera
-il g-nodo finale `current.visiting_gnode` come non ancora visitato: cioè potrebbe visitarlo in seguito
+Quando un pacchetto *di eccezione* raggiunge il nodo *v*, come indicato nell'algoritmo con l'eccezione
+SearchMigrationPathError, questi stralcia completamente la path indicata da `current`. Ma al contempo ora
+considera il g-nodo finale `current.visiting_gnode` come non ancora visitato: cioè potrebbe visitarlo in seguito
 attraverso altre path.
 
 Proseguiamo ipotizzando che la verifica ha esito positivo.  
 Quando si raggiunge il g-nodo indicato nell'elemento `path_hops[1].visiting_gnode`, occorre verificare che
-il precedente singolo nodo sia del g-nodo `path_hops[1].previous_migrating_gnode`.  
+il precedente singolo nodo sia del g-nodo `path_hops[1].previous_migrating_gnode`. Perciò ogni nodo che inoltra
+il pacchetto *di richiesta* indica il suo indirizzo Netsukuku completo nel campo `caller`.  
 Deve inoltre essere vero che `path_hops[1].previous_migrating_gnode` è dentro `path_hops[0].visiting_gnode`
 al livello subito sotto.  
 Anche in questa verifica, se viene rilevata una incongruenza, allora il nodo
@@ -1338,8 +1338,9 @@ Riassumendo, i pacchetti contengono:
 
 ```
 SearchMigrationPathRequest:
-  List<PathHop> path_hops
   TupleGNode v
+  TupleGNode caller
+  List<PathHop> path_hops
   int max_host_lvl
   int reserve_request_id
 
@@ -1360,9 +1361,9 @@ SearchMigrationPathResponse:
 Per l'instradamento di questi pacchetti saranno previsti i metodi remoti:
 
 ```
-route_search_request()
-route_search_error()
-route_search_response()
+route_search_request(SearchMigrationPathRequest p)
+route_search_error(SearchMigrationPathError p)
+route_search_response(SearchMigrationPathResponse p)
 ```
 
 ##### Riserva un posto per la migrazione
@@ -1527,8 +1528,8 @@ Riassumendo, i pacchetti contengono:
 
 ```
 ExploreGNodeRequest:
-  List<PathHop> path_hops
   TupleGNode v
+  List<PathHop> path_hops
   int requested_lvl
 
 ExploreGNodeResponse:
@@ -1539,8 +1540,8 @@ ExploreGNodeResponse:
 Per l'instradamento di questi pacchetti saranno previsti i metodi remoti:
 
 ```
-route_explore_request()
-route_explore_response()
+route_explore_request(ExploreGNodeRequest p)
+route_explore_response(ExploreGNodeResponse p)
 ```
 
 ##### Prosegue l'algoritmo di ricerca in ampiezza della shortest migration-path
@@ -1599,7 +1600,7 @@ DeleteReservationRequest:
 Per l'instradamento di questo pacchetto sarà previsto il metodo remoto:
 
 ```
-route_delete_reserve_request()
+route_delete_reserve_request(DeleteReservationRequest p)
 ```
 
 Non c'è bisogno di attendere una risposta. Il primo singolo nodo in esso chiama il metodo `delete_reserve` del
