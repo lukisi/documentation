@@ -1580,7 +1580,7 @@ Il nodo *n* potrà tentare di degradare.
 Per ogni soluzione `Solution s` che decide di non perseguire, il nodo *v* ha i dati necessari a
 contattare il g-nodo che aveva fatta una prenotazione con posizione *reale* e a chiederne la
 cancellazione.  
-La tupla `s.leaf.visiting_gnode` rappresenta il g-nodo contattato, il quale però è di livello `ask_lvl + 1`
+La tupla `s.leaf.visiting_gnode` rappresenta il g-nodo contattato, il quale però è di un certo livello
 mentre il livello in cui è stata ottenuta una prenotazione *reale* è `s.final_host_lvl`. Quindi il
 g-nodo da contattare va aggiustato.  
 Il nodo *v* inoltre conosce l'identificativo `reserve_request_id` che è stato usato per etichettare la
