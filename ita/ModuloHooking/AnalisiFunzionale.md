@@ -1111,30 +1111,32 @@ Mentre Q is not empty:
   Su eccezione SearchMigrationPathError:
     S.remove(current.visiting_gnode)
     Continue (prossima iterazione)
-  current.visiting_gnode = make_tuple_up_to_level(current.visiting_gnode, min_host_lvl).
+  Se min_host_lvl > levels:
+    // risposta invalida. nessuna possibilità per questa migration-path.
+    Continue (prossima iterazione)
   Se min_host_lvl > max_host_lvl:
     // nessuna possibilità per questa migration-path.
     Continue (prossima iterazione)
-  Altrimenti-Se final_host_lvl ≤ ok_host_lvl:
+  current.visiting_gnode = make_tuple_up_to_level(current.visiting_gnode, min_host_lvl).
+  Se final_host_lvl ≤ ok_host_lvl:
     // questa è una soluzione soddisfacente. non cercheremo altre migration-path.
-    Solution sol = new Solution(current, final_host_lvl, real_new_pos, real_new_eldership)
+    Solution sol = new Solution(leaf=current, final_host_lvl, real_new_pos, real_new_eldership)
     solutions.add(sol)
     Restituisci solutions.
-  Altrimenti-Se min_host_lvl = final_host_lvl:
+  Se min_host_lvl = final_host_lvl:
     // questa è una soluzione. non è possibile proseguire oltre su questa migration-path.
-    Solution sol = new Solution(current, final_host_lvl, real_new_pos, real_new_eldership)
+    Solution sol = new Solution(leaf=current, final_host_lvl, real_new_pos, real_new_eldership)
     solutions.add(sol)
-    prev_sol_distance = sol.get_distance()
+    prev_sol_distance = sol.leaf.get_distance()
     max_host_lvl = final_host_lvl - 1
     Continue (prossima iterazione)
-  Altrimenti-Se final_host_lvl ≤ max_host_lvl:
-    // questa è una soluzione. vedremo gli adiacenti.
-    Solution sol = new Solution(current, final_host_lvl, real_new_pos, real_new_eldership)
+  Se final_host_lvl ≤ max_host_lvl:
+    // questa è una soluzione. poi vedremo anche gli adiacenti.
+    Solution sol = new Solution(leaf=current, final_host_lvl, real_new_pos, real_new_eldership)
     solutions.add(sol)
-    prev_sol_distance = sol.get_distance()
+    prev_sol_distance = sol.leaf.get_distance()
     max_host_lvl = final_host_lvl - 1
-  Altrimenti-Se final_host_lvl > max_host_lvl:
-    // questa non è una soluzione. vedremo gli adiacenti.
+  // vediamo gli adiacenti.
   Per ogni TupleGNode n, int border_real_pos in set_adjacent:
     // Notare che la tupla `n` indica un g-nodo di livello maggiore o uguale a `min_host_lvl`.
     Se level(n) > min_host_lvl:
@@ -1485,8 +1487,8 @@ Il nodo *w* instrada verso il nodo *v* in un pacchetto *di risposta* la tupla co
 
 In particolare evidenziamo che il nodo *v* riceve il parametro di output `min_host_lvl`
 che è il livello minimo a cui il g-nodo `current.visiting_gnode` può richiedere una prenotazione,
-cioè tale che il metodo `reserve` del Coordinator non lanci una eccezione, cioè in definitiva il
-livello in cui quel g-nodo è un g-nodo a gestione autonoma del routing. Quindi il nodo *v* usa
+cioè tale che il metodo `reserve` del Coordinator non lanci una eccezione, cioè in definitiva il livello subito
+superiore a quello in cui quel g-nodo è un g-nodo a gestione autonoma del routing. Quindi il nodo *v* usa
 la funzione `make_tuple_up_to_level` per mantenere d'ora in poi in `current.visiting_gnode`
 proprio tale g-nodo.
 
@@ -1560,9 +1562,13 @@ appena visitato) occorre non soltanto verificare che quel preciso g-nodo non sia
 che abbiamo indicato con `S`, ma anche che nel percorso in esame `current` non si abbia
 già toccato un g-nodo contenuto nel g-nodo `n`.
 
-La ricerca si interrompe quando si trova una migration-path con un delta minore di `𝜀`,
-oppure quando dopo l'ultima migration-path trovata (sebbene con un delta *non soddisfacente*) sono stati fatti
-troppi passi ulteriori senza trovarne una con un delta più piccolo.
+La ricerca si interrompe quando si trova una migration-path con un delta minore di `𝜀`: infatti
+nell'algoritmo abbiamo l'istruzione `Restituisci solutions` in risposta al caso `final_host_lvl ≤ ok_host_lvl`.  
+Oppure la ricerca si interrompe quando dopo l'ultima migration-path trovata (sebbene con un
+delta *non soddisfacente*) sono stati fatti troppi passi ulteriori senza trovarne una con un
+delta più piccolo: infatti nell'algoritmo all'inizio del ciclo abbiamo l'istruzione
+`Esci dal ciclo` in risposta a considerazioni sulla distanza della migration-path corrente
+`current.get_distance()` e quella precedente memorizzata in `prev_sol_distance`.
 
 Quando l'algoritmo di ricerca si interrompe, se qualche soluzione è stata trovata allora l'ultima
 è quella da preferire.  
