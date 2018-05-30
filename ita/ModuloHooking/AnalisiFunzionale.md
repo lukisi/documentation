@@ -1637,13 +1637,13 @@ Per le migration-path di lunghezza maggiore di zero, sappiamo quindi che:
 *   *l* può avere un valore da 0 a *levels* - 2.
 
 Ricordiamo inoltre che i g-nodi della migration-path (*p<sub>1</sub>*, *p<sub>2</sub>*, ... *p<sub>m</sub>*) sono adiacenti
-ognuno al successivo. Ognuno è di livello maggiore o uguale al precedente. Sono tutti saturi, tranne l'ultimo
-che ha almeno una posizione riservabile.
+ognuno al successivo. Il primo è di livello maggiore di *l*. Ognuno è di livello maggiore o uguale al precedente. Sono
+tutti saturi, tranne l'ultimo che ha almeno una posizione riservabile.
 
 Ai fini delle comunicazioni che andranno fatte a singoli nodi dentro specifici g-nodi per eseguire la
 migration-path, ricordiamo alcune cose:
 
-**1**. I g-nodi *p<sub>i</sub>*, con *i* da 1 a *m* - 1, hanno tutte
+**1**. I g-nodi *p<sub>i</sub>*, con *i* da 1 a *m*, hanno tutte
 posizioni *reali*. Ricordiamo che indichiamo con *k<sub>i</sub>* il livello del g-nodo *p<sub>i</sub>*.
 
 **2**. Nel generico passo *i*, con *i* da 1 a *m* - 1, un border g-nodo *𝛽<sub>i</sub>* di livello *k<sub>i</sub>* - 1
@@ -1680,12 +1680,25 @@ analogo un singolo pacchetto verso l'indirizzo Netsukuku completo di *v*.
 Prima di trasmettere l'esito il singolo nodo *𝛽0<sub>i</sub>* può fare uso della collaborazione con
 il modulo Coordinator per avviare una *propagazione* a tutto il suo g-nodo, *con* o *senza* ritorno.
 
+Il nodo *v* ha tutte le informazioni necessarie ad ogni passo della migration-path codificate in una
+istanza di Solution, la quale contiene in modo ricorsivo *m* istanze di SolutionStep. E abbiamo già detto
+che *m* > 1, e dobbiamo operare *m* - 1 migrazioni.  
+Indichiamo con `sol` l'istanza di Solution in esame.  
+Quando parliamo, in seguito, del passo *i*-esimo intendiamo il passo che concerne la migrazione del g-nodo
+*𝛽<sub>i</sub>* da *p<sub>i</sub>* in *p<sub>i+1</sub>*. Ebbene, indichiamo con *ss<sub>i</sub>* l'istanza
+di SolutionStep che si trova partendo da `sol.leaf` e operando *m* - *i* - 1 volte il passaggio `parent`.  
+Inoltre, per i passi da 1 a *m* - 2 (cioè per tutti i passi tranne l'ultimo, e solo se m ≥ 3)
+indichiamo con *ss_prev<sub>i</sub>* l'istanza di SolutionStep che si trova partendo da `sol.leaf` e
+operando *m* - *i* - 2 volte il passaggio `parent`.
+
 Per prima cosa il nodo *v* per ogni passo della migration-path (cioè per *i* da 1 fino a *m* - 1)
 inventa un identificativo `migration_id` e lo associa a *𝛽<sub>i</sub>*.
 
 Partendo da *i* = *m* - 1 e scendendo fino a 1, il nodo *v* contatta un singolo nodo *𝛽0<sub>i</sub>*,
-che appartiene al g-nodo *𝛽<sub>i</sub>*, che appartiene al g-nodo
-*p<sub>i</sub>*. Notiamo che nell'ultimo passo, cioè con *i* = 1, è possibile che lo stesso nodo
+che appartiene al g-nodo *𝛽<sub>i</sub>*, che appartiene al g-nodo *p<sub>i</sub>*. Conosciamo la tupla
+che identifica *𝛽<sub>i</sub>*, `mig_gnode`. Essa è la tupla che è stata salvata nel membro `previous_migrating_gnode`
+di *ss<sub>i</sub>*.  
+Notiamo che nell'ultimo passo, cioè con *i* = 1, è possibile che lo stesso nodo
 *v* appartenga a *𝛽<sub>i</sub>*: in questo caso è lo stesso nodo *v* a fare le veci di *𝛽0<sub>i</sub>*.  
 Il nodo *v* passa al nodo *𝛽0<sub>i</sub>* il suo `migration_id`.  
 Il nodo *𝛽0<sub>i</sub>* attraverso la *propagazione con ritorno* del metodo `prepare_migration` fa in modo che
@@ -1693,18 +1706,20 @@ tutti i singoli nodi di *𝛽<sub>i</sub>* avviano la prima parte delle operazio
 dell'identità. Quando questa è stata eseguita, *𝛽0<sub>i</sub>* lo comunica al nodo *v* che
 prosegue con il prossimo valore di *i*.
 
-Ora il nodo *v* contatta un singolo nodo *𝛽0<sub>m-1</sub>* in *𝛽<sub>m-1</sub>*, in *p<sub>m-1</sub>*.
+Ora il nodo *v* contatta un singolo nodo *𝛽0<sub>m-1</sub>* in *𝛽<sub>m-1</sub>*, in *p<sub>m-1</sub>*. Conosciamo la tupla
+che identifica *𝛽<sub>m-1</sub>*, `mig_gnode`. Essa è la tupla che è stata salvata nel membro `previous_migrating_gnode`
+di *ss<sub>m-1</sub>*.  
 Se *m* = 2, è possibile che lo stesso *v* sia *𝛽0<sub>m-1</sub>*.  
-Conosciamo `final_mig_gnode_old_pos`, la posizione di *𝛽<sub>m-1</sub>* in *p<sub>m-1</sub>*, che è *reale*. Essa è
-il primo elemento della tupla che è stata salvata nel membro `previous_migrating_gnode` di SolutionStep.  
 Sappiamo anche che è stato riservato un posto *virtuale* `conn_gnode_pos` in *p<sub>m-1</sub>* che verrà assegnato
 all'identità *di connettività* che *𝛽<sub>m-1</sub>* assume in *p<sub>m-1</sub>*. Esso è stato
-salvato nel membro `previous_gnode_new_conn_vir_pos` di SolutionStep.  
-Sappiamo anche che nel g-nodo *p<sub>m</sub>* di livello *k<sub>m</sub>* è stato
-riservato un posto *reale*. Indichiamo con `final_mig_gnode_host_lvl` il livello *k<sub>m</sub>*, con
-`final_mig_gnode_new_pos` la posizione in esso riservata e con `final_mig_gnode_new_eldership` la
-sua anzianità. Questi valori sono stati salvati nei membri `final_host_lvl`, `real_new_pos` e
-`real_new_eldership` di Solution.  
+salvato nel membro `previous_gnode_new_conn_vir_pos` di *ss<sub>m-1</sub>*.  
+Conosciamo la tupla che identifica *p<sub>m</sub>* di livello *k<sub>m</sub>*, `host_gnode`. Essa si ottiene dalla
+tupla che è stata salvata nel membro `visiting_gnode` di *ss<sub>m-1</sub>* eliminando i livelli inferiori in eccesso.
+Il livello *k<sub>m</sub>* è quello salvato nel membro `final_host_lvl` di *ss<sub>m-1</sub>*.  
+Sappiamo anche che nel g-nodo *p<sub>m</sub>* è stato riservato un posto *reale*.
+Indichiamo con `final_mig_gnode_new_pos` la posizione riservata e con `final_mig_gnode_new_eldership` la
+sua anzianità. Questi valori sono stati salvati nei membri `real_new_pos` e
+`real_new_eldership` di *ss<sub>m-1</sub>*.  
 Il nodo *v* passa al nodo *𝛽0<sub>m-1</sub>* queste informazioni e il suo `migration_id`.  
 Il nodo *𝛽0<sub>m-1</sub>* attraverso la *propagazione senza ritorno* del metodo `finish_migration` fa in modo che
 queste informazioni giungano a tutti i singoli nodi di *𝛽<sub>m-1</sub>*. Questi avviano la seconda
@@ -1722,17 +1737,21 @@ esterni ed inizierà a verificare se c'è ancora bisogno di lui.
 Dopo aver dato il via alla *propagazione senza ritorno* il nodo *𝛽0<sub>m-1</sub>* lo comunica al nodo *v*.
 
 Ora il nodo *v* riparte da *i* = *m* - 2 e scende fino a 1. Il nodo *v* contatta un singolo
-nodo *𝛽0<sub>i</sub>* in *𝛽<sub>i</sub>*, in *p<sub>i</sub>*. Se *i* = 1, è possibile che
+nodo *𝛽0<sub>i</sub>* in *𝛽<sub>i</sub>*, in *p<sub>i</sub>*. Conosciamo la tupla
+che identifica *𝛽<sub>i</sub>*, `mig_gnode`. Essa è la tupla che è stata salvata nel membro `previous_migrating_gnode`
+di *ss<sub>i</sub>*.  
+Se *i* = 1, è possibile che
 lo stesso *v* sia *𝛽0<sub>i</sub>*.  
-Conosciamo `mig_gnode_old_pos`, la posizione di *𝛽<sub>i</sub>* in *p<sub>i</sub>*, che è *reale*. Essa è il primo
-elemento della tupla che è stata salvata nel membro `previous_migrating_gnode` di SolutionStep.  
 Sappiamo anche che è stato riservato un posto *virtuale* `conn_gnode_pos` in *p<sub>i</sub>* che verrà assegnato
 all'identità *di connettività* che *𝛽<sub>i</sub>* assume in *p<sub>i</sub>*. Esso è stato
-salvato nel membro `previous_gnode_new_conn_vir_pos` di SolutionStep.  
-Sappiamo anche che intanto un border-g-nodo di livello *k<sub>i+1</sub>* - 1 sta migrando da *p<sub>i+1</sub>*
-a *p<sub>i+2</sub>* e che la posizione che aveva in *p<sub>i+1</sub>* è `mig_gnode_new_pos`, ed è *reale*.
-Essa è il primo elemento della tupla che è stata salvata nel membro `previous_migrating_gnode` di SolutionStep
-riferita al passo successivo. Inoltre la dimensione di detta tupla ci svela il valore del livello *k<sub>i+1</sub>* - 1.  
+salvato nel membro `previous_gnode_new_conn_vir_pos` di *ss<sub>i</sub>*.  
+Sappiamo anche che intanto, dentro *p<sub>i+1</sub>* di livello *k<sub>i+1</sub>*, un border-g-nodo, la cui
+posizione al livello *k<sub>i+1</sub>* - 1 era *reale*, sta migrando verso *p<sub>i+2</sub>*.
+La tupla di tale border-g-nodo è stata salvata nel membro `previous_migrating_gnode` di *ss_prev<sub>i</sub>*.
+Quindi conosciamo `mig_gnode_new_pos`, il primo elemento della suddetta tupla, che è la posizione
+*reale* di livello *k<sub>i+1</sub>* - 1 che viene liberata in *p<sub>i+1</sub>*.  
+Inoltre se copiamo la suddetta tupla rimuovendone poi il primo elemento otteniamo
+la tupla che identifica *p<sub>i+1</sub>* di livello *k<sub>i+1</sub>*, `host_gnode`.  
 Il nodo *v* passa al nodo *𝛽0<sub>i</sub>* queste informazioni e il suo `migration_id`.  
 Il nodo *𝛽0<sub>i</sub>* attraverso la *propagazione senza ritorno* del metodo `finish_migration` fa in modo che
 queste informazioni giungano a tutti i singoli nodi di *𝛽<sub>i</sub>*. Questi avviano la seconda
@@ -1746,35 +1765,27 @@ prosegue con il prossimo valore di *i*.
 
 ### <a name="Strategia_ingresso_Algoritmo_esecuzione"></a>Algoritmo di esecuzione
 
-Il nodo *v* ha tutte le informazioni necessarie ad ogni passo della migration-path codificate in una
-istanza di Solution, la quale contiene in modo ricorsivo *m* istanze di SolutionStep. E abbiamo già detto
-che non serve eseguire una migration-path di lunghezza zero, quindi *m* > 1.  
-Ora il nodo *v* prepara questi dati in una lista di *m* - 1 strutture dati `MigData`, che sono di più
-semplice gestione come oggetti serializzabili.
-
-Ogni struttura contiene:
+Ribadiamo quali sono i dati che il nodo *v* passa al primo singolo nodo *𝛽0<sub>i</sub>* che raggiunge
+in *𝛽<sub>i</sub>*, in *p<sub>i</sub>*, in ognuno dei *m* - 1 passi della migration-path.  
+Sono i membri della struttura dati `MigData`, che è un oggetto serializzabile. Essa contiene:
 
 ```
 MigData:
-  TupleGNode from_gnode
-  int mig_gnode_old_pos
   int migration_id
+  TupleGNode mig_gnode
   int conn_gnode_pos
   int prev_mig_gnode_new_eldership
-  TupleGNode to_gnode
+  TupleGNode host_gnode
   int? mig_gnode_new_pos
-  int? final_mig_gnode_host_lvl
   int? final_mig_gnode_new_pos
   int? final_mig_gnode_new_eldership
 ```
 
 Il significato dei vari membri per l'elemento *i*-esimo della lista, con 1 ≤ *i* ≤ *m* - 1, è il seguente:
 
-*   `from_gnode` indica il g-nodo *p<sub>i</sub>*, cioè il g-nodo da cui un g-nodo di livello *l*
-    dovrà migrare.
-*   `mig_gnode_old_pos` è la posizione a livello *l* del g-nodo *𝛽<sub>i</sub>* che
-    dovrà migrare. Sappiamo che `mig_gnode_old_pos` è una posizione *reale*.
-*   `migration_id` è l'identificativo associato alla migrazione di *𝛽<sub>i</sub>*.
+*   `migration_id` è l'identificativo associato alla migrazione *i*-esima.
+*   `mig_gnode` indica il g-nodo *𝛽<sub>i</sub>* in *p<sub>i</sub>*, cioè il
+    g-nodo di livello *k<sub>i</sub>* - 1 che dovrà migrare.
 *   `conn_gnode_pos` è la posizione *virtuale* riservata nel g-nodo *p<sub>i</sub>* per l'identità
     *di connettività* con cui il g-nodo *𝛽<sub>i</sub>* resta in *p<sub>i</sub>*. Sappiamo che non
     serve una particolare anzianità per i g-nodi *di connettività*.
@@ -1782,14 +1793,11 @@ Il significato dei vari membri per l'elemento *i*-esimo della lista, con 1 ≤�
     precedente passo della migration-path (oppure dal passo di ingresso nella rete che ha provocato
     la ricerca di una migration-path) viene ad occupare la posizione *reale* `mig_gnode_old_pos`
     appena liberata in *p<sub>i</sub>*.
-*   `to_gnode` indica il g-nodo *p<sub>i+1</sub>*, cioè il g-nodo in cui il g-nodo *𝛽<sub>i</sub>*
+*   `host_gnode` indica il g-nodo *p<sub>i+1</sub>*, cioè il g-nodo in cui il g-nodo *𝛽<sub>i</sub>*
     dovrà migrare.
 *   `mig_gnode_new_pos` è *null* nell'ultimo elemento della lista.  
-    Negli altri elementi, esso è la posizione *reale* a livello *l* che il g-nodo *𝛽'<sub>i</sub>*
+    Negli altri elementi, esso è la posizione *reale* a livello *k<sub>i</sub>* - 1 che il g-nodo *𝛽'<sub>i</sub>*
     può assumere in *p<sub>i+1</sub>*.
-*   `final_mig_gnode_host_lvl` è *null* in tutti gli elementi della lista tranne l'ultimo.  
-    Nell'ultimo elemento della lista, esso è il livello di *p<sub>m</sub>* in cui è stato riservato
-    un posto *reale* al livello `final_mig_gnode_host_lvl - 1`.
 *   `final_mig_gnode_new_pos` e `final_mig_gnode_new_eldership` sono *null* in tutti gli elementi della lista tranne l'ultimo.  
     Nell'ultimo elemento della lista, essi sono posizione *reale* e sua anzianità riservate nel g-nodo *p<sub>m</sub>*
     per l'ultimo passo della migrazione.
@@ -1815,7 +1823,7 @@ Mentre current.parent ≠ null:
   mig.migration_id = Random_int()
   mig.conn_gnode_pos = current.previous_gnode_new_conn_vir_pos
   mig.prev_mig_gnode_new_eldership = current.previous_gnode_new_eldership
-  mig.to_gnode = dup_object(current.visiting_gnode)
+  mig.host_gnode = dup_object(current.visiting_gnode)
   mig.mig_gnode_new_pos = mig_gnode_new_pos
   migs.insert(0,mig)
   last = False
@@ -1904,11 +1912,11 @@ RequestPacket.fase2(MigData mig, MigData? mig_next)
   this.migration_id = mig.migration_id
   this.conn_gnode_pos = mig.conn_gnode_pos
   Se mig_next = null:
-    this.to_gnode = mig.to_gnode sliced at level mig.final_mig_gnode_host_lvl
+    this.host_gnode = mig.host_gnode sliced at level mig.final_mig_gnode_host_lvl
     this.real_new_pos = mig.final_mig_gnode_new_pos
     this.real_new_eldership = mig.final_mig_gnode_new_eldership
   Altrimenti:
-    this.to_gnode = mig.to_gnode
+    this.host_gnode = mig.host_gnode
     this.real_new_pos = mig.mig_gnode_new_pos
     this.real_new_eldership = mig_next.prev_mig_gnode_new_eldership
 
@@ -1947,7 +1955,7 @@ void execute_mig(RequestPacket p0):
     int lvl = level(p0.dest)
     Object finish_migration_data = new FinishMigrationData(p0.migration_id,
                                    p0.conn_gnode_pos,
-                                   p0.to_gnode,
+                                   p0.host_gnode,
                                    p0.real_new_pos,
                                    p0.real_new_eldership)
     Coord.finish_migration(lvl, finish_migration_data)
@@ -1981,8 +1989,8 @@ void finish_migration(lvl, finish_migration_data):
   var old_qspn_mgr = Identities.get_identity_module(old_id, "qspn")
   var new_qspn_mgr = new Qspn.migration(...)
   Identities.set_identity_module(old_id, "qspn", new_qspn_mgr)
-  int host_lvl = level(finish_migration_data.to_gnode)
-  int upper_lvl = upper_lvl(finish_migration_data.to_gnode, old_qspn_mgr.my_pos)
+  int host_lvl = level(finish_migration_data.host_gnode)
+  int upper_lvl = upper_lvl(finish_migration_data.host_gnode, old_qspn_mgr.my_pos)
   old_qspn_mgr.make_connectivity(host_lvl,upper_lvl,update_addr,update_fp)
   new_qspn_mgr.presence_notified.connect(() => {
     wait(30sec)
