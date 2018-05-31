@@ -1765,9 +1765,12 @@ prosegue con il prossimo valore di *i*.
 
 ### <a name="Strategia_ingresso_Algoritmo_esecuzione"></a>Algoritmo di esecuzione
 
-Ribadiamo quali sono i dati che il nodo *v* passa al primo singolo nodo *𝛽0<sub>i</sub>* che raggiunge
-in *𝛽<sub>i</sub>*, in *p<sub>i</sub>*, in ognuno dei *m* - 1 passi della migration-path.  
-Sono i membri della struttura dati `MigData`, che è un oggetto serializzabile. Essa contiene:
+Abbiamo già detto che il nodo *v* ha tutte le informazioni necessarie ai *m* - 1 passi della migration-path
+codificate in una istanza di Solution, la quale contiene in modo ricorsivo *m* istanze di SolutionStep.  
+Ora il nodo *v* prepara questi dati in una lista di *m* - 1 strutture dati `MigData`, che sono di più semplice
+gestione come oggetti serializzabili.
+
+Ogni struttura contiene:
 
 ```
 MigData:
@@ -1789,18 +1792,19 @@ Il significato dei vari membri per l'elemento *i*-esimo della lista, con 1 ≤�
 *   `conn_gnode_pos` è la posizione *virtuale* riservata nel g-nodo *p<sub>i</sub>* per l'identità
     *di connettività* con cui il g-nodo *𝛽<sub>i</sub>* resta in *p<sub>i</sub>*. Sappiamo che non
     serve una particolare anzianità per i g-nodi *di connettività*.
-*   `prev_mig_gnode_new_eldership` è l'anzianità che può essere assegnata al g-nodo che dal
-    precedente passo della migration-path (oppure dal passo di ingresso nella rete che ha provocato
-    la ricerca di una migration-path) viene ad occupare la posizione *reale* `mig_gnode_old_pos`
+*   `prev_mig_gnode_new_eldership` è l'anzianità che può essere assegnata al g-nodo che
+    nel successivo passo (cioè nel passo *i* - 1 poiché i passi sono eseguiti in ordine inverso,
+    oppure nel passo di ingresso nella rete) viene ad occupare la posizione *reale* `mig_gnode.pos[0]`
     appena liberata in *p<sub>i</sub>*.
-*   `host_gnode` indica il g-nodo *p<sub>i+1</sub>*, cioè il g-nodo in cui il g-nodo *𝛽<sub>i</sub>*
-    dovrà migrare.
+*   `host_gnode` indica il g-nodo *p<sub>i+1</sub>* di livello *k<sub>i+1</sub>*, cioè il g-nodo in cui
+    il g-nodo *𝛽<sub>i</sub>* dovrà migrare.
 *   `mig_gnode_new_pos` è *null* nell'ultimo elemento della lista.  
-    Negli altri elementi, esso è la posizione *reale* a livello *k<sub>i</sub>* - 1 che il g-nodo *𝛽'<sub>i</sub>*
-    può assumere in *p<sub>i+1</sub>*.
-*   `final_mig_gnode_new_pos` e `final_mig_gnode_new_eldership` sono *null* in tutti gli elementi della lista tranne l'ultimo.  
-    Nell'ultimo elemento della lista, essi sono posizione *reale* e sua anzianità riservate nel g-nodo *p<sub>m</sub>*
-    per l'ultimo passo della migrazione.
+    Negli altri elementi, esso è la posizione *reale* che il g-nodo *𝛽'<sub>i</sub>*
+    può assumere in *p<sub>i+1</sub>*, cioè in `host_gnode`.
+*   `final_mig_gnode_new_pos` e `final_mig_gnode_new_eldership` sono *null* in tutti gli elementi della lista
+    tranne l'ultimo.  
+    Nell'ultimo elemento della lista, essi sono posizione *reale* e sua anzianità riservate nel
+    g-nodo *p<sub>m</sub>*, cioè in `host_gnode`.
 
 Per tradurre il contenuto dell'istanza di Solution nella lista di MigData l'algoritmo è il seguente:
 
@@ -1814,16 +1818,17 @@ int? mig_gnode_new_pos = null
 SolutionStep current = s.leaf
 Mentre current.parent ≠ null:
   MigData mig = new MigData()
+  mig.host_gnode = dup_object(current.visiting_gnode)
   Se last:
-    mig.final_mig_gnode_host_lvl = s.final_host_lvl
+    mig.host_gnode is sliced at level s.final_host_lvl
     mig.final_mig_gnode_new_pos = s.real_new_pos
     mig.final_mig_gnode_new_eldership = s.real_new_eldership
-  mig.from_gnode = dup_object(current.parent.visiting_gnode)
-  mig.mig_gnode_old_pos = current.previous_gnode_border_real_pos
+  mig.mig_gnode = dup_object(current.parent.visiting_gnode)
+  mig.mig_gnode.pos.insert_at(0,current.previous_gnode_border_real_pos)
+  mig.mig_gnode.eldership.insert_at(0,-1) // unused data
   mig.migration_id = Random_int()
   mig.conn_gnode_pos = current.previous_gnode_new_conn_vir_pos
   mig.prev_mig_gnode_new_eldership = current.previous_gnode_new_eldership
-  mig.host_gnode = dup_object(current.visiting_gnode)
   mig.mig_gnode_new_pos = mig_gnode_new_pos
   migs.insert(0,mig)
   last = False
@@ -1911,12 +1916,11 @@ RequestPacket.fase2(MigData mig, MigData? mig_next)
   this.operation = RequestPacketType.FINISH_MIGRATION
   this.migration_id = mig.migration_id
   this.conn_gnode_pos = mig.conn_gnode_pos
+  this.host_gnode = mig.host_gnode
   Se mig_next = null:
-    this.host_gnode = mig.host_gnode sliced at level mig.final_mig_gnode_host_lvl
     this.real_new_pos = mig.final_mig_gnode_new_pos
     this.real_new_eldership = mig.final_mig_gnode_new_eldership
   Altrimenti:
-    this.host_gnode = mig.host_gnode
     this.real_new_pos = mig.mig_gnode_new_pos
     this.real_new_eldership = mig_next.prev_mig_gnode_new_eldership
 
@@ -1928,16 +1932,16 @@ Segue l'algortimo che *v* usa per eseguire la migration-path descritta in `List<
 Per i = migs.size - 1 scende fino a 0:
   MigData mig = migs[i]
   RequestPacket p0 = new RequestPacket.fase1(mig)
-  send_mig_request(mig.from_gnode+mig.mig_gnode_old_pos, p0)
+  send_mig_request(mig.mig_gnode, p0)
 Per i = migs.size - 1:
   MigData mig = migs[i]
   RequestPacket p0 = new RequestPacket.fase2(mig, null)
-  send_mig_request(mig.from_gnode+mig.mig_gnode_old_pos, p0)
+  send_mig_request(mig.mig_gnode, p0)
 Per i = migs.size - 2 scende fino a 0:
   MigData mig = migs[i]
   MigData mig_next = migs[i+1]
   RequestPacket p0 = new RequestPacket.fase2(mig, mig_next)
-  send_mig_request(mig.from_gnode+mig.mig_gnode_old_pos, p0)
+  send_mig_request(mig.mig_gnode, p0)
 
 ```
 
