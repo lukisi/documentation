@@ -1051,12 +1051,12 @@ Mentre Q is not empty:
   Set<Pair<TupleGNode,int>>? set_adjacent, int? new_conn_vir_pos, int? new_eldership.
   (min_host_lvl, final_host_lvl, real_new_pos, real_new_eldership,
         set_adjacent, new_conn_vir_pos, new_eldership) =
-        ask_enter_net(current, max_host_lvl, reserve_request_id)
+        send_search_request(current, max_host_lvl, reserve_request_id)
     // Questo algoritmo è eseguito nel singolo nodo contattato in `current.visiting_gnode` passando
     //  per il percorso indicato ricorsivamente in `current.parent...`. Il nodo destinazione
     //  riceve i parametri `visiting_gnode, max_host_lvl, reserve_request_id`.
     Se real_pos_up_to(my_pos) `<` levels:
-      Instrada eccezione SearchMigrationPathError. Termina.
+      Instrada eccezione SearchMigrationPathErrorPkt. Termina.
     Assert visiting_gnode sono io.
     Prepara risultato:
       .min_host_lvl = level(visiting_gnode)
@@ -1330,11 +1330,30 @@ Se invece la verifica ha esito positivo, il nodo toglie il primo elemento dalla 
 poi instrada il pacchetto *di richiesta* verso `path_hops[1].visiting_gnode`.
 
 E così via. Se il percorso non contiene incongruenze arriveremo al punto in cui il pacchetto
-*di richiesta* raggiunge `path_hops[1].visiting_gnode` e la lista `path_hops` termina lì. Quindi dopo
-aver rimosso il primo elemento dalla lista `path_hops` essa non ha più un elemento di indice 1.
+*di richiesta* raggiunge `path_hops[1].visiting_gnode` e la lista `path_hops` termina lì.
+Cioè la lista `path_hops` ha 2 elementi. In questo caso, prima di procedere a rimuovere il primo
+elemento della lista, occorre fare altre valuazioni.  
+Ci troviamo infatti in un singolo nodo all'interno del g-nodo destinazione. Ma bisogna considerare che il
+singolo nodo che dovrà operare per conto del g-nodo destinazione (se non per altro a causa delle attuali
+limitazioni del modulo PeerServices) deve avere tutte le componenti del suo indirizzo *reali*.  
+Se il nodo che riceve il pacchetto *di richiesta* scopre di essere parte di `path_hops[1].visiting_gnode`,
+se inoltre vede che la lista `path_hops` ha 2 elementi, sicuramente le componenti del suo indirizzo
+più alte (quelle indicate cioè in `path_hops[1].visiting_gnode`) sono *reali*, se le componenti
+più basse sono non tutte *reali* si comporta così:
 
-Indichiamo con *w* il primo singolo nodo che si è incontrato nel g-nodo destinazione del
-pacchetto *di richiesta*.  
+*   mantiene la lista `path_hops` nel pacchetto così (cioè non rimuove il primo elemento);
+*   non altera nemmeno il contenuto di `caller` nel pacchetto;
+*   sia `l0` il livello più alto in cui la sua componente è *virtuale*; di sicuro nella sua mappa
+    dei percorsi ha almeno una destinazione *reale* nota al livello `l0`; tra le destinazioni note
+    prende `p0` quella con valore più piccolo;
+*   instrada il pacchetto verso `(l0, p0)`.
+
+In questo modo altri eventuali singoli nodi con indirizzo non completamente *reale* che riceveranno
+il pacchetto all'interno del g-nodo destinazione si comporteranno in modo coerente e il pacchetto
+alla fine giungerà ad un singolo nodo con indirizzo completamente *reale*.
+
+Indichiamo con *w* il primo singolo nodo con indirizzo completamente *reale* che si è incontrato nel
+g-nodo destinazione del pacchetto *di richiesta*. Questi rimuove il primo elemento dalla lista `path_hops`.  
 Il nodo *w* recupera dal pacchetto il parametro `visiting_gnode` da `path_hops[0]` e gli altri
 parametri `max_host_lvl` e `reserve_request_id`.  
 Ora il nodo *w* prosegue con l'algoritmo, che spiegheremo a breve con maggiori dettagli.
@@ -1352,7 +1371,7 @@ SearchMigrationPathRequest:
   int max_host_lvl
   int reserve_request_id
 
-SearchMigrationPathError:
+SearchMigrationPathErrorPkt:
   TupleGNode v
 
 SearchMigrationPathResponse:
@@ -1366,30 +1385,102 @@ SearchMigrationPathResponse:
   int? new_eldership
 ```
 
-Per l'instradamento di questi pacchetti saranno previsti i metodi remoti:
+Per l'instradamento di questi pacchetti si usano questi algoritmi:
 
 ```
-route_search_request(SearchMigrationPathRequest p)
-route_search_error(SearchMigrationPathError p)
-route_search_response(SearchMigrationPathResponse p)
+void send_search_request
+     (SolutionStep current,
+      int max_host_lvl, int reserve_request_id,
+      out int min_host_lvl, out int? final_host_lvl, out int? real_new_pos, out int? real_new_eldership,
+      out Set<Pair<TupleGNode,int>>? set_adjacent, out int? new_conn_vir_pos, out int? new_eldership
+      ) throws SearchMigrationPathError:
+  SearchMigrationPathRequest p0 = new SearchMigrationPathRequest with:
+    .path_hops = get_path_hops(current)
+    .max_host_lvl = max_host_lvl
+    .reserve_request_id = reserve_request_id
+  Se p0.path_hops.size = 1:
+    // first step dest is me
+    execute_search(p0) // TODO
+    Return
+  // prepare to receive response
+  p0.v = my_pos as TupleGNode at level 0
+  p0.caller = my_pos as TupleGNode at level 0
+  p0.pkt_id = Random_int()
+  Channel ch = new Channel()
+  request_id_map[p0.pkt_id] = ch
+  // send request
+  Stub st = best_gw_to(p0.path_hops[1].visiting_gnode)
+  st.route_search_request(p0)
+  // wait response with timeout
+  var v
+  Try:
+    v = ch.recv(timeout)
+    Se v è SearchMigrationPathErrorPkt:
+      Lancia eccezione SearchMigrationPathError
+    Se v non è SearchMigrationPathResponse:
+      Lancia eccezione SearchMigrationPathError
+  Su eccezione Timeout:
+    Lancia eccezione SearchMigrationPathError
+  With v as SearchMigrationPathResponse:
+    min_host_lvl = .min_host_lvl
+    final_host_lvl = .final_host_lvl
+    real_new_pos = .real_new_pos
+    real_new_eldership = .real_new_eldership
+    set_adjacent = .set_adjacent
+    new_conn_vir_pos = .new_conn_vir_pos
+    new_eldership = .new_eldership
+  Return
+
+
+
+[Remote] void route_search_request(SearchMigrationPathRequest p0):
+  // TODO
+  Se my_pos in p0.dest:
+    ResponsePacket p1
+    p1.pkt_id = p0.pkt_id
+    p1.dest = p0.src
+    p1.src = my_pos
+    execute_search(RequestPacket p0)
+    // send response
+    Stub st = best_gw_to(pq.dest)
+    st.route_search_response(p1)
+  Altrimenti:
+    // route request
+    Stub st = best_gw_to(p0.dest)
+    st.route_search_request(p0)
+
+
+
+void execute_search(RequestPacket p0):
+  // TODO
+  do_something(p0)
+
+
+
+[Remote] void route_search_error(SearchMigrationPathErrorPkt p2):
+  // TODO
+  ...
+
+
+
+[Remote] void route_search_response(SearchMigrationPathResponse p1):
+  // TODO
+  Se my_pos in p1.dest:
+    Se NOT request_id_map.has_key(p1.pkt_id):
+      Return
+    Channel ch = request_id_map[p1.pkt_id]
+    ch.send(p1)
+  Altrimenti:
+    // route response
+    Stub st = best_gw_to(p1.dest)
+    st.route_search_response(p1)
+
 ```
 
 ##### Riserva un posto per la migrazione
 
 Il nodo *w* avendo ricevuto il parametro `visiting_gnode` può calcolare il livello del g-nodo che è
 chiamato a rappresentare. Mette il livello in `min_host_lvl`.
-
-Il nodo *w* ora deve chiedere al Coordinator del suo g-nodo di livello `min_host_lvl` di riservare un posto. Ma per fare questo
-è necessario, a causa delle attuali limitazioni del modulo PeerServices, che il nodo *w* abbia tutte le
-componenti del suo indirizzo *reali*.  
-Durante le operazioni di ricerca della migration-path risulta difficile garantire che questo
-requisito sia soddisfatto. Forse in futuro una diversa implementazione del modulo PeerServices potrà
-ridurre queste limitazioni.  
-Per il momento adottiamo questa soluzione: se il nodo *w* contattato non ha tutte le componenti
-*reali*, allora prepara un pacchetto *di eccezione* `SearchMigrationPathError` da instradare verso *v*
-come abbiamo visto prima che poteva accadere durante l'instradamento. Questo consente al nodo
-originante *v* di ignorare il presente percorso e al contempo non escludere tutto il g-nodo
-dalla possibilità di essere visitato di nuovo.
 
 Adesso il nodo *w* deve agire per conto dell'intero g-nodo `visiting_gnode` di livello `min_host_lvl`. Deve
 vedere, partendo da `min_host_lvl` e arrivando al massimo a `max_host_lvl`, a quale livello minimo il g-nodo
@@ -1430,7 +1521,7 @@ Adesso il nodo *w* imposta `final_host_lvl = min_host_lvl + 1`. Partendo da 
 massimo a `max_host_lvl`, vede a quale livello minimo sia possibile prenotare un posto *reale*.
 
 Il nodo *w*, man mano che fa questi tentativi, incrementa il valore di `final_host_lvl`. Così, se
-non fosse possibile prenotare una posizione *reale* a nessun livello tra `min_host_lvl` e `max_host_lvl`,
+non fosse possibile prenotare una posizione *reale* a nessun livello tra `min_host_lvl + 1` e `max_host_lvl`,
 il risultato sarebbe che `final_host_lvl` diventa maggiore di `max_host_lvl`. E da questo fatto
 l'esito sarebbe chiaro al nodo *v* quando riceverà la risposta.
 
@@ -1458,8 +1549,8 @@ suo g-nodo di livello `min_host_lvl`.
 
 Il nodo *w* sa quali sono i g-nodi di livello `min_host_lvl` interni al suo g-nodo di livello `min_host_lvl + 1`,
 cioè quali HCoord di livello `min_host_lvl` sono presenti nella sua mappa dei percorsi.
-Tra questi sa dire quali (se ce ne sono) siano anche adiacenti al suo g-nodo di livello `min_host_lvl`: infatti esiste
-un percorso verso essi che non contiene passi intermedi di livello `min_host_lvl`. È anche necessario
+Tra questi sa dire quali (se ce ne sono) siano anche adiacenti al suo g-nodo di livello `min_host_lvl`: infatti il suo
+miglior percorso verso essi non contiene passi intermedi di livello `min_host_lvl`. È anche necessario
 che l'ultimo passo intermedio di livello `min_host_lvl - 1` sia un HCoord con posizione *reale* a quel livello. Se non
 esiste un passo intermedio di livello `min_host_lvl - 1`, allora è necessario che lo stesso nodo *w* abbia
 una posizione *reale* a quel livello.
@@ -1479,11 +1570,14 @@ di livello `min_host_lvl - 1` del g-nodo di livello `min_host_lvl` di *w*.
 Dato un HCoord di livello `i`, il nodo *w* sa produrre l'istanza `TupleGNode` del g-nodo di
 livello `i` con il metodo `make_tuple_from_hc` visto sopra.  
 Per gli HCoord di livello `min_host_lvl` questo è quello che serve. Per quelli di livello
-superiore, invece, questa informazione non è sufficiente. Ma non
-possiamo affidare al nodo *w* il compito di contattare un singolo nodo in essi per scoprire
+superiore, invece, questa informazione non è sufficiente.  
+Ma preferiamo non affidare al nodo *w* il compito di contattare un singolo nodo in essi per scoprire
 la tupla completa del g-nodo di livello `min_host_lvl` in quanto il nodo *w* potrebbe non avere
-tutte le componenti *reali*. In conclusione il nodo *w* ottiene un set di tuple
-il cui livello è maggiore o uguale a `min_host_lvl`.
+tutte le componenti *reali* e comunque queste informazioni potrebbero non rendersi necessarie. Facciamo
+quindi in modo che il nodo *w* risponda in tempi rapidi e lasciamo che sia il nodo *v* a procurarsi
+queste informazioni se gli sono necessarie.
+
+In conclusione il nodo *w* ottiene un set di tuple il cui livello è maggiore o uguale a `min_host_lvl`.
 
 ##### Risposta al nodo richiedente
 
@@ -1512,17 +1606,20 @@ Prima di fare queste valutazioni occorre considerare che i g-nodi adiacenti rice
 dal g-nodo appena visitato (gli elementi della lista `set_adjacent`) possono non essere del giusto livello.
 Il nodo *v* sa di aver contattato il g-nodo `current.visiting_gnode` che (ora) identifica un g-nodo
 di livello `min_host_lvl`. I g-nodi adiacenti nella lista `set_adjacent` possono essere di livello
-maggiore o uguale a `min_host_lvl`. Se si trova la tupla `n` di un g-nodo di livello maggiore di `min_host_lvl`
+maggiore o uguale a `min_host_lvl`. Per ogni tupla `n` in questa lista, se `n` è un g-nodo di livello maggiore di `min_host_lvl`
 instrada un *pacchetto di esplorazione* con meccanismi simili a quelli descritti per il *pacchetto di richiesta*
-per chiedere al primo singolo nodo che incontra in essi la tupla completa del g-nodo di livello `requested_lvl = min_host_lvl`.  
+per chiedere al primo singolo nodo che incontra in essi la tupla completa del g-nodo di livello `requested_lvl = min_host_lvl`.
+
 Anche qui è necessario seguire tutto il percorso indicato da `current` e poi instradare verso `n`. Non è
-invece necessario che durante il tragitto si verifichi anche l'adiacenza come visto prima.  
+invece necessario che durante il tragitto si verifichi anche l'adiacenza come visto prima.
+
+Quando si raggiunge un singolo nodo che appartiene al g-nodo destinazione `n` questi controlla le
+componenti inferiori (rispetto al livello di `n`) del suo indirizzo fino al livello `requested_lvl`.
+Se non sono tutte *reali* si comporta come abbiamo visto prima nell'istradamento del pacchetto
+*di richiesta*. Invece ai livelli inferiori a `requested_lvl` non è necessario che esse siano *reali*.
+
 Il nodo che risponde alla richiesta dovrà instradare il *pacchetto di risposta esplorazione* al
 nodo *v*.
-
-Se il nodo che risponde alla richiesta appartiene ad un g-nodo di livello `requested_lvl` che ha componenti
-non *reali* (è possibile ai livelli minori del livello della tupla `n` iniziale) allora il
-nodo *v* ignora questa tupla. Altrimenti la processa.
 
 Per intuizione crediamo (non è dimostrato al momento) che questo comportamento del nodo *v* gli permette di visitare gradualmente tutti
 i g-nodi di livello `min_host_lvl` della rete, sebbene ogni singolo g-nodo che esso contatta non sia
@@ -1574,7 +1671,7 @@ Oppure la ricerca si interrompe quando dopo l'ultima migration-path trovata (seb
 delta *non soddisfacente*) sono stati fatti troppi passi ulteriori senza trovarne una con un
 delta più piccolo: infatti nell'algoritmo all'inizio del ciclo abbiamo l'istruzione
 `Esci dal ciclo` in risposta a considerazioni sulla distanza della migration-path corrente
-`current.get_distance()` e quella precedente memorizzata in `prev_sol_distance`.
+`current.get_distance()` e quella risolutiva precedente memorizzata in `prev_sol_distance`.
 
 Quando l'algoritmo di ricerca si interrompe, se qualche soluzione è stata trovata allora l'ultima
 è quella da preferire.  
