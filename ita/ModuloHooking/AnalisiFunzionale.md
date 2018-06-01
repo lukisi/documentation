@@ -868,7 +868,7 @@ un g-nodo *g* di livello *l* se *P* è una lista di g-nodi che soddisfa questi r
     *   *k<sub>i+1</sub>* ≥ *k<sub>i</sub>*.
     *   Inoltre è necessario che il g-nodo *p<sub>i</sub>* abbia tutte le sue posizioni (ai
         livelli da *k<sub>i</sub>* a *levels* - 1) *reali*.
-    *   *p<sub>i+1</sub>* ∈ *𝛤<sub>l+1</sub>(p<sub>i</sub>)*, cioè *p<sub>i+1</sub>* è direttamente collegato a
+    *   *p<sub>i+1</sub>* ∈ *𝛤<sub>k(i)</sub>(p<sub>i</sub>)*, cioè *p<sub>i+1</sub>* è direttamente collegato a
         *p<sub>i</sub>* nel grafo *[G]<sub>k(i)</sub>*.  
     *   Inoltre è necessario che il g-nodo di livello *k<sub>i</sub>* - 1 in *p<sub>i</sub>* diretto vicino
         di *p<sub>i+1</sub>* abbia la posizione *reale* al livello *k<sub>i</sub>* - 1.
@@ -906,7 +906,7 @@ Da un lato dello spettro abbiamo il caso ottimale: *d* = 0 e *hl* = *l* + 
 di livello *l* + 1.
 
 Si intuisce facilmente che allontanandoci da questa situazione, ovvero con il crescere di *d* e/o con
-il crescere del delta *hl* - *l*, andiamo a fare operazioni che danneggiano maggiormente la nuova rete *J*.
+il crescere del delta *hl* - *l*, andiamo a fare operazioni che danneggiano maggiormente la rete *J*.
 
 Con il crescere di *d* cresce il numero di g-nodi che cambiano indirizzo, quindi è ovvio il danno.
 
@@ -1047,8 +1047,8 @@ Mentre Q is not empty:
   // La risposta sarà una tupla composta di: `min_host_lvl`,
   //  `final_host_lvl`, `real_new_pos`, `real_new_eldership`,
   //  `set_adjacent`, `new_conn_vir_pos`, `new_eldership`.
-  int min_host_lvl, int final_host_lvl, int real_new_pos, int real_new_eldership.
-  Set<Pair<TupleGNode,int>> set_adjacent, int new_conn_vir_pos, int new_eldership.
+  int min_host_lvl, int? final_host_lvl, int? real_new_pos, int? real_new_eldership.
+  Set<Pair<TupleGNode,int>>? set_adjacent, int? new_conn_vir_pos, int? new_eldership.
   (min_host_lvl, final_host_lvl, real_new_pos, real_new_eldership,
         set_adjacent, new_conn_vir_pos, new_eldership) =
         ask_enter_net(current, max_host_lvl, reserve_request_id)
@@ -1155,15 +1155,13 @@ Mentre Q is not empty:
       //  (perché in uno dei suoi passaggi si è incontrato un g-nodo a gestione autonoma
       //  di più alto livello) dobbiamo verificare anche che non ci sia stato un g-nodo
       //  contenuto in `n` già attraversato dal percorso `current`.
-      SolutionStep prev_step = current
+      SolutionStep? prev_step = current
       bool in_prev_step = False
-      Mentre True:
+      Mentre prev_step ≠ null:
         TupleGNode prev_step_gnode = prev_step.visiting_gnode.
         TupleGNode prev_step_gnode_bigger = make_tuple_up_to_level(prev_step_gnode, min_host_lvl)
         Se prev_step_gnode_bigger.pos = n.pos:
           in_prev_step = True
-          Esci dal ciclo.
-        Se prev_step.parent = null:
           Esci dal ciclo.
         prev_step = prev_step.parent
       Se NOT in_prev_step:
@@ -1258,7 +1256,9 @@ List<PathHop> get_path_hops(SolutionStep current):
   Mentre hop ≠ null:
     PathHop path_hop = new PathHop()
     path_hop.visiting_gnode = dup_object(hop.visiting_gnode)
-    path_hop.previous_migrating_gnode = dup_object(hop.previous_migrating_gnode)
+    path_hop.previous_migrating_gnode = null
+    Se hop.previous_migrating_gnode ≠ null:
+      path_hop.previous_migrating_gnode = dup_object(hop.previous_migrating_gnode)
     path_hops.insert(0,path_hop)
     hop = hop.parent
   Restituisci path_hops
@@ -1316,9 +1316,12 @@ considera il g-nodo finale `current.visiting_gnode` come non ancora visitato: ci
 attraverso altre path.
 
 Proseguiamo ipotizzando che la verifica ha esito positivo.  
+Ogni nodo che inoltra il pacchetto *di richiesta* lo modifica prima mettendo il suo indirizzo Netsukuku
+completo nel campo `caller`.
+
 Quando si raggiunge il g-nodo indicato nell'elemento `path_hops[1].visiting_gnode`, occorre verificare che
-il precedente singolo nodo sia del g-nodo `path_hops[1].previous_migrating_gnode`. Perciò ogni nodo che inoltra
-il pacchetto *di richiesta* indica il suo indirizzo Netsukuku completo nel campo `caller`.  
+l'indirizzo che era nel campo `caller`, cioè l'indirizzo del precedente singolo nodo, faccia parte del
+g-nodo `path_hops[1].previous_migrating_gnode`.  
 Deve inoltre essere vero che `path_hops[1].previous_migrating_gnode` è dentro `path_hops[0].visiting_gnode`
 al livello subito sotto.  
 Anche in questa verifica, se viene rilevata una incongruenza, allora il nodo
