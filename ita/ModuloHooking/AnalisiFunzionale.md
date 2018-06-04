@@ -1141,7 +1141,7 @@ Mentre Q is not empty:
       // Contatta un singolo nodo in `n` passando per il percorso in `current`.
       // Passa `requested_lvl = min_host_lvl`.
       // La risposta sarà il TupleGNode di livello `requested_lvl` a cui esso appartiene.
-      n = ask_tuple(current, n, requested_lvl = min_host_lvl)
+      n = send_explore_request(current, n, requested_lvl = min_host_lvl)
         // Questo algoritmo è eseguito nel singolo nodo contattato in `n`.
         Instrada risultato make_tuple_from_level(requested_lvl). Termina.
       Se ora n ha componenti non reali:
@@ -1651,7 +1651,7 @@ In conclusione il nodo *w* ottiene un set di tuple il cui livello è maggiore o 
 ##### Risposta al nodo richiedente
 
 Il nodo *w* instrada verso il nodo *v* in un pacchetto *di risposta* la tupla composta di
-`esito`, `min_host_lvl`, `final_host_lvl`, `real_new_pos`, `real_new_eldership`, `set_adjacent`,
+`min_host_lvl`, `final_host_lvl`, `real_new_pos`, `real_new_eldership`, `set_adjacent`,
 `new_conn_vir_pos`, `new_eldership`.
 
 In particolare evidenziamo che il nodo *v* riceve il parametro di output `min_host_lvl`
@@ -1787,7 +1787,7 @@ void send_explore_request
 
 
 
-void execute_explore(RequestPacket p0):
+void execute_explore
      (int requested_lvl,
       out TupleGNode result):
   vedi algoritmo illustrato sopra.
@@ -1866,10 +1866,45 @@ DeleteReservationRequest:
   int reserve_request_id
 ```
 
-Per l'instradamento di questo pacchetto sarà previsto il metodo remoto:
+Per l'instradamento di questi pacchetti si usano questi algoritmi:
 
 ```
-route_delete_reserve_request(DeleteReservationRequest p)
+void send_delete_reserve_request
+     (TupleGNode dest_gnode,
+      int reserve_request_id):
+  Se my_pos in dest_gnode:
+    execute_delete_reserve(dest_gnode, reserve_request_id)
+    Return
+  // prepare packet to send
+  DeleteReservationRequest p0 = new DeleteReservationRequest with:
+    .dest_gnode = dest_gnode
+    .reserve_request_id = reserve_request_id
+  // send request
+  Stub st = best_gw_to(p0.dest_gnode)
+  st.route_delete_reserve_request(p0)
+  // no response needed
+  Return
+
+
+
+[Remote] route_delete_reserve_request(DeleteReservationRequest p0)
+  Se my_pos in p0.dest_gnode:
+    execute_delete_reserve(p0.dest_gnode, p0.reserve_request_id)
+    // no response
+    Return
+  Altrimenti:
+    // route request
+    Stub st = best_gw_to(p0.dest_gnode)
+    st.route_delete_reserve_request(p0)
+    Return
+
+
+
+void execute_delete_reserve
+     (TupleGNode dest_gnode,
+      int reserve_request_id):
+  coord_delete_reserve(level(dest_gnode), reserve_request_id)
+
 ```
 
 Non c'è bisogno di attendere una risposta. Il primo singolo nodo in esso chiama il metodo `delete_reserve` del
