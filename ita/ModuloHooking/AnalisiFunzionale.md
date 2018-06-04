@@ -1332,7 +1332,7 @@ poi instrada il pacchetto *di richiesta* verso `path_hops[1].visiting_gnode`.
 E così via. Se il percorso non contiene incongruenze arriveremo al punto in cui il pacchetto
 *di richiesta* raggiunge `path_hops[1].visiting_gnode` e la lista `path_hops` termina lì.
 Cioè la lista `path_hops` ha 2 elementi. In questo caso, prima di procedere a rimuovere il primo
-elemento della lista, occorre fare altre valuazioni.  
+elemento della lista, occorre fare altre valutazioni.  
 Ci troviamo infatti in un singolo nodo all'interno del g-nodo destinazione. Ma bisogna considerare che il
 singolo nodo che dovrà operare per conto del g-nodo destinazione (se non per altro a causa delle attuali
 limitazioni del modulo PeerServices) deve avere tutte le componenti del suo indirizzo *reali*.  
@@ -1343,10 +1343,10 @@ più basse sono non tutte *reali* si comporta così:
 
 *   mantiene la lista `path_hops` nel pacchetto così (cioè non rimuove il primo elemento);
 *   non altera nemmeno il contenuto di `caller` nel pacchetto;
-*   sia `l0` il livello più alto in cui la sua componente è *virtuale*; di sicuro nella sua mappa
-    dei percorsi ha almeno una destinazione *reale* nota al livello `l0`; tra le destinazioni note
-    prende `p0` quella con valore più piccolo;
-*   instrada il pacchetto verso `(l0, p0)`.
+*   sia `lvl_next` il livello più alto in cui la sua componente è *virtuale*; di sicuro nella sua mappa
+    dei percorsi ha almeno una destinazione *reale* nota al livello `lvl_next`; tra le destinazioni note
+    prende `pos_next` quella con valore più piccolo;
+*   instrada il pacchetto verso `(lvl_next, pos_next)`.
 
 In questo modo altri eventuali singoli nodi con indirizzo non completamente *reale* che riceveranno
 il pacchetto all'interno del g-nodo destinazione si comporteranno in modo coerente e il pacchetto
@@ -1394,14 +1394,17 @@ void send_search_request
       out int min_host_lvl, out int? final_host_lvl, out int? real_new_pos, out int? real_new_eldership,
       out Set<Pair<TupleGNode,int>>? set_adjacent, out int? new_conn_vir_pos, out int? new_eldership
       ) throws SearchMigrationPathError:
+  var path_hops = get_path_hops(current)
+  Se path_hops.size = 1:
+    execute_search(path_hops[0].visiting_gnode, max_host_lvl, reserve_request_id,
+                   out min_host_lvl, out final_host_lvl, out real_new_pos, out real_new_eldership,
+                   out set_adjacent, out new_conn_vir_pos, out new_eldership)
+    Return
+  // prepare packet to send
   SearchMigrationPathRequest p0 = new SearchMigrationPathRequest with:
-    .path_hops = get_path_hops(current)
+    .path_hops = path_hops
     .max_host_lvl = max_host_lvl
     .reserve_request_id = reserve_request_id
-  Se p0.path_hops.size = 1:
-    // first step dest is me
-    execute_search(p0) // TODO
-    Return
   // prepare to receive response
   p0.v = my_pos as TupleGNode at level 0
   p0.caller = my_pos as TupleGNode at level 0
@@ -1434,20 +1437,71 @@ void send_search_request
 
 
 [Remote] void route_search_request(SearchMigrationPathRequest p0):
-  // TODO
-  Se my_pos in p0.dest:
-    ResponsePacket p1
-    p1.pkt_id = p0.pkt_id
-    p1.dest = p0.src
-    p1.src = my_pos
-    execute_search(RequestPacket p0)
-    // send response
-    Stub st = best_gw_to(pq.dest)
-    st.route_search_response(p1)
+  Se my_pos in p0.path_hops[1].visiting_gnode:
+    // check adjacency
+    var adjacency = (p0.caller in p0.path_hops[1].previous_migrating_gnode)
+                AND (p0.path_hops[1].previous_migrating_gnode in p0.path_hops[0].visiting_gnode)
+                AND (level(p0.path_hops[1].previous_migrating_gnode) + 1 = level(p0.path_hops[0].visiting_gnode))
+    Se NOT adjacency:
+      // send error in routing
+      SearchMigrationPathErrorPkt p1 = new SearchMigrationPathErrorPkt with:
+        .v = p0.v
+        .pkt_id = p0.pkt_id
+      Stub st = best_gw_to(p1.v)
+      st.route_search_error(p1)
+      Return
+    Se p0.path_hops.size > 2:
+      p0.caller = my_pos as TupleGNode at level 0
+      p0.path_hops.remove_at(0)
+      // route request
+      Stub st = best_gw_to(p0.path_hops[1].visiting_gnode)
+      st.route_search_request(p0)
+      Return
+    // check i am real
+    var lvl_next = my_pos.highest_virtual_level()
+    Se lvl_next = -1: // i am real
+      p0.path_hops.remove_at(0)
+      SearchMigrationPathResponse p1 = new SearchMigrationPathResponse with:
+        .v = p0.v
+        .pkt_id = p0.pkt_id
+      execute_search(p0.path_hops[0].visiting_gnode, p0.max_host_lvl, p0.reserve_request_id,
+                     out p1.min_host_lvl, out p1.final_host_lvl, out p1.real_new_pos, out p1.real_new_eldership,
+                     out p1.set_adjacent, out p1.new_conn_vir_pos, out p1.new_eldership)
+      Se eccezione SearchMigrationPathError:
+        // send error
+        SearchMigrationPathErrorPkt p2 = new SearchMigrationPathErrorPkt with:
+          .v = p0.v
+          .pkt_id = p0.pkt_id
+        Stub st = best_gw_to(p2.v)
+        st.route_search_error(p2)
+        Return
+      // send response
+      Stub st = best_gw_to(p1.v)
+      st.route_search_error(p1)
+      Return
+    Altrimenti:
+      Per pos_next = 0 to gsizes[lvl_next]-1:
+        Se dest_exists(lvl_next, pos_next):
+          // route request
+          Stub st = best_gw_to(lvl_next, pos_next)
+          st.route_search_request(p0)
+          Return
+      // Se sono virtuale a lvl_next ci sarà un g-nodo reale a quel livello.
+      Assert_not_reached()
   Altrimenti:
+    Se my_pos NOT in p0.path_hops[0].visiting_gnode:
+      // send error in routing
+      SearchMigrationPathErrorPkt p1 = new SearchMigrationPathErrorPkt with:
+        .v = p0.v
+        .pkt_id = p0.pkt_id
+      Stub st = best_gw_to(p1.v)
+      st.route_search_error(p1)
+      Return
+    p0.caller = my_pos as TupleGNode at level 0
     // route request
-    Stub st = best_gw_to(p0.dest)
+    Stub st = best_gw_to(p0.path_hops[1].visiting_gnode)
     st.route_search_request(p0)
+    Return
 
 
 
@@ -1476,6 +1530,9 @@ void execute_search(RequestPacket p0):
     st.route_search_response(p1)
 
 ```
+
+Le funzioni `my_pos`, `best_gw_to` e `dest_exists` sono delegati che usano la mappa dei percorsi
+noti del nodo.
 
 ##### Riserva un posto per la migrazione
 
