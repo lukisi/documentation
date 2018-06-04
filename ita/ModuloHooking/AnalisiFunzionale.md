@@ -1055,9 +1055,7 @@ Mentre Q is not empty:
     // Questo algoritmo è eseguito nel singolo nodo contattato in `current.visiting_gnode` passando
     //  per il percorso indicato ricorsivamente in `current.parent...`. Il nodo destinazione
     //  riceve i parametri `visiting_gnode, max_host_lvl, reserve_request_id`.
-    Se real_pos_up_to(my_pos) `<` levels:
-      Instrada eccezione SearchMigrationPathErrorPkt. Termina.
-    Assert visiting_gnode sono io.
+    Assert visiting_gnode sono io, mio indirizzo è del tutto reale.
     Prepara risultato:
       .min_host_lvl = level(visiting_gnode)
       .final_host_lvl = null
@@ -1350,7 +1348,10 @@ più basse sono non tutte *reali* si comporta così:
 
 In questo modo altri eventuali singoli nodi con indirizzo non completamente *reale* che riceveranno
 il pacchetto all'interno del g-nodo destinazione si comporteranno in modo coerente e il pacchetto
-alla fine giungerà ad un singolo nodo con indirizzo completamente *reale*.
+alla fine giungerà ad un singolo nodo con indirizzo completamente *reale*. Non è affatto detto che il
+pacchetto raggiunga proprio `(lvl_next, pos_next)` e non è necessario. L'importante è che non si formino
+cicli mentre il pacchetto viene inoltrato in singoli nodi con indirizzo non completamente *reale*
+fin quando non giunge ad un singolo nodo con indirizzo completamente *reale*.
 
 Indichiamo con *w* il primo singolo nodo con indirizzo completamente *reale* che si è incontrato nel
 g-nodo destinazione del pacchetto *di richiesta*. Questi rimuove il primo elemento dalla lista `path_hops`.  
@@ -1365,17 +1366,20 @@ Riassumendo, i pacchetti contengono:
 
 ```
 SearchMigrationPathRequest:
-  TupleGNode v
+  int pkt_id
+  TupleGNode origin
   TupleGNode caller
   List<PathHop> path_hops
   int max_host_lvl
   int reserve_request_id
 
 SearchMigrationPathErrorPkt:
-  TupleGNode v
+  int pkt_id
+  TupleGNode origin
 
 SearchMigrationPathResponse:
-  TupleGNode v
+  int pkt_id
+  TupleGNode origin
   int min_host_lvl
   int? final_host_lvl
   int? real_new_pos
@@ -1406,7 +1410,7 @@ void send_search_request
     .max_host_lvl = max_host_lvl
     .reserve_request_id = reserve_request_id
   // prepare to receive response
-  p0.v = my_pos as TupleGNode at level 0
+  p0.origin = my_pos as TupleGNode at level 0
   p0.caller = my_pos as TupleGNode at level 0
   p0.pkt_id = Random_int()
   Channel ch = new Channel()
@@ -1415,16 +1419,16 @@ void send_search_request
   Stub st = best_gw_to(p0.path_hops[1].visiting_gnode)
   st.route_search_request(p0)
   // wait response with timeout
-  var v
+  var resp
   Try:
-    v = ch.recv(timeout)
-    Se v è SearchMigrationPathErrorPkt:
+    resp = ch.recv(timeout)
+    Se resp è SearchMigrationPathErrorPkt:
       Lancia eccezione SearchMigrationPathError
-    Se v non è SearchMigrationPathResponse:
+    Se resp non è SearchMigrationPathResponse:
       Lancia eccezione SearchMigrationPathError
   Su eccezione Timeout:
     Lancia eccezione SearchMigrationPathError
-  With v as SearchMigrationPathResponse:
+  With resp as SearchMigrationPathResponse:
     min_host_lvl = .min_host_lvl
     final_host_lvl = .final_host_lvl
     real_new_pos = .real_new_pos
@@ -1441,13 +1445,14 @@ void send_search_request
     // check adjacency
     var adjacency = (p0.caller in p0.path_hops[1].previous_migrating_gnode)
                 AND (p0.path_hops[1].previous_migrating_gnode in p0.path_hops[0].visiting_gnode)
-                AND (level(p0.path_hops[1].previous_migrating_gnode) + 1 = level(p0.path_hops[0].visiting_gnode))
+                AND (level(p0.path_hops[1].previous_migrating_gnode) + 1
+                     = level(p0.path_hops[0].visiting_gnode))
     Se NOT adjacency:
       // send error in routing
       SearchMigrationPathErrorPkt p1 = new SearchMigrationPathErrorPkt with:
-        .v = p0.v
+        .origin = p0.origin
         .pkt_id = p0.pkt_id
-      Stub st = best_gw_to(p1.v)
+      Stub st = best_gw_to(p1.origin)
       st.route_search_error(p1)
       Return
     Se p0.path_hops.size > 2:
@@ -1462,21 +1467,14 @@ void send_search_request
     Se lvl_next = -1: // i am real
       p0.path_hops.remove_at(0)
       SearchMigrationPathResponse p1 = new SearchMigrationPathResponse with:
-        .v = p0.v
+        .origin = p0.origin
         .pkt_id = p0.pkt_id
-      execute_search(p0.path_hops[0].visiting_gnode, p0.max_host_lvl, p0.reserve_request_id,
-                     out p1.min_host_lvl, out p1.final_host_lvl, out p1.real_new_pos, out p1.real_new_eldership,
-                     out p1.set_adjacent, out p1.new_conn_vir_pos, out p1.new_eldership)
-      Se eccezione SearchMigrationPathError:
-        // send error
-        SearchMigrationPathErrorPkt p2 = new SearchMigrationPathErrorPkt with:
-          .v = p0.v
-          .pkt_id = p0.pkt_id
-        Stub st = best_gw_to(p2.v)
-        st.route_search_error(p2)
-        Return
+      execute_search
+         (p0.path_hops[0].visiting_gnode, p0.max_host_lvl, p0.reserve_request_id,
+          out p1.min_host_lvl, out p1.final_host_lvl, out p1.real_new_pos, out p1.real_new_eldership,
+          out p1.set_adjacent, out p1.new_conn_vir_pos, out p1.new_eldership)
       // send response
-      Stub st = best_gw_to(p1.v)
+      Stub st = best_gw_to(p1.origin)
       st.route_search_error(p1)
       Return
     Altrimenti:
@@ -1492,9 +1490,9 @@ void send_search_request
     Se my_pos NOT in p0.path_hops[0].visiting_gnode:
       // send error in routing
       SearchMigrationPathErrorPkt p1 = new SearchMigrationPathErrorPkt with:
-        .v = p0.v
+        .origin = p0.origin
         .pkt_id = p0.pkt_id
-      Stub st = best_gw_to(p1.v)
+      Stub st = best_gw_to(p1.origin)
       st.route_search_error(p1)
       Return
     p0.caller = my_pos as TupleGNode at level 0
@@ -1506,33 +1504,47 @@ void send_search_request
 
 
 void execute_search(RequestPacket p0):
-  // TODO
-  do_something(p0)
+     (TupleGNode visiting_gnode,
+      int max_host_lvl, int reserve_request_id,
+      out int min_host_lvl, out int? final_host_lvl, out int? real_new_pos, out int? real_new_eldership,
+      out Set<Pair<TupleGNode,int>>? set_adjacent, out int? new_conn_vir_pos, out int? new_eldership):
+  vedi algoritmo illustrato sopra.
 
 
 
 [Remote] void route_search_error(SearchMigrationPathErrorPkt p2):
-  // TODO
-  ...
+  Se my_pos = p2.origin:
+    // deliver
+    Se NOT request_id_map.has_key(p2.pkt_id):
+      Return
+    Channel ch = request_id_map[p2.pkt_id]
+    ch.send(p2)
+    Return
+  // route error
+  Stub st = best_gw_to(p2.origin)
+  st.route_search_error(p2)
+  Return
 
 
 
 [Remote] void route_search_response(SearchMigrationPathResponse p1):
-  // TODO
-  Se my_pos in p1.dest:
+  Se my_pos = p1.origin:
+    // deliver
     Se NOT request_id_map.has_key(p1.pkt_id):
       Return
     Channel ch = request_id_map[p1.pkt_id]
     ch.send(p1)
-  Altrimenti:
-    // route response
-    Stub st = best_gw_to(p1.dest)
-    st.route_search_response(p1)
+    Return
+  // route response
+  Stub st = best_gw_to(p1.origin)
+  st.route_search_response(p1)
+  Return
 
 ```
 
 Le funzioni `my_pos`, `best_gw_to` e `dest_exists` sono delegati che usano la mappa dei percorsi
-noti del nodo.
+noti del nodo. Il dizionario `request_id_map` nel nodo origine *v*, che associa ogni pacchetto inviato
+al suo identificativo, è una variabile globale del modulo Hooking.
 
 ##### Riserva un posto per la migrazione
 
@@ -1690,20 +1702,111 @@ Riassumendo, i pacchetti contengono:
 
 ```
 ExploreGNodeRequest:
-  TupleGNode v
+  int pkt_id
+  TupleGNode origin
   List<PathHop> path_hops
   int requested_lvl
 
 ExploreGNodeResponse:
-  TupleGNode v
-  TupleGNode response
+  int pkt_id
+  TupleGNode origin
+  TupleGNode result
 ```
 
-Per l'instradamento di questi pacchetti saranno previsti i metodi remoti:
+Per l'instradamento di questi pacchetti si usano questi algoritmi:
 
 ```
-route_explore_request(ExploreGNodeRequest p)
-route_explore_response(ExploreGNodeResponse p)
+void send_explore_request
+     (SolutionStep current, TupleGNode adjacent,
+      int requested_lvl,
+      out TupleGNode result
+      ) throws ExploreGNodeError :
+  var path_hops = get_path_hops(current)
+  path_hops.add(new PathHop(visiting_gnode=adjacent, previous_migrating_gnode=null))
+  // prepare packet to send
+  ExploreGNodeRequest p0 = new ExploreGNodeRequest with:
+    .path_hops = path_hops
+    .requested_lvl = requested_lvl
+  // prepare to receive response
+  p0.origin = my_pos as TupleGNode at level 0
+  p0.pkt_id = Random_int()
+  Channel ch = new Channel()
+  request_id_map[p0.pkt_id] = ch
+  // send request
+  Stub st = best_gw_to(p0.path_hops[1].visiting_gnode)
+  st.route_explore_request(p0)
+  // wait response with timeout
+  var resp
+  Try:
+    resp = ch.recv(timeout)
+    Se resp non è ExploreGNodeResponse:
+      Lancia eccezione ExploreGNodeError
+  Su eccezione Timeout:
+    Lancia eccezione ExploreGNodeError
+  With resp as ExploreGNodeResponse:
+    result = .result
+  Return
+
+
+
+[Remote] void route_explore_request(ExploreGNodeRequest p0):
+  Se my_pos in p0.path_hops[1].visiting_gnode:
+    Se p0.path_hops.size > 2:
+      p0.path_hops.remove_at(0)
+      // route request
+      Stub st = best_gw_to(p0.path_hops[1].visiting_gnode)
+      st.route_explore_request(p0)
+      Return
+    // check i am real
+    var lvl_next = my_pos.highest_virtual_level()
+    Se lvl_next < p0.requested_lvl: // i am real at least the requested gnode
+      p0.path_hops.remove_at(0)
+      ExploreGNodeResponse p1 = new ExploreGNodeResponse with:
+        .origin = p0.origin
+        .pkt_id = p0.pkt_id
+      execute_explore(p0.requested_lvl,
+                     out p1.result)
+      // send response
+      Stub st = best_gw_to(p1.origin)
+      st.route_explore_error(p1)
+      Return
+    Altrimenti:
+      Per pos_next = 0 to gsizes[lvl_next]-1:
+        Se dest_exists(lvl_next, pos_next):
+          // route request
+          Stub st = best_gw_to(lvl_next, pos_next)
+          st.route_explore_request(p0)
+          Return
+      // Se sono virtuale a lvl_next ci sarà un g-nodo reale a quel livello.
+      Assert_not_reached()
+  Altrimenti:
+    // route request
+    Stub st = best_gw_to(p0.path_hops[1].visiting_gnode)
+    st.route_explore_request(p0)
+    Return
+
+
+
+void execute_explore(RequestPacket p0):
+     (int requested_lvl,
+      out TupleGNode result):
+  vedi algoritmo illustrato sopra.
+
+
+
+[Remote] void route_explore_response(ExploreGNodeResponse p1):
+  Se my_pos = p1.origin:
+    // deliver
+    Se NOT request_id_map.has_key(p1.pkt_id):
+      Return
+    Channel ch = request_id_map[p1.pkt_id]
+    ch.send(p1)
+    Return
+  // route response
+  Stub st = best_gw_to(p1.origin)
+  st.route_explore_response(p1)
+  Return
+
 ```
 
 ##### Prosegue l'algoritmo di ricerca in ampiezza della shortest migration-path
