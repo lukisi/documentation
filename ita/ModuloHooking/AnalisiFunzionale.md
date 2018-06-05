@@ -14,6 +14,7 @@
     1.  [Sesta fase - richiesta della prenotazione di un posto](#Fusione_reti_fase6)
     1.  [Prenotazione riuscita: Settima fase - ingresso](#Fusione_reti_fase7a)
     1.  [Prenotazione fallita: Settima fase - annullamento al g-nodo entrante](#Fusione_reti_fase7b)
+    1.  [Classe HookingMemory](#Class_HookingMemory)
 1.  [Strategia di ingresso](#Strategia_ingresso)
     1.  [Definizione della migration-path](#Strategia_ingresso_Definizione_migration_path)
     1.  [Uso della migration-path](#Strategia_ingresso_Uso_migration_path)
@@ -23,7 +24,6 @@
     1.  [Esecuzione della migration-path](#Strategia_ingresso_Esecuzione_migration_path)
     1.  [Algoritmo di esecuzione](#Strategia_ingresso_Algoritmo_esecuzione)
 1.  [Risoluzione di uno split di g-nodo](#Split_gnodo)
-1.  [Classe HookingMemory](#Class_HookingMemory)
 
 ## <a name="Notazioni"></a>Terminologia e notazioni
 
@@ -781,6 +781,22 @@ Se invece il nuovo valore di *lvl* non è minore di 0, allora il nodo *n* potrà
 dalla quinta fase (comunicazione con il g-nodo entrante) con il nuovo valore di *lvl*. Cioè,
 considerando se stesso ancora come "eletto" a tentare l'ingresso in *J* per conto della rete *G*,
 riparte dalla chiamata di `begin_enter` con il nuovo valore di *lvl*.
+
+### <a name="Class_HookingMemory"></a>Classe HookingMemory
+
+La classe `HookingMemory` è serializzabile. È usata una sua istanza per rappresentare la
+memoria condivisa di un g-nodo di pertinenza del modulo Hooking.
+
+I suoi membri sono:
+
+*   `List<EvaluateEnterEvaluation> evaluate_enter_evaluation_list` - Lista di valutazioni.
+    Può essere vuota, se non si sta valutando alcun ingresso.
+*   `int? evaluate_enter_first_ask_lvl`
+*   `Timer? evaluate_enter_timeout`
+*   `EvaluationStatus? evaluate_enter_status`
+*   `EvaluateEnterEvaluation? evaluate_enter_elected`
+*   `Timer? begin_enter_timeout` - Scadenza per un tentativo in corso di fare ingresso in
+    blocco in un'altra rete. È *null* se nessun tentativo di questo tipo è in corso.
 
 ## <a name="Strategia_ingresso"></a>Strategia di ingresso
 
@@ -1873,7 +1889,8 @@ void send_delete_reserve_request
      (TupleGNode dest_gnode,
       int reserve_request_id):
   Se my_pos in dest_gnode:
-    execute_delete_reserve(dest_gnode, reserve_request_id)
+    In new tasklet:
+      execute_delete_reserve(dup_object(dest_gnode), reserve_request_id)
     Return
   // prepare packet to send
   DeleteReservationRequest p0 = new DeleteReservationRequest with:
@@ -1976,19 +1993,19 @@ Prima di trasmettere l'esito il singolo nodo *𝛽0<sub>i</sub>* può fare uso d
 il modulo Coordinator per avviare una *propagazione* a tutto il suo g-nodo, *con* o *senza* ritorno.
 
 Il nodo *v* ha tutte le informazioni necessarie ad ogni passo della migration-path codificate in una
-istanza di Solution, la quale contiene in modo ricorsivo *m* istanze di SolutionStep. E abbiamo già detto
-che *m* > 1, e dobbiamo operare *m* - 1 migrazioni.  
+istanza di Solution, la quale contiene in modo ricorsivo *m* istanze di SolutionStep. Abbiamo già detto
+che *m* > 1, e dobbiamo operare *m* - 1 migrazioni. Queste vanno operate a ritroso, cioè deve migrare il
+g-nodo *𝛽<sub>i</sub>* con *i* che parte da *m* - 1 fino a 1.  
 Indichiamo con `sol` l'istanza di Solution in esame.  
 Quando parliamo, in seguito, del passo *i*-esimo intendiamo il passo che concerne la migrazione del g-nodo
 *𝛽<sub>i</sub>* da *p<sub>i</sub>* in *p<sub>i+1</sub>*. Ebbene, indichiamo con *ss<sub>i</sub>* l'istanza
 di SolutionStep che si trova partendo da `sol.leaf` e operando *m* - *i* - 1 volte il passaggio `parent`.  
-Inoltre, per i passi da 1 a *m* - 2 (cioè per tutti i passi tranne l'ultimo, e solo se m ≥ 3)
+Inoltre, per i passi da *m* - 2 a 1 (cioè dal secondo passo in poi)
 indichiamo con *ss_prev<sub>i</sub>* l'istanza di SolutionStep che si trova partendo da `sol.leaf` e
 operando *m* - *i* - 2 volte il passaggio `parent`.
 
-Per prima cosa il nodo *v* per ogni passo della migration-path (cioè per *i* da 1 fino a *m* - 1)
-inventa un identificativo `migration_id` e lo associa a *𝛽<sub>i</sub>*.
-
+Per prima cosa il nodo *v* per ogni passo della migration-path (cioè per *i* da *m* - 1 fino a 1)
+inventa un identificativo `migration_id` e lo associa a *𝛽<sub>i</sub>*.  
 Partendo da *i* = *m* - 1 e scendendo fino a 1, il nodo *v* contatta un singolo nodo *𝛽0<sub>i</sub>*,
 che appartiene al g-nodo *𝛽<sub>i</sub>*, che appartiene al g-nodo *p<sub>i</sub>*. Conosciamo la tupla
 che identifica *𝛽<sub>i</sub>*, `mig_gnode`. Essa è la tupla che è stata salvata nel membro `previous_migrating_gnode`
@@ -2010,11 +2027,11 @@ all'identità *di connettività* che *𝛽<sub>m-1</sub>* assume in *p<sub>m-1</
 salvato nel membro `previous_gnode_new_conn_vir_pos` di *ss<sub>m-1</sub>*.  
 Conosciamo la tupla che identifica *p<sub>m</sub>* di livello *k<sub>m</sub>*, `host_gnode`. Essa si ottiene dalla
 tupla che è stata salvata nel membro `visiting_gnode` di *ss<sub>m-1</sub>* eliminando i livelli inferiori in eccesso.
-Il livello *k<sub>m</sub>* è quello salvato nel membro `final_host_lvl` di *ss<sub>m-1</sub>*.  
+Il livello *k<sub>m</sub>* è quello salvato nel membro `final_host_lvl` di `sol`.  
 Sappiamo anche che nel g-nodo *p<sub>m</sub>* è stato riservato un posto *reale*.
 Indichiamo con `final_mig_gnode_new_pos` la posizione riservata e con `final_mig_gnode_new_eldership` la
 sua anzianità. Questi valori sono stati salvati nei membri `real_new_pos` e
-`real_new_eldership` di *ss<sub>m-1</sub>*.  
+`real_new_eldership` di `sol`.  
 Il nodo *v* passa al nodo *𝛽0<sub>m-1</sub>* queste informazioni e il suo `migration_id`.  
 Il nodo *𝛽0<sub>m-1</sub>* attraverso la *propagazione senza ritorno* del metodo `finish_migration` fa in modo che
 queste informazioni giungano a tutti i singoli nodi di *𝛽<sub>m-1</sub>*. Questi avviano la seconda
@@ -2079,7 +2096,7 @@ MigData:
   int? final_mig_gnode_new_eldership
 ```
 
-Il significato dei vari membri per l'elemento *i*-esimo della lista, con 1 ≤ *i* ≤ *m* - 1, è il seguente:
+Il significato dei vari membri per l'elemento *i*-esimo della lista, con *i* che parte da *m* - 1 fino a 1, è il seguente:
 
 *   `migration_id` è l'identificativo associato alla migrazione *i*-esima.
 *   `mig_gnode` indica il g-nodo *𝛽<sub>i</sub>* in *p<sub>i</sub>*, cioè il
@@ -2093,7 +2110,7 @@ Il significato dei vari membri per l'elemento *i*-esimo della lista, con 1 ≤�
     appena liberata in *p<sub>i</sub>*.
 *   `host_gnode` indica il g-nodo *p<sub>i+1</sub>* di livello *k<sub>i+1</sub>*, cioè il g-nodo in cui
     il g-nodo *𝛽<sub>i</sub>* dovrà migrare.
-*   `mig_gnode_new_pos` è *null* nell'ultimo elemento della lista.  
+*   `mig_gnode_new_pos` è *null* nell'ultimo elemento della lista (cioè quello relativo alla prima migrazione da operare).  
     Negli altri elementi, esso è la posizione *reale* che il g-nodo *𝛽'<sub>i</sub>*
     può assumere in *p<sub>i+1</sub>*, cioè in `host_gnode`.
 *   `final_mig_gnode_new_pos` e `final_mig_gnode_new_eldership` sono *null* in tutti gli elementi della lista
@@ -2332,20 +2349,4 @@ e il demone *ntkd*, accorgendosene, comunicherà al modulo Hooking la nascita di
 
 Con i meccanismi descritti in precedenza questo provoca le operazioni di ingresso di *g'* nella rete originale con un
 nuovo indirizzo come un nuovo distinto g-nodo internamente connesso.
-
-## <a name="Class_HookingMemory"></a>Classe HookingMemory
-
-La classe `HookingMemory` è serializzabile. È usata una sua istanza per rappresentare la
-memoria condivisa di un g-nodo di pertinenza del modulo Hooking.
-
-I suoi membri sono:
-
-*   `List<EvaluateEnterEvaluation> evaluate_enter_evaluation_list` - Lista di valutazioni.
-    Può essere vuota, se non si sta valutando alcun ingresso.
-*   `int? evaluate_enter_first_ask_lvl`
-*   `Timer? evaluate_enter_timeout`
-*   `EvaluationStatus? evaluate_enter_status`
-*   `EvaluateEnterEvaluation? evaluate_enter_elected`
-*   `Timer? begin_enter_timeout` - Scadenza per un tentativo in corso di fare ingresso in
-    blocco in un'altra rete. È *null* se nessun tentativo di questo tipo è in corso.
 
