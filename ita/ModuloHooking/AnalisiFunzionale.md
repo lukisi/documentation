@@ -1904,7 +1904,7 @@ void send_delete_reserve_request
 
 
 
-[Remote] route_delete_reserve_request(DeleteReservationRequest p0)
+[Remote] void route_delete_reserve_request(DeleteReservationRequest p0)
   Se my_pos in p0.dest_gnode:
     execute_delete_reserve(p0.dest_gnode, p0.reserve_request_id)
     // no response
