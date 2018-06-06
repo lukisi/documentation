@@ -2152,8 +2152,11 @@ Segue l'algoritmo che *v* usa per instradare un pacchetto di richiesta verso il 
 preciso g-nodo `dest` e ricevere una risposta.  
 L'algoritmo illustrato viene usato sia per la prima fase, in cui si comunica ad un g-nodo di avviare
 la prima fase della duplicazione, sia per la seconda, in cui si istruisce il g-nodo di completare la
-duplicazione e le altre operazioni della migrazione. Le istanze di `RequestPacket` possono contenere
-i dati che servono alla prima o alla seconda fase.  
+duplicazione e le altre operazioni della migrazione.  
+L'istanza di `RequestPacket` che viene passata al metodo `send_mig_request` può contenere nei suoi membri
+i dati che servono alla prima o alla seconda fase. Di seguito vengono popolati altri suoi membri usati per
+l'instradamento.  
+Invece la struttura dati `ResponsePacket` non ha membri oltre a quelli usati per l'instradamento.  
 Il nodo *v* chiama il metodo `send_mig_request` dopo aver preparato il pacchetto del tipo voluto. Il
 metodo ritorna solo dopo che un singolo nodo nel g-nodo desiderato ha completato l'esecuzione del
 metodo `void execute_mig(RequestPacket p0)`.
@@ -2183,13 +2186,13 @@ void send_mig_request(TupleGNode dest, RequestPacket p0) throws MigrationPathExe
 
 [Remote] void route_mig_request(RequestPacket p0):
   Se my_pos in p0.dest:
-    ResponsePacket p1
+    execute_mig(p0)
+    // send response
+    ResponsePacket p1 = new ResponsePacket()
     p1.pkt_id = p0.pkt_id
     p1.dest = p0.src
     p1.src = my_pos
-    execute_mig(RequestPacket p0)
-    // send response
-    Stub st = best_gw_to(pq.dest)
+    Stub st = best_gw_to(p1.dest)
     st.route_mig_response(p1)
   Altrimenti:
     // route request
@@ -2199,7 +2202,7 @@ void send_mig_request(TupleGNode dest, RequestPacket p0) throws MigrationPathExe
 
 
 void execute_mig(RequestPacket p0):
-  do_something(p0)
+  vedi algoritmo illustrato sotto.
 
 
 
@@ -2216,8 +2219,8 @@ void execute_mig(RequestPacket p0):
 
 ```
 
-Seguono i construttori della struttura dati `RequestPacket` che popolano i suoi membri
-sulla base di una istanza di `MigData` per i due momenti.
+I construttori della struttura dati `RequestPacket` popolano i suoi membri
+sulla base delle istanze di `MigData` per i due momenti.
 
 ```
 RequestPacket.fase1(MigData mig)
