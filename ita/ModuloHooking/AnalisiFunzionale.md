@@ -1519,7 +1519,7 @@ void send_search_request
 
 
 
-void execute_search(RequestPacket p0):
+void execute_search
      (TupleGNode visiting_gnode,
       int max_host_lvl, int reserve_request_id,
       out int min_host_lvl, out int? final_host_lvl, out int? real_new_pos, out int? real_new_eldership,
@@ -1559,8 +1559,9 @@ void execute_search(RequestPacket p0):
 ```
 
 Le funzioni `my_pos`, `best_gw_to` e `dest_exists` sono delegati che usano la mappa dei percorsi
-noti del nodo. Il dizionario `request_id_map` nel nodo origine *v*, che associa ogni pacchetto inviato
-al suo identificativo, è una variabile globale del modulo Hooking.
+noti del nodo.  
+Il dizionario `request_id_map` è una variabile globale del modulo Hooking; essa associa all'identificativo
+di ogni pacchetto che il nodo ha inviato, il canale su cui è in ascolto la tasklet che lo ha inviato.
 
 ##### Riserva un posto per la migrazione
 
