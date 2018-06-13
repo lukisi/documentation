@@ -1491,7 +1491,7 @@ void send_search_request
           out p1.set_adjacent, out p1.new_conn_vir_pos, out p1.new_eldership)
       // send response
       Stub st = best_gw_to(p1.origin)
-      st.route_search_error(p1)
+      st.route_search_response(p1)
       Return
     Altrimenti:
       Per pos_next = 0 to gsizes[lvl_next]-1:
@@ -1785,7 +1785,7 @@ void send_explore_request
                      out p1.result)
       // send response
       Stub st = best_gw_to(p1.origin)
-      st.route_explore_error(p1)
+      st.route_explore_response(p1)
       Return
     Altrimenti:
       Per pos_next = 0 to gsizes[lvl_next]-1:
