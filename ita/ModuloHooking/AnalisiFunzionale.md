@@ -2131,21 +2131,20 @@ int? mig_gnode_new_pos = null
 SolutionStep current = s.leaf
 Mentre current.parent ≠ null:
   MigData mig = new MigData()
+  mig.migration_id = Random_int()
+  mig.mig_gnode = dup_object(current.previous_migrating_gnode)
+  mig.conn_gnode_pos = current.previous_gnode_new_conn_vir_pos
+  mig.prev_mig_gnode_new_eldership = current.previous_gnode_new_eldership
   mig.host_gnode = dup_object(current.visiting_gnode)
   Se last:
     mig.host_gnode is sliced at level s.final_host_lvl
+  mig.mig_gnode_new_pos = mig_gnode_new_pos
+  Se last:
     mig.final_mig_gnode_new_pos = s.real_new_pos
     mig.final_mig_gnode_new_eldership = s.real_new_eldership
-  mig.mig_gnode = dup_object(current.parent.visiting_gnode)
-  mig.mig_gnode.pos.insert_at(0,current.previous_gnode_border_real_pos)
-  mig.mig_gnode.eldership.insert_at(0,-1) // unused data
-  mig.migration_id = Random_int()
-  mig.conn_gnode_pos = current.previous_gnode_new_conn_vir_pos
-  mig.prev_mig_gnode_new_eldership = current.previous_gnode_new_eldership
-  mig.mig_gnode_new_pos = mig_gnode_new_pos
   migs.insert(0,mig)
   last = False
-  mig_gnode_new_pos = current.previous_gnode_border_real_pos
+  mig_gnode_new_pos = current.previous_migrating_gnode.pos[0]
   current = current.parent
 ```
 
