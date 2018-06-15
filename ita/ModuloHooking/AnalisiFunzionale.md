@@ -2058,13 +2058,13 @@ lo stesso *v* sia *𝛽0<sub>i</sub>*.
 Sappiamo anche che è stato riservato un posto *virtuale* `conn_gnode_pos` in *p<sub>i</sub>* che verrà assegnato
 all'identità *di connettività* che *𝛽<sub>i</sub>* assume in *p<sub>i</sub>*. Esso è stato
 salvato nel membro `previous_gnode_new_conn_vir_pos` di *ss<sub>i</sub>*.  
+Conosciamo la tupla che identifica *p<sub>i+1</sub>* di livello *k<sub>i+1</sub>*, `host_gnode`. Essa è la
+tupla che è stata salvata nel membro `visiting_gnode` di *ss<sub>i</sub>*.  
 Sappiamo anche che intanto, dentro *p<sub>i+1</sub>* di livello *k<sub>i+1</sub>*, un border-g-nodo, la cui
 posizione al livello *k<sub>i+1</sub>* - 1 era *reale*, sta migrando verso *p<sub>i+2</sub>*.
 La tupla di tale border-g-nodo è stata salvata nel membro `previous_migrating_gnode` di *ss_prev<sub>i</sub>*.
 Quindi conosciamo `mig_gnode_new_pos`, il primo elemento della suddetta tupla, che è la posizione
 *reale* di livello *k<sub>i+1</sub>* - 1 che viene liberata in *p<sub>i+1</sub>*.  
-Inoltre se copiamo la suddetta tupla rimuovendone poi il primo elemento otteniamo
-la tupla che identifica *p<sub>i+1</sub>* di livello *k<sub>i+1</sub>*, `host_gnode`.  
 Il nodo *v* passa al nodo *𝛽0<sub>i</sub>* queste informazioni e il suo `migration_id`.  
 Il nodo *𝛽0<sub>i</sub>* attraverso la *propagazione senza ritorno* del metodo `finish_migration` fa in modo che
 queste informazioni giungano a tutti i singoli nodi di *𝛽<sub>i</sub>*. Questi avviano la seconda
@@ -2122,30 +2122,30 @@ Il significato dei vari membri per l'elemento *i*-esimo della lista, con *i* che
 Per tradurre il contenuto dell'istanza di Solution nella lista di MigData l'algoritmo è il seguente:
 
 ```
-Solution s;
+Solution sol;
 List<MigData> migs = [];
 
-Assert s.leaf.parent ≠ null
+Assert sol.leaf.parent ≠ null
 bool last = True
-int? mig_gnode_new_pos = null
-SolutionStep current = s.leaf
-Mentre current.parent ≠ null:
+SolutionStep? ss_prev = null
+SolutionStep ss = sol.leaf
+Mentre ss.parent ≠ null:
   MigData mig = new MigData()
   mig.migration_id = Random_int()
-  mig.mig_gnode = dup_object(current.previous_migrating_gnode)
-  mig.conn_gnode_pos = current.previous_gnode_new_conn_vir_pos
-  mig.prev_mig_gnode_new_eldership = current.previous_gnode_new_eldership
-  mig.host_gnode = dup_object(current.visiting_gnode)
+  mig.mig_gnode = dup_object(ss.previous_migrating_gnode)
+  mig.conn_gnode_pos = ss.previous_gnode_new_conn_vir_pos
+  mig.prev_mig_gnode_new_eldership = ss.previous_gnode_new_eldership
+  mig.host_gnode = dup_object(ss.visiting_gnode)
   Se last:
-    mig.host_gnode is sliced at level s.final_host_lvl
-  mig.mig_gnode_new_pos = mig_gnode_new_pos
+    mig.host_gnode is sliced at level sol.final_host_lvl
+  mig.mig_gnode_new_pos = Se (ss_prev = null) null Altrimenti ss_prev.previous_migrating_gnode.pos[0]
   Se last:
-    mig.final_mig_gnode_new_pos = s.real_new_pos
-    mig.final_mig_gnode_new_eldership = s.real_new_eldership
+    mig.final_mig_gnode_new_pos = sol.real_new_pos
+    mig.final_mig_gnode_new_eldership = sol.real_new_eldership
   migs.insert(0,mig)
   last = False
-  mig_gnode_new_pos = current.previous_migrating_gnode.pos[0]
-  current = current.parent
+  ss_prev = ss
+  ss = ss.parent
 ```
 
 Segue l'algoritmo che *v* usa per instradare un pacchetto di richiesta verso il primo nodo dentro un
@@ -2191,7 +2191,6 @@ void send_mig_request(TupleGNode dest, RequestPacket p0) throws MigrationPathExe
     ResponsePacket p1 = new ResponsePacket()
     p1.pkt_id = p0.pkt_id
     p1.dest = p0.src
-    p1.src = my_pos
     Stub st = best_gw_to(p1.dest)
     st.route_mig_response(p1)
   Altrimenti:
@@ -2277,7 +2276,8 @@ void execute_mig(RequestPacket p0):
                                    p0.host_gnode,
                                    p0.real_new_pos,
                                    p0.real_new_eldership)
-    Coord.finish_migration(lvl, finish_migration_data)
+    In una nuova tasklet:
+      Coord.finish_migration(lvl, finish_migration_data)
   Altrimenti:
     Ignora pacchetto
 
