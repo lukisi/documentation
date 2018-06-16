@@ -140,27 +140,15 @@ all'interno di un g-nodo sono:
 
 ## <a name="Requisiti"></a>Requisiti
 
-### Delegati
+### Interfaccia IHookingMapPaths
 
-Al modulo Hooking (associato ad una nostra identità) deve essere fornito un delegato interrogando il quale sia
-possibile dire se l'identità associata è la principale.
+...
 
-```
-bool is_main_id();
-```
+### Interfaccia ICoordinator
 
-* * *
+L'interfaccia `ICoordinator`...
 
-Attraverso un delegato può ottenere uno stub per trasmettere un messaggio in modo reliable su un
-dato arco identità.
-
-```
-HookingManagerStub get_stub(IIdentityArc ia);
-```
-
-* * *
-
-Attraverso un delegato può richiedere al programma di chiamare (usando la collaborazione col modulo Coordinator)
+Con il suo metodo `evaluate_enter` il modulo Hooking può richiedere al programma di chiamare
 il metodo `evaluate_enter` sul nodo Coordinator del suo g-nodo di un dato livello.
 
 ```
@@ -173,6 +161,10 @@ che il modulo Hooking deve quindi esporre.
 ```
 public int evaluate_enter() throws AskAgainError, IgnoreNetworkError;
 ```
+
+### Interfaccia IIdentityArc
+
+L'interfaccia `IIdentityArc`...
 
 ### Segnali
 
