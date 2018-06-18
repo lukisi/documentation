@@ -3,6 +3,12 @@
 1.  [Associazione del modulo ad una identità](#Associazione_identita)
     1.  [Operazioni su un proprio arco-identità](#Operazioni_arco_identita)
     1.  [Operazioni su richieste da altri nodi](#Operazioni_su_propagazione)
+1.  [Requisiti](#Requisiti)
+    1.  [Interfaccia IHookingMapPaths](#Requisiti_IHookingMapPaths)
+    1.  [Interfaccia ICoordinator](#Requisiti_ICoordinator)
+    1.  [Interfaccia IIdentityArc](#Requisiti_IIdentityArc)
+    1.  [Segnali](#Requisiti_Segnali)
+    1.  [Metodi remoti](#Requisiti_Metodiremoti)
 
 ## <a name="Associazione_identita"></a>Associazione del modulo ad una identità
 
@@ -140,33 +146,96 @@ all'interno di un g-nodo sono:
 
 ## <a name="Requisiti"></a>Requisiti
 
-### Interfaccia IHookingMapPaths
+### <a name="Requisiti_IHookingMapPaths"></a>Interfaccia IHookingMapPaths
 
-...
+Il modulo riceve dal suo utilizzatore una istanza dell'interfaccia `IHookingMapPaths`.  
+Tramite questa interfaccia il modulo può:
 
-### Interfaccia ICoordinator
+*   Leggere l'identificativo della rete. Metodo `int64 get_network_id()`.
+*   Leggere la dimensione della rete. Metodo `int get_n_nodes()`.  
+    Questo metodo restituisce l'informazione secondo le conoscenze del nodo stesso. Cioè non
+    interpella il Coordinator della rete.
+*   Leggere informazioni sulla topologia della rete:
+    *   Metodo `int get_levels()`. Numero di livelli nella rete.
+    *   Metodo `int get_gsize(int level)`. Numero di posizioni *reali* per un dato livello.
+    *   Metodo `int get_epsilon(int level)`. Se si avvia la ricerca di una migration-path per liberare
+        una posizione *reale* al livello `level` questo metodo ci dice di quanti livelli ulteriori
+        possiamo salire al massimo per avere una soluzione che ci soddisfa.
+*   Leggere informazioni sulla posizione del nodo.
+    *   Metodo `int get_my_pos(int level)`. Posizione al livello `level`.  
+        Questo dato può cambiare nel tempo. Infatti una identità può diventare di connettività al
+        livello `level`.
+    *   Metodo `int get_my_eldership(int level)`. Anzianità al livello `level`.  
+        L'anzianità del proprio g-nodo di livello `level` (o del nodo stesso se `level=0`) rispetto
+        agli altri g-nodi nello stesso g-nodo di livello `level+1` perde di significato nel momento
+        in cui una identità diventa di connettività al livello `level` (sebbene il valore che si otterrebbe
+        chiamando questo metodo non cambia).
+    *   Metodo `int get_subnetlevel()`. Livello della sottorete a gestione autonoma di cui questo nodo
+        è il gateway.
+*   Leggere informazioni sulle destinazioni di cui il nodo è a conoscenza. Cioè della sua mappa.
+    *   Metodo `bool exists(int level, int pos)`. Dice se questo g-nodo esiste nella rete.
+    *   Metodo `int get_eldership(int level, int pos)`. Anzianità di questo g-nodo.
+    *   Metodo `Gee.List<IPairHCoordInt> adjacent_to_my_gnode(int level_adjacent_gnodes, int level_my_gnode)`.
+        Analizzando la mappa dei percorsi noti scopre quali g-nodi di livello `level_adjacent_gnodes`
+        siano adiacenti al mio g-nodo di livello `level_my_gnode`.  
+        Il metodo può assumere che nella richiesta sia `level_adjacent_gnodes ≥ level_my_gnode`.  
+        Per ogni g-nodo adiacente individuato il metodo deve indicare (nei campi appositi dell'interfaccia
+        `IPairHCoordInt`) le coordinate gerarchiche del g-nodo relative alla posizione del nostro nodo
+        e la posizione del g-nodo di livello `level_my_gnode-1` che risulta essere il border-gnodo
+        verso di esso. Quest'ultima deve essere una posizione *reale* all'interno del nostro stesso
+        g-nodo di livello `level_my_gnode`.
+    *   Metodo `int IHookingManagerStub gateway(int level, int pos)`. Il gateway del meglio percorso di cui
+        il nodo sia a conoscenza verso quel g-nodo. CIoè uno stub per dialogare con questo gateway.
 
-L'interfaccia `ICoordinator`...
+### <a name="Requisiti_ICoordinator"></a>Interfaccia ICoordinator
 
-Con il suo metodo `evaluate_enter` il modulo Hooking può richiedere al programma di chiamare
-il metodo `evaluate_enter` sul nodo Coordinator del suo g-nodo di un dato livello.
+Il modulo riceve dal suo utilizzatore una istanza dell'interfaccia `ICoordinator`.  
+Tramite questa interfaccia il modulo può richiedere alcuni tipi di collaborazione con il modulo Coordinator.
 
-```
-int evaluate_enter() throws AskAgainError, IgnoreNetworkError;
-```
+In alcuni casi con questa collaborazione si ottiene che si può richiamare un metodo del modulo Hooking stesso
+ma da eseguire sul nodo che attualmente risulta il Coordinator del proprio g-nodo di un dato livello.  
+Per ognuno di questi casi avremo quindi un metodo nell'interfaccia `ICoordinator` e un metodo nel modulo
+Hooking che avranno la stessa (o analoga) firma.  
+Con questa modalità abbiamo questi metodi:
 
-Sul nodo Coordinator del g-nodo interessato il programma dovrà chiamare un corrispettivo metodo pubblico
-che il modulo Hooking deve quindi esporre.
+*   Metodo `int evaluate_enter() throws AskAgainError, IgnoreNetworkError`.
+*   ... `begin_enter`, `completed_enter`, `abort_enter`
 
-```
-public int evaluate_enter() throws AskAgainError, IgnoreNetworkError;
-```
+* * *
 
-### Interfaccia IIdentityArc
+In altri casi, se il nodo in cui ci troviamo è esso stesso il nodo Coordinator del proprio g-nodo di un dato livello,
+con questa collaborazione si può accedere in lettura/scrittura alla memoria condivisa del g-nodo. Essa è memorizzata
+dal servizio peer-to-peer (vedi modulo PeerServices) implementato nel modulo Coordinator. In tale memoria condivisa
+alcune informazioni sono di pertinenza del modulo Hooking.  
+Con questa modalità abbiamo questi metodi:
+
+*   ... `get_hooking_memory`, `set_hooking_memory`
+
+* * *
+
+In altri casi con questa collaborazione si ottiene che venga eseguito un metodo del modulo Hooking stesso
+su tutti i nodi del proprio g-nodo di un dato livello.  
+Per ognuno di questi casi avremo quindi un metodo nell'interfaccia `ICoordinator` e un metodo nel modulo
+Hooking che avranno la stessa (o analoga) firma.  
+Con questa modalità abbiamo questi metodi:
+
+*   ... `prepare_migration`, `finish_migration`, `prepare_enter`, `finish_enter`, `we_have_splitted`
+
+* * *
+
+In altri casi con questa collaborazione si ottiene che si può richiamare un metodo del modulo Coordinator
+nel proprio nodo.  
+Con questa modalità abbiamo questi metodi:
+
+*   Metodo `void reserve(int host_lvl, int reserve_request_id, out int new_pos, out int new_eldership) throws CoordReserveError`
+*   Metodo `void delete_reserve(int host_lvl, int reserve_request_id)`
+*   Metodo `int get_n_nodes()`
+
+### <a name="Requisiti_IIdentityArc"></a>Interfaccia IIdentityArc
 
 L'interfaccia `IIdentityArc`...
 
-### Segnali
+### <a name="Requisiti_Segnali"></a>Segnali
 
 Il modulo Hooking associato ad una nostra identità può emettere questi segnali:
 
@@ -177,7 +246,7 @@ Il modulo Hooking associato ad una nostra identità può emettere questi segnali
 *   `do_prepare_migration(/* TODO */)`
 *   `do_finish_migration(/* TODO */)`
 
-### Metodi remoti
+### <a name="Requisiti_Metodiremoti"></a>Metodi remoti
 
 Tra diretti vicini i dialoghi sono espletati con questi metodi remoti:
 
