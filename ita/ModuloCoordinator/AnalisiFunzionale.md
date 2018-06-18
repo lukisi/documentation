@@ -49,7 +49,7 @@ Le operazioni di ingresso in una rete, che sono messe in atto quando due reti di
 per mezzo di alcuni archi, non sono di pertinenza del modulo Coordinator, bensì del modulo Hooking.
 
 Però gli algoritmi del modulo Hooking per questi compiti hanno dei requisiti che possono essere soddisfatti
-attrtaverso una stretta collaborazione con il modulo Coordinator.
+attraverso una stretta collaborazione con il modulo Coordinator.
 
 #### Esecuzioni sul nodo Coordinator di un g-nodo
 

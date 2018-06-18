@@ -174,7 +174,7 @@ Tramite questa interfaccia il modulo può:
         è il gateway.
 *   Leggere informazioni sulle destinazioni di cui il nodo è a conoscenza. Cioè della sua mappa.
     *   Metodo `bool exists(int level, int pos)`. Dice se questo g-nodo esiste nella rete.
-    *   Metodo `int get_eldership(int level, int pos)`. Anzianità di questo g-nodo.
+    *   Metodo `int get_eldership(int level, int pos)`. Restituisce l'anzianità di questo g-nodo.
     *   Metodo `Gee.List<IPairHCoordInt> adjacent_to_my_gnode(int level_adjacent_gnodes, int level_my_gnode)`.
         Analizzando la mappa dei percorsi noti scopre quali g-nodi di livello `level_adjacent_gnodes`
         siano adiacenti al mio g-nodo di livello `level_my_gnode`.  
@@ -184,8 +184,8 @@ Tramite questa interfaccia il modulo può:
         e la posizione del g-nodo di livello `level_my_gnode-1` che risulta essere il border-gnodo
         verso di esso. Quest'ultima deve essere una posizione *reale* all'interno del nostro stesso
         g-nodo di livello `level_my_gnode`.
-    *   Metodo `int IHookingManagerStub gateway(int level, int pos)`. Il gateway del meglio percorso di cui
-        il nodo sia a conoscenza verso quel g-nodo. CIoè uno stub per dialogare con questo gateway.
+    *   Metodo `int IHookingManagerStub gateway(int level, int pos)`. Restituisce uno stub per comunicare
+        con il gateway del miglior percorso di cui il nodo sia a conoscenza verso quel g-nodo.
 
 ### <a name="Requisiti_ICoordinator"></a>Interfaccia ICoordinator
 
@@ -233,7 +233,12 @@ Con questa modalità abbiamo questi metodi:
 
 ### <a name="Requisiti_IIdentityArc"></a>Interfaccia IIdentityArc
 
-L'interfaccia `IIdentityArc`...
+Il modulo riceve dal suo utilizzatore una istanza dell'interfaccia `IIdentityArc` per ogni arco-identità
+che viene costituito.  
+Tramite questa interfaccia il modulo può:
+
+*   Avere uno stub per comunicare col diretto vicino attraverso questo arco-identità.
+    Metodo `IHookingManagerStub get_stub()`.
 
 ### <a name="Requisiti_Segnali"></a>Segnali
 
