@@ -185,7 +185,8 @@ Tramite questa interfaccia il modulo può:
         verso di esso. Quest'ultima deve essere una posizione *reale* all'interno del nostro stesso
         g-nodo di livello `level_my_gnode`.
     *   Metodo `int IHookingManagerStub gateway(int level, int pos)`. Restituisce uno stub per comunicare
-        con il gateway del miglior percorso di cui il nodo sia a conoscenza verso quel g-nodo.
+        con il gateway del miglior percorso di cui il nodo sia a conoscenza verso quel g-nodo.  
+        Questo stub non attende una risposta. Serve a chiamare i metodi remoti `route_xxx`.
 
 ### <a name="Requisiti_ICoordinator"></a>Interfaccia ICoordinator
 
@@ -198,7 +199,7 @@ Per ognuno di questi casi avremo quindi un metodo nell'interfaccia `ICoordinator
 Hooking che avranno la stessa (o analoga) firma.  
 Con questa modalità abbiamo questi metodi:
 
-*   Metodo `int evaluate_enter() throws AskAgainError, IgnoreNetworkError`.
+*   Metodo `int evaluate_enter(Object evaluate_enter_data) throws AskAgainError, IgnoreNetworkError`.
 *   ... `begin_enter`, `completed_enter`, `abort_enter`
 
 * * *
@@ -238,7 +239,8 @@ che viene costituito.
 Tramite questa interfaccia il modulo può:
 
 *   Avere uno stub per comunicare col diretto vicino attraverso questo arco-identità.
-    Metodo `IHookingManagerStub get_stub()`.
+    Metodo `IHookingManagerStub get_stub()`.  
+    Questo stub attende una risposta. Serve a chiamare i metodi remoti `retrieve_network_data` e `search_migration_path`.
 
 ### <a name="Requisiti_Segnali"></a>Segnali
 
@@ -255,7 +257,7 @@ Il modulo Hooking associato ad una nostra identità può emettere questi segnali
 
 Tra diretti vicini i dialoghi sono espletati con questi metodi remoti:
 
-*   `retrieve_network_data()`
+*   `NetworkData retrieve_network_data(bool ask_coord) throws NotPrincipalError`
 *   ``
 *   ``
 
