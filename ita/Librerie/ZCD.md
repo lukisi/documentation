@@ -110,7 +110,7 @@ al metodo remoto. Ad esempio, la libreria MOD-RPC può scegliere di usare la ser
 GObject come viene fornita dalla libreria JsonGlib senza per questo dover assumere che anche la libreria
 di basso livello ZCD ne faccia uso.
 
-## <a name="Inizializzazione_basso_livello"></a>Inizializzazione di basso livello (lato server)
+## <a name="Basso_livello_lato_server"></a>Inizializzazione di basso livello (lato server)
 
 Un programma che usa il framework ZCD per prima cosa inizializza la libreria ZCD indicando dove ascoltare.
 
@@ -162,29 +162,7 @@ Le stesse tipologie di connessioni vengono simulate nei test che saranno realizz
     Il nodo ascolta su un numero di path con nome `xxx_n_broad` per
     messaggi. Ognuno di questi path rappresenta una interfaccia di rete del nodo.
 
-## <a name="Inizializzazione_basso_livello"></a>Chiamate a metodi remoti di basso livello (lato client)
-
-## <a name="Interazioni_dei_livelli"></a>Interazioni dei 3 livelli
-
-L'utilizzatore di ZCD inizializza come detto prima la libreria di basso livello indicando dove ascoltare.
-
-A tutte le tasklet che stanno in ascolto, fornisce dei delegati che saranno usati per identificare un messaggio
-e decidere se vada ignorato o preso in carico.
-
-Il framework ZCD supporta il concetto di *identità* multiple in un nodo. Cioè ogni singolo nodo può assumere
-diverse *identità* distinte.
-
-I delegati che vengono passati alla libreria ZCD conoscono il cosidetto *identificativo di identità* che
-individua ogni *identità* che il nodo ha assunto.
-
-Così, quando ZCD riceve un messaggio dalla rete essi sono in grado di decidere se darlo in carico ad uno
-specifico **dispatcher**<sup>1</sup>.
-
-
-
-
-
-
+## <a name="Basso_livello_lato_client"></a>Chiamate a metodi remoti di basso livello (lato client)
 
 Quando l'utilizzatore di ZCD vuole chiamare un metodo remoto lo può fare in 3 diverse modalità, per ognuna
 delle quali va invocato un distinto metodo di ZCD. Le modalità di invio del messaggio messe a disposizione
@@ -327,6 +305,28 @@ di una richiesta. Queste sono:
     *   **TODO**
 *   Nel caso della modalità UnixDomainBroadcast:
     *   **TODO**
+
+## <a name="Interazioni_dei_livelli"></a>Interazioni dei 3 livelli
+
+L'utilizzatore di ZCD inizializza come detto prima la libreria di basso livello indicando dove ascoltare.
+
+A tutte le tasklet che stanno in ascolto, fornisce dei delegati che saranno usati per identificare un messaggio
+e decidere se vada ignorato o preso in carico.
+
+Il framework ZCD supporta il concetto di *identità* multiple in un nodo. Cioè ogni singolo nodo può assumere
+diverse *identità* distinte.
+
+I delegati che vengono passati alla libreria ZCD conoscono il cosidetto *identificativo di identità* che
+individua ogni *identità* che il nodo ha assunto.
+
+Così, quando ZCD riceve un messaggio dalla rete essi sono in grado di decidere se darlo in carico ad uno
+specifico **dispatcher**<sup>1</sup>.
+
+
+
+
+
+
 
 Quando vengono chiamati questi metodi la libreria ZCD nel nodo corrente, sulla base delle richieste che ha
 ricevuto, fa pervenire le informazioni alla libreria ZCD nel nodo (o nodi) destinatario. Qui la libreria
