@@ -87,14 +87,29 @@ Si mettono in discussione due scelte fatte in precedenza che risultano devianti.
 
 ## Dettagli tecnici
 
-1.  **UnixDomainNeighborStream** Lato server il nodo (processo) viene istruito ad ascoltare su un numero di path con
-    nome `xxx_n_conn` per connessioni. Ognuno di questi path rappresenta un arco. Lato client un nodo vicino (un altro processo)
-    che ha un arco (conosce il path `xxx_n_conn`) si connette al socket in ascolto e comunica in modo reliable.
-1.  **UnixDomainNeighborBroadcast** Lato server il nodo ascolta su un numero di path con nome `xxx_n_broad` per messaggi.
-    Ognuno di questi path rappresenta un arco. Lato client un nodo vicino (un altro processo) che ha un arco
-    (conosce il path `xxx_n_broad`) invia al socket in ascolto un messaggio in modo non-reliable.
-1.  **UnixDomainRoutedStream** Lato server il nodo (processo) viene istruito ad ascoltare su un numero di path con
-    nome `xxx_n_conn` per connessioni. Ognuno di questi path rappresenta un arco. Lato client un nodo vicino (un altro processo)
-    che ha un arco (conosce il path `xxx_n_conn`) si connette al socket in ascolto e comunica in modo reliable.
+1.  **UnixDomainNeighborStream** Lato server il nodo (processo) viene istruito ad ascoltare su un numero
+    di path con nome `xxx_n_conn` per connessioni. Ognuno di questi path rappresenta un indirizzo linklocal
+    che questo nodo ha assegnato ad una sua interfaccia di rete. Lato client
+    un nodo vicino (un altro processo) che ha un arco (conosce il path `xxx_n_conn`) si connette al socket
+    in ascolto e comunica in modo reliable.  
+    È l'equivalente del **TcpNeighbor**.
+1.  **UnixDomainRoutedStream** Lato server il nodo (processo) viene istruito ad ascoltare su un numero
+    di path con nome `xxx_r_conn` per connessioni. Ognuno di questi path rappresenta un indirizzo proprio di
+    questo nodo che è routable all'interno di un g-nodo. Lato client un altro nodo (un altro processo) nello
+    stesso g-nodo che conosce l'indirizzo (conosce il path `xxx_r_conn`) si connette al socket
+    in ascolto e comunica in modo reliable.  
+    È l'equivalente del **TcpRoutable**.
+1.  **UnixDomainNeighborBroadcast** Lato server il nodo ascolta su un numero di path con nome `xxx_n_broad` per
+    messaggi. Ognuno di questi path rappresenta una interfaccia di rete del nodo. Lato client un nodo vicino
+    (un altro processo) che ha una interfaccia di rete collegata allo stesso dominio broadcast (conosce cioè
+    tutti i path `xxx_n_broad` degli altri processi che simulano una propria interfaccia di rete collegata
+    a quell'unico dominio broadcast) invia a tutti i socket in ascolto un messaggio in modo non-reliable.  
+    È l'equivalente del **Broadcast**.
 
+Con l'uso di **UnixDomainNeighborBroadcast** a simulare le interfacce di rete collegate ad un certo dominio
+broadcast si dovrebbe riuscire a simulare le possibili caratteristiche di una radio: in particolare il fatto
+che se un nodo *B* con una interfaccia di rete è diretto vicino di *A* e di *C* questo non implica
+necessariamente che i nodi *A* e *C* siano fra loro diretti vicini.  
+Questa situazione non era facilmente simulabile con una serie di macchine virtuali collegate a segmenti
+di rete virtuali.
 
