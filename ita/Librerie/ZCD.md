@@ -51,7 +51,8 @@ Questa libreria è in grado di:
 *   Inviare risposte.
 *   Ricevere risposte e smistarle, se opportuno, al suo utilizzatore.
 
-Mentre la libreria del livello basso è generica e non specifica i metodi remoti, al livello intermedio
+Mentre la libreria del livello basso è generica e non ha conoscenza dei metodi remoti che
+sono stati definiti dall'applicazione che la sta usando, al livello intermedio
 abbiamo un'altra libreria specifica che conosce i metodi remoti e le strutture dati che devono essere
 passate nei messaggi e sa come serializzarle e deserializzarle. Questa libreria per inviare un messaggio
 usa la libreria del livello basso di cui conosce il funzionamento. A sua  volta, verso l'esterno espone
@@ -95,7 +96,7 @@ prodotto permette di creare una interfaccia tra la libreria MOD-RPC e l'applicaz
 obbligata né ad avere dipendenze verso la libreria ZCD né a usare stringhe in formato JSON.
 
 La libreria ZCD ha bisogno di comporre e interpretare delle stringhe JSON ad uso interno. Ad esempio per
-comporre i messaggi delle chiamate o per i messaggi di ACK o di KEEPALIVE di cui parleremo in seguito.
+comporre i messaggi delle chiamate o per i messaggi di ACK di cui parleremo in seguito.
 L'implementazione attuale di ZCD usa internamente la libreria JsonGlib per trattare le stringhe in formato
 JSON ma non espone questo dettaglio al suo utilizzatore.
 
@@ -109,28 +110,81 @@ al metodo remoto. Ad esempio, la libreria MOD-RPC può scegliere di usare la ser
 GObject come viene fornita dalla libreria JsonGlib senza per questo dover assumere che anche la libreria
 di basso livello ZCD ne faccia uso.
 
+## <a name="Inizializzazione_basso_livello"></a>Inizializzazione di basso livello (lato server)
+
+Un programma che usa il framework ZCD per prima cosa inizializza la libreria ZCD indicando dove ascoltare.
+
+Ci sono varie modalità con le quali la libreria può mettersi in ascolto di messaggi.
+
+1.  Attendere connessioni con il protocollo TCP su una specifica porta su uno qualsiasi dei propri indirizzi IP.
+1.  Attendere messaggi con il protocollo UDP su una specifica porta e
+    trasmessi in broadcast sul [broadcast domain](https://en.wikipedia.org/wiki/Broadcast_domain)
+    collegato a una propria specifica interfaccia di rete.
+1.  Attendere connessioni su uno unix domain socket legato ad uno specifico filesystem path.
+1.  Attendere messaggi su uno unix domain socket legato ad uno specifico filesystem path.
+
+L'utilizzatore può inizializzare la libreria ZCD ordinandogli di mettersi in ascolto in una o più di una
+di queste modalità.
+
+È evidente che le primi due modalità servono ad un processo che vuole dialogare con altri processi che
+sono in altri nodi della rete. Invece le successive due servono ad un processo che vuole dialogare
+con altri processi in esecuzione sullo stesso sistema.
+
+D'ora in poi, generalizzando, parleremo di *messaggi ricevuti dalla rete*, anche per indicare i messaggi
+ricevuti su uno unix domain socket.
+
+Inoltre parleremo di *nodo* anche nel caso di unix domain socket, indicando in questo modo il processo
+che usa la libreria ZCD e si mette in ascolto dei messaggi.
+
+#### Specifico di ntkd: Nomenclatura dei path per unix socket
+
+Il demone *ntkd* lato server avrà questi tipi di connessioni:
+
+1.  Sta in ascolto su tutti i propri indirizzi IP con il protocollo TCP. Attraverso questa
+    modalità si ricevono e si gestiscono sia le connessioni ai propri indirizzi IP linklocal
+    che sono fatte da un nodo diretto vicino; sia le connessioni ai propri indirizzi IP routable
+    che partono da un qualsiasi nodo in un proprio g-nodo.
+1.  Sta in ascolto su una propria interfaccia di rete con il protocollo UDP per pacchetti broadcast.
+    Attraverso questa modalità si ricevono e si gestiscono i messaggi broadcast che sono trasmessi
+    da un nodo diretto vicino.
+
+Le stesse tipologie di connessioni vengono simulate nei test che saranno realizzati con i unix socket.
+
+1.  Attende connessioni su uno unix domain socket legato ad uno specifico filesystem path.  
+    Si usa in 2 modi:  
+    1) Il nodo (processo) viene istruito ad ascoltare su un numero
+    di path con nome `xxx_n_conn` per connessioni. Ognuno di questi path rappresenta un indirizzo linklocal
+    che questo nodo ha assegnato ad una sua interfaccia di rete.  
+    2) Il nodo (processo) viene istruito ad ascoltare su un numero
+    di path con nome `xxx_r_conn` per connessioni. Ognuno di questi path rappresenta un indirizzo proprio di
+    questo nodo che è routable all'interno di un g-nodo.
+1.  Attende messaggi su uno unix domain socket legato ad uno specifico filesystem path.  
+    Il nodo ascolta su un numero di path con nome `xxx_n_broad` per
+    messaggi. Ognuno di questi path rappresenta una interfaccia di rete del nodo.
+
+## <a name="Inizializzazione_basso_livello"></a>Chiamate a metodi remoti di basso livello (lato client)
+
 ## <a name="Interazioni_dei_livelli"></a>Interazioni dei 3 livelli
 
-L'utilizzatore di ZCD inizializza questa libreria. Gli dice di mettersi in ascolto di messaggi dalla rete.
+L'utilizzatore di ZCD inizializza come detto prima la libreria di basso livello indicando dove ascoltare.
 
-L'utilizzatore può ordinargli di ascoltare con il protocollo TCP su una specifica porta.
+A tutte le tasklet che stanno in ascolto, fornisce dei delegati che saranno usati per identificare un messaggio
+e decidere se vada ignorato o preso in carico.
 
-Può anche (in aggiunta o in alternativa) ordinargli di ascoltare con il protocollo UDP su una specifica porta
-e su una specifica interfaccia di rete i pacchetti trasmessi in broadcast
-sul [broadcast domain](https://en.wikipedia.org/wiki/Broadcast_domain) collegato a quella interfaccia.
-
-In entrambi i casi gli fornisce dei delegati che saranno usati da ZCD per identificare un messaggio che riceve
-dalla rete e decidere se vada ignorato o preso in carico.
-
-Il framework ZCD supporta il concetto di *identità* multiple in un nodo. Cioè ogni singolo nodo (di solito si
-identifica un nodo con l'unico processo che usando la libreria ZCD si mette in ascolto su una specifica porta
-TCP o UDP convenzionale) può assumere diverse *identità* distinte.
+Il framework ZCD supporta il concetto di *identità* multiple in un nodo. Cioè ogni singolo nodo può assumere
+diverse *identità* distinte.
 
 I delegati che vengono passati alla libreria ZCD conoscono il cosidetto *identificativo di identità* che
 individua ogni *identità* che il nodo ha assunto.
 
 Così, quando ZCD riceve un messaggio dalla rete essi sono in grado di decidere se darlo in carico ad uno
 specifico **dispatcher**<sup>1</sup>.
+
+
+
+
+
+
 
 Quando l'utilizzatore di ZCD vuole chiamare un metodo remoto lo può fare in 3 diverse modalità, per ognuna
 delle quali va invocato un distinto metodo di ZCD. Le modalità di invio del messaggio messe a disposizione
@@ -150,9 +204,16 @@ da ZCD sono:
     mittente. Questo identificativo, chiamato `source_id`, non è definito dalla libreria ZCD ma dal suo
     utilizzatore. La sua eventuale interpretazione è demandata al *dispatcher*.
 *   **Unicast**: Con questa modalità il nodo chiamante trasmette il messaggio su una delle sue interfacce
-    di rete in broadcast con il protocollo UDP che è non-reliable. Oltre a specificare l'interfaccia di
-    rete su cui trasmettere, può specificare opzionalmente l'indirizzo IP da usare come *source* nella
-    trasmissione. Il destinatario è uno solo e si suppone che si trovi direttamente collegato al chiamante
+    di rete in broadcast con il protocollo UDP che è non-reliable.  
+    Il chiamante può specificare opzionalmente l'indirizzo IP da usare come *source* nella
+    trasmissione. **Nota:** Siccome un indirizzo IP linklocal è associato univocamente ad una interfaccia di
+    rete, questa informazione specificata fa sì che il ricevente possa associare il messaggio ad un suo
+    specifico arco, anche in presenza di eventuali diversi archi con lo stesso diretto vicino. Ma questa informazione
+    (cioè lo specifico arco) che il ricevente desume dall'indirizzo IP (indicato come mittente nel pacchetto
+    IP ricevuto) sarebbe meglio includerla come parte obbligatoria nel messaggio stesso: infatti in questo
+    modo usando un diverso medium (ad esempio un unix socket) che non contiene questo dettaglio si potrà
+    fare comunque affidamento sullo stesso set di informazioni. **TODO** serve anche ad altro?  
+    Il destinatario è uno solo e si suppone che si trovi direttamente collegato al chiamante
     sull'interfaccia di rete indicata, cioè è un diretto vicino. Pur essendo uno solo il destinatario il
     messaggio è trasmesso in broadcast e nel messaggio stesso viene incluso un identificativo che indica
     il nodo destinatario.  
@@ -171,12 +232,11 @@ da ZCD sono:
     hanno configurato le loro interfacce di rete con indirizzi e rotte concordate. Da questa feature deriva
     lo stesso nome della libreria, nella parte **zero configuration**.  
     Un esempio di utilizzo di questa possibilità nell'applicazione di Netsukuku è quando un nodo vuole
-    comunicare con un diretto vicino ma ancora non ha formato un arco con lui. Un esempio di questa situazione
-    è quando si incontrano due nodi appartenenti a due "isole", cioè due reti Netsukuku distinte formatesi
-    separatamente e non ancora fuse in una.
+    comunicare con un diretto vicino ma ancora non ha formato un arco con lui.
 *   **Broadcast**: Con questa modalità il nodo chiamante trasmette il messaggio su una delle sue interfacce
-    di rete in broadcast con il protocollo UDP che è non-reliable. Oltre a specificare l'interfaccia di rete
-    su cui trasmettere, può specificare opzionalmente l'indirizzo IP da usare come *source* nella trasmissione.
+    di rete in broadcast con il protocollo UDP che è non-reliable.  
+    Il chiamante può specificare opzionalmente l'indirizzo IP da usare come *source* nella
+    trasmissione. **Nota:** Vedi sopra sulla descrizione di Unicast.  
     I destinatari sono tra i nodi vicini e possono essere più di uno. Nel messaggio stesso viene incluso un
     identificativo con il quale ogni nodo che lo riceve è in grado di capire se deve considerarsi tra i
     destinatari del messaggio.  
@@ -198,6 +258,34 @@ da ZCD sono:
     nell'applicazione di Netsukuku, quando un messaggio di ETP trasmesso in modalità Broadcast non raggiunge
     tutti i nodi vicini di cui il nodo è a conoscenza allora il nodo cerca di inviarlo in modalità TcpClient
     ai nodi che non hanno risposto.
+*   **UnixDomainStream**: Con questa modalità il nodo chiamante, conoscendo il path per il socket unix del nodo destinatario
+    del messaggio (che termina per `_conn`), si connette a questo in modalità stream che è reliable. Il destinatario è uno solo.  
+    Con questa modalità, se il chiamante non riceve un errore è sicuro che il messaggio è giunto a
+    destinazione correttamente.  
+    Sebbene il messaggio giunge ad un solo nodo, nel messaggio stesso viene incluso un identificativo che
+    indica il destinatario. Questo perché ZCD supporta le *identità* multiple in un nodo.  
+    Questo identificativo, chiamato `unicast_id`, non è definito dalla libreria ZCD ma dal suo utilizzatore.
+    Per la sua interpretazione la libreria ZCD si avvale dei delegati che gli sono stati passati al momento
+    della sua inizializzazione.  
+    Per lo stesso motivo, nel messaggio stesso viene incluso anche un identificativo che indica il
+    mittente. Questo identificativo, chiamato `source_id`, non è definito dalla libreria ZCD ma dal suo
+    utilizzatore. La sua eventuale interpretazione è demandata al *dispatcher*.
+*   **UnixDomainBroadcast**: Con questa modalità il nodo chiamante, conoscendo i path per i socket unix dei vari nodi destinatari
+    del messaggio (che terminano tutti per `_broad`), trasmette il messaggio ad ognuno di questi con la modalità
+    non-reliable.  
+    I destinatari possono essere più di uno. Nel messaggio stesso viene incluso un
+    identificativo con il quale ogni nodo che lo riceve è in grado di capire se deve considerarsi tra i
+    destinatari del messaggio e per quali sue identità.  
+    Questo identificativo, chiamato `broadcast_id`, non è definito dalla libreria ZCD ma dal suo utilizzatore.
+    Per la sua interpretazione la libreria ZCD si avvale dei delegati che gli sono stati passati al momento
+    della sua inizializzazione.  
+    Per lo stesso motivo visto prima, nel messaggio stesso viene incluso anche un identificativo che indica
+    il mittente. Questo identificativo, chiamato `source_id`, non è definito dalla libreria ZCD ma dal suo
+    utilizzatore. La sua eventuale interpretazione è demandata al *dispatcher*.  
+    Sebbene il protocollo di trasmissione non garantisca la corretta ricezione del messaggio da parte di
+    tutti i nodi, tramite un meccanismo di risposte ACK la libreria ZCD è in grado di comunicare al suo
+    utilizzatore quali nodi, entro un certo lasso di tempo, abbiano notificato la corretta ricezione del
+    messaggio.
 
 Per ognuno dei metodi suddetti l'utilizzatore passa le informazioni che sono necessarie a ZCD per l'invio
 di una richiesta. Queste sono:
@@ -235,6 +323,10 @@ di una richiesta. Queste sono:
     *   La stringa del nome dell'interfaccia di rete da usare.
     *   La porta UDP.
     *   Opzionalmente, l'indirizzo IP da usare come *source*.
+*   Nel caso della modalità UnixDomainStream:
+    *   **TODO**
+*   Nel caso della modalità UnixDomainBroadcast:
+    *   **TODO**
 
 Quando vengono chiamati questi metodi la libreria ZCD nel nodo corrente, sulla base delle richieste che ha
 ricevuto, fa pervenire le informazioni alla libreria ZCD nel nodo (o nodi) destinatario. Qui la libreria
@@ -262,8 +354,17 @@ succedere che più di uno di questi destinatari sia una *identità* di questo no
 dispatcher si prende cura di notificare il messaggio alle diverse *identità* di questo nodo che sono
 interessate.  
 Inoltre, in questo caso, se il messaggio prevede una comunicazione di ACK da ogni destinatario che
-lo riceve, la libreria ZCD trasmette un unico ACK con il MAC address dell'interfaccia che ha ricevuto
-il messaggio. Dall'altra parte, il nodo che riceve questo ACK deve essere in grado di associarlo
+lo riceve, la libreria ZCD trasmette un unico ACK con un identificativo dal quale si possa risalire
+all'interfaccia che ha ricevuto il messaggio.  
+Chiariamo cosa sia questo identificativo. Sappiamo che i casi di messaggi broadcast sono quelli
+ricevuti con il protocollo UDP su una specifica interfaccia di rete, oppure quelli ricevuti su uno unix socket
+legato ad un path. Rispettivamente questi messaggi sono stati trasmessi da
+altri nodi attraverso le modalità **Broadcast** e **UnixDomainBroadcast**, le quali si aspettano di
+ricevere risposte di ACK. Nel caso di una specifica interfaccia di rete l'identificativo è
+il MAC address dell'interfaccia che ha ricevuto il messaggio. Nel caso di uno unix socket
+legato ad un path l'identificativo è una stringa dalla quale il programma è in grado di
+risalire al path stesso.  
+Dall'altra parte, il nodo che riceve questo ACK deve essere in grado di associarlo
 all'intero set di *identità* di questo nodo che erano interessate.</sub>
 
 ### <a name="Interfacce_tra_livelli"></a>Interfacce tra i livelli
