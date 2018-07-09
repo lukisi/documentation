@@ -75,38 +75,54 @@ la logica del programma resta la stessa.
 
 ## Altre modifiche
 
-Si mettono in discussione due scelte fatte in precedenza che risultano devianti.
+Intendiamo rimuovere del tutto la modalità **Unicast**. Con questa si realizzava il dialogo
+con i nodi diretti vicini prima di aver costruito un arco. Si era già a conoscenza del
+*unicastid* del nodo diretto vicino interessato, ma non del suo indirizzo IP linklocal.  
+L'unico punto in cui questa modalità era usata è nel modulo Neighborhood nelle operazioni
+di costruzione di un arco.
 
-1.  Invece di avere una modalità **TcpClient** usata sia per i diretti vicini (dopo la creazione di un arco)
-    sia per i nodi del g-nodo, sarebbe meglio distinguere i due casi. Ad esempio **TcpNeighbor** e **TcpRoutable**.
-1.  Si ha a disposizione una modalità per stabilire una connessione con i diretti vicini una volta che l'arco
-    con essi è stato creato, cioè **TcpNeighbor**. Si ha inoltre una modalità per trasmettere messaggi broadcast
-    a tutti i propri diretti vicini su un dominio broadcast, cioè **Broadcast**. Se si riesce ad usare i soli
-    messaggi broadcast nelle fasi necessarie alla creazione di un arco diventa inutile avere anche
-    la modalità **Unicast** (come è implementata adesso).
+Abbiamo una modalità di dialogo con i nodi di cui conosciamo l'indirizzo IP, la **TcpClient**.  
+Questa modalità viene usata per dialogare con uno specifico nodo all'interno di un g-nodo
+comune al nostro nodo. In questo caso il nostro nodo è in qualche modo venuto a conoscere
+l'indirizzo IP routable univoco nel g-nodo del nodo destinatario.  
+La medesima modalità viene usata anche per dialogare con un nodo diretto vicino, dopo che
+è stato costruito un arco. Infatti in questo momento siamo a conoscenza dell'indirizzo
+IP linklocal del nodo diretto vicino.
+
+La stessa è simulata (nel caso dell'uso di unix socket) con un unix socket in modalità connessione
+reliable, indicata sotto con **UnixDomainStream**.
+
+Si ha inoltre una modalità per trasmettere messaggi broadcast
+a tutti i propri diretti vicini su un dominio broadcast, cioè **Broadcast**.
+
+La stessa è simulata (nel caso dell'uso di unix socket) con un unix socket che trasmette
+messaggi in modo non-reliable, indicata sotto con **UnixDomainBroadcast**.
+
+Dovrebbe risultare facile l'implementazione delle fasi necessarie alla costruzione di un arco
+tramite l'uso di soli messaggi broadcast.
 
 ## Dettagli tecnici
 
-1.  **UnixDomainNeighborStream** Lato server il nodo (processo) viene istruito ad ascoltare su un numero
+1.  **UnixDomainStream** È l'equivalente del **TcpClient**.  
+    Si usa in 2 modi:  
+    1) Lato server il nodo (processo) viene istruito ad ascoltare su un numero
     di path con nome `xxx_n_conn` per connessioni. Ognuno di questi path rappresenta un indirizzo linklocal
     che questo nodo ha assegnato ad una sua interfaccia di rete. Lato client
     un nodo vicino (un altro processo) che ha un arco (conosce il path `xxx_n_conn`) si connette al socket
     in ascolto e comunica in modo reliable.  
-    È l'equivalente del **TcpNeighbor**.
-1.  **UnixDomainRoutedStream** Lato server il nodo (processo) viene istruito ad ascoltare su un numero
+    2) Lato server il nodo (processo) viene istruito ad ascoltare su un numero
     di path con nome `xxx_r_conn` per connessioni. Ognuno di questi path rappresenta un indirizzo proprio di
     questo nodo che è routable all'interno di un g-nodo. Lato client un altro nodo (un altro processo) nello
     stesso g-nodo che conosce l'indirizzo (conosce il path `xxx_r_conn`) si connette al socket
-    in ascolto e comunica in modo reliable.  
-    È l'equivalente del **TcpRoutable**.
-1.  **UnixDomainNeighborBroadcast** Lato server il nodo ascolta su un numero di path con nome `xxx_n_broad` per
+    in ascolto e comunica in modo reliable.
+1.  **UnixDomainBroadcast** È l'equivalente del **Broadcast**.  
+    Lato server il nodo ascolta su un numero di path con nome `xxx_n_broad` per
     messaggi. Ognuno di questi path rappresenta una interfaccia di rete del nodo. Lato client un nodo vicino
     (un altro processo) che ha una interfaccia di rete collegata allo stesso dominio broadcast (conosce cioè
     tutti i path `xxx_n_broad` degli altri processi che simulano una propria interfaccia di rete collegata
-    a quell'unico dominio broadcast) invia a tutti i socket in ascolto un messaggio in modo non-reliable.  
-    È l'equivalente del **Broadcast**.
+    a quell'unico dominio broadcast) invia a tutti i socket in ascolto un messaggio in modo non-reliable.
 
-Con l'uso di **UnixDomainNeighborBroadcast** a simulare le interfacce di rete collegate ad un certo dominio
+Con l'uso di **UnixDomainBroadcast** a simulare le interfacce di rete collegate ad un certo dominio
 broadcast si dovrebbe riuscire a simulare le possibili caratteristiche di una radio: in particolare il fatto
 che se un nodo *B* con una interfaccia di rete è diretto vicino di *A* e di *C* questo non implica
 necessariamente che i nodi *A* e *C* siano fra loro diretti vicini.  
