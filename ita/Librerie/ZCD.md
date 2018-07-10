@@ -110,7 +110,7 @@ al metodo remoto. Ad esempio, la libreria MOD-RPC può scegliere di usare la ser
 GObject come viene fornita dalla libreria JsonGlib senza per questo dover assumere che anche la libreria
 di basso livello ZCD ne faccia uso.
 
-## <a name="Basso_livello_lato_server"></a>Inizializzazione di basso livello (lato server)
+## <a name="Basso_livello_lato_server"></a>Tasklet in ascolto al basso livello (lato server)
 
 Un programma che usa il framework ZCD per prima cosa inizializza la libreria ZCD indicando dove ascoltare.
 
@@ -123,10 +123,10 @@ Ci sono varie modalità con le quali la libreria può mettersi in ascolto di mes
 1.  Attendere connessioni su uno unix domain socket legato ad uno specifico filesystem path.
 1.  Attendere messaggi su uno unix domain socket legato ad uno specifico filesystem path.
 
-L'utilizzatore può inizializzare la libreria ZCD ordinandogli di mettersi in ascolto in una o più di una
-di queste modalità.
+L'utilizzatore può inizializzare la libreria ZCD ordinandogli di mettersi in ascolto con delle tasklet in una
+o più di una di queste modalità.
 
-È evidente che le primi due modalità servono ad un processo che vuole dialogare con altri processi che
+È evidente che le prime due modalità servono ad un processo che vuole dialogare con altri processi che
 sono in altri nodi della rete. Invece le successive due servono ad un processo che vuole dialogare
 con altri processi in esecuzione sullo stesso sistema.
 
@@ -148,21 +148,19 @@ Il demone *ntkd* lato server avrà questi tipi di connessioni:
     Attraverso questa modalità si ricevono e si gestiscono i messaggi broadcast che sono trasmessi
     da un nodo diretto vicino.
 
-Le stesse tipologie di connessioni vengono simulate nei test che saranno realizzati con i unix socket.
+Le stesse tipologie di connessioni vengono simulate nei test che saranno realizzati con alcuni unix socket.
 
 1.  Attende connessioni su uno unix domain socket legato ad uno specifico filesystem path.  
     Si usa in 2 modi:  
-    1) Il nodo (processo) viene istruito ad ascoltare su un numero
-    di path con nome `xxx_n_conn` per connessioni. Ognuno di questi path rappresenta un indirizzo linklocal
-    che questo nodo ha assegnato ad una sua interfaccia di rete.  
-    2) Il nodo (processo) viene istruito ad ascoltare su un numero
-    di path con nome `xxx_r_conn` per connessioni. Ognuno di questi path rappresenta un indirizzo proprio di
-    questo nodo che è routable all'interno di un g-nodo.
+    1.  Alcuni unix socket sono legati a path con nome `xxx_n_conn`. Ognuno di questi path rappresenta un
+        indirizzo linklocal che questo nodo ha assegnato ad una sua interfaccia di rete.  
+    1.  Alcuni unix socket sono legati a path con nome `xxx_r_conn`.  Ognuno di questi path rappresenta un
+        indirizzo proprio di questo nodo che è routable all'interno di un g-nodo.
 1.  Attende messaggi su uno unix domain socket legato ad uno specifico filesystem path.  
-    Il nodo ascolta su un numero di path con nome `xxx_n_broad` per
-    messaggi. Ognuno di questi path rappresenta una interfaccia di rete del nodo.
+    In questo caso alcuni unix socket sono legati a path con nome `xxx_n_broad`. Ognuno di questi path
+    rappresenta una interfaccia di rete del nodo.
 
-## <a name="Basso_livello_lato_client"></a>Chiamate a metodi remoti di basso livello (lato client)
+## <a name="Basso_livello_lato_client"></a>Chiamate a metodi remoti al basso livello (lato client)
 
 Quando l'utilizzatore di ZCD vuole chiamare un metodo remoto lo può fare in 3 diverse modalità, per ognuna
 delle quali va invocato un distinto metodo di ZCD. Le modalità di invio del messaggio messe a disposizione
@@ -189,7 +187,7 @@ da ZCD sono:
     specifico arco, anche in presenza di eventuali diversi archi con lo stesso diretto vicino. Ma questa informazione
     (cioè lo specifico arco) che il ricevente desume dall'indirizzo IP (indicato come mittente nel pacchetto
     IP ricevuto) sarebbe meglio includerla come parte obbligatoria nel messaggio stesso: infatti in questo
-    modo usando un diverso medium (ad esempio un unix socket) che non contiene questo dettaglio si potrà
+    modo usando un diverso medium (ad esempio uno unix socket) che non contiene questo dettaglio si potrà
     fare comunque affidamento sullo stesso set di informazioni. **TODO** serve anche ad altro?  
     Il destinatario è uno solo e si suppone che si trovi direttamente collegato al chiamante
     sull'interfaccia di rete indicata, cioè è un diretto vicino. Pur essendo uno solo il destinatario il
