@@ -35,6 +35,16 @@ anche il compito di permettere agli altri moduli la comunicazione tra nodi:
     Da questa interrogazione l'utilizzatore saprà se deve passare la richiesta a uno
     (o piu d'uno) skeleton nel nodo corrente, il quale potrà richiamare metodi anche di altri moduli.
 
+Proposta:
+
+Lato server. Il demone interroga Neighborhood solo se riceve una richiesta TCP con indirizzo di destinazione di tipo linklocal.  
+Se invece è di tipo routable deve direttamente passarla allo skeleton della main identity.  
+Se è una richiesta broadcast?
+
+Lato client. Il modulo Neighborhood fornisce un metodo per produrre lo stub di tipo TCP linklocal per un suo arco.  
+Per preparare lo stub per un broadcast su una certa interfaccia non serve il modulo Neighborhood.  
+Per preparare lo stub per un TCP routable non serve il modulo Neighborhood.
+
 ## <a name="Operazioni_di_base"></a>Operazioni di base
 
 Il modulo fa uso delle [tasklet](../Librerie/TaskletSystem.md), un sistema di multithreading
@@ -48,7 +58,7 @@ usati nel demone *ntkd*.
 Quando si inizializza, il modulo produce l'identificativo NeigborhoodNodeID del proprio nodo.
 
 Il modulo riceve subito l'elenco delle interfacce di rete che deve gestire. Ad ognuna associa un indirizzo
-locale detto *indirizzo di scheda*.
+IP linklocal detto *indirizzo di scheda*.
 
 * * *
 
@@ -57,9 +67,10 @@ ha la sua importanza in relazione al protocollo di risoluzione degli indirizzi I
 indirizzi MAC ([Address Resolution Protocol](https://en.wikipedia.org/wiki/Address_Resolution_Protocol)).
 Infatti quando un sistema *a* vuole trasmettere un pacchetto IP ad un suo diretto vicino *b*, esso conosce
 l'indirizzo IP di *b* e l'interfaccia di rete di *a* dove trasmettere. Il sistema *a* trasmette un frame Ethernet broadcast
-su quel segmento di rete una richiesta: «chi ha l'indirizzo IP XYZ?». Il sistema *b* risponde indicando al
-sistema *a* l'indirizzo MAC della sua interfaccia di rete. Quindi il sistema *a* può incapsulare il pacchetto
-IP in un frame Ethernet unicast che riporta gli indirizzi MAC dell'interfaccia che trasmette e dell'interfaccia che deve ricevere.
+su quel segmento di rete. Consiste nella richiesta: «chi ha l'indirizzo IP XYZ?». Il sistema *b* risponde al sistema *a*
+con un frame Ethernet unicast. In questo modo gli indica l'indirizzo MAC della sua interfaccia di rete. Quindi il
+sistema *a* può incapsulare il pacchetto IP in un frame Ethernet unicast che riporta gli indirizzi MAC dell'interfaccia
+che trasmette e dell'interfaccia che deve ricevere.
 
 * * *
 
@@ -69,28 +80,41 @@ vicino: essi sono ammessi solo se diversi MAC del vicino sono rilevati da divers
 corrente. Per verificare questo vincolo è necessario identificare un nodo vicino come singola entità (con il
 NeigborhoodNodeID) e non basarsi soltanto sui distinti MAC address.
 
-Con ogni vicino, poi, si accorda per la creazione (o meno) di un arco. L'accordo potrebbe non essere raggiunto
-perché uno dei due vertici ha già un numero di archi elevato. Se l'accordo viene raggiunto entrambi i nodi
+Con ogni vicino, in modo sincronizzato, crea un arco. Da subito entrambi i nodi
 vengono anche a conoscenza dell'*indirizzo di scheda* del vicino.
 
-Sia *k* un arco che il modulo nel nodo corrente *a* ha creato con un vicino *b*. La struttura dati che il
-modulo mantiene per l'arco *k* contiene:
+Quando il modulo crea un nuovo arco, esso imposta le rotte nelle tabelle del kernel per rendere possibile
+la comunicazione via TCP con il vicino attraverso gli *indirizzi di scheda*.
+
+Per ogni arco che il modulo nel nodo corrente *a* ha creato con un vicino *b*, la struttura dati che il
+modulo mantiene in memoria per l'arco contiene:
 
 *   L'identificativo di *b* (NeighborhoodNodeID).
 *   Il MAC address dell'interfaccia di rete di *b*.
 *   L'*indirizzo di scheda* associato dal nodo *b* a detta interfaccia.
 *   L'interfaccia di rete di *a*.
+*   Booleano: se l'arco è esposto.
 *   Il costo dell'arco.
 
-Quando il modulo crea un nuovo arco, esso imposta le rotte nelle tabelle del kernel per rendere possibile
-la comunicazione via TCP con il vicino attraverso gli *indirizzi di scheda*.
+Tutti i dati suddetti sono da subito noti al nodo *a*.  
+L'arco inizialmente non è esposto dal modulo.  
+Il costo dell'arco non è stato misurato. Esso è inizializzato a `NULL`.
+
+Subito dopo i nodi *a* e *b* avviano una comunicazione TCP (reliable) tramite i loro *indirizzi di scheda*.
+In essa viene deciso se l'arco vada esposto dal modulo. Uno dei nodi potrebbe rifiutarlo se ha già un numero
+di archi elevato: in quel caso anche l'altro nodo deve evitare di esporre l'arco dal modulo.
+
+Se si decide di esporre l'arco, allora entrambi i nodi iniziano a monitorare il costo dell'arco e valorizzare di
+conseguenza il dato nella struttura indicata prima. Di fatto il modulo espone l'arco solo dopo che la prima misurazione
+del costo ha avuto luogo.
 
 Nel tempo, il modulo gestisce la costituzione di nuovi archi, la rimozione di archi, i cambiamenti del costo
 degli archi.
 
 ## <a name="Caratteristiche_degli_archi"></a>Caratteristiche degli archi
 
-Quando si crea un arco esso esiste per entrambi i nodi.
+Quando si crea un arco esso esiste per entrambi i nodi. Quando il modulo espone l'arco, anche nel nodo
+collegato il modulo espone l'arco.
 
 * * *
 
@@ -372,9 +396,12 @@ messaggio è pervenuto. Per realizzare questa associazione il modulo Neighborhoo
 
 *   Emette un segnale per:
     *   Avvenuta assegnazione dell'*indirizzo di scheda* ad una interfaccia di rete gestita.
-    *   Costituzione di un arco. Significa anche avvenuto inserimento della rotta nelle tabelle.
-    *   Il modulo sta per rimuovere un arco. Significa anche che sta per rimuovere la rotta nelle tabelle.
-    *   Rimozione di un arco. Significa anche avvenuta rimozione della rotta nelle tabelle.
+    *   Avvenuta costituzione di un arco. Significa anche avvenuto inserimento della rotta nelle tabelle.
+    *   Il modulo sta per rimuovere un arco. Significa anche che sta per rimuovere la rotta nelle tabelle.  
+        Il modulo quando emette questo segnale aspetta che esso sia gestito. Cioè il gestore del segnale
+        non dovrebbe avviare una nuova tasklet. Questi infatti deve usare questa opportunità per rimuovere
+        tutte le dipendenze di questa rotta diretta.
+    *   Avvenuta rimozione di un arco. Significa anche avvenuta rimozione della rotta nelle tabelle.
     *   Variazione del costo di un arco.
     *   Avvenuta rimozione dell'*indirizzo di scheda* ad una interfaccia di rete che non si gestisce più.
 

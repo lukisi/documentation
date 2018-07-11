@@ -150,31 +150,39 @@ Il modulo, per ogni interfaccia che inizia a gestire, memorizza il suo nome e il
 indirizzo locale di scheda. Usa l'oggetto [INeighborhoodIPRouteManager](#INeighborhoodIPRouteManager)
 per impostare l'indirizzo generato. Poi emette il segnale *nic_address_set*.
 
-Poi avvia una tasklet nella quale invia un broadcast_to_dev (cioè un broadcast solo su quella interfaccia di rete) con
+Poi avvia una tasklet nella quale invia un `broadcast_to_dev` (cioè un broadcast solo su quella interfaccia di rete) con
 il messaggio "ci sono io" indicando il suo NeighborhoodNodeID, il MAC della interfaccia e il suo indirizzo locale di scheda.
 Poi ripete lo stesso messaggio con bassa frequenza, ogni minuto.
 
 I nodi che sono nel dominio broadcast vedono questo messaggio e possono fin da subito accordarsi per un arco. Quelli che hanno
 già costituito un arco verso quel MAC address ignorano il nuovo messaggio.
 
-Un nodo che vuole accordarsi per un arco con un vicino di cui ha notato la presenza gli invia un messaggio "facciamo un arco"
-in UDP unicast, indicando anche esso il suo NeighborhoodNodeID e il MAC e l'indirizzo locale della interfaccia di rete, e
-riceverà la risposta. Dopo entrambi i nodi avranno un arco il cui costo è ancora non misurato.
+Un nodo che vuole accordarsi per un arco con un vicino di cui ha notato la presenza invia un messaggio "facciamo un arco"
+in `broadcast_to_dev` (solo sull'interfaccia dove ha ricevuto il messaggio "ci sono io") indicando sia i dati ricevuti
+nel precedente messaggio "ci sono io" (NeighborhoodNodeID, MAC e linklocal del nodo vicino) sia i rispettivi dati
+del proprio nodo. Dopo entrambi i nodi avranno un arco che ancora non è esposto dal modulo e il cui costo è ancora non misurato.
 
-Dopo essersi accordati per l'arco entrambi i nodi usano l'oggetto [INeighborhoodIPRouteManager](#INeighborhoodIPRouteManager)
+Dopo, entrambi i nodi usano l'oggetto [INeighborhoodIPRouteManager](#INeighborhoodIPRouteManager)
 per impostare la rotta verso l'indirizzo di scheda del nuovo vicino. Quindi da subito è possibile realizzare connessioni
 reliable (con protocollo TCP) tra i due nodi passanti per questo nuovo arco.
 
+Il nodo che ha inviato il messaggio "facciamo un arco" usa ora una connessione TCP per chiamare sul nuovo vicino il metodo
+remoto "esponi l'arco". In questo metodo, con la firma `bool can_you_export(bool i_can_export)`, entrambi i nodi dichiarano
+la loro disponibilità ad esporre l'arco dal modulo. Come detto in precedenza, se uno rifiuta anche l'altro deve
+evitare di esporre l'arco.
+
+Se entrambi i nodi sono disposti ad esporre l'arco, il costo dell'arco non è stato però ancora misurato.
 Un arco il cui costo non è ancora stato misurato non va a far parte della lista ufficiale che il modulo Neighborhood
 espone all'applicazione.
 
-Dopo aver realizzato l'arco entrambi i nodi avviano una tasklet che si occuperà della monitorazione dell'arco e della
+Se entrambi i nodi sono disposti ad esporre l'arco, entrambi i nodi
+avviano una tasklet che si occuperà della monitorazione dell'arco e della
 misurazione del costo ad esso associato. In questa tasklet viene realizzata subito una prima misurazione e in seguito
 ogni 30 secondi si ripete. Nell'effettuare la misurazione si verifica anche il funzionamento stesso dell'arco e se non
 funziona viene rimosso.
 
 La misurazione del costo espresso come RTT avviene attraverso l'uso dell'oggetto
-[INeighborhoodNetworkInterface](#INeighborhoodNetworkInterface), come indicato nel relativo documento.
+[INeighborhoodNetworkInterface](#INeighborhoodNetworkInterface), come indicato sotto.
 
 Dopo che è stata fatta la prima misurazione, il modulo emette il segnale *arc_added* e l'arco va a far parte della
 lista ufficiale.
