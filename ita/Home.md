@@ -74,7 +74,9 @@ tutti i moduli hanno una dipendenza.
     adotterà.
 *   [ZCD](Librerie/ZCD.md). Questa libreria formalizza e realizza il passaggio di messaggi tra nodi della rete, anche
     quando ancora i nodi non hanno configurato le loro interfacce di rete con indirizzi e parametri
-    concordati.
+    concordati.  
+    Lo scambio di messaggi tra i nodi della rete attraverso un meccanismo di chiamate a procedure
+    nei nodi remoti (RPC) viene realizzato dal demone ntkd secondo le modalità descritte nel documento [ZCD-ntkd](Librerie/ZCD_ntkd.md).
 *   [ntkd-common](Librerie/Common.md). Questa libreria contiene alcune classi e funzioni che sono note a più di un
     modulo.
 

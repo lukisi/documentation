@@ -162,6 +162,29 @@ Le stesse tipologie di connessioni vengono simulate nei test che saranno realizz
 
 ## <a name="Basso_livello_lato_client"></a>Chiamate a metodi remoti al basso livello (lato client)
 
+Le modalità sono:
+
+*   **TCPStream**: Unicast. ...
+    *   *Neighborhood*: ...
+    *   *Routed*: ...
+*   **UDPPacket**: Broadcast. ...
+*   **UnixDomainStream**: Unicast. ...
+    *   *Neighborhood*: ...
+    *   *Routed*: ...
+*   **UnixDomainPacket**: Broadcast. ...
+
+Il protocollo da parte del client prevede:
+
+*   Nome del metodo
+*   Argomenti
+*   ISourceID
+*   IUnicastID o IBroadcastID
+*   Identificazione che permetta al ricevente di individuare un suo arco/arco-identità
+
+Il protocollo da parte del server prevede:
+
+*   ...
+
 Quando l'utilizzatore di ZCD vuole chiamare un metodo remoto lo può fare in 3 diverse modalità, per ognuna
 delle quali va invocato un distinto metodo di ZCD. Le modalità di invio del messaggio messe a disposizione
 da ZCD sono:
@@ -320,14 +343,12 @@ individua ogni *identità* che il nodo ha assunto.
 Così, quando ZCD riceve un messaggio dalla rete essi sono in grado di decidere se darlo in carico ad uno
 specifico **dispatcher**<sup>1</sup>.
 
+**TODO**: continuare le modifiche.
 
+* * *
 
-
-
-
-
-Quando vengono chiamati questi metodi la libreria ZCD nel nodo corrente, sulla base delle richieste che ha
-ricevuto, fa pervenire le informazioni alla libreria ZCD nel nodo (o nodi) destinatario. Qui la libreria
+Quando vengono invocati i metodi che iniziano una chiamata a metodo remoto, la libreria ZCD nel nodo
+corrente fa pervenire le informazioni alla libreria ZCD nel nodo (o nodi) destinatario. Qui la libreria
 ZCD interroga i delegati passati dal suo utilizzatore per sapere se il messaggio è riconosciuto di sua
 pertinenza. In questo caso il delegato fornisce alla libreria ZCD la funzione *f<sub>m</sub>* da chiamare
 (sotto forma di una istanza di *dispatcher*, che è una interfaccia nota alla libreria ZCD) per processare

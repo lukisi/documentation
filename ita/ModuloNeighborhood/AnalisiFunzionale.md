@@ -22,28 +22,23 @@ corrente colleghino a due distinte interfacce di rete di uno stesso nodo diretto
 deve identificare univocamente non soltanto la specifica interfaccia di rete di un vicino, ma anche il nodo vicino
 come entità nel suo insieme.
 
-L'identificativo di un nodo vicino è chiamato NeigborhoodNodeID. Esso è un concetto interno al modulo
-Neighborhood. Riassumendo, ogni arco associa una interfaccia di rete del nodo corrente ad una coppia composta
+L'identificativo di un nodo vicino è chiamato NeigborhoodNodeID. Esso è rappresentato in una istanza di una
+classe pubblica definita nel modulo Neighborhood: il suo utilizzatore la conosce.  
+Il modulo Neighborhood si occupa di realizzare le istanze di NeighborhoodNodeID e fornirle al ntkd.  
+Il modulo costruisce l'istanza di NeighborhoodNodeID che rappresenta il nodo corrente e la rende nota al suo utilizzatore.  
+Inoltre, quando segnala un arco al suo utilizzatore gli rende nota l'istanza di NeighborhoodNodeID del peer.
+
+Riassumendo, ogni arco associa una interfaccia di rete del nodo corrente ad una coppia composta
 dal NeigborhoodNodeID del vicino e dal MAC address della sua interfaccia.
 
-Come diretta conseguenza del ruolo di realizzazione e mantenimento degli archi, al modulo Neighborhood è demandato
-anche il compito di permettere agli altri moduli la comunicazione tra nodi:
+*Promemoria da rimuovere*: Non è più demandato al modulo Neighborhood il compito di realizzare la comunicazione tra nodi.  
+Questo era:
 
 *   Lato client. Il modulo Neighborhood fornisce al suo utilizzatore metodi per produrre gli stub che gli altri moduli dell'applicazione usano per
     comunicare con i nodi (diretti vicini o con indirizzo IP).
 *   Lato server. Il modulo Neighborhood viene interrogato dal suo utilizzatore quando esso rileva una richiesta tramite una interfaccia di rete.
     Da questa interrogazione l'utilizzatore saprà se deve passare la richiesta a uno
     (o piu d'uno) skeleton nel nodo corrente, il quale potrà richiamare metodi anche di altri moduli.
-
-Proposta:
-
-Lato server. Il demone interroga Neighborhood solo se riceve una richiesta TCP con indirizzo di destinazione di tipo linklocal.  
-Se invece è di tipo routable deve direttamente passarla allo skeleton della main identity.  
-Se è una richiesta broadcast?
-
-Lato client. Il modulo Neighborhood fornisce un metodo per produrre lo stub di tipo TCP linklocal per un suo arco.  
-Per preparare lo stub per un broadcast su una certa interfaccia non serve il modulo Neighborhood.  
-Per preparare lo stub per un TCP routable non serve il modulo Neighborhood.
 
 ## <a name="Operazioni_di_base"></a>Operazioni di base
 
@@ -217,7 +212,7 @@ con "rpcdesign" e che contiene queste informazioni:
 *   Nel caso di pacchetti TCP, l'indirizzo IP usato come destinazione. Il modulo Neighborhood lato client
     farà in modo che nei messaggi trasmessi ai diretti vicini, questo indirizzo identifichi univocamente una
     interfaccia di rete del nodo destinatario.
-*   Nel caso di pacchetti UDP, l'interfaccia di rete del nodo da cui è stato ricevuto il messaggio.
+*   Nel caso di pacchetti UDP, la propria interfaccia di rete da cui è stato ricevuto il messaggio.
 
 Nei casi in cui il modulo che vuole comunicare è *di identità*, il NodeID che identifica una *identità* di
 un nodo è una parte essenziale delle classi che si usano come ISourceID, IUnicastID e IBroadcastID nella
