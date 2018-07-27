@@ -24,7 +24,7 @@ come entità nel suo insieme.
 
 L'identificativo di un nodo vicino è chiamato NeigborhoodNodeID. Esso è rappresentato in una istanza di una
 classe pubblica definita nel modulo Neighborhood: il suo utilizzatore la conosce.  
-Il modulo Neighborhood si occupa di realizzare le istanze di NeighborhoodNodeID e fornirle al ntkd.  
+Il modulo Neighborhood si occupa di realizzare le istanze di NeighborhoodNodeID e fornirle al suo utilizzatore.  
 Il modulo costruisce l'istanza di NeighborhoodNodeID che rappresenta il nodo corrente e la rende nota al suo utilizzatore.  
 Inoltre, quando segnala un arco al suo utilizzatore gli rende nota l'istanza di NeighborhoodNodeID del peer.
 
@@ -165,6 +165,8 @@ la larghezza di banda in uscita.
 * * *
 
 Quando un nodo rimuove un arco tenta di comunicarlo al vertice collegato perché faccia altrettanto.
+
+**TODO: Identità multiple in un sistema** rimuovere spostandolo in ZCD_ntkd
 
 ## <a name="Identita_multiple_in_un_sistema"></a>Identità multiple in un sistema
 
