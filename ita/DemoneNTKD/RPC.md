@@ -67,6 +67,63 @@ un nodo nella rete Netsukuku) è una parte essenziale delle classi che si usano 
 Nei casi in cui il modulo che vuole comunicare è *di identità*, il NodeID (che identifica univocamente una *identità* di
 un nodo della rete) è una parte essenziale delle suddette classi.
 
+### Moduli di identità
+
+#### Unicast - diretto vicino
+
+Facciamo un esempio di un modulo *di identità* in cui una precisa identità del nodo *a*,
+indichiamola con *a<sub>0</sub>*, vuole chiamare un metodo remoto su una precisa identità del nodo diretto
+vicino *b*, indichiamola con *b<sub>0</sub>*, passando attraverso l'arco *x*.
+
+Il nodo *a* chiama il metodo `get_stub_identity_aware_unicast` dello *StubFactory*. Gli passa un
+INeighborhoodArc che identifica l'arco *x*, il quale collega il nodo *a* con il nodo *b* attraverso
+due specifiche interfacce di rete. Inoltre gli passa il NodeID di *a<sub>0</sub>* e il NodeID di *b<sub>0</sub>*.
+Infine specifica se si vuole attendere una risposta al messaggio.  
+Lo stub prodotto in questo modo trasmetterà il messaggio su una sola interfaccia di rete, univocamente individuata
+dall'arco *x*.
+
+L'oggetto che identifica l'arco *x* contiene le due interfacce di rete dell'arco. Cioè il device-name della
+propria interfaccia di rete del nodo *a* e il MAC address dell'interfaccia di rete di *b*. Inoltre contiene
+anche l'indirizzo IP linklocal che il nodo *b* ha associato a quella interfaccia di rete. Sicché una connessione
+TCP realizzata dal nodo *a* verso quell'indirizzo IP si appoggia esattamente sull'arco *x*. Infatti al momento
+della realizzazione dell'arco il modulo Neighborhood nei due nodi avrà impostato una apposita rotta con scope *link*
+nelle tabelle del kernel del *network namespace default*.
+
+Dal NodeID di *a<sub>0</sub>* verrà prodotto un IdentityAwareSourceID.
+Dal NodeID di *b<sub>0</sub>* verrà prodotto un IdentityAwareUnicastID.
+
+Di seguito elenchiamo le informazioni che verranno convogliate al nodo *b* attraverso il protocollo del framework ZCD
+(oltre naturalmente al messaggio vero e proprio che verrà indicato in seguito allo stub) e che quindi devono
+venire specificate dal demone ntkd alla creazione dello stub.
+
+*   ISourceID a0. Identifica il mittente.  
+    In questo caso si tratta di un IdentityAwareSourceID, quindi identifica una *identità*. Ma questo ZCD non è tenuto a saperlo.
+*   IUnicastID b0. Identifica il destinatario.  
+    In questo caso si tratta di un IdentityAwareUnicastID, quindi identifica una *identità*. Ma questo ZCD non è tenuto a saperlo.
+*   Identificativo del nodo mittente. **TODO**
+*   Identificativo del NIC usato dal mittente. **TODO**
+
+Quando nel nodo *b* il framework ZCD riceve il messaggio esso riconosce dalla
+modalità di trasmissione (di tipo STREAM, che prevede l'argomento IUnicastID) che si tratta di un
+messaggio unicast, quindi prepara una istanza di CallerInfo specifica per i messaggi unicast.
+
+Poi passa il CallerInfo al delegato. Questi riconosce dal CallerInfo che si tratta di un
+messaggio unicast, quindi chiama il metodo `get_dispatcher` dello *SkeletonFactory*. Gli passa
+le informazioni presenti nel CallerInfo, cioè quelle convogliate nel protocollo del framework ZCD.  
+In questo metodo lo SkeletonFactory, che conosce le classi IdentityAwareSourceID e IdentityAwareUnicastID
+e sa recuperarne il NodeID di *a<sub>0</sub>* e quello di *b<sub>0</sub>*, è in grado di identificare
+la specifica identità di *b* da coinvolgere.  
+Inoltre verifica che l'arco usato per la trasmissione sia noto al nodo *b* e che sia presente
+anche l'arco-identità tra *a<sub>0</sub>* e *b<sub>0</sub>*.  
+A questo punto il delegato restituirà uno skeleton specifico per l'identità *b<sub>0</sub>* (un
+*IdentitySkeleton*) e il framework ZCD potrà chiamarne i metodi che referenziano la giusta
+istanza del modulo di identità interessato dal messaggio.
+
+
+
+
+
+
 
 **TODO** spostare altrove.
 L'oggetto CallerInfo contiene queste informazioni:

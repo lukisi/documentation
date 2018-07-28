@@ -22,7 +22,8 @@ Lato server finora si poteva:
 1.  stare in ascolto su una propria interfaccia di rete con il protocollo UDP per pacchetti broadcast.
     Attraverso questa modalità si ricevono e si gestiscono sia i messaggi broadcast che sono trasmessi
     da un nodo diretto vicino; sia i messaggi unicast che sono trasmessi da un nodo diretto vicino
-    nelle fasi precedenti alla creazione di un arco.
+    nelle fasi precedenti alla creazione di un arco.  
+    La modalità unicast, con tutti i meccanismi di KEEP-ALIVE, verrà rimossa.
 
 Adesso si aggiunge:
 
@@ -36,7 +37,8 @@ Analogamente lato client, finora si poteva:
     per comunicare con un qualsiasi nodo in un proprio g-nodo.
 1.  inviare un messaggio (**Unicast** e **Broadcast**) con un pacchetto UDP broadcast su una certa
     propria interfaccia di rete, trasmettendo in questo modo su uno specifico dominio broadcast.
-    Così da raggiungere gli altri nodi diretti vicini che erano in ascolto su una loro interfaccia di rete.
+    Così da raggiungere gli altri nodi diretti vicini che erano in ascolto su una loro interfaccia di rete.  
+    La modalità unicast verrà rimossa.
 
 Adesso si aggiunge:
 
@@ -79,7 +81,9 @@ Intendiamo rimuovere del tutto la modalità **Unicast**. Con questa si realizzav
 con i nodi diretti vicini prima di aver costruito un arco. Si era già a conoscenza del
 *unicastid* del nodo diretto vicino interessato, ma non del suo indirizzo IP linklocal.  
 L'unico punto in cui questa modalità era usata è nel modulo Neighborhood nelle operazioni
-di costruzione di un arco.
+di costruzione di un arco.  
+Risulta facile l'implementazione delle fasi necessarie alla costruzione di un arco
+tramite l'uso di soli messaggi broadcast.
 
 Abbiamo una modalità di dialogo con i nodi di cui conosciamo l'indirizzo IP, la **TcpClient**.  
 Questa modalità viene usata per dialogare con uno specifico nodo all'interno di un g-nodo
@@ -97,9 +101,6 @@ a tutti i propri diretti vicini su un dominio broadcast, cioè **Broadcast**.
 
 La stessa è simulata (nel caso dell'uso di unix socket) con un unix socket che trasmette
 messaggi in modo non-reliable, indicata sotto con **UnixDomainBroadcast**.
-
-Dovrebbe risultare facile l'implementazione delle fasi necessarie alla costruzione di un arco
-tramite l'uso di soli messaggi broadcast.
 
 ## Dettagli tecnici
 

@@ -72,9 +72,17 @@ tutti i moduli hanno una dipendenza.
 *   [tasklet-system](Librerie/TaskletSystem.md). Con una dipendenza su questa libreria, un modulo può usare un generico sistema di
     tasklet (thread cooperativi) senza dover conoscere la specifica implementazione che il programma
     adotterà.
-*   [ZCD](Librerie/ZCD.md). Questa libreria formalizza e realizza il passaggio di messaggi tra nodi della rete.  
-    Lo scambio di messaggi tra i nodi della rete attraverso un meccanismo di chiamate a procedure
-    nei nodi remoti viene realizzato dal demone ntkd secondo le modalità descritte nel documento [RPC](DemoneNTKD/RPC.md).
+*   [ZCD](Librerie/ZCD.md). Questo framework è usato per realizzare il passaggio di messaggi tra nodi della rete.  
+    Il framework comprende una libreria di basso livello, la quale però non è direttamente tra le dipendenze dei moduli
+    o del demone ntkd. Infatti per usare questo framework, partendo da una definizione dei messaggi specifici
+    dell'applicazione, si costruisce una libreria intermedia
+    (nel nostro caso [ntkdrpc](https://github.com/lukisi/ntkdrpc/blob/master/build_sources/interfaces.rpcidl))
+    che sarà tra le dipendenze dirette dei moduli e del demone ntkd.  
+    I moduli utilizzano direttamente questa libreria in quanto chiamano i metodi degli stub e implementano i
+    metodi delle classi che realizzano le interfacce skeleton
+    ([classi stub e skeleton](https://en.wikipedia.org/wiki/Distributed_object_communication#Class_stubs_and_skeletons)).  
+    Il demone ntkd utilizza direttamente questa libreria per costruire gli stub e invocare gli skeleton
+    secondo le modalità descritte nel documento [RPC](DemoneNTKD/RPC.md).
 *   [ntkd-common](Librerie/Common.md). Questa libreria contiene alcune classi e funzioni che sono note a più di un
     modulo.
 

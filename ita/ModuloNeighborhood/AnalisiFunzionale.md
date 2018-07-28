@@ -166,10 +166,11 @@ la larghezza di banda in uscita.
 
 Quando un nodo rimuove un arco tenta di comunicarlo al vertice collegato perché faccia altrettanto.
 
-**TODO: Identità multiple in un sistema** rimuovere spostandolo in ZCD_ntkd
+**TODO: Identità multiple in un sistema** rimuovere spostandolo in DemoneNTKD/RPC
 
 ## <a name="Identita_multiple_in_un_sistema"></a>Identità multiple in un sistema
 
+**spostato** in "ZCD" o in "ntkd".  
 Introduciamo il concetto di *identità*. In un singolo nodo possono in dati momenti sussistere diverse
 *identità*. La ragion d'essere di queste identità sarà discussa in dettaglio nella trattazione del modulo
 QSPN, quando si parla di nodi virtuali. La gestione di queste identità è demandata al modulo Identities.
@@ -220,6 +221,7 @@ Nei casi in cui il modulo che vuole comunicare è *di identità*, il NodeID che 
 un nodo è una parte essenziale delle classi che si usano come ISourceID, IUnicastID e IBroadcastID nella
 produzione di stub per chiamare metodi remoti.
 
+**fatto** in "Moduli di identità - Unicast - diretto vicino".  
 Facciamo un esempio di un modulo *di identità* (ad esempio QSPN) in cui una precisa identità del nodo *a*,
 indichiamola con *a<sub>0</sub>*, vuole chiamare un metodo remoto su una precisa identità del nodo diretto
 vicino *b*, indichiamola con *b<sub>0</sub>*, passando attraverso l'arco *x*. Il nodo *a* chiama un metodo
@@ -234,11 +236,14 @@ su una sola interfaccia di rete, univocamente individuata dal INeighborhoodArc p
 server vedremo sotto come il nodo *b* aveva istruito il suo modulo Neighborhood perché potesse gestire questo
 tipo di IUnicastID.
 
+**fatto** in "Moduli di identità - Unicast - diretto vicino".  
+**da fare anche** in "Moduli di identità - Unicast - nodo nel g-nodo".  
 Nelle trasmissioni *unicast* è sempre individuato un solo arco tra *a* e *b*. Per le trasmissioni in TCP questo
 è scontato, nel senso che il nodo *b* riceve il messaggio una sola volta attraverso l'interfaccia di rete
 specifica di quell'arco. E le trasmissioni unicast fatte dai moduli *di identità* sono sempre in TCP, come
 vedremo in seguito.
 
+**fatto** in "Moduli di identità - Unicast - diretto vicino".  
 In particolare, nelle trasmissioni *identity_aware_unicast* abbiamo aggiunto come informazioni le identità
 *a<sub>0</sub>* e *b<sub>0</sub>*; grazie a queste il nodo ricevente *b* (non il modulo Neighborhood, bensì
 il suo utilizzatore) è in grado di identificare la specifica istanza del *modulo di identità* da coinvolgere
