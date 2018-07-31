@@ -1,3 +1,4 @@
+# ntkd - RPC
 
 ## <a name="Identita_multiple_in_un_sistema"></a>Identità multiple in un sistema
 
@@ -112,7 +113,13 @@ framework ZCD e anche la conoscenza della modalità con cui era in ascolto la ta
 il messaggio. In questo caso un ascolto di connessioni su uno specifico indirizzo IP linklocal
 (associato ad una specifica nostra interfaccia di rete) oppure su uno specifico unix-domain socket.
 
-Poi passa il CallerInfo al delegato. Questi riconosce dal CallerInfo che si tratta di un
+Poi passa il CallerInfo ad un delegato fornito dal demone ntkd (un `Netsukuku.IRpcDelegate`) il cui compito
+è di reperire un set di istanze skeleton su cui il messaggio va processato.  
+Le operazioni complete che si svolgono lato server quando viene recepito un messaggio
+sono illustrate nel documento [RPCLatoServer](../DemoneNTKD/RPCLatoServer.md).
+Nel presente documento invece ci concentriamo sull'esame di un caso alla volta nella sua interezza.
+
+Il delegato riconosce dal CallerInfo che si tratta di un
 messaggio unicast, quindi chiama il metodo `get_dispatcher` dello *SkeletonFactory*. Gli passa
 le informazioni presenti nel CallerInfo, cioè quelle convogliate nel protocollo del framework ZCD.  
 In questo metodo lo SkeletonFactory, che conosce le classi IdentityAwareSourceID e IdentityAwareUnicastID

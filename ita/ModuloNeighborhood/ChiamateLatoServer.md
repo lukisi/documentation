@@ -1,5 +1,7 @@
 # Modulo Neighborhood - Chiamate Lato Server
 
+**Spostato tutto** su [RPCLatoServer](../DemoneNTKD/RPCLatoServer.md).
+
 In questo documento vediamo passo passo come una applicazione debba usare il modulo Neighborhood per gestire gli aspetti "lato server" delle chiamate a metodi remoti.
 
 ## Applicazione basata su MOD-RPC prodotta con "rpcdesign"
