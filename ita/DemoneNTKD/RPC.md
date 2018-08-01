@@ -76,6 +76,8 @@ Facciamo un esempio di un modulo *di identità* in cui una precisa identità del
 indichiamola con *a<sub>0</sub>*, vuole chiamare un metodo remoto su una precisa identità del nodo diretto
 vicino *b*, indichiamola con *b<sub>0</sub>*, passando attraverso l'arco *x*.
 
+#### chiamata lato client
+
 Il nodo *a* chiama il metodo `get_stub_identity_aware_unicast` dello *StubFactory*. Gli passa un
 INeighborhoodArc che identifica l'arco *x*, il quale collega il nodo *a* con il nodo *b* attraverso
 due specifiche interfacce di rete. Inoltre gli passa il NodeID di *a<sub>0</sub>* e il NodeID di *b<sub>0</sub>*.
@@ -97,13 +99,20 @@ Di seguito elenchiamo le informazioni che verranno convogliate al nodo *b* attra
 (oltre naturalmente al messaggio vero e proprio che verrà indicato in seguito allo stub) e che quindi devono
 venire specificate dal demone ntkd alla creazione dello stub.
 
-*   ISourceID a0. Identifica il mittente.  
-    In questo caso si tratta di un IdentityAwareSourceID, quindi identifica una *identità*. Ma questo ZCD non è tenuto a saperlo.
-*   IUnicastID b0. Identifica il destinatario.  
-    In questo caso si tratta di un IdentityAwareUnicastID, quindi identifica una *identità*. Ma questo ZCD non è tenuto a saperlo.
-*   Identificativo del NIC usato dal nodo mittente. **TODO**: In `build_json_request` della libreria di basso livello ZCD
-    dobbiamo aggiungere l'argomento `string src_nic` in cui è serializzato l'oggetto SrcNic da definire.
+*   `ISourceID source_id`. Identifica il mittente.  
+    In questo caso si tratta di un IdentityAwareSourceID, quindi identifica una *identità* nel nodo
+    mittente. Ma questo ZCD non è tenuto a saperlo.
+*   `IUnicastID unicast_id`. Identifica il destinatario.  
+    In questo caso si tratta di un IdentityAwareUnicastID, quindi identifica una *identità* nel nodo
+    destinatario. Ma questo ZCD non è tenuto a saperlo.
+*   `ISrcNic src_nic`. Identifica il NIC usato dal nodo mittente.  
+    In questo caso si tratta di un StreamSrcNic, quindi rappresenta un indirizzo linklocal che il nodo
+    mittente ha assegnato a una delle sue interfacce di rete. Ma questo ZCD non è tenuto a saperlo.  
+    **TODO**: In `build_json_request` della libreria di basso livello ZCD
+    dobbiamo aggiungere l'argomento `string src_nic` in cui è serializzato l'oggetto ISrcNic.
 *   Se lo stub resta in attesa della risposta. Booleano `wait_reply`.
+
+#### ricezione lato server
 
 Quando nel nodo *b* il framework ZCD riceve il messaggio esso riconosce dalla
 modalità di trasmissione (di tipo STREAM, che prevede l'argomento IUnicastID) che si tratta di un
@@ -112,6 +121,8 @@ Nell'oggetto CallerInfo il framework ZCD include le informazioni convogliate nel
 framework ZCD e anche la conoscenza della modalità con cui era in ascolto la tasklet che ha recepito
 il messaggio. In questo caso un ascolto di connessioni su uno specifico indirizzo IP linklocal
 (associato ad una specifica nostra interfaccia di rete) oppure su uno specifico unix-domain socket.
+Diciamo che questa informazione è nel campo `ListenMode listen_mode` (non da serializzare)
+dell'oggetto CallerInfo.
 
 Poi passa il CallerInfo ad un delegato fornito dal demone ntkd (un `Netsukuku.IRpcDelegate`) il cui compito
 è di reperire un set di istanze skeleton su cui il messaggio va processato.  
@@ -125,14 +136,18 @@ le informazioni presenti nel CallerInfo, cioè quelle convogliate nel protocollo
 In questo metodo lo SkeletonFactory, che conosce le classi IdentityAwareSourceID e IdentityAwareUnicastID
 e sa recuperarne il NodeID di *a<sub>0</sub>* e quello di *b<sub>0</sub>*, è in grado di identificare
 la specifica identità di *b* da coinvolgere.  
-Inoltre, conoscendo gli archi che il modulo Neighborhood ha realizzato, può individuare quello
-tra la propria interfaccia su cui era in ascolto la tasklet che ha recepito e l'interfaccia
-del nodo mittente.  
-Perciò verifica che l'arco usato per la trasmissione sia noto al nodo *b* e che su questo si appoggi
-un arco-identità tra *b<sub>0</sub>* e *a<sub>0</sub>*.  
-A questo punto il delegato restituirà uno skeleton specifico per l'identità *b<sub>0</sub>* (un
-*IdentitySkeleton*) e il framework ZCD potrà chiamarne i metodi che referenziano la giusta
+Inoltre conosce gli archi-identità che sono associati a *b<sub>0</sub>*; per ognuno di essi sa vedere
+su quale arco formato dal modulo Neighborhood questo si appoggia; per un arco formato dal
+modulo Neighborhood sa vedere l'identificativo del NIC del vicino.  
+Se riesce a individuare un arco-identità tra *b<sub>0</sub>* e *a<sub>0</sub>* che poggia
+su un arco in cui il NIC del vicino è lo stesso del ISrcNic specificato in questo messaggio,
+restituirà il `identity_skeleton` specifico per l'identità *b<sub>0</sub>*.
+
+Il delegato restituisce lo skeleton (sarà di sicuro uno solo in questo caso, ma generalmente un set)
+al framework ZCD, il quale potrà chiamarne i metodi che referenziano la giusta
 istanza del modulo di identità interessato dal messaggio.
+
+#### esecuzione lato server
 
 Quando viene chiamato il metodo specificato dal messaggio sull'istanza dello skeleton del modulo
 interessato, agli argomenti specifici del messaggio viene aggiunto il CallerInfo.  
@@ -142,33 +157,44 @@ interfaccia) di identificare l'arco-identità tramite il quale il messaggio è s
 Prendiamo ad esempio il metodo `i_qspn_comes_from(CallerInfo rpc_caller)` dell'interfaccia `IQspnArc`
 come viene usato dallo skeleton del modulo Qspn nel metodo remoto `get_full_etp`.  
 Il metodo remoto `get_full_etp` in realtà può essere invocato dai diretti vicini sia con un messaggio
-unicast, sia con un messaggio broadcast. Ora esaminiamo cosa avviene quando è stato invocato come
-messaggio unicast.  
-Durante l'esecuzione di questo metodo remoto invocato dal framework ZCD, il QspnManager conosce
-gli archi-identità che gli sono stati passati come oggetti che implementano l'interfaccia IQspnArc.
+unicast, sia con un messaggio broadcast. Le operazioni il metodo `i_qspn_comes_from` sono comunque
+le stesse in entrambi i casi.
+
+Durante l'esecuzione del metodo remoto `get_full_etp` invocato dal framework ZCD, il QspnManager conosce
+gli archi-identità di *b<sub>0</sub>* che gli sono stati passati come oggetti che implementano l'interfaccia IQspnArc.
 Prende uno di essi e vuole chiedere al demone ntkd se il CallerInfo indica che il messaggio
 è stato consegnato proprio attraverso di esso. Quindi ne chiama il metodo `i_qspn_comes_from(rpc_caller)`.
 
 In questo metodo il demone ntkd sa che il mittente del messaggio è una identità di un nodo
-diretto vicino. Chiama sullo SkeletonFactory il metodo `from_caller_get_identity` e gli passa
-il CallerInfo.  
+diretto vicino. Chiama sullo SkeletonFactory il metodo `from_caller_get_identityarc` e gli passa
+il CallerInfo e l'istanza di IdentityData che rappresenta l'identità associata alla
+istanza di QspnManager che ha fatto richiesta.  
 In questo metodo lo SkeletonFactory presume che il chiamante sia un diretto vicino, ma ammette
 che possa aver fatto una trasmissione unicast o broadcast. In ogni caso, sa riconoscere il
-tipo di CallerInfo e estrapolarne il ISourceID che si presume essere un IdentityAwareSourceID.  
-Se non lo fosse lo SkeletonFactory si vede autorizzato a terminare la tasklet corrente poiché il
-messaggio ricevuto sarebbe malformato e quindi da ignorare.  
-Lo SkeletonFactory recupera il NodeID e lo restituisce.
+tipo di CallerInfo e estrapolarne il ISourceID.  
+Lo SkeletonFactory presume che questo sia un IdentityAwareSourceID (se non lo fosse restituirebbe *null*)
+e da esso recupera il NodeID dell'identità mittente.  
+Lo SkeletonFactory recupera inoltre dal CallerInfo l'identificativo della nostra interfaccia
+su cui il messaggio è stato ricevuto e l'identificativo dell'interfaccia del mittente che esso ha usato
+per trasmetterlo.  
+Con queste informazioni il metodo `from_caller_get_identityarc` individua e restituisce l'arco-identità
+su cui il messaggio è stato ricevuto da *b<sub>0</sub>*.
 
-Sulla base del NodeID del mittente il demone ntkd (nel metodo `i_qspn_comes_from` che era in esame)
-sa dire se il messaggio proveniva dall'arco in esame.
+Al ricevere questo arco-identità, il metodo `i_qspn_comes_from` sa vedere se l'arco IQspnArc in
+esame è proprio quello che rappresenta questo arco-identità.
+
+#### risposta dal server
 
 Al termine dell'esecuzione del metodo remoto, se lo stub che aveva trasmesso il messaggio aveva
 indicato nel protocollo ZCD di restare in attesa del risultato, il framework ZCD trasmette
 il risultato nella stessa connessione in cui aveva ricevuto il messaggio.
 
+***
 
 
-**TODO** spostare altrove.
+
+
+**TODO** spostare altrove.  
 L'oggetto CallerInfo contiene queste informazioni:
 
 *   Un ISourceID.
