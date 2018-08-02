@@ -282,6 +282,16 @@ il risultato nella stessa connessione in cui aveva ricevuto il messaggio.
 ***
 
 
+**TODO** spostare altrove.  
+Quando si chiama il metodo che produce uno stub per l'invio di messaggi in broadcast, può essere passato un
+oggetto che contiene il codice e i dati necessari a gestire l'evento di 'mancata ricezione di un ACK da un
+arco entro il timeout'. Tale oggetto implementa l'interfaccia INeighborhoodMissingArcHandler. L'interfaccia permette di:
+
+*   Lanciare il codice che gestisce una arco mancante, passandogli l'arco (metodo `missing`).
+
+
+
+***
 
 
 **TODO** spostare altrove.  
