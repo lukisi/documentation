@@ -76,7 +76,7 @@ Facciamo un esempio di un modulo *di identità* in cui una precisa identità del
 indichiamola con *a<sub>0</sub>*, vuole chiamare un metodo remoto su una precisa identità del nodo diretto
 vicino *b*, indichiamola con *b<sub>0</sub>*, passando attraverso l'arco *x*.
 
-#### chiamata lato client
+##### chiamata lato client
 
 Il nodo *a* chiama il metodo `get_stub_identity_aware_unicast` dello *StubFactory*. Gli passa un
 INeighborhoodArc che identifica l'arco *x*, il quale collega il nodo *a* con il nodo *b* attraverso
@@ -112,7 +112,7 @@ venire specificate dal demone ntkd alla creazione dello stub.
     dobbiamo aggiungere l'argomento `string src_nic` in cui è serializzato l'oggetto ISrcNic.
 *   Se lo stub resta in attesa della risposta. Booleano `wait_reply`.
 
-#### ricezione lato server
+##### ricezione lato server
 
 Quando nel nodo *b* il framework ZCD riceve il messaggio esso riconosce dalla
 modalità di trasmissione (di tipo STREAM, che prevede l'argomento IUnicastID) che si tratta di un
@@ -147,7 +147,7 @@ Il delegato restituisce lo skeleton (sarà di sicuro uno solo in questo caso, ma
 al framework ZCD, il quale potrà chiamarne i metodi che referenziano la giusta
 istanza del modulo di identità interessato dal messaggio.
 
-#### esecuzione lato server
+##### esecuzione lato server
 
 Quando viene chiamato il metodo specificato dal messaggio sull'istanza dello skeleton del modulo
 interessato, agli argomenti specifici del messaggio viene aggiunto il CallerInfo.  
@@ -183,11 +183,101 @@ su cui il messaggio è stato ricevuto da *b<sub>0</sub>*.
 Al ricevere questo arco-identità, il metodo `i_qspn_comes_from` sa vedere se l'arco IQspnArc in
 esame è proprio quello che rappresenta questo arco-identità.
 
-#### risposta dal server
+##### risposta dal server
 
 Al termine dell'esecuzione del metodo remoto, se lo stub che aveva trasmesso il messaggio aveva
 indicato nel protocollo ZCD di restare in attesa del risultato, il framework ZCD trasmette
 il risultato nella stessa connessione in cui aveva ricevuto il messaggio.
+
+#### Unicast - nodo dentro un g-nodo
+
+Facciamo un esempio di un modulo *di identità* in cui una precisa identità del nodo *a*,
+indichiamola con *a<sub>0</sub>*, vuole chiamare un metodo remoto su una precisa identità del nodo *b*,
+il quale non è (necessariamente) un nostro diretto vicino ma un nodo di cui conosciamo l'indirizzo
+che lo identifica univocamente all'interno di un nostro comune g-nodo.
+
+In questo caso il demone *ntkd* del nodo *a* non conosce gli identificativi delle identità nel nodo
+*b*. Essi infatti sono resi noti attraverso il modulo di nodo Identities solo ai nodi diretti vicini.
+Nel demone *ntkd* si è prevista solo la possibilità di comunicare attraverso questa modalità tra
+le due identità principali di due nodi. Quindi in questo caso abbiamo che *a<sub>0</sub>* è
+l'identità principale di *a* e vuole comunicare con l'identità principale di *b*, chiamiamola
+*b<sub>0</sub>*, della quale non conosce l'identificativo.
+
+##### chiamata lato client
+
+Il nodo *a* chiama il metodo `get_stub_main_identity_unicast_inside_gnode` dello *StubFactory*. Gli passa
+l'indirizzo di *b* interno ad un suo g-nodo, sottoforma di lista di posizioni ai livelli da 0 al livello
+subito inferiore del livello del g-nodo comune.  
+Infine specifica se si vuole attendere una risposta al messaggio.  
+Lo stub prodotto in questo modo trasmetterà il messaggio su una sola interfaccia di rete, individuata
+sulle tabelle di routing del kernel del nodo *a* sulla base dell'indirizzo IP routabile prodotto
+dall'indirizzo di *b* interno ad un g-nodo di *a*.
+
+Vengono prodotti in questo metodo un MainIdentitySourceID e un MainIdentityUnicastID. Queste due classi
+non contengono altre informazioni, individuano l'identità principale dei nodi, qualunque essa sia al momento
+della ricezione del messaggio.
+
+Di seguito elenchiamo le informazioni che verranno convogliate al nodo *b* attraverso il protocollo del framework ZCD
+(oltre naturalmente al messaggio vero e proprio che verrà indicato in seguito allo stub) e che quindi devono
+venire specificate dal demone ntkd alla creazione dello stub.
+
+*   `ISourceID source_id`. Identifica il mittente.  
+    In questo caso si tratta di un MainIdentitySourceID. Ma questo ZCD non è tenuto a saperlo.
+*   `IUnicastID unicast_id`. Identifica il destinatario.  
+    In questo caso si tratta di un MainIdentityUnicastID. Ma questo ZCD non è tenuto a saperlo.
+*   `ISrcNic src_nic`. Identifica il NIC usato dal nodo mittente.  
+    In questo caso si tratta di un StreamSrcNic, quindi rappresenta un indirizzo routabile che identifica
+    il nodo mittente all'interno del g-nodo comune. Ma questo ZCD non è tenuto a saperlo.
+*   Se lo stub resta in attesa della risposta. Booleano `wait_reply`.
+
+##### ricezione lato server
+
+Quando nel nodo *b* il framework ZCD riceve il messaggio esso riconosce dalla
+modalità di trasmissione (di tipo STREAM, che prevede l'argomento IUnicastID) che si tratta di un
+messaggio unicast, quindi prepara una istanza di CallerInfo specifica per i messaggi unicast.  
+Nell'oggetto CallerInfo il framework ZCD include le informazioni convogliate nel protocollo del
+framework ZCD e anche la conoscenza della modalità `ListenMode listen_mode` con cui era in ascolto
+la tasklet che ha recepito il messaggio. In questo caso un ascolto di connessioni su uno specifico
+indirizzo IP routabile oppure su uno specifico unix-domain socket.
+
+Poi passa il CallerInfo al delegato `Netsukuku.IRpcDelegate`.
+Il delegato riconosce dal CallerInfo che si tratta di un
+messaggio unicast, quindi chiama il metodo `get_dispatcher` dello *SkeletonFactory*
+passandogli il CallerInfo.  
+In questo metodo lo SkeletonFactory, che conosce le classi MainIdentitySourceID e MainIdentityUnicastID
+sa che deve coinvolgere l'identità principale di *b*. Quindi
+restituirà il `identity_skeleton` specifico per tale identità.
+
+Il delegato restituisce lo skeleton (sarà di sicuro uno solo in questo caso, ma generalmente un set)
+al framework ZCD, il quale potrà chiamarne i metodi che referenziano la giusta
+istanza del modulo di identità interessato dal messaggio.
+
+##### esecuzione lato server
+
+Quando viene chiamato il metodo specificato dal messaggio sull'istanza dello skeleton del modulo
+interessato, agli argomenti specifici del messaggio viene aggiunto il CallerInfo.  
+Il modulo interessato sa che un dato metodo remoto viene chiamato attraverso la modalità
+"nodo dentro un g-nodo", quindi che non può chiedere di identificare l'arco-identità tramite il
+quale il messaggio è stato consegnato.
+
+D'altra parte la modalità prevede una connessione reliable, sulla quale eventualmente sarà
+possibile trasmettere una risposta al chiamante.
+
+Se per altri motivi fosse necessario al ricevente conoscere una modalità per contattare in
+altro momento il chiamante (ad esempio l'indirizzo IP univoco del chiamante all'interno del
+g-nodo comune) questa informazione dovrà far parte degli argomenti del metodo remoto chiamato.
+
+Per completezza ricordiamo che il metodo `from_caller_get_identityarc` dello SkeletonFactory
+se gli viene passato un CallerInfo che contiene un ISourceID che non è un IdentityAwareSourceID
+(come nel nostro caso che sarebbe un MainIdentitySourceID) restituisce *null*.
+
+##### risposta dal server
+
+Al termine dell'esecuzione del metodo remoto, se lo stub che aveva trasmesso il messaggio aveva
+indicato nel protocollo ZCD di restare in attesa del risultato, il framework ZCD trasmette
+il risultato nella stessa connessione in cui aveva ricevuto il messaggio.
+
+
 
 ***
 

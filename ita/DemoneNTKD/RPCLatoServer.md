@@ -86,14 +86,14 @@ Nel metodo `IAddressManagerSkeleton? get_dispatcher(ISourceID source_id, IUnicas
     solo se questa è collegata tramite un *arco-identità* alla identità `identity_aware_source_id`. Inoltre
     deve trattarsi di un *arco-identità* che si appoggia all'arco formato dal modulo Neighborhood
     con `peer_address`. Altrimenti *null*.
+*   Se `unicast_id` è un MainIdentityUnicastID:  
+    Conosciamo la nostra identità principale. Si restituisce il suo `identity_skeleton`.
 *   Se `unicast_id` è un WholeNodeUnicastID:  
     In questo caso `source_id` deve essere un WholeNodeSourceID. Altrimenti restituisce subito *null*.  
     Si estrapola da `source_id` il `NeighborhoodNodeID whole_node_source_id`.  
     Conosciamo l'istanza `node_skeleton`. Se è stato formato un arco dal modulo Neighborhood con
     `whole_node_source_id`, se inoltre tale arco riporta come indirizzo IP `peer_address` allora va
     restituita l'istanza `node_skeleton`. Altrimenti *null*.
-*   Se `unicast_id` è un PeersUnicastID:  
-    Conosciamo la nostra identità principale. Si restituisce il suo `identity_skeleton`.
 
 Nel metodo `Gee.List<IAddressManagerSkeleton> get_dispatcher_set(ISourceID source_id, IBroadcastID broadcast_id, string peer_address, string dev)`:
 
