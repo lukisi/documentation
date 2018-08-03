@@ -282,12 +282,41 @@ il risultato nella stessa connessione in cui aveva ricevuto il messaggio.
 ***
 
 
-**TODO** spostare altrove.  
-Quando si chiama il metodo che produce uno stub per l'invio di messaggi in broadcast, può essere passato un
-oggetto che contiene il codice e i dati necessari a gestire l'evento di 'mancata ricezione di un ACK da un
-arco entro il timeout'. Tale oggetto implementa l'interfaccia INeighborhoodMissingArcHandler. L'interfaccia permette di:
+**TODO** spostare altrove.
 
-*   Lanciare il codice che gestisce una arco mancante, passandogli l'arco (metodo `missing`).
+Quando si chiama il metodo che produce uno stub per l'invio di messaggi in broadcast, può essere passato un
+oggetto che implementa l'interfaccia `IAckCommunicator` fornita dal `ntkdrpc`. Ogni volta che verrà usato lo
+stub per trasmettere un messaggio in broadcast, dopo un certo timeout dal momento della trasmissione,
+questo oggetto riceverà (nel metodo `process_macs_list`) un elenco dei MAC (lista di stringhe, o in futuro
+istanze di ISrcNic) dai quali abbiamo ricevuto un pacchetto di "ACKnowledgement" di ricezione del nostro messaggio.  
+La logica è che questo oggetto ha le informazioni necessarie a gestire il fatto che un certo MAC (in generale
+una certa interfaccia di rete di un vicino che conosciamo) non ha trasmesso l'ACK nel tempo previsto.
+
+Attualmente, l'unico caso di questo tipo nel demone *ntkd* è `get_stub_identity_aware_broadcast`. Infatti l'altro
+metodo `get_stub_whole_node_broadcast_for_radar` gli passa *null*.  
+Quindi più specificamente la logica è che questo oggetto gestisce i singoli archi-identità collegati agli
+archi dai quali non abbiamo ricevuto conferma di ricezione.  
+L'oggetto passato è un `AcknowledgementsCommunicator`, una classe privata dello StubFactory. Al suo interno
+ha un `NodeMissingArcHandlerForIdentityAware` cioè un gestore degli archi-nodo che sono stati "mancati"
+dalla trasmissione broadcast che sa che deve operare sugli archi-identità. Questo a sua volta al suo interno ha
+una istanza dell'interfaccia `IIdentityAwareMissingArcHandler` cioè un gestore degli archi-identità che sono
+stati "mancati" dalla trasmissione broadcast.
+
+L'oggetto `AcknowledgementsCommunicator` può accedere (sia al momento della produzione dello stub sia
+al momento dell'esecuzione del metodo `process_macs_list`) alla lista di archi-nodo che il demone *ntkd*
+conosce. Ogni arco-nodo ha un identificativo dell'interfaccia di rete del vicino che è confrontabile
+con l'identificativo (`string mac` o `ISrcNic src_nic`) che sono state passate nel metodo `process_macs_list`
+dal framework ZCD.  
+Tutto ciò permette di chiamare una serie di volte (ognuna in una tasklet indipendente) il metodo
+`missing(IdentityData identity_data, IdentityArc identity_arc)` della `IIdentityAwareMissingArcHandler`
+quando non si riceve nel tempo previsto un ACK da una certa interfaccia.
+
+Le istanze di `IIdentityAwareMissingArcHandler` usate nel codice sono:
+
+*   `MissingArcHandlerForPeers` nel file `peers_helpers.vala`. Usata nel `PeersNeighborsFactory.i_peers_get_broadcast`
+    che il modulo usa per chiamare i metodi remoti `set_participant` e `give_participant_maps`.
+*   `MissingArcHandlerForQspn` nel file `qspn_helpers.vala`. Usata nel `QspnStubFactory.i_qspn_get_broadcast`
+    che il modulo usa per chiamare i metodi remoti `send_etp`, `got_prepare_destroy` e `got_destroy`.
 
 
 
