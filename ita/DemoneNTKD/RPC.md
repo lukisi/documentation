@@ -13,6 +13,143 @@ Una classe **SkeletonFactory** è usata quando si rileva una richiesta tramite u
 Interrogando questa classe si decide se bisogna passare la richiesta a uno
 (o piu d'uno) skeleton nel nodo corrente, il quale potrà richiamare metodi remoti definiti nei vari moduli.
 
+## Socket del dominio sistema
+
+### ZCD
+
+La nuova versione del framework ZCD prevede che la libreria di basso livello supporti oltre
+ai socket nel dominio di rete anche i socket nel dominio sistema.
+
+Cioè con le stesse modalità con cui si realizzano le comunicazioni tra distinti nodi di una rete, sia
+possibile anche realizzare comunicazioni tra processi distinti in un medesimo sistema.
+
+...
+
+### ntkd
+
+L'uso di socket nel dominio sistema (unix-domain socket) anziché i normali socket nel dominio di rete
+ha lo scopo di facilitare la produzione di testsuite (per i vari moduli o per l'intero demone *ntkd*)
+in cui più processi (all'interno di un sistema) simulano più nodi (all'interno di una rete).
+
+I pathname per identificare questi socket devono essere univoci all'interno della testsuite.
+
+Per simulare un socket in ascolto per connessioni su un indirizzo IP:
+
+*   Se l'indirizzo IP `<ip>` è un linklocal, ipotiziamo che sia univoco nell'intera testsuite.  
+    Allora il pathname sarà `conn_<ip>`.
+*   Se l'indirizzo IP `<ip>` è routabile, potremmo avere una testsuite in cui si prevedono diverse
+    reti che vengono in contatto fra di loro. Oppure all'interno della stessa rete potremmo
+    avere indirizzi IP interni ad un g-nodo, che sono univoci solo dentro il g-nodo. In entrambi i
+    casi l'indirizzo potrebbe essere non univoco nell'intera testsuite.
+
+    *   Se l'indirizzo IP è globale (o anonimizzante) sia `<netid>` l'identificativo della rete.
+    *   Se è interno ad un g-nodo di livello *i* sia `<netid>` l'identificativo del g-nodo di livello *i*.
+
+    In entrambi i casi assumiamo come requisito che tali identificativi non cambiano nel tempo di vita
+    della testsuite.  
+    Allora il pathname sarà `conn_<netid>_<ip>`.
+    
+Per simulare un socket in ascolto per messaggi broadcast su un NIC:
+
+*   Il nic-name `<dev>` assumiamo che sia univoco solo nel nodo, cioè nel processo. Sia `<pid>`
+    l'identificativo del processo.  
+    Allora una parte del pathname sarà `<pid>_<dev>`.
+
+Vediamo cosa significa per il framework ZCD stare in ascolto per connessioni o per messaggi e come si comporta
+in particolare nel caso di dominio di sistema.
+
+Stare in ascolto per connessioni su un indirizzo IP significa che la tasklet attende una connessione su
+un socket con porta "well-known" a quell'indirizzo. Quando arriva una connessione viene avviata una tasklet che gestisce
+quella specifica connessione, mentre la tasklet originale torna ad attendere. La tasklet che gestisce la
+connessione può leggere e scrivere sul socket connesso.
+
+Quindi stare in ascolto per connessioni su un pathname è del tutto simile. La tasklet attende una connessione su
+un socket con quel pathname. Quando arriva una connessione viene avviata una tasklet che gestisce
+quella specifica connessione, mentre la tasklet originale torna ad attendere. La tasklet che gestisce la
+connessione può leggere e scrivere sul socket connesso.
+
+Trasmettere per connessioni su un indirizzo IP significa che viene tentata una connessione da parte
+di un socket con porta "effimera" verso un socket con porta "well-known" a quell'indirizzo. Stabilita
+la connessione il client può leggere e scrivere sul socket connesso.
+
+Quindi trasmettere per connessioni su un pathname è del tutto simile. Viene tentata una connessione da parte
+di un socket unnamed verso un socket con quel pathname. Stabilita
+la connessione il client può leggere e scrivere sul socket connesso.
+
+Stare in ascolto per messaggi broadcast su un nic significa che la tasklet ascolta i pacchetti che transitano
+su un dominio broadcast sul quale è "collegata" una sua interfaccia di rete. Questo si fa con un socket
+impostato a "set_broadcast" e associato ad un certo nic. I pacchetti che rileva possono essere "REQUEST" o "ACK".
+Quando rileva un pacchetto viene avviata una tasklet che gestisce il pacchetto rilevato, mentre la tasklet originale
+torna ad ascoltare.  
+Se il pachetto è un "REQUEST" (e richiede un ack) avvia una tasklet che a breve trasmetterà un relativo
+pacchetto "ACK" sulla stessa interfaccia di rete. Per la verità alcuni (4) a intervalli variabili. Sotto descriveremo
+come si trasmette.  
+Poi costruisce un `zcd.UdpCallerInfo` e passa al delegato `IZcdUdpRequestMessageDelegate del_req` le informazioni
+estrapolate dal pacchetto. Questi restituirà, se il caso, un `IZcdDispatcher` da eseguire. Dopo averlo
+eseguito la tasklet potrà terminare.  
+Se il pacchetto è un "ACK" passa al delegato `IZcdUdpServiceMessageDelegate del_ser` le informazioni
+estrapolate dal pacchetto. Questi non restituirà nulla: la tasklet potrà terminare.
+
+Trasmettere un pacchetto (che contenga un "REQUEST" o un "ACK) tramite una propria interfaccia di rete si fa con
+un socket impostato a "set_broadcast" e associato ad un certo nic. Il risultato è che quel pacchetto 
+transita sul dominio broadcast sul quale è "collegato" quel nic. Quindi viene rilevato da qualsiasi altro
+nic collegato allo stesso dominio broadcast. Di norma si tratta di altri nic di altri nodi,
+ma teoricamente anche altri nic dello stesso nodo possono essere collegati allo stesso dominio broadcast.
+
+Per simulare queste operazioni in una testsuite in cui più processi (all'interno di un sistema) simulano più
+nodi (all'interno di una rete) occorre attivare anche altri processi "domain" che emulano un dominio di broadcast.
+
+Ad esempio si voglia simulare un nodo "alfa" e un nodo "beta" i quali entrambi hanno una interfaccia "eth0" sullo
+stesso dominio, che chiameremo dominio "tau". Vogliamo lanciare il comando "qspntester" su entrambi i nodi (simulati)
+indicando l'interfaccia "eth0".
+
+Per emulare il dominio "tau", si lancia `domain` e si prende nota del suo pid per comunicare in seguito con esso.
+
+Per "alfa", si lancia `qspntester -I eth0` che crea il processo pid 1234. Tale processo computa un pathname `1234_eth0` per
+rappresentare il suo pseudonic `eth0`.  
+Quando questo processo vuole stare in ascolto per messaggi broadcast su questo pseudonic, in realtà si
+mette in ascolto su un socket unix-domain con il pathname `recv_1234_eth0`.  
+Per il momento nessuno scrive su `recv_1234_eth0`.  
+Quando questo processo vuole trasmettere un pacchetto tramite questo pseudonic, in realtà lo scrive su
+un socket unix-domain con il pathname `send_1234_eth0`.  
+Per il momento nessuno ascolta su `send_1234_eth0`.
+
+Per "beta", si lancia `qspntester -I eth0` che crea il processo pid 6543. Tale processo computa un pathname `6543_eth0` per
+rappresentare il suo pseudonic `eth0`.  
+Quando questo processo vuole stare in ascolto per messaggi broadcast su questo pseudonic, in realtà si
+mette in ascolto su un socket unix-domain con il pathname `recv_6543_eth0`.  
+Per il momento nessuno scrive su `recv_6543_eth0`.  
+Quando questo processo vuole trasmettere un pacchetto tramite questo pseudonic, in realtà lo scrive su
+un socket unix-domain con il pathname `send_6543_eth0`.  
+Per il momento nessuno ascolta su `send_6543_eth0`.
+
+Per collegare `eth0` di "alfa" al dominio "tau" dobbiamo comunicare al processo `domain` di cui sopra che
+è ora attaccato il nic `1234_eth0`. Questo processo avvia una tasklet associata a `1234_eth0` che si mette
+in ascolto su un socket unix-domain con il pathname `send_1234_eth0`. Inoltre mette in una lista
+il pathname `1234_eth0`.  
+Ora se il processo che simula "alfa" trasmette un pacchetto, cioè scrive sul socket unix-domain con il
+pathname `send_1234_eth0`, il processo `domain` lo riceve tramite la sua tasklet associata a `1234_eth0`.
+Allora cerca nella sua lista se c'è un pathname diverso da `1234_eth0`. Ma non ne trova, quindi non fa nulla.
+Infatti un nic che trasmette un pacchetto non può al contempo rilevarlo.
+
+Per collegare `eth0` di "beta" al dominio "tau" dobbiamo comunicare al processo `domain` di cui sopra che
+è ora attaccato il nic `6543_eth0`. Questo processo avvia una tasklet associata a `6543_eth0` che si mette
+in ascolto su un socket unix-domain con il pathname `send_6543_eth0`. Inoltre mette nella lista
+il pathname `6543_eth0`.  
+Ora se il processo che simula "alfa" trasmette un pacchetto, cioè scrive sul socket unix-domain con il
+pathname `send_1234_eth0`, il processo `domain` lo riceve tramite la sua tasklet associata a `1234_eth0`.
+Allora cerca nella sua lista se c'è un pathname diverso da `1234_eth0`. E trova `6543_eth0`. Allora
+fa da proxy: avviando una nuova tasklet per ogni pathname diverso da `1234_eth0` trovato, trasmette lo
+stesso pacchetto scrivendolo su un socket unix-domain con il pathname `recv_<pathname>`. Nel nostro caso
+lo scrive su `recv_6543_eth0`. Quindi il processo che simula "beta" lo riceve.
+
+Supponiamo di voler emulare un dominio radio. Questi hanno una particolare caratteristica: supponiamo che il
+nodo beta ha un nic radio collegato allo stesso dominio broadcast (stesso canale, stesso SSID) a
+cui è collegato il nodo alfa e il nodo gamma; allora se beta è in grado di comunicare sia con alfa sia con
+gamma questo non implica che il nodo alfa sia in grado di comunicare direttamente con il nodo gamma.  
+Per simulare una tale situazione occorre che il processo "domain" possa accettare una configurazione
+molto più dettagliata rispetto a quanto visto sopra.
+
 ## <a name="Identita_multiple_in_un_sistema"></a>Identità multiple in un sistema
 
 ### ZCD
