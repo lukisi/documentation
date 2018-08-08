@@ -1,5 +1,18 @@
 # ntkd - RPC
 
+Il progetto *ntkd* usa il framework ZCD per realizzare le comunicazioni tra nodi.
+
+## StubFactory
+
+Una classe **StubFactory** è usata per produrre gli stub che i vari moduli dell'applicazione usano per
+comunicare con altri nodi (diretti vicini o specifici nodi all'interno di un comune g-nodo).
+
+## SkeletonFactory
+
+Una classe **SkeletonFactory** è usata quando si rileva una richiesta tramite una interfaccia di rete.
+Interrogando questa classe si decide se bisogna passare la richiesta a uno
+(o piu d'uno) skeleton nel nodo corrente, il quale potrà richiamare metodi remoti definiti nei vari moduli.
+
 ## <a name="Identita_multiple_in_un_sistema"></a>Identità multiple in un sistema
 
 ### ZCD
@@ -318,39 +331,46 @@ Le istanze di `IIdentityAwareMissingArcHandler` usate nel codice sono:
 *   `MissingArcHandlerForQspn` nel file `qspn_helpers.vala`. Usata nel `QspnStubFactory.i_qspn_get_broadcast`
     che il modulo usa per chiamare i metodi remoti `send_etp`, `got_prepare_destroy` e `got_destroy`.
 
+**FINE-TODO**
 
 
 ***
 
 
-**TODO** spostare altrove.  
-L'oggetto CallerInfo contiene queste informazioni:
+**TODO** spostare altrove.
 
-*   Un ISourceID.
-*   Un IUnicastID o un IBroadcastID.
-*   Se si tratta di un messaggio ricevuto come pacchetto UDP broadcast:
-    *   Questo è necessariamente trasmesso da un nostro diretto vicino.
-    *   Un identificativo associabile all'interfaccia di rete sulla quale il diretto vicino ha trasmesso il messaggio.
-        *   Può essere il MAC se il medium è la rete.
-        *   Se il medium è uno unix-domain, cosa usiamo?
-    *   Un identificativo associabile alla propria interfaccia di rete che ha recepito il messaggio.
-        *   Può essere il device-name se il medium è la rete.
-        *   Se il medium è uno unix-domain, cosa usiamo?
-*   Se si tratta di uno stream ricevuto su una connessione TCP tramite indirizzo IP linklocal:
-    *   Questa connessione è con un nostro diretto vicino.
-    *   Un identificativo associabile all'interfaccia di rete del diretto vicino di cui si compone l'arco
-        (o arco-identità) interessato dal messaggio.
-        *   Può essere l'indirizzo IP linklocal se il medium è la rete.
-        *   Se il medium è uno unix-domain, cosa usiamo?
-    *   Un identificativo associabile alla propria interfaccia di rete di cui si compone l'arco
-        (o arco-identità) interessato dal messaggio.
-        *   Può essere l'indirizzo IP linklocal se il medium è la rete.
-        *   Se il medium è uno unix-domain, cosa usiamo?
-*   Se si tratta di uno stream ricevuto su una connessione TCP tramite indirizzo IP routabile:
-    *   Questa connessione è con un altro nodo di un nostro g-nodo.
-    *   Non servono altre informazioni. Si tratta sicuramente di un messaggio destinato ad un
-        *modulo di identità* e le identità mittente e destinatario sono le identità principali dei
-        due nodi che stanno comunicando. La risposta del server è trasmessa nella stessa connessione TCP.
+L'oggetto CallerInfo viene prodotto sul server, in particolare dalla libreria *ntkdrpc*, a seguito di una
+richiesta da remoto contenuta in una connessione o un messaggio. La richiesta viene letta da una delle
+tasklet che sono state avviate per l'ascolto.
+
+A seconda della tasklet che riceve viene prodotta una istanza di:
+
+*   `StreamNetCallerInfo` dalla tasklet `stream_ip_listen`. Era la `TcpclientCallerInfo`.  
+    Questa contiene:
+    *   `ISourceID sourceid`
+    *   `IUnicastID unicastid`
+    *   `ISrcNic src_nic`
+    *   `bool wait_reply`
+    *   `string listening_to_my_ip`
+*   `DatagramNetCallerInfo` dalla tasklet `datagram_nic_listen`. Era la `BroadcastCallerInfo`.  
+    Questa contiene:
+    *   `ISourceID sourceid`
+    *   `IBroadcastID broadcastid`
+    *   `ISrcNic src_nic`
+    *   `string listening_to_my_dev`
+*   `StreamSystemCallerInfo` dalla `stream_pathname_listen`.  
+    Questa contiene:
+    *   `ISourceID sourceid`
+    *   `IUnicastID unicastid`
+    *   `ISrcNic src_nic`
+    *   `bool wait_reply`
+    *   `string listening_to_my_pseudoip`
+*   `DatagramSystemCallerInfo` dalla `datagram_pathname_listen`.  
+    Questa contiene:
+    *   `ISourceID sourceid`
+    *   `IBroadcastID broadcastid`
+    *   `ISrcNic src_nic`
+    *   `string listening_to_my_pseudodev`
 
 **FINE-TODO**
 

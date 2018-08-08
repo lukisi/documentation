@@ -11,9 +11,24 @@ appoggia sulla libreria ZCD.
 
 Poi viene costruito il demone *ntkd* che si appoggia su ntkdrpc.
 
-Il demone *ntkd* avvia sia un *listener* TCP sia uno UDP con i metodi della libreria ntkdrpc. Essi si
-avviano in una tasklet e richiamano i relativi listener della libreria ZCD. **TODO** si aggiungeranno
-listener a connessioni e a messaggi nel medium unix-domain socket.
+## Le tasklet in ascolto
+
+Il demone *ntkd* avvia alcuni *listener* con i metodi della libreria ntkdrpc (nel namespace `Netsukuku`)
+che fanno da proxy per altrettanti metodi della libreria ZCD (nel namespace `zcd`). Questi avviano delle
+tasklet che si mettono in ascolto.
+
+Attualmente questi listener sono un `tcp_listen` e una serie di `udp_listen`. Diventeranno un
+numero di `stream_ip_listen`, `datagram_nic_listen`, `stream_pathname_listen`, `datagram_pathname_listen`.
+
+Attualmente la libreria ZCD esporta (nel namespace `zcd`) le classi TcpCallerInfo e UdpCallerInfo, entrambe
+implementano l'interfaccia vuota IZcdCallerInfo. Diventeranno una classe per ogni modalità di listen.
+
+Chiamando `Netsukuku.tcp_listen` *ntkd* passa un `Netsukuku.IRpcDelegate` e un `Netsukuku.IRpcErrorHandler`.
+Di risposta ntkdrpc chiama `zcd.tcp_listen` e passa un `zcd.IZcdTcpDelegate` e un `zcd.IZcdTcpAcceptErrorHandler`.
+
+Chiamando `Netsukuku.udp_listen` *ntkd* passa sempre un `Netsukuku.IRpcDelegate` e un `Netsukuku.IRpcErrorHandler`.
+Di risposta ntkdrpc chiama `zcd.udp_listen` e passa un `zcd.IZcdUdpRequestMessageDelegate`,
+un `zcd.IZcdUdpServiceMessageDelegate` e un `zcd.IZcdUdpCreateErrorHandler`.
 
 ### Individuare il (o i) corretto root-dispatcher da invocare
 
@@ -23,11 +38,11 @@ ZCD prepara un zcd.CallerInfo e chiama un metodo di un delegato fornito da ntkdr
 
 ntkdrpc prepara un Netsukuku.CallerInfo, che può essere una istanza di:
 
-*   TcpclientCallerInfo.
+*   TcpclientCallerInfo. **TODO** diventerà StreamNetCallerInfo.
 *   UnicastCallerInfo. **TODO** si rimuoverà.
-*   BroadcastCallerInfo.
-*   StreamUnixCallerInfo. **TODO** si aggiungerà.
-*   DatagramUnixCallerInfo. **TODO** si aggiungerà.
+*   BroadcastCallerInfo. **TODO** diventerà DatagramNetCallerInfo.
+*   StreamSystemCallerInfo. **TODO** si aggiungerà.
+*   DatagramSystemCallerInfo. **TODO** si aggiungerà.
 
 Poi ntkdrpc chiama il metodo `get_addr_set` di un delegato Netsukuku.IRpcDelegate, la cui implementazione
 è fornita dal demone *ntkd*.
@@ -48,8 +63,8 @@ Il demone *ntkd* in questo metodo recupera dal CallerInfo:
     dal socket che gli è passato dal sistema operativo, dovrà essere sostituita da una informazione che
     rappresenta la modalità con cui la presente tasklet era in ascolto: su una specifica interfaccia di
     rete o su un unix-domain.
-*   Caso StreamUnixCallerInfo. **TODO** si aggiungerà.
-*   Caso DatagramUnixCallerInfo. **TODO** si aggiungerà.
+*   Caso StreamSystemCallerInfo. **TODO** si aggiungerà.
+*   Caso DatagramSystemCallerInfo. **TODO** si aggiungerà.
 
 Poi il demone *ntkd* a seconda dei casi:
 
@@ -68,6 +83,8 @@ Poi il demone *ntkd* a seconda dei casi:
     un arco realizzato dal modulo Neighborhood. Non è previsto al momento alcun altro tipo di messaggio di
     nodo oltre a quelli nelle operazioni di "radar scan". Inoltre gestisce il caso di messaggio di identità
     da un diretto vicino. La modalità broadcast può essere usata solo per i messaggi da diretti vicini.
+*   Caso StreamSystemCallerInfo. **TODO** si aggiungerà.
+*   Caso DatagramSystemCallerInfo. **TODO** si aggiungerà.
 
 Infine ntkdrpc riceve un set (forse vuoto) di root-dispatcher su cui invocare un metodo remoto. Sa come
 proseguire.
@@ -83,16 +100,15 @@ Nel metodo `IAddressManagerSkeleton? get_dispatcher(ISourceID source_id, IUnicas
     Chiama il metodo `get_identity_skeleton(identity_aware_source_id, identity_aware_unicast_id, peer_address)`.  
     Questo metodo, conoscendo le *identità* del nodo e gli *archi-identità* che li collegano ad altri nodi,
     restituisce, se esiste, il `identity_skeleton` relativo alla identità `identity_aware_unicast_id`, ma
-    solo se questa è collegata tramite un *arco-identità* alla identità `identity_aware_source_id`. Inoltre
-    deve trattarsi di un *arco-identità* che si appoggia all'arco formato dal modulo Neighborhood
-    con `peer_address`. Altrimenti *null*.
+    solo se questa è collegata alla identità `identity_aware_source_id` tramite un *arco-identità*
+    che si appoggia ad un arco formato dal modulo Neighborhood con `peer_address`. Altrimenti *null*.
 *   Se `unicast_id` è un MainIdentityUnicastID:  
     Conosciamo la nostra identità principale. Si restituisce il suo `identity_skeleton`.
 *   Se `unicast_id` è un WholeNodeUnicastID:  
     In questo caso `source_id` deve essere un WholeNodeSourceID. Altrimenti restituisce subito *null*.  
     Si estrapola da `source_id` il `NeighborhoodNodeID whole_node_source_id`.  
-    Conosciamo l'istanza `node_skeleton`. Se è stato formato un arco dal modulo Neighborhood con
-    `whole_node_source_id`, se inoltre tale arco riporta come indirizzo IP `peer_address` allora va
+    Conosciamo l'istanza `node_skeleton`. Se è stato formato dal modulo Neighborhood un arco con
+    `whole_node_source_id` sull'interfaccia del vicino identificata da `peer_address` allora va
     restituita l'istanza `node_skeleton`. Altrimenti *null*.
 
 Nel metodo `Gee.List<IAddressManagerSkeleton> get_dispatcher_set(ISourceID source_id, IBroadcastID broadcast_id, string peer_address, string dev)`:

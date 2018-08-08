@@ -31,15 +31,6 @@ Inoltre, quando segnala un arco al suo utilizzatore gli rende nota l'istanza di 
 Riassumendo, ogni arco associa una interfaccia di rete del nodo corrente ad una coppia composta
 dal NeigborhoodNodeID del vicino e dal MAC address della sua interfaccia.
 
-*Promemoria da rimuovere*: Non è più demandato al modulo Neighborhood il compito di realizzare la comunicazione tra nodi.  
-Questo era:
-
-*   Lato client. Il modulo Neighborhood fornisce al suo utilizzatore metodi per produrre gli stub che gli altri moduli dell'applicazione usano per
-    comunicare con i nodi (diretti vicini o con indirizzo IP).
-*   Lato server. Il modulo Neighborhood viene interrogato dal suo utilizzatore quando esso rileva una richiesta tramite una interfaccia di rete.
-    Da questa interrogazione l'utilizzatore saprà se deve passare la richiesta a uno
-    (o piu d'uno) skeleton nel nodo corrente, il quale potrà richiamare metodi anche di altri moduli.
-
 ## <a name="Operazioni_di_base"></a>Operazioni di base
 
 Il modulo fa uso delle [tasklet](../Librerie/TaskletSystem.md), un sistema di multithreading
