@@ -328,7 +328,7 @@ una implementazione dell'interfaccia IZcdUdpCreateErrorHandler. I suoi metodi so
 #### cosa fa la tasklet che gestisce il socket in ascolto
 
 La tasklet avviata dal metodo `udp_listen` istanzia un socket UDP per la ricezione di messaggi broadcast
-(un IZcdServerDatagramSocket) associato all'interfaccia di rete e alla porta specificate. Nel caso di
+(un TaskletSystem.IServerDatagramSocket) associato all'interfaccia di rete e alla porta specificate. Nel caso di
 errore lo passa al metodo `error_handler` e poi termina.
 
 La tasklet mette il socket in attesa di un pacchetto con la chiamata `recvfrom`.

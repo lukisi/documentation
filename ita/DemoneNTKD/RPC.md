@@ -13,27 +13,64 @@ Una classe **SkeletonFactory** è usata quando si rileva una richiesta tramite u
 Interrogando questa classe si decide se bisogna passare la richiesta a uno
 (o piu d'uno) skeleton nel nodo corrente, il quale potrà richiamare metodi remoti definiti nei vari moduli.
 
-## Socket del dominio sistema
+## <a name="Trasmissioni_e_Medium"></a>Tipi di trasmissione e tipi di medium
 
 ### ZCD
 
-La nuova versione del framework ZCD prevede che la libreria di basso livello supporti oltre
-ai socket nel dominio di rete anche i socket nel dominio sistema.
+Il framework ZCD prevede due tipi di trasmissione:
 
-Cioè con le stesse modalità con cui si realizzano le comunicazioni tra distinti nodi di una rete, sia
-possibile anche realizzare comunicazioni tra processi distinti in un medesimo sistema.
+*   "datagram".  
+    Con questa modalità ogni messaggio è costituito di un solo pacchetto. Quindi non esiste
+    una connessione e la ricezione da parte del destinatario non è assicurata.  
+    Con questa modalità ogni pacchetto è di tipo "broadcast" e può essere trasmesso solo su una specifica
+    interfaccia di rete. Quindi i possibili destinatari sono quelli collegati allo stesso
+    dominio broadcast su cui è collegata questa nostra interfaccia.  
+    Con questa modalità e solo con questa si trasmettono messaggi destinati ad un set di
+    destinatari. Cioè i messaggi che prevedono un IBroadcastID.
+*   "stream".  
+    Con questa modalità ogni messaggio è incapsulato all'interno di una connessione. Quindi
+    la ricezione da parte del destinatario è assicurata. Inoltre è possibile inviare in questo
+    modo messaggi di qualsiasi dimensione.  
+    Con questa modalità la connessione si stabilisce tra il nodo corrente e un altro nodo di
+    cui si conosce un indirizzo IP con cui possiamo raggiungerlo.  
+    Con questa modalità e solo con questa si trasmettono messaggi destinati ad un unico
+    destinatario. Cioè i messaggi che prevedono un IUnicastID.
 
-...
+Inoltre il framework ZCD prevede due tipi di medium per la trasmissione:
+
+*   "net".  
+    Due nodi appartenenti ad una rete comunicano tra loro.  
+    Si realizzano queste comunicazioni usando i socket classici.  
+    Lato server questi socket sono associati (a seconda della modalità di trasmissione):
+
+    *   ad una propria interfaccia di rete e una porta UDP;
+    *   ad un proprio indirizzo IP e una porta TCP.
+
+    Lato client questi socket sono associati (a seconda della modalità di trasmissione):
+
+    *   ad una propria interfaccia di rete e una porta UDP di destinazione; in questo caso la
+        destinazione del messaggio è nel dominio broadcast a cui è collegata l'interfaccia.
+    *   ad un indirizzo IP di destinazione e una porta TCP di destinazione.
+
+*   "system".  
+    Due processi in esecuzione su uno stesso sistema comunicano tra loro.  
+    Si realizzano queste comunicazioni usando i socket unix-domain.  
+    Lato server questi socket sono associati (in entrambe le modalità di trasmissione)
+    ad un pathname su cui questo processo è in ascolto.  
+    Lato client questi socket sono associati (in entrambe le modalità di trasmissione)
+    ad un pathname di destinazione su cui un altro processo è in ascolto. Più sotto descriveremo un
+    meccanismo che consente, nel caso di modalità "datagram", di emulare un dominio broadcast
+    usando questi socket.
 
 ### ntkd
 
-L'uso di socket nel dominio sistema (unix-domain socket) anziché i normali socket nel dominio di rete
+Il supporto al medium "system" (in aggiunta al classico medium "net")
 ha lo scopo di facilitare la produzione di testsuite (per i vari moduli o per l'intero demone *ntkd*)
 in cui più processi (all'interno di un sistema) simulano più nodi (all'interno di una rete).
 
 I pathname per identificare questi socket devono essere univoci all'interno della testsuite.
 
-Per simulare un socket in ascolto per connessioni su un indirizzo IP:
+Per simulare un socket in ascolto per connessioni su un suo indirizzo IP:
 
 *   Se l'indirizzo IP `<ip>` è un linklocal, ipotiziamo che sia univoco nell'intera testsuite.  
     Allora il pathname sarà `conn_<ip>`.
@@ -55,8 +92,8 @@ Per simulare un socket in ascolto per messaggi broadcast su un NIC:
     l'identificativo del processo.  
     Allora una parte del pathname sarà `<pid>_<dev>`.
 
-Vediamo cosa significa per il framework ZCD stare in ascolto per connessioni o per messaggi e come si comporta
-in particolare nel caso di dominio di sistema.
+Vediamo cosa significa per il framework ZCD stare in ascolto nella modalità "stream" o "datagram" e come si comporta
+in particolare nel caso di medium "system".
 
 Stare in ascolto per connessioni su un indirizzo IP significa che la tasklet attende una connessione su
 un socket con porta "well-known" a quell'indirizzo. Quando arriva una connessione viene avviata una tasklet che gestisce
@@ -482,32 +519,19 @@ tasklet che sono state avviate per l'ascolto.
 
 A seconda della tasklet che riceve viene prodotta una istanza di:
 
-*   `StreamNetCallerInfo` dalla tasklet `stream_ip_listen`. Era la `TcpclientCallerInfo`.  
+*   `StreamCallerInfo` dalla tasklet `stream_net_listen` o dalla tasklet `stream_system_listen`. Era la `TcpclientCallerInfo`.  
     Questa contiene:
     *   `ISourceID sourceid`
     *   `IUnicastID unicastid`
     *   `ISrcNic src_nic`
     *   `bool wait_reply`
     *   `string listening_to_my_ip`
-*   `DatagramNetCallerInfo` dalla tasklet `datagram_nic_listen`. Era la `BroadcastCallerInfo`.  
+*   `DatagramCallerInfo` dalla tasklet `datagram_net_listen` o dalla tasklet `datagram_system_listen`. Era la `BroadcastCallerInfo`.  
     Questa contiene:
     *   `ISourceID sourceid`
     *   `IBroadcastID broadcastid`
     *   `ISrcNic src_nic`
     *   `string listening_to_my_dev`
-*   `StreamSystemCallerInfo` dalla `stream_pathname_listen`.  
-    Questa contiene:
-    *   `ISourceID sourceid`
-    *   `IUnicastID unicastid`
-    *   `ISrcNic src_nic`
-    *   `bool wait_reply`
-    *   `string listening_to_my_pseudoip`
-*   `DatagramSystemCallerInfo` dalla `datagram_pathname_listen`.  
-    Questa contiene:
-    *   `ISourceID sourceid`
-    *   `IBroadcastID broadcastid`
-    *   `ISrcNic src_nic`
-    *   `string listening_to_my_pseudodev`
 
 **FINE-TODO**
 

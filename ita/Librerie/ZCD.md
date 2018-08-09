@@ -36,6 +36,11 @@ correttamente il messaggio; poiché un messaggio trasmesso in broadcast è di pe
 Con queste necessità in mente, è stato realizzato un framework, chiamato *ZCD* o *Zero Configuration Dispatchers*,
 che permette di realizzare delle Remote Procedure Call.
 
+Sebbene l'obiettivo primario di questo framework sia il supporto dello sviluppo di Netsukuku, in questo
+documento tratteremo concetti generali. Per una panoramica su come il demone Netsukuku fa uso del framework
+rimandiamo al documento [RPC](../DemoneNTKD/RPC.md). Nel presente documento faremo anche dei rimandi puntuali a
+sezioni del documento RPC.
+
 ## <a name="Divisione_logica_3_livelli"></a>Divisione della logica in 3 livelli
 
 Il framework ZCD suddivide la logica delle operazioni in 3 livelli.
@@ -116,12 +121,13 @@ Un programma che usa il framework ZCD per prima cosa inizializza la libreria ZCD
 
 Ci sono varie modalità con le quali la libreria può mettersi in ascolto di messaggi.
 
-1.  Attendere connessioni con il protocollo TCP su una specifica porta su uno qualsiasi dei propri indirizzi IP.
-1.  Attendere messaggi con il protocollo UDP su una specifica porta e
-    trasmessi in broadcast sul [broadcast domain](https://en.wikipedia.org/wiki/Broadcast_domain)
-    collegato a una propria specifica interfaccia di rete.
-1.  Attendere connessioni su uno unix domain socket legato ad uno specifico filesystem path.
-1.  Attendere messaggi su uno unix domain socket legato ad uno specifico filesystem path.
+1.  Attendere connessioni con il protocollo TCP (su una specifica porta TCP) su un proprio indirizzo IP.
+1.  Attendere messaggi con il protocollo UDP (su una specifica porta UDP) su una propria interfaccia di
+    rete con un socket impostato a "set_broadcast". Con questa modalità di fatto si ascoltano i pacchetti
+    broadcast che transitano sul [broadcast domain](https://en.wikipedia.org/wiki/Broadcast_domain)
+    al quale è collegata quella interfaccia di rete.
+1.  Attendere connessioni su uno unix-domain socket legato ad uno specifico pathname.
+1.  Attendere messaggi su uno unix-domain socket legato ad uno specifico pathname.
 
 L'utilizzatore può inizializzare la libreria ZCD ordinandogli di mettersi in ascolto con delle tasklet in una
 o più di una di queste modalità.
@@ -131,47 +137,28 @@ sono in altri nodi della rete. Invece le successive due servono ad un processo c
 con altri processi in esecuzione sullo stesso sistema.
 
 D'ora in poi, generalizzando, parleremo di *messaggi ricevuti dalla rete*, anche per indicare i messaggi
-ricevuti su uno unix domain socket.
+ricevuti su uno unix-domain socket.
 
-Inoltre parleremo di *nodo* anche nel caso di unix domain socket, indicando in questo modo il processo
+Inoltre parleremo di *nodo* anche nel caso di unix-domain socket, indicando così in questo caso il processo
 che usa la libreria ZCD e si mette in ascolto dei messaggi.
 
-#### Specifico di ntkd: Nomenclatura dei path per unix socket
-
-Il demone *ntkd* lato server avrà questi tipi di connessioni:
-
-1.  Sta in ascolto su tutti i propri indirizzi IP con il protocollo TCP. Attraverso questa
-    modalità si ricevono e si gestiscono sia le connessioni ai propri indirizzi IP linklocal
-    che sono fatte da un nodo diretto vicino; sia le connessioni ai propri indirizzi IP routable
-    che partono da un qualsiasi nodo in un proprio g-nodo.
-1.  Sta in ascolto su una propria interfaccia di rete con il protocollo UDP per pacchetti broadcast.
-    Attraverso questa modalità si ricevono e si gestiscono i messaggi broadcast che sono trasmessi
-    da un nodo diretto vicino.
-
-Le stesse tipologie di connessioni vengono simulate nei test che saranno realizzati con alcuni unix socket.
-
-1.  Attende connessioni su uno unix domain socket legato ad uno specifico filesystem path.  
-    Si usa in 2 modi:  
-    1.  Alcuni unix socket sono legati a path con nome `xxx_n_conn`. Ognuno di questi path rappresenta un
-        indirizzo linklocal che questo nodo ha assegnato ad una sua interfaccia di rete.  
-    1.  Alcuni unix socket sono legati a path con nome `xxx_r_conn`.  Ognuno di questi path rappresenta un
-        indirizzo proprio di questo nodo che è routable all'interno di un g-nodo.
-1.  Attende messaggi su uno unix domain socket legato ad uno specifico filesystem path.  
-    In questo caso alcuni unix socket sono legati a path con nome `xxx_n_broad`. Ognuno di questi path
-    rappresenta una interfaccia di rete del nodo.
+Rimandiamo a [RPC](../DemoneNTKD/RPC.md#Trasmissioni_e_Medium) per approfondire come il demone *ntkd*
+usa queste modalità di ascolto.
 
 ## <a name="Basso_livello_lato_client"></a>Chiamate a metodi remoti al basso livello (lato client)
 
 Le modalità sono:
 
-*   **TCPStream**: Unicast. ...
-    *   *Neighborhood*: ...
-    *   *Routed*: ...
-*   **UDPPacket**: Broadcast. ...
-*   **UnixDomainStream**: Unicast. ...
-    *   *Neighborhood*: ...
-    *   *Routed*: ...
-*   **UnixDomainPacket**: Broadcast. ...
+*   **Stream**: Unicast. Con o senza `wait_reply`. Può essere per un vicino o per un nodo nel g-nodo comune di livello *i*.
+    *   Nel dominio net si usa un indirizzo IP.
+    *   Nel dominio sistema si usa un pathname che include:
+        *   `pseudoip`. Se è un linklocal si assume sia univoco nell'ambito del contesto del sistema.
+        *   Se è routabile, il `netid` del g-nodo comune, all'interno del quale `pseudoip` si assume sia univoco.
+*   **Datagram**: Broadcast. Con o senza `ACK`. Si specifica un proprio NIC.
+    *   Nel dominio net si usa un NIC reale.
+    *   Nel dominio sistema si usa un pathname che include:
+        *   `pid`. L'id del processo. Esso identifica univocamente il processo nell'ambito del sistema.
+        *   `pseudonic`. Si assume sia univoco nell'ambito del processo.
 
 Il protocollo da parte del client prevede:
 
