@@ -19,14 +19,6 @@ Interrogando questa classe si decide se bisogna passare la richiesta a uno
 
 Il framework ZCD prevede due tipi di trasmissione:
 
-*   "datagram".  
-    Con questa modalità ogni messaggio è costituito di un solo pacchetto. Quindi non esiste
-    una connessione e la ricezione da parte del destinatario non è assicurata.  
-    Con questa modalità ogni pacchetto è di tipo "broadcast" e può essere trasmesso solo su una specifica
-    interfaccia di rete. Quindi i possibili destinatari sono quelli collegati allo stesso
-    dominio broadcast su cui è collegata questa nostra interfaccia.  
-    Con questa modalità e solo con questa si trasmettono messaggi destinati ad un set di
-    destinatari. Cioè i messaggi che prevedono un IBroadcastID.
 *   "stream".  
     Con questa modalità ogni messaggio è incapsulato all'interno di una connessione. Quindi
     la ricezione da parte del destinatario è assicurata. Inoltre è possibile inviare in questo
@@ -35,6 +27,66 @@ Il framework ZCD prevede due tipi di trasmissione:
     cui si conosce un indirizzo IP con cui possiamo raggiungerlo.  
     Con questa modalità e solo con questa si trasmettono messaggi destinati ad un unico
     destinatario. Cioè i messaggi che prevedono un IUnicastID.
+*   "datagram".  
+    Con questa modalità ogni messaggio è costituito di un solo pacchetto. Quindi non esiste
+    una connessione e la ricezione da parte del destinatario non è assicurata.  
+    Con questa modalità ogni pacchetto è di tipo "broadcast" e può essere trasmesso solo su una specifica
+    interfaccia di rete. Quindi i possibili destinatari sono quelli collegati allo stesso
+    dominio broadcast su cui è collegata questa nostra interfaccia.  
+    Con questa modalità e solo con questa si trasmettono messaggi destinati ad un set di
+    destinatari. Cioè i messaggi che prevedono un IBroadcastID.
+
+#### Modalità stream
+
+Lato server:  
+Una tasklet attende una connessione su un socket associato ad un proprio indirizzo IP tramite il quale
+il mittente lo può identificare. Quando arriva una connessione viene avviata una tasklet che gestisce
+quella specifica connessione, mentre la tasklet originale torna ad attendere. La tasklet che gestisce la
+connessione può leggere e scrivere sul socket connesso.
+
+Lato client:  
+Il mittente del messaggio avvia una connessione con un suo socket (che non ha bisogno di essere identificabile
+da altri) verso il socket del destinatario che lui sa identificare. Stabilita
+la connessione il mittente può leggere e scrivere sul socket connesso.
+
+La connessione termina, per convenzione, quando il mittente la chiude.
+
+#### Modalità datagram
+
+Lato server:  
+Una tasklet ascolta i pacchetti broadcast che transitano
+su un dominio broadcast sul quale è "collegata" una sua interfaccia di rete. In questo caso
+è il dominio broadcast che in un certo senso può essere identificato dal
+mittente, nel senso che anche il mittente è collegato con una sua interfaccia di rete allo stesso
+dominio. Quando un pacchetto transita in quel dominio il destinatario lo rileva.
+
+Lato client:  
+Il mittente del messaggio tramite una propria interfaccia di rete trasmette
+un pacchetto broadcast sul dominio broadcast a cui sa che è collegata una certa interfaccia
+di rete del destinatario (o dei destinatari).
+
+In questo caso non c'è una connessione: il mittente non ha la certezza che il pacchetto venga
+rilevato dai destinatari. Ma può richiedere che questi notifichino la ricezione con un pacchetto
+di "ACK". In questo caso anche il mittente può essere raggiungibile, per il fatto che ha una interfaccia
+di rete collegata allo stesso dominio broadcast in cui il destinatario ha rilevato il pacchetto.
+Quindi anche il mittente è a sua volta in ascolto con una tasklet.
+
+Quindi la tasklet in ascolto dei pacchetti broadcast ha un duplice compito: i pacchetti che rileva possono
+essere "REQUEST" o "ACK".
+
+Quando rileva un pacchetto viene avviata una tasklet che gestisce il pacchetto rilevato, mentre la tasklet originale
+torna ad ascoltare.
+
+*   Se il pachetto è un "REQUEST":
+    *   Se richiede un ACK:
+        *   Avvia una tasklet che trasmetterà un relativo pacchetto "ACK" sulla stessa interfaccia di rete.
+    *   Passa ad un *delegato di request* le informazioni estrapolate dal pacchetto "REQUEST". Questi
+        restituirà, se il caso, un *dispatcher* da eseguire. Dopo averlo eseguito la tasklet potrà terminare.
+*   Se il pachetto è un "ACK":
+    *   Passa ad un *delegato di ack* le informazioni estrapolate dal pacchetto "ACK". Questi
+        non restituirà nulla: la tasklet potrà terminare.
+
+* * *
 
 Inoltre il framework ZCD prevede due tipi di medium per la trasmissione:
 
@@ -43,14 +95,14 @@ Inoltre il framework ZCD prevede due tipi di medium per la trasmissione:
     Si realizzano queste comunicazioni usando i socket classici.  
     Lato server questi socket sono associati (a seconda della modalità di trasmissione):
 
-    *   ad una propria interfaccia di rete e una porta UDP;
     *   ad un proprio indirizzo IP e una porta TCP.
+    *   ad una propria interfaccia di rete e una porta UDP;
 
     Lato client questi socket sono associati (a seconda della modalità di trasmissione):
 
+    *   ad un indirizzo IP di destinazione e una porta TCP di destinazione.
     *   ad una propria interfaccia di rete e una porta UDP di destinazione; in questo caso la
         destinazione del messaggio è nel dominio broadcast a cui è collegata l'interfaccia.
-    *   ad un indirizzo IP di destinazione e una porta TCP di destinazione.
 
 *   "system".  
     Due processi in esecuzione su uno stesso sistema comunicano tra loro.  
@@ -115,23 +167,12 @@ la connessione il client può leggere e scrivere sul socket connesso.
 
 Stare in ascolto per messaggi broadcast su un nic significa che la tasklet ascolta i pacchetti che transitano
 su un dominio broadcast sul quale è "collegata" una sua interfaccia di rete. Questo si fa con un socket
-impostato a "set_broadcast" e associato ad un certo nic. I pacchetti che rileva possono essere "REQUEST" o "ACK".
-Quando rileva un pacchetto viene avviata una tasklet che gestisce il pacchetto rilevato, mentre la tasklet originale
-torna ad ascoltare.  
-Se il pachetto è un "REQUEST" (e richiede un ack) avvia una tasklet che a breve trasmetterà un relativo
-pacchetto "ACK" sulla stessa interfaccia di rete. Per la verità alcuni (4) a intervalli variabili. Sotto descriveremo
-come si trasmette.  
-Poi costruisce un `zcd.UdpCallerInfo` e passa al delegato `IZcdUdpRequestMessageDelegate del_req` le informazioni
-estrapolate dal pacchetto. Questi restituirà, se il caso, un `IZcdDispatcher` da eseguire. Dopo averlo
-eseguito la tasklet potrà terminare.  
-Se il pacchetto è un "ACK" passa al delegato `IZcdUdpServiceMessageDelegate del_ser` le informazioni
-estrapolate dal pacchetto. Questi non restituirà nulla: la tasklet potrà terminare.
+impostato a "set_broadcast" e associato ad un certo nic.
 
-Trasmettere un pacchetto (che contenga un "REQUEST" o un "ACK) tramite una propria interfaccia di rete si fa con
+Trasmettere un pacchetto tramite una propria interfaccia di rete si fa con
 un socket impostato a "set_broadcast" e associato ad un certo nic. Il risultato è che quel pacchetto 
 transita sul dominio broadcast sul quale è "collegato" quel nic. Quindi viene rilevato da qualsiasi altro
-nic collegato allo stesso dominio broadcast. Di norma si tratta di altri nic di altri nodi,
-ma teoricamente anche altri nic dello stesso nodo possono essere collegati allo stesso dominio broadcast.
+nic collegato allo stesso dominio broadcast.
 
 Per simulare queste operazioni in una testsuite in cui più processi (all'interno di un sistema) simulano più
 nodi (all'interno di una rete) occorre attivare anche altri processi "domain" che emulano un dominio di broadcast.
