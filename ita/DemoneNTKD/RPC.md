@@ -1,19 +1,25 @@
 # ntkd - RPC
 
+1.  [StubFactory](#StubFactory)
+1.  [SkeletonFactory](#SkeletonFactory)
+1.  [Tipi di trasmissione](#Trasmissioni)
+1.  [Tipi di medium](#Medium)
+1.  [Identità multiple in un sistema](#Identita_multiple_in_un_sistema)
+
 Il progetto *ntkd* usa il framework ZCD per realizzare le comunicazioni tra nodi.
 
-## StubFactory
+## <a name="StubFactory"></a>StubFactory
 
 Una classe **StubFactory** è usata per produrre gli stub che i vari moduli dell'applicazione usano per
 comunicare con altri nodi (diretti vicini o specifici nodi all'interno di un comune g-nodo).
 
-## SkeletonFactory
+## <a name="SkeletonFactory"></a>SkeletonFactory
 
 Una classe **SkeletonFactory** è usata quando si rileva una richiesta tramite una interfaccia di rete.
 Interrogando questa classe si decide se bisogna passare la richiesta a uno
 (o piu d'uno) skeleton nel nodo corrente, il quale potrà richiamare metodi remoti definiti nei vari moduli.
 
-## <a name="Trasmissioni_e_Medium"></a>Tipi di trasmissione e tipi di medium
+## <a name="Trasmissioni"></a>Tipi di trasmissione
 
 ### ZCD
 
@@ -49,7 +55,15 @@ Il mittente del messaggio avvia una connessione con un suo socket (che non ha bi
 da altri) verso il socket del destinatario che lui sa identificare. Stabilita
 la connessione il mittente può leggere e scrivere sul socket connesso.
 
-La connessione termina, per convenzione, quando il mittente la chiude.
+Il mittente scrive sul socket connesso la *richiesta*. Il destinatario legge la richiesta. Poi passa ad un *delegato*
+le informazioni estrapolate dalla richiesta. Questi restituirà, se il caso, un *dispatcher* da eseguire. La sua
+esecuzione produrrà una *risposta*.
+
+Se il messaggio di richiesta prevedeva l'attesa della risposta (`wait_reply=true`) il destinatario
+scrive sul socket connesso la risposta. Il mittente legge la risposta.
+
+La connessione termina, per convenzione, quando il mittente la chiude. A quel punto la tasklet che gestisce
+quella specifica connessione sul destinatario potrà terminare.
 
 #### Modalità datagram
 
@@ -86,9 +100,33 @@ torna ad ascoltare.
     *   Passa ad un *delegato di ack* le informazioni estrapolate dal pacchetto "ACK". Questi
         non restituirà nulla: la tasklet potrà terminare.
 
-* * *
+### ntkd
 
-Inoltre il framework ZCD prevede due tipi di medium per la trasmissione:
+Nel demone *ntkd* la modalità unicast-stream è usata per invocare un metodo remoto (cioè inviare
+un messaggio) e ottenere una risposta precisa in queste circostanze:
+
+*   TODO
+
+Nel demone *ntkd* la modalità unicast-stream è usata per invocare un metodo remoto (cioè inviare
+un messaggio) e solo accertarsi della ricezione (`wait_reply=false`) in queste circostanze:
+
+*   TODO
+
+Nel demone *ntkd* la modalità broadcast-datagram è usata per inviare
+un messaggio senza pretendere un puntuale risultato in queste circostanze:
+
+*   TODO
+
+Nel demone *ntkd* la modalità unicast-stream è usata come "rafforzativo" (cioè per ribadire un messaggio
+broadcast quando ci si accorge che questo non è stato recepito) in queste circostanze:
+
+*   TODO
+
+## <a name="Medium"></a>Tipi di medium
+
+### ZCD
+
+Il framework ZCD prevede due tipi di medium per la trasmissione:
 
 *   "net".  
     Due nodi appartenenti ad una rete comunicano tra loro.  
@@ -120,32 +158,11 @@ Il supporto al medium "system" (in aggiunta al classico medium "net")
 ha lo scopo di facilitare la produzione di testsuite (per i vari moduli o per l'intero demone *ntkd*)
 in cui più processi (all'interno di un sistema) simulano più nodi (all'interno di una rete).
 
-I pathname per identificare questi socket devono essere univoci all'interno della testsuite.
+I pathname per identificare questi socket devono essere univoci all'interno della testsuite.  
+Vediamo dunque come opera il framework ZCD nella modalità "stream" e nella modalità "datagram" e come
+si ottiene nel caso di medium "system" un risultato analogo a quello con il medium "net".
 
-Per simulare un socket in ascolto per connessioni su un suo indirizzo IP:
-
-*   Se l'indirizzo IP `<ip>` è un linklocal, ipotiziamo che sia univoco nell'intera testsuite.  
-    Allora il pathname sarà `conn_<ip>`.
-*   Se l'indirizzo IP `<ip>` è routabile, potremmo avere una testsuite in cui si prevedono diverse
-    reti che vengono in contatto fra di loro. Oppure all'interno della stessa rete potremmo
-    avere indirizzi IP interni ad un g-nodo, che sono univoci solo dentro il g-nodo. In entrambi i
-    casi l'indirizzo potrebbe essere non univoco nell'intera testsuite.
-
-    *   Se l'indirizzo IP è globale (o anonimizzante) sia `<netid>` l'identificativo della rete.
-    *   Se è interno ad un g-nodo di livello *i* sia `<netid>` l'identificativo del g-nodo di livello *i*.
-
-    In entrambi i casi assumiamo come requisito che tali identificativi non cambiano nel tempo di vita
-    della testsuite.  
-    Allora il pathname sarà `conn_<netid>_<ip>`.
-    
-Per simulare un socket in ascolto per messaggi broadcast su un NIC:
-
-*   Il nic-name `<dev>` assumiamo che sia univoco solo nel nodo, cioè nel processo. Sia `<pid>`
-    l'identificativo del processo.  
-    Allora una parte del pathname sarà `<pid>_<dev>`.
-
-Vediamo cosa significa per il framework ZCD stare in ascolto nella modalità "stream" o "datagram" e come si comporta
-in particolare nel caso di medium "system".
+#### Emulazione modalità stream
 
 Stare in ascolto per connessioni su un indirizzo IP significa che la tasklet attende una connessione su
 un socket con porta "well-known" a quell'indirizzo. Quando arriva una connessione viene avviata una tasklet che gestisce
@@ -165,6 +182,24 @@ Quindi trasmettere per connessioni su un pathname è del tutto simile. Viene ten
 di un socket unnamed verso un socket con quel pathname. Stabilita
 la connessione il client può leggere e scrivere sul socket connesso.
 
+Per simulare un socket in ascolto per connessioni su un suo indirizzo IP:
+
+*   Se l'indirizzo IP `<ip>` è un linklocal, ipotiziamo che sia univoco nell'intera testsuite.  
+    Allora il pathname sarà `conn_<ip>`.
+*   Se l'indirizzo IP `<ip>` è routabile, potremmo avere una testsuite in cui si prevedono diverse
+    reti che vengono in contatto fra di loro. Oppure all'interno della stessa rete potremmo
+    avere indirizzi IP interni ad un g-nodo, che sono univoci solo dentro il g-nodo. In entrambi i
+    casi l'indirizzo potrebbe essere non univoco nell'intera testsuite.
+
+    *   Se l'indirizzo IP è globale (o anonimizzante) sia `<netid>` l'identificativo della rete.
+    *   Se è interno ad un g-nodo di livello *i* sia `<netid>` l'identificativo del g-nodo di livello *i*.
+
+    In entrambi i casi assumiamo come requisito che tali identificativi non cambiano nel tempo di vita
+    della testsuite.  
+    Allora il pathname sarà `conn_<netid>_<ip>`.
+    
+#### Emulazione modalità datagram
+
 Stare in ascolto per messaggi broadcast su un nic significa che la tasklet ascolta i pacchetti che transitano
 su un dominio broadcast sul quale è "collegata" una sua interfaccia di rete. Questo si fa con un socket
 impostato a "set_broadcast" e associato ad un certo nic.
@@ -173,6 +208,12 @@ Trasmettere un pacchetto tramite una propria interfaccia di rete si fa con
 un socket impostato a "set_broadcast" e associato ad un certo nic. Il risultato è che quel pacchetto 
 transita sul dominio broadcast sul quale è "collegato" quel nic. Quindi viene rilevato da qualsiasi altro
 nic collegato allo stesso dominio broadcast.
+
+Per simulare un socket che opera (in ascolto o in trasmissione) con messaggi broadcast su un NIC:
+
+*   Il nic-name `<dev>` assumiamo che sia univoco solo nel nodo, cioè nel processo. Sia `<pid>`
+    l'identificativo del processo.  
+    Allora una parte del pathname sarà `<pid>_<dev>`.
 
 Per simulare queste operazioni in una testsuite in cui più processi (all'interno di un sistema) simulano più
 nodi (all'interno di una rete) occorre attivare anche altri processi "domain" che emulano un dominio di broadcast.
@@ -220,6 +261,14 @@ Allora cerca nella sua lista se c'è un pathname diverso da `1234_eth0`. E trova
 fa da proxy: avviando una nuova tasklet per ogni pathname diverso da `1234_eth0` trovato, trasmette lo
 stesso pacchetto scrivendolo su un socket unix-domain con il pathname `recv_<pathname>`. Nel nostro caso
 lo scrive su `recv_6543_eth0`. Quindi il processo che simula "beta" lo riceve.
+
+Oppure, invece di ispezionare il PID dei processi e comunicare con il processo "domain" in seguito
+al suo avvio, si potrebbe aggiungere un parametro al processo "qspntester" per indicare il valore da assegnare
+al segnaposto `<pid>`. Ad esempio `qspntester -p 1234 -I eth0`.  
+A questo punto banalmente il processo "domain" potrà sapere fin dal suo avvio su quali pathname stare in
+ascolto. Ad esempio `domain -i 1234_eth0 -i 6543_eth0`.
+
+#### Emulazione radio
 
 Supponiamo di voler emulare un dominio radio. Questi hanno una particolare caratteristica: supponiamo che il
 nodo beta ha un nic radio collegato allo stesso dominio broadcast (stesso canale, stesso SSID) a
