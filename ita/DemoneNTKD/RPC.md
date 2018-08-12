@@ -21,86 +21,11 @@ Interrogando questa classe si decide se bisogna passare la richiesta a uno
 
 ## <a name="Trasmissioni"></a>Tipi di trasmissione
 
-### ZCD
+Abbiamo analizzato nel documento [ZCD](../Librerie/ZCD.md#Trasmissioni) che il framework ZCD prevede due tipi
+di trasmissione:
 
-Il framework ZCD prevede due tipi di trasmissione:
-
-*   "stream".  
-    Con questa modalità ogni messaggio è incapsulato all'interno di una connessione. Quindi
-    la ricezione da parte del destinatario è assicurata. Inoltre è possibile inviare in questo
-    modo messaggi di qualsiasi dimensione.  
-    Con questa modalità la connessione si stabilisce tra il nodo corrente e un altro nodo di
-    cui si conosce un indirizzo IP con cui possiamo raggiungerlo.  
-    Con questa modalità e solo con questa si trasmettono messaggi destinati ad un unico
-    destinatario. Cioè i messaggi che prevedono un IUnicastID.
-*   "datagram".  
-    Con questa modalità ogni messaggio è costituito di un solo pacchetto. Quindi non esiste
-    una connessione e la ricezione da parte del destinatario non è assicurata.  
-    Con questa modalità ogni pacchetto è di tipo "broadcast" e può essere trasmesso solo su una specifica
-    interfaccia di rete. Quindi i possibili destinatari sono quelli collegati allo stesso
-    dominio broadcast su cui è collegata questa nostra interfaccia.  
-    Con questa modalità e solo con questa si trasmettono messaggi destinati ad un set di
-    destinatari. Cioè i messaggi che prevedono un IBroadcastID.
-
-#### Modalità stream
-
-Lato server:  
-Una tasklet attende una connessione su un socket associato ad un proprio indirizzo IP tramite il quale
-il mittente lo può identificare. Quando arriva una connessione viene avviata una tasklet che gestisce
-quella specifica connessione, mentre la tasklet originale torna ad attendere. La tasklet che gestisce la
-connessione può leggere e scrivere sul socket connesso.
-
-Lato client:  
-Il mittente del messaggio avvia una connessione con un suo socket (che non ha bisogno di essere identificabile
-da altri) verso il socket del destinatario che lui sa identificare. Stabilita
-la connessione il mittente può leggere e scrivere sul socket connesso.
-
-Il mittente scrive sul socket connesso la *richiesta*. Il destinatario legge la richiesta. Poi passa ad un *delegato*
-le informazioni estrapolate dalla richiesta. Questi restituirà, se il caso, un *dispatcher* da eseguire. La sua
-esecuzione produrrà una *risposta*.
-
-Se il messaggio di richiesta prevedeva l'attesa della risposta (`wait_reply=true`) il destinatario
-scrive sul socket connesso la risposta. Il mittente legge la risposta.
-
-La connessione termina, per convenzione, quando il mittente la chiude. A quel punto la tasklet che gestisce
-quella specifica connessione sul destinatario potrà terminare.
-
-#### Modalità datagram
-
-Lato server:  
-Una tasklet ascolta i pacchetti broadcast che transitano
-su un dominio broadcast sul quale è "collegata" una sua interfaccia di rete. In questo caso
-è il dominio broadcast che in un certo senso può essere identificato dal
-mittente, nel senso che anche il mittente è collegato con una sua interfaccia di rete allo stesso
-dominio. Quando un pacchetto transita in quel dominio il destinatario lo rileva.
-
-Lato client:  
-Il mittente del messaggio tramite una propria interfaccia di rete trasmette
-un pacchetto broadcast sul dominio broadcast a cui sa che è collegata una certa interfaccia
-di rete del destinatario (o dei destinatari).
-
-In questo caso non c'è una connessione: il mittente non ha la certezza che il pacchetto venga
-rilevato dai destinatari. Ma può richiedere che questi notifichino la ricezione con un pacchetto
-di "ACK". In questo caso anche il mittente può essere raggiungibile, per il fatto che ha una interfaccia
-di rete collegata allo stesso dominio broadcast in cui il destinatario ha rilevato il pacchetto.
-Quindi anche il mittente è a sua volta in ascolto con una tasklet.
-
-Quindi la tasklet in ascolto dei pacchetti broadcast ha un duplice compito: i pacchetti che rileva possono
-essere "REQUEST" o "ACK".
-
-Quando rileva un pacchetto viene avviata una tasklet che gestisce il pacchetto rilevato, mentre la tasklet originale
-torna ad ascoltare.
-
-*   Se il pachetto è un "REQUEST":
-    *   Se richiede un ACK:
-        *   Avvia una tasklet che trasmetterà un relativo pacchetto "ACK" sulla stessa interfaccia di rete.
-    *   Passa ad un *delegato di request* le informazioni estrapolate dal pacchetto "REQUEST". Questi
-        restituirà, se il caso, un *dispatcher* da eseguire. Dopo averlo eseguito la tasklet potrà terminare.
-*   Se il pachetto è un "ACK":
-    *   Passa ad un *delegato di ack* le informazioni estrapolate dal pacchetto "ACK". Questi
-        non restituirà nulla: la tasklet potrà terminare.
-
-### ntkd
+*   "stream", per i messaggi unicast.
+*   "datagram", per i messaggi broadcast.
 
 Nel demone *ntkd* la modalità unicast-stream è usata per invocare un metodo remoto (cioè inviare
 un messaggio) e ottenere una risposta precisa in queste circostanze:
@@ -124,41 +49,19 @@ broadcast quando ci si accorge che questo non è stato recepito) in queste circo
 
 ## <a name="Medium"></a>Tipi di medium
 
-### ZCD
+Abbiamo analizzato nel documento [ZCD](../Librerie/ZCD.md#Medium) che il framework ZCD prevede due tipi
+di medium per la trasmissione:
 
-Il framework ZCD prevede due tipi di medium per la trasmissione:
+*   "net", per comunicazioni tra nodi di una rete.
+*   "system", per comunicazioni tra processi di un sistema.
 
-*   "net".  
-    Due nodi appartenenti ad una rete comunicano tra loro.  
-    Si realizzano queste comunicazioni usando i socket classici.  
-    Lato server questi socket sono associati (a seconda della modalità di trasmissione):
-
-    *   ad un proprio indirizzo IP e una porta TCP.
-    *   ad una propria interfaccia di rete e una porta UDP;
-
-    Lato client questi socket sono associati (a seconda della modalità di trasmissione):
-
-    *   ad un indirizzo IP di destinazione e una porta TCP di destinazione.
-    *   ad una propria interfaccia di rete e una porta UDP di destinazione; in questo caso la
-        destinazione del messaggio è nel dominio broadcast a cui è collegata l'interfaccia.
-
-*   "system".  
-    Due processi in esecuzione su uno stesso sistema comunicano tra loro.  
-    Si realizzano queste comunicazioni usando i socket unix-domain.  
-    Lato server questi socket sono associati (in entrambe le modalità di trasmissione)
-    ad un pathname su cui questo processo è in ascolto.  
-    Lato client questi socket sono associati (in entrambe le modalità di trasmissione)
-    ad un pathname di destinazione su cui un altro processo è in ascolto. Più sotto descriveremo un
-    meccanismo che consente, nel caso di modalità "datagram", di emulare un dominio broadcast
-    usando questi socket.
-
-### ntkd
-
-Il supporto al medium "system" (in aggiunta al classico medium "net")
+Per quanto concerne il demone *ntkd*, il supporto al medium "system" (in aggiunta al classico medium "net")
 ha lo scopo di facilitare la produzione di testsuite (per i vari moduli o per l'intero demone *ntkd*)
 in cui più processi (all'interno di un sistema) simulano più nodi (all'interno di una rete).
 
-I pathname per identificare questi socket devono essere univoci all'interno della testsuite.  
+Per trasmettere un messaggio da un processo ad un preciso altro processo si usano i socket unix-domain
+associati ad un pathname. I pathname per identificare questi socket devono essere univoci all'interno della testsuite.
+
 Vediamo dunque come opera il framework ZCD nella modalità "stream" e nella modalità "datagram" e come
 si ottiene nel caso di medium "system" un risultato analogo a quello con il medium "net".
 

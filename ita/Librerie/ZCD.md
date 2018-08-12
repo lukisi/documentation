@@ -3,6 +3,8 @@
 1.  [Obiettivo](#Obiettivo)
 1.  [Divisione della logica in 3 livelli](#Divisione_logica_3_livelli)
 1.  [Deploy e dipendenze dei 3 livelli](#Deploy_e_dipendenze)
+1.  [Tipi di trasmissione](#Trasmissioni)
+1.  [Tipi di medium](#Medium)
 1.  [Interazioni dei 3 livelli](#Interazioni_dei_livelli)
     1.  [Interfacce tra i livelli](#Interfacce_tra_livelli)
         1.  [Interfaccia tra MOD-RPC e APP come realizzata con "rpcdesign"](#Interfaccia_modrpc_app_con_rpcdesgin)
@@ -38,8 +40,8 @@ che permette di realizzare delle Remote Procedure Call.
 
 Sebbene l'obiettivo primario di questo framework sia il supporto dello sviluppo di Netsukuku, in questo
 documento tratteremo concetti generali. Per una panoramica su come il demone Netsukuku fa uso del framework
-rimandiamo al documento [RPC](../DemoneNTKD/RPC.md). Nel presente documento faremo anche dei rimandi puntuali a
-sezioni del documento RPC.
+rimandiamo al documento [ntkd-RPC](../DemoneNTKD/RPC.md). Nel presente documento faremo anche dei rimandi puntuali a
+sezioni del documento ntkd-RPC.
 
 ## <a name="Divisione_logica_3_livelli"></a>Divisione della logica in 3 livelli
 
@@ -115,34 +117,160 @@ al metodo remoto. Ad esempio, la libreria MOD-RPC può scegliere di usare la ser
 GObject come viene fornita dalla libreria JsonGlib senza per questo dover assumere che anche la libreria
 di basso livello ZCD ne faccia uso.
 
+## <a name="Trasmissioni"></a>Tipi di trasmissione
+
+Il framework ZCD prevede due tipi di trasmissione:
+
+*   "stream".  
+    Con questa modalità ogni messaggio è incapsulato all'interno di una connessione. Quindi
+    la ricezione da parte del destinatario è assicurata. Inoltre è possibile inviare in questo
+    modo messaggi di qualsiasi dimensione.  
+    Con questa modalità la connessione si stabilisce tra il nodo corrente e un altro nodo di
+    cui si conosce un indirizzo IP con cui possiamo raggiungerlo.  
+    Con questa modalità e solo con questa si trasmettono messaggi destinati ad un unico
+    destinatario.
+*   "datagram".  
+    Con questa modalità ogni messaggio è costituito di un solo pacchetto. Quindi non esiste
+    una connessione e la ricezione da parte del destinatario non è assicurata.  
+    Con questa modalità ogni pacchetto è di tipo "broadcast" e può essere trasmesso solo su una specifica
+    interfaccia di rete. Quindi i possibili destinatari sono quelli collegati allo stesso
+    dominio broadcast su cui è collegata questa nostra interfaccia.  
+    Con questa modalità e solo con questa si trasmettono messaggi destinati ad un set di
+    destinatari.
+
+#### Modalità stream
+
+Lato server:  
+Una tasklet attende una connessione su un socket associato ad un proprio indirizzo IP tramite il quale
+il mittente lo può identificare. Quando arriva una connessione viene avviata una tasklet che gestisce
+quella specifica connessione, mentre la tasklet originale torna ad attendere. La tasklet che gestisce la
+connessione può leggere e scrivere sul socket connesso.
+
+Lato client:  
+Il mittente del messaggio avvia una connessione con un suo socket (che non ha bisogno di essere identificabile
+da altri) verso il socket del destinatario che lui sa identificare. Stabilita
+la connessione il mittente può leggere e scrivere sul socket connesso.
+
+Il mittente scrive sul socket connesso la *richiesta*. Il destinatario legge la richiesta. Poi passa ad un *delegato*
+le informazioni estrapolate dalla richiesta. Questi restituirà, se il caso, un *dispatcher* da eseguire. La sua
+esecuzione produrrà una *risposta*.
+
+Se il messaggio di richiesta prevedeva l'attesa della risposta (`wait_reply=true`) il destinatario
+scrive sul socket connesso la risposta. Il mittente legge la risposta.
+
+La connessione termina, per convenzione, quando il mittente la chiude. A quel punto la tasklet che gestisce
+quella specifica connessione sul destinatario potrà terminare.
+
+#### Modalità datagram
+
+Lato server:  
+Una tasklet ascolta i pacchetti broadcast che transitano
+su un dominio broadcast sul quale è "collegata" una sua interfaccia di rete. In questo caso
+è il dominio broadcast che in un certo senso può essere identificato dal
+mittente, nel senso che anche il mittente è collegato con una sua interfaccia di rete allo stesso
+dominio. Quando un pacchetto transita in quel dominio il destinatario lo rileva.
+
+Lato client:  
+Il mittente del messaggio tramite una propria interfaccia di rete trasmette
+un pacchetto broadcast sul dominio broadcast a cui sa che è collegata una certa interfaccia
+di rete del destinatario (o dei destinatari).
+
+In questo caso non c'è una connessione: il mittente non ha la certezza che il pacchetto venga
+rilevato dai destinatari. Ma può richiedere che questi notifichino la ricezione con un pacchetto
+di "ACK". In questo caso anche il mittente può essere raggiungibile, per il fatto che ha una interfaccia
+di rete collegata allo stesso dominio broadcast in cui il destinatario ha rilevato il pacchetto.
+Quindi anche il mittente è a sua volta in ascolto con una tasklet.
+
+Quindi la tasklet in ascolto dei pacchetti broadcast ha un duplice compito: i pacchetti che rileva possono
+essere "REQUEST" o "ACK".
+
+Quando rileva un pacchetto viene avviata una tasklet che gestisce il pacchetto rilevato, mentre la tasklet originale
+torna ad ascoltare.
+
+*   Se il pachetto è un "REQUEST":
+    *   Se richiede un ACK:
+        *   Avvia una tasklet che trasmetterà un relativo pacchetto "ACK" sulla stessa interfaccia di rete.
+    *   Passa ad un *delegato di request* le informazioni estrapolate dal pacchetto "REQUEST". Questi
+        restituirà, se il caso, un *dispatcher* da eseguire. Dopo averlo eseguito la tasklet potrà terminare.
+*   Se il pachetto è un "ACK":
+    *   Passa ad un *delegato di ack* le informazioni estrapolate dal pacchetto "ACK". Questi
+        non restituirà nulla: la tasklet potrà terminare.
+
+## <a name="Medium"></a>Tipi di medium
+
+Il framework ZCD prevede due tipi di medium per la trasmissione:
+
+*   "net".  
+    Due nodi appartenenti ad una rete comunicano tra loro.  
+    Si realizzano queste comunicazioni usando i socket classici.  
+    Lato server questi socket sono associati (a seconda della modalità di trasmissione):
+
+    *   ad un proprio indirizzo IP e una porta TCP.
+    *   ad una propria interfaccia di rete e una porta UDP;
+
+    Lato client questi socket sono associati (a seconda della modalità di trasmissione):
+
+    *   ad un indirizzo IP di destinazione e una porta TCP di destinazione.
+    *   ad una propria interfaccia di rete e una porta UDP di destinazione; in questo caso la
+        destinazione del messaggio è nel dominio broadcast a cui è collegata l'interfaccia.
+
+*   "system".  
+    Due processi in esecuzione su uno stesso sistema comunicano tra loro.  
+    Si realizzano queste comunicazioni usando i socket unix-domain.  
+    Lato server questi socket sono associati (in entrambe le modalità di trasmissione)
+    ad un pathname su cui questo processo è in ascolto.  
+    Lato client questi socket sono associati (in entrambe le modalità di trasmissione)
+    ad un pathname di destinazione su cui un altro processo è in ascolto.
+
+#### Medium net
+
+Il medium "net" è il primario obiettivo del framework.
+
+#### Medium system
+
+Il supporto al medium "system" ha principalmente lo scopo di facilitare la produzione di testsuite
+in cui più processi (all'interno di un sistema) simulano più nodi (all'interno di una rete).
+
+D'ora in poi, generalizzando, parleremo di *messaggi ricevuti dalla rete*, anche per indicare i messaggi
+ricevuti su un socket unix-domain.
+
+Inoltre parleremo di *nodo* anche nel caso di socket unix-domain, indicando così in questo caso il processo
+che usa la libreria ZCD e si mette in ascolto dei messaggi.
+
+Nel documento ntkd-RPC descriveremo anche un
+meccanismo che consente, nel caso di modalità "datagram", di emulare un dominio broadcast
+usando questi socket.
+
 ## <a name="Basso_livello_lato_server"></a>Tasklet in ascolto al basso livello (lato server)
 
 Un programma che usa il framework ZCD per prima cosa inizializza la libreria ZCD indicando dove ascoltare.
 
-Ci sono varie modalità con le quali la libreria può mettersi in ascolto di messaggi.
+Rammentando le modalità di trasmissione e i medium previsti dal framework, abbiamo come conseguenza
+che la libreria di basso livello può mettersi in ascolto di messaggi nei seguenti modi:
 
-1.  Attendere connessioni con il protocollo TCP (su una specifica porta TCP) su un proprio indirizzo IP.
-1.  Attendere messaggi con il protocollo UDP (su una specifica porta UDP) su una propria interfaccia di
+1.  Attendere connessioni con il protocollo TCP (su una precisa porta TCP) su un proprio indirizzo IP.  
+    La libreria espone la funzione `stream_net_listen(ip,tcp_port)` che avvia una tasklet che si mette in ascolto in questo modo.  
+    L'utilizzatore specifica l'indirizzo IP (deve essere uno proprio del nodo) e la porta TCP.
+1.  Attendere messaggi con il protocollo UDP (su una precisa porta UDP) su una propria interfaccia di
     rete con un socket impostato a "set_broadcast". Con questa modalità di fatto si ascoltano i pacchetti
     broadcast che transitano sul [broadcast domain](https://en.wikipedia.org/wiki/Broadcast_domain)
-    al quale è collegata quella interfaccia di rete.
-1.  Attendere connessioni su uno unix-domain socket legato ad uno specifico pathname.
-1.  Attendere messaggi su uno unix-domain socket legato ad uno specifico pathname.
+    al quale è collegata quella interfaccia di rete.  
+    La libreria espone la funzione `datagram_net_listen(dev,udp_port)` che avvia una tasklet che si mette in ascolto in questo modo.  
+    L'utilizzatore specifica il dev-name della propria interfaccia di rete e la porta UDP.
+1.  Attendere connessioni su un socket unix-domain legato ad uno specifico pathname.  
+    La libreria espone la funzione `stream_system_listen(pseudoip)` che avvia una tasklet che si mette in ascolto in questo modo.  
+    L'utilizzatore specifica un indirizzo IP che il processo (che simula un nodo) finge di aver assegnato a se stesso
+    o ad una sua precisa pseudo-interfaccia. Il pathname che viene associato al socket include tale pseudoip.
+1.  Attendere messaggi su un socket unix-domain legato ad uno specifico pathname.  
+    La libreria espone la funzione `datagram_pathname_listen(pseudodev)` che avvia una tasklet che si mette in ascolto in questo modo.  
+    L'utilizzatore specifica un finto dev-name che il processo (che simula un nodo) finge che sia di
+    una sua precisa pseudo-interfaccia. Il pathname che viene associato al socket include tale pseudodev.
 
 L'utilizzatore può inizializzare la libreria ZCD ordinandogli di mettersi in ascolto con delle tasklet in una
 o più di una di queste modalità.
 
-È evidente che le prime due modalità servono ad un processo che vuole dialogare con altri processi che
-sono in altri nodi della rete. Invece le successive due servono ad un processo che vuole dialogare
-con altri processi in esecuzione sullo stesso sistema.
-
-D'ora in poi, generalizzando, parleremo di *messaggi ricevuti dalla rete*, anche per indicare i messaggi
-ricevuti su uno unix-domain socket.
-
-Inoltre parleremo di *nodo* anche nel caso di unix-domain socket, indicando così in questo caso il processo
-che usa la libreria ZCD e si mette in ascolto dei messaggi.
-
-Rimandiamo a [RPC](../DemoneNTKD/RPC.md#Trasmissioni_e_Medium) per approfondire come il demone *ntkd*
+Rimandiamo al documento ntkd-RPC nelle sezioni [Tipi di trasmissione](../DemoneNTKD/RPC.md#Trasmissioni)
+e [Tipi di medium](../DemoneNTKD/RPC.md#Medium) per approfondire come il demone *ntkd*
 usa queste modalità di ascolto.
 
 ## <a name="Basso_livello_lato_client"></a>Chiamate a metodi remoti al basso livello (lato client)
