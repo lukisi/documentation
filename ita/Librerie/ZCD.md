@@ -237,7 +237,7 @@ ricevuti su un socket unix-domain.
 Inoltre parleremo di *nodo* anche nel caso di socket unix-domain, indicando così in questo caso il processo
 che usa la libreria ZCD e si mette in ascolto dei messaggi.
 
-Nel documento ntkd-RPC descriveremo anche un
+Nel documento ntkd-RPC nella sezione [Tipi di medium](../DemoneNTKD/RPC.md#Medium) descriveremo anche un
 meccanismo che consente, nel caso di modalità "datagram", di emulare un dominio broadcast
 usando questi socket.
 
@@ -262,7 +262,7 @@ che la libreria di basso livello può mettersi in ascolto di messaggi nei seguen
     L'utilizzatore specifica un indirizzo IP che il processo (che simula un nodo) finge di aver assegnato a se stesso
     o ad una sua precisa pseudo-interfaccia. Il pathname che viene associato al socket include tale pseudoip.
 1.  Attendere messaggi su un socket unix-domain legato ad uno specifico pathname.  
-    La libreria espone la funzione `datagram_pathname_listen(pseudodev)` che avvia una tasklet che si mette in ascolto in questo modo.  
+    La libreria espone la funzione `datagram_system_listen(pseudodev)` che avvia una tasklet che si mette in ascolto in questo modo.  
     L'utilizzatore specifica un finto dev-name che il processo (che simula un nodo) finge che sia di
     una sua precisa pseudo-interfaccia. Il pathname che viene associato al socket include tale pseudodev.
 

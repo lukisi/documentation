@@ -524,6 +524,7 @@ A seconda della tasklet che riceve viene prodotta una istanza di:
     *   `ISourceID sourceid`
     *   `IBroadcastID broadcastid`
     *   `ISrcNic src_nic`
+    *   `bool send_ack`
     *   `string listening_to_my_dev`
 
 **FINE-TODO**
