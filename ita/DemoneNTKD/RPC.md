@@ -4,6 +4,8 @@
 1.  [SkeletonFactory](#SkeletonFactory)
 1.  [Tipi di trasmissione](#Trasmissioni)
 1.  [Tipi di medium](#Medium)
+1.  [Tasklet in ascolto](#Tasklet_listen)
+1.  [Chiamate a metodi remoti](#Get_stub)
 1.  [Identità multiple in un sistema](#Identita_multiple_in_un_sistema)
 
 Il progetto *ntkd* usa il framework ZCD per realizzare le comunicazioni tra nodi.
@@ -165,11 +167,26 @@ fa da proxy: avviando una nuova tasklet per ogni pathname diverso da `1234_eth0`
 stesso pacchetto scrivendolo su un socket unix-domain con il pathname `recv_<pathname>`. Nel nostro caso
 lo scrive su `recv_6543_eth0`. Quindi il processo che simula "beta" lo riceve.
 
-Oppure, invece di ispezionare il PID dei processi e comunicare con il processo "domain" in seguito
-al suo avvio, si potrebbe aggiungere un parametro al processo "qspntester" per indicare il valore da assegnare
-al segnaposto `<pid>`. Ad esempio `qspntester -p 1234 -I eth0`.  
-A questo punto banalmente il processo "domain" potrà sapere fin dal suo avvio su quali pathname stare in
-ascolto. Ad esempio `domain -i 1234_eth0 -i 6543_eth0`.
+Oppure, invece di ispezionare il PID dei processi e comunicare con il processo `domain` in seguito
+al suo avvio, si potrebbe aggiungere un parametro al processo `qspntester` per indicare il valore da assegnare
+al segnaposto `<pid>`.  
+Ad esempio lanciamo `qspntester -p 1234 -I eth0`. Il processo `qspntester-1234` crea `recv_1234_eth0` e si mette in
+ascolto su esso. Quando vuole trasmettere prova a scrivere su `send_1234_eth0` ma soltanto se già esiste.
+Per il momento nessuno scrive su `recv_1234_eth0` e se `qspntester-1234` vuole trasmettere si accorge che
+`send_1234_eth0` non esiste e quindi non fa nulla.  
+A questo punto banalmente il processo `domain` potrà sapere fin dal suo avvio su quali pathname stare in
+ascolto. Ad esempio `domain -i 1234_eth0 -i 6543_eth0`.  
+Il processo `domain` crea `send_1234_eth0` e `send_6543_eth0` e si mette in ascolto su essi. Quando riceve
+da `send_1234_eth0` prova a scrivere su `recv_6543_eth0` ma soltanto se già esiste. Allo stesso modo quando riceve
+da `send_6543_eth0` prova a scrivere su `recv_1234_eth0` ma soltanto se già esiste.  
+Adesso quando `qspntester-1234` vuole trasmettere si accorge che `send_1234_eth0` esiste e quindi scrive lì. Il processo
+`domain` lo riceve e vorrebbe trasmetterlo su `recv_6543_eth0` ma si accorge che non esiste e quindi non fa nulla.
+Per il momento ancora nessuno scrive su `recv_1234_eth0`.  
+Poi possiamo lanciare `qspntester -p 6543 -I eth0`. Il processo `qspntester-6543` crea `recv_6543_eth0` e si mette in
+ascolto su esso. Quando vuole trasmettere prova a scrivere su `send_6543_eth0` ma soltanto se già esiste.  
+Ora, quando `qspntester-6543` vuole trasmettere si accorge che `send_6543_eth0` esiste e quindi scrive lì. Il processo
+`domain` lo riceve e vorrebbe trasmetterlo su `recv_1234_eth0`, che esiste e quindi scrive lì. Il processo
+`qspntester-1234` lo riceve. E cosi via.
 
 #### Emulazione radio
 
@@ -179,6 +196,14 @@ cui è collegato il nodo alfa e il nodo gamma; allora se beta è in grado di com
 gamma questo non implica che il nodo alfa sia in grado di comunicare direttamente con il nodo gamma.  
 Per simulare una tale situazione occorre che il processo "domain" possa accettare una configurazione
 molto più dettagliata rispetto a quanto visto sopra.
+
+## <a name="Tasklet_listen"></a>Tasklet in ascolto
+
+**TODO**
+
+## <a name="Get_stub"></a>Chiamate a metodi remoti
+
+**TODO**
 
 ## <a name="Identita_multiple_in_un_sistema"></a>Identità multiple in un sistema
 
