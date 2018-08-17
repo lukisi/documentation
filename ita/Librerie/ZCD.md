@@ -5,11 +5,13 @@
 1.  [Deploy e dipendenze dei 3 livelli](#Deploy_e_dipendenze)
 1.  [Tipi di trasmissione](#Trasmissioni)
 1.  [Tipi di medium](#Medium)
-1.  [Tasklet in ascolto](#Tasklet_listen)
-1.  [Chiamate a metodi remoti](#Send)
-1.  [Interazioni dei 3 livelli](#Interazioni_dei_livelli)
-    1.  [Interfacce tra i livelli](#Interfacce_tra_livelli)
-        1.  [Interfaccia tra MOD-RPC e APP come realizzata con "rpcdesign"](#Interfaccia_modrpc_app_con_rpcdesgin)
+1.  [Libreria ZCD di basso livello](#Livello_basso)
+    1.  [Tasklet in ascolto](#Tasklet_listen)
+    1.  [Chiamate a metodi remoti](#Send)
+    1.  [Interazioni tra la libreria ZCD e il suo utilizzatore](#Interazioni)
+
+1.  [Interfacce tra i livelli](#Interfacce_tra_livelli)
+    1.  [Interfaccia tra MOD-RPC e APP come realizzata con "rpcdesign"](#Interfaccia_modrpc_app_con_rpcdesgin)
 1.  [Dettagli tecnici](#Dettagli_tecnici)
 
 ## <a name="Obiettivo"></a>Obiettivo
@@ -190,12 +192,12 @@ Quando rileva un pacchetto viene avviata una tasklet che gestisce il pacchetto r
 torna ad ascoltare.
 
 *   Se il pachetto è un "REQUEST":
-    *   Se richiede un ACK:
+    *   Se richiede un ACK (`send_ack=true`):
         *   Avvia una tasklet che trasmetterà un relativo pacchetto "ACK" sulla stessa interfaccia di rete.
-    *   Passa ad un *delegato di request* le informazioni estrapolate dal pacchetto "REQUEST". Questi
+    *   Passa ad un *delegato* le informazioni estrapolate dal pacchetto "REQUEST". Questi
         restituirà, se il caso, un *dispatcher* da eseguire. Dopo averlo eseguito la tasklet potrà terminare.
 *   Se il pachetto è un "ACK":
-    *   Passa ad un *delegato di ack* le informazioni estrapolate dal pacchetto "ACK". Questi
+    *   Passa al *delegato* le informazioni estrapolate dal pacchetto "ACK". Questi
         non restituirà nulla: la tasklet potrà terminare.
 
 ## <a name="Medium"></a>Tipi di medium
@@ -243,7 +245,13 @@ Nel documento ntkd-RPC nella sezione [Tipi di medium](../DemoneNTKD/RPC.md#Mediu
 meccanismo che consente, nel caso di modalità "datagram", di emulare un dominio broadcast
 usando questi socket.
 
-## <a name="Tasklet_listen"></a>Tasklet in ascolto
+## <a name="Livello_basso"></a>Libreria ZCD di basso livello
+
+Nel resto del documento presente analiziamo la libreria ZCD, quella di basso livello.
+
+Nel documento [ntkd-RPC](../DemoneNTKD/RPC.md) descriveremo il livello intermedio e il livello applicativo.
+
+### <a name="Tasklet_listen"></a>Tasklet in ascolto
 
 Un programma che usa il framework ZCD per prima cosa inizializza la libreria ZCD indicando dove ascoltare.
 
@@ -251,33 +259,42 @@ Rammentando le modalità di trasmissione e i medium previsti dal framework, abbi
 che la libreria di basso livello può mettersi in ascolto di messaggi nei seguenti modi:
 
 1.  Attendere connessioni con il protocollo TCP (su una precisa porta TCP) su un proprio indirizzo IP.  
-    La libreria espone la funzione `stream_net_listen(my_ip, tcp_port)` che avvia una tasklet che si mette in ascolto in questo modo.  
+    La libreria espone la funzione `stream_net_listen(my_ip, tcp_port)` che avvia una tasklet che si mette in
+    ascolto in questo modo.  
     L'utilizzatore specifica l'indirizzo IP (deve essere uno proprio del nodo) e la porta TCP.
 1.  Attendere connessioni su un socket unix-domain legato ad uno specifico pathname.  
-    La libreria espone la funzione `stream_system_listen(pathname)` che avvia una tasklet che si mette in ascolto in questo modo.  
-    L'utilizzatore specifica un pathname che deve essere univoco all'interno del set di processi che compongono la
-    testsuite e deve riflettere la modalità di comunicazione con connessione.  
+    La libreria espone la funzione `stream_system_listen(listen_pathname)` che avvia una tasklet che si mette
+    in ascolto in questo modo.  
+    L'utilizzatore specifica un pathname di ascolto che deve essere univoco all'interno del set di processi
+    che compongono la testsuite e deve riflettere la modalità di comunicazione con connessione.  
     Indicheremo nel documento ntkd-RPC nella sezione [Tasklet in ascolto](../DemoneNTKD/RPC.md#Tasklet_listen)
     le scelte fatte nell'applicazione *ntkd* per mappare in un pathname le situazioni di comunicazione con connessione
     che si possono incontrare.
 1.  Attendere messaggi broadcast con il protocollo UDP (su una precisa porta UDP) su una propria interfaccia di
-    rete. Si fa con un socket impostato a "set_broadcast" e legato all'interfaccia di rete. Con questa modalità di fatto si ascoltano
-    i pacchetti broadcast che transitano sul [broadcast domain](https://en.wikipedia.org/wiki/Broadcast_domain)
+    rete. Si fa con un socket impostato a "set_broadcast" e legato all'interfaccia di rete. Con
+    questa modalità di fatto si ascoltano i pacchetti broadcast che transitano
+    sul [broadcast domain](https://en.wikipedia.org/wiki/Broadcast_domain)
     al quale è collegata quella interfaccia di rete.  
-    La libreria espone la funzione `datagram_net_listen(my_dev, udp_port)` che avvia una tasklet che si mette in ascolto in questo modo.  
+    La libreria espone la funzione `datagram_net_listen(my_dev, udp_port, string ack_mac)` che avvia una tasklet che si mette
+    in ascolto in questo modo.  
     L'utilizzatore specifica il dev-name della propria interfaccia di rete e la porta UDP.
 1.  Attendere messaggi su un socket unix-domain legato ad uno specifico pathname.  
-    La libreria espone la funzione `datagram_system_listen(pathname)` che avvia una tasklet che si mette in ascolto in questo modo.  
-    L'utilizzatore specifica un pathname che deve essere univoco all'interno del set di processi che compongono la
-    testsuite e deve riflettere la modalità di comunicazione con messaggi broadcast.  
+    La libreria espone la funzione `datagram_system_listen(listen_pathname, send_pathname, string ack_mac)` che avvia una tasklet
+    che si mette in ascolto in questo modo.  
+    L'utilizzatore specifica un pathname di ascolto che deve essere univoco all'interno del set di processi
+    che compongono la testsuite e deve riflettere la modalità di comunicazione con messaggi broadcast. Inoltre
+    specifica un pathname di trasmissione per la trasmissione dei pacchetti ACK.  
     Indicheremo nel documento ntkd-RPC nella sezione [Tasklet in ascolto](../DemoneNTKD/RPC.md#Tasklet_listen)
-    le scelte fatte nell'applicazione *ntkd* per mappare in un pathname le situazioni di comunicazione con messaggi broadcast
-    che si possono incontrare.
+    le scelte fatte nell'applicazione *ntkd* per mappare in un pathname le situazioni di comunicazione con messaggi
+    broadcast che si possono incontrare.
+
+Nelle modalità di ascolto per messaggi abbiamo un parametro `string ack_mac`. Esso è da utilizzare nella
+trasmissione di messaggi *ack*.
 
 L'utilizzatore può inizializzare la libreria ZCD ordinandogli di mettersi in ascolto con delle tasklet in una
 o più di una di queste modalità.
 
-## <a name="Send"></a>Chiamate a metodi remoti
+### <a name="Send"></a>Chiamate a metodi remoti
 
 Quando l'utilizzatore di ZCD vuole chiamare un metodo remoto invoca un metodo di ZCD.
 
@@ -289,7 +306,7 @@ che ci sono diverse modalità, per ognuna delle quali ZCD mette a disposizione u
     porta avanti le comunicazioni legate ad una chiamata a metodo remoto.  
     L'utilizzatore specifica un indirizzo IP (che sa essere del destinatario) e la porta TCP.
 1.  Stabilire una connessione su un socket unix-domain legato ad uno specifico pathname.  
-    La libreria espone la funzione `send_stream_system(pathname, ...)` che apre una connessione e
+    La libreria espone la funzione `send_stream_system(send_pathname, ...)` che apre una connessione e
     porta avanti le comunicazioni legate ad una chiamata a metodo remoto.  
     L'utilizzatore specifica un pathname sul quale sa che il destinatario è in ascolto e che riflette
     la modalità di comunicazione con connessione.
@@ -300,7 +317,7 @@ che ci sono diverse modalità, per ognuna delle quali ZCD mette a disposizione u
     La libreria espone la funzione `send_datagram_net(my_dev, udp_port, ...)` che trasmette in questo modo.  
     L'utilizzatore specifica il dev-name della propria interfaccia di rete e la porta UDP.
 1.  Inviare un messaggio su un socket unix-domain legato ad uno specifico pathname.  
-    La libreria espone la funzione `send_datagram_system(pathname, ...)` che trasmette in questo modo.  
+    La libreria espone la funzione `send_datagram_system(send_pathname, ...)` che trasmette in questo modo.  
     L'utilizzatore specifica un pathname sul quale sa che il destinatario è in ascolto e che riflette la modalità di
     comunicazione con messaggi broadcast.
 
@@ -342,8 +359,8 @@ sono:
     di un pacchetto di ACK.  
     Se è così, ogni nodo che rileva il messaggio da una sua interfaccia di rete trasmette subito sulla stessa
     interfaccia (quindi sullo stesso dominio broadcast su cui il mittente ha trasmesso) un pacchetto ACK in
-    cui sono specificati lo stesso `int packet_id` del messaggio di richiesta e un `string src_nic` che è
-    la serializzazione di un oggetto (ignoto al framework ZCD) che rappresenta l'interfaccia di rete
+    cui sono specificati lo stesso `int packet_id` del messaggio di richiesta e un `string ack_mac` che è
+    l'identificativo dell'interfaccia di rete (reale se il medium è net, finta se il medium è system)
     che ha ricevuto il messaggio.  
     In ogni caso la funzione termina appena il messaggio è stato trasmesso, senza avere certezza che
     qualcuno lo abbia ricevuto.
@@ -369,7 +386,7 @@ In entrambe le modalità (stream e datagram) abbiamo dei parametri comuni.
     La libreria MOD-RPC ha avuto l'incarico di produrle serializzando un oggetto e sarà in grado, dall'altro
     lato della comunicazione, di deserializzarle nella giusta forma.
 
-## <a name="Interazioni_dei_livelli"></a>Interazioni dei 3 livelli
+### <a name="Interazioni"></a>Interazioni tra la libreria ZCD e il suo utilizzatore
 
 L'utilizzatore di ZCD inizializza come detto prima la libreria di basso livello indicando dove ascoltare.
 
@@ -387,20 +404,75 @@ specifico **dispatcher**<sup>1</sup>.
 Quando vengono invocati i metodi che iniziano una chiamata a metodo remoto, la libreria ZCD nel nodo
 corrente fa pervenire le informazioni alla libreria ZCD nel nodo (o nodi) destinatario. Qui la libreria
 ZCD interroga i delegati passati dal suo utilizzatore per sapere se il messaggio è riconosciuto di sua
-pertinenza. In questo caso il delegato fornisce alla libreria ZCD la funzione *f<sub>m</sub>* da chiamare
-(sotto forma di una istanza di *dispatcher*, che è una interfaccia nota alla libreria ZCD) per processare
-il messaggio *m*. La libreria ZCD allora predispone quanto necessario ai suoi compiti (ad esempio per la
-trasmissione di un ACK) e poi chiama la funzione *f<sub>m</sub>* passando
-il messaggio *m* e anche una struttura dati CallerInfo contenente informazioni sul messaggio ricevuto.
+pertinenza.
 
-La struttura CallerInfo ... **TODO**
+Per interrogare i delegati, prima di tutto la libreria ZCD costruisce una struttura dati CallerInfo
+che contiene informazioni accessorie sul messaggio che è stato ricevuto. Accessorie in quanto ulteriori
+rispetto al contenuto del messaggio che è essenzialmente il nome del metodo remoto e i suoi argomenti.
 
-Al termine delle operazioni la funzione *f<sub>m</sub>* restituisce alla libreria ZCD una stringa in formato JSON
-che rappresenta l'esito del messaggio, che può essere un valore di ritorno oppure una eccezione. Il significato di
-tale stringa non è di competenza della libreria ZCD. Se la richiesta era nella modalità stream e specificava di
-voler attendere l'esito allora la libreria ZCD nel nodo destinatario del messaggio ora trasmette il risultato
-alla libreria ZCD nel nodo chiamante e questa lo comunica al suo utilizzatore come valore di ritorno del
-metodo che questi aveva chiamato all'inizio del giro.
+La classe CallerInfo è vuota. Viene ereditata dalle classi StreamCallerInfo e DatagramCallerInfo.
+
+Se la tasklet che ha ricevuto il messaggio era in ascolto per connessioni, cioè `stream_net_listen` o
+`stream_system_listen`, viene prodotta una istanza di StreamCallerInfo. Questa contiene:
+
+*   `string source_id`. 
+*   `string unicast_id`
+*   `string src_nic`
+*   `bool wait_reply`
+*   `Listener listener`
+
+Se invece la tasklet che ha ricevuto il messaggio era in ascolto per messaggi broadcast, cioè `datagram_net_listen` 
+o `datagram_system_listen`, viene prodotta una istanza di DatagramCallerInfo. Questa contiene:
+
+*   `string source_id`. 
+*   `string broadcast_id`
+*   `string src_nic`
+*   `bool send_ack`
+*   `Listener listener`
+
+La classe Listener è vuota. Viene ereditata dalle seguenti classi esposte dalla libreria ZCD:
+
+*   StreamNetListener. Prodotta da `stream_net_listen`. Contiene i suoi parametri `my_ip, tcp_port`.
+*   StreamSystemListener. Prodotta da `stream_system_listen`. Contiene i suoi parametri `listen_pathname`.
+*   DatagramNetListener. Prodotta da `datagram_net_listen`. Contiene i suoi parametri `my_dev, udp_port`.
+*   DatagramSystemListener. Prodotta da `datagram_system_listen`. Contiene i suoi parametri `listen_pathname, send_pathname`.
+
+Quindi la libreria ZCD passa questo oggetto CallerInfo ai delegati forniti dal suo utilizzatore.
+
+I delegati sono forniti al momento dell'avvio di una tasklet di ascolto. Esistono diversi delegati.
+Per le comunicazioni per connessioni abbiamo il delegato `IStreamDelegate stream_dlg`. Per
+le comunicazioni per messaggio broadcast abbiamo il delegato `IDatagramDelegate datagram_dlg`.
+
+Come si usa il delegato `stream_dlg`: sulla ricezione di un messaggio su una connessione, dopo aver costruito uno
+StreamCallerInfo, viene chiamato il suo metodo `IStreamDispatcher? get_dispatcher(StreamCallerInfo caller_info)`.  
+Se il risultato è nullo significa che il messaggio non va processato. La tasklet termina.  
+Se il risultato non è nullo, su questo `IStreamDispatcher` viene chiamato il metodo
+`string execute(string m_name, List<string> args, StreamCallerInfo caller_info)`. Cioè di fatto viene
+processato il messaggio chiamando un metodo di uno skeleton che risiede in questo nodo. Si ottiene una
+stringa che è la serializzazione del risultato.  
+Al termine, se la richiesta conteneva `wait_reply`, la stringa risultato viene trasmessa dal destinatario
+del messaggio al suo mittente. Poi la tasklet termina.
+
+Come si usa il delegato `datagram_dlg`: dobbiamo ricordare che i messaggi broadcast che si ricevono
+possono essere *request* o *ack*. Sulla ricezione di una *request* viene per prima cosa chiamato il
+suo metodo `bool is_my_own_message(int packet_id)` per evitare che un nodo reagisca al messaggio che
+esso stesso ha trasmesso. In questo caso la tasklet termina.  
+Il prossimo passaggio sarà di trasmettere, se la richiesta conteneva `send_ack`, il messaggio *ack*.
+Il messaggio *ack* viene trasmesso dalla libreria ZCD chiamando una sua funzione interna
+(`send_ack_net(my_dev, udp_port, ...)` o `send_ack_system(send_pathname, ...)` a seconda della tasklet
+in ascolto che ha ricevuto la *request*) dove si specifica il `int packet_id` e lo `string ack_mac`
+dell'interfaccia di rete che ha ricevuto la *request*.  
+In seguito, dopo aver costruito un DatagramCallerInfo, viene chiamato il suo metodo
+`IDatagramDispatcher? get_dispatcher(DatagramCallerInfo caller_info)`.  
+Se il risultato è nullo significa che il messaggio non va processato.  
+Se il risultato non è nullo, su questo `IDatagramDispatcher` viene chiamato il metodo
+`void execute(string m_name, List<string> args, DatagramCallerInfo caller_info)`. In questo caso non
+è previsto comunicare il risultato. La tasklet termina.
+
+Invece sulla ricezione di un *ack* viene chiamato il suo metodo `void got_ack(int packet_id, string ack_mac)`.
+Esso non restituisce nulla. La tasklet termina.
+
+In ogni caso il `CallerInfo caller_info` viene passato al metodo remoto eseguito nello skeleton.
 
 * * *
 
@@ -408,15 +480,16 @@ metodo che questi aveva chiamato all'inizio del giro.
 Quando il messaggio è in modalità datagram, il `broadcast_id` può identificare diversi destinatari. Se si tratta
 di *identità* piuttosto che di *nodi*, quando un nodo riceve il messaggio può darsi
 che più di uno di questi destinatari sia una *identità* di questo nodo. In questo caso il
-dispatcher si prende cura di notificare il messaggio alle diverse *identità* di questo nodo che sono
-interessate.  
+dispatcher `IDatagramDispatcher` ottenuto dal delegato si prende cura di notificare il messaggio alle
+diverse *identità* di questo nodo che sono interessate; di fatto avvia una nuova tasklet per ogni identità
+interessata e chiama in essa il metodo sul relativo skeleton.  
 Inoltre, in questo caso, se il messaggio prevede una comunicazione di ACK da ogni destinatario che lo riceve,
 la libreria ZCD trasmette un unico ACK con un identificativo `string src_nic` dal quale si possa risalire
 all'interfaccia che ha ricevuto il messaggio.  
 Dall'altra parte, il nodo che riceve questo ACK deve essere in grado di associarlo
 all'intero set di *identità* di questo nodo che erano interessate.</sub>
 
-### <a name="Interfacce_tra_livelli"></a>Interfacce tra i livelli
+## <a name="Interfacce_tra_livelli"></a>Interfacce tra i livelli
 
 L'interfaccia della libreria ZCD nei confronti della libreria di livello intermedio MOD-RPC prevede
 il passaggio di alcune strutture dati che la libreria ZCD non conosce. Tali dati vengono passati come
@@ -452,7 +525,7 @@ Comunque, la separazione dei due livelli è consigliabile per alcuni motivi:
     MOD-RPC versione 1.0. Qualsiasi versione di APP che si appoggia su questa libreria sarà quindi teoricamente
     in grado di comunicare con versioni differenti di APP che si appoggiano però sulla stessa libreria.
 
-#### <a name="Interfaccia_modrpc_app_con_rpcdesgin"></a>Interfaccia tra MOD-RPC e APP come realizzata con "rpcdesign"
+### <a name="Interfaccia_modrpc_app_con_rpcdesgin"></a>Interfaccia tra MOD-RPC e APP come realizzata con "rpcdesign"
 
 Le classi stub prodotte dal tool "rpcdesign" si occupano di serializzare ogni argomento per ogni metodo
 remoto. In questa implementazione il nodo radice è sempre un nodo di tipo *oggetto* con un solo membro di
