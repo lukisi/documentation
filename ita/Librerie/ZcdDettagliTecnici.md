@@ -2,10 +2,14 @@
 
 1.  [ZCD](#ZCD)
     1.  [Inizializzazione](#ZCD_Inizializzazione)
-    1.  [TCP - server](#ZCD_tcp_listen)
-    1.  [TCP - client](#ZCD_tcp_client)
-    1.  [UDP - server](#ZCD_udp_listen)
-    1.  [UDP - client](#ZCD_UDP)
+    1.  [stream_net_listen](#ZCD_stream_net_listen)
+    1.  [send_stream_net](#ZCD_send_stream_net)
+    1.  [stream_system_listen](#ZCD_stream_system_listen)
+    1.  [send_stream_system](#ZCD_send_stream_system)
+    1.  [datagram_net_listen](#ZCD_datagram_net_listen)
+    1.  [send_datagram_net](#ZCD_send_datagram_net)
+    1.  [datagram_system_listen](#ZCD_datagram_system_listen)
+    1.  [send_datagram_system](#ZCD_send_datagram_system)
 1.  [MOD-RPC](#MODRPC)
     1.  [Oggetti serializzabili](#MODRPC_serializzabili)
     1.  [Lato server](#MODRPC_server)
@@ -39,19 +43,19 @@ ZCD viene "inizializzata" con alcune chiamate.
 
 *   La funzione `init_tasklet_system` fornisce la implementazione delle interfacce usate per le comunicazioni
     allo schedulatore delle tasklet.
-*   La funzione `stream_net_listen`. Illustrata in precedenza.
-*   La funzione `stream_system_listen`. Illustrata in precedenza.
-*   La funzione `datagram_net_listen`. Illustrata in precedenza.
-*   La funzione `datagram_system_listen`. Illustrata in precedenza.
+*   La funzione `stream_net_listen`.
+*   La funzione `stream_system_listen`.
+*   La funzione `datagram_net_listen`.
+*   La funzione `datagram_system_listen`.
 
 In seguito si può richiedere a ZCD di effettuare una chiamata a metodo remoto invocando:
 
-*   La funzione `send_stream_net`. Illustrata in precedenza.
-*   La funzione `send_stream_system`. Illustrata in precedenza.
-*   La funzione `send_datagram_net`. Illustrata in precedenza.
-*   La funzione `send_datagram_system`. Illustrata in precedenza.
+*   La funzione `send_stream_net`.
+*   La funzione `send_stream_system`.
+*   La funzione `send_datagram_net`.
+*   La funzione `send_datagram_system`.
 
-### stream_net_listen
+### <a name="ZCD_stream_net_listen"></a>stream_net_listen
 
 La funzione `stream_net_listen` oltre agli argomenti illustrati in precedenza riceve il delegato
 `IStreamDelegate stream_dlg` e anche un delegato `IErrorHandler error_handler` su cui, in caso
@@ -148,7 +152,7 @@ Di seguito la tasklet:
         *   Esegue `disp.execute(m_name, args, caller_info)`.
 *   Ascolta altre richieste.
 
-### <a name="ZCD_tcp_client"></a>TCP - client
+### <a name="ZCD_send_stream_net"></a>send_stream_net
 
 Per ridurre l'overhead di una connessione TCP, un client può stabilire una connessione TCP con un server ed
 utilizzarla per diversi messaggi. Il metodo `tcp_client` restituisce un'istanza di TcpClient che rappresenta
@@ -236,7 +240,15 @@ sostituito con un nuovo socket costruito con gli stessi dati del precedente (ind
 connesso. Poi l'operazione in corso lancia l'eccezione ZCDError. Le altre operazioni, che eventualmente erano
 state accodate in precedenza, potranno essere avviate e di conseguenza una nuova connessione verrà tentata.
 
-### <a name="ZCD_udp_listen"></a>UDP - server
+### <a name="ZCD_stream_system_listen"></a>stream_system_listen
+
+**TODO**
+
+### <a name="ZCD_send_stream_system"></a>send_stream_system
+
+**TODO**
+
+### <a name="ZCD_datagram_net_listen"></a>datagram_net_listen
 
 Il metodo `udp_listen` avvia una tasklet che ascolta e gestisce i messaggi UDP provenienti dall'esterno.
 
@@ -457,7 +469,7 @@ Se si tratta di una ACK:
     *   `string mac`
 *   La tasklet chiama il metodo `got_ack(id, mac)` del delegato per i messaggi di servizio.
 
-### <a name="ZCD_UDP"></a>UDP - client
+### <a name="ZCD_send_datagram_net"></a>send_datagram_net
 
 Su iniziativa dell'utilizzatore di ZCD, per trasmettere una richiesta con il protocollo UDP a un nodo (o più
 di uno) diretto vicino, possono essere trasmessi i seguenti messaggi:
@@ -498,6 +510,14 @@ Tutte le funzioni sopra elencate possono lanciare un ZCDError nel caso di proble
 stringa JSON sulla rete. Per la costruzione del JSON invece non sono previsti errori; in particolare se le
 stringhe passate che devono contenere un valido JSON (`source_id`, `unicast_id`, `broadcast_id` e gli
 argomenti dei metodi) non sono ben formate le funzioni abortiscono il programma.
+
+### <a name="ZCD_datagram_system_listen"></a>datagram_system_listen
+
+**TODO**
+
+### <a name="ZCD_send_datagram_system"></a>send_datagram_system
+
+**TODO**
 
 ## <a name="MODRPC"></a>MOD-RPC
 
