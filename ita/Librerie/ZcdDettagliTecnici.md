@@ -37,72 +37,38 @@ La libreria ZCD usa JsonGlib. All'utilizzatore di ZCD non viene imposto di avere
 
 ZCD viene "inizializzata" con alcune chiamate.
 
-*   Il metodo `init_tasklet_system` fornisce la implementazione delle interfacce usate per le comunicazioni
+*   La funzione `init_tasklet_system` fornisce la implementazione delle interfacce usate per le comunicazioni
     allo schedulatore delle tasklet.
-*   Il metodo `tcp_listen` avvia una tasklet che con un socket TCP si mette in ascolto su un dato indirizzo
-    locale (oppure su tutti) e una data porta.
-*   Il metodo `udp_listen` avvia una tasklet che con un socket UDP si mette in ascolto su una data interfaccia
-    di rete e una data porta per ricevere pacchetti inviati in broadcast sul broadcast domain collegato alla interfaccia passata.
+*   La funzione `stream_net_listen`. Illustrata in precedenza.
+*   La funzione `stream_system_listen`. Illustrata in precedenza.
+*   La funzione `datagram_net_listen`. Illustrata in precedenza.
+*   La funzione `datagram_system_listen`. Illustrata in precedenza.
 
-In seguito si può richiedere a ZCD di effettuare una chiamata a metodo remoto invocando questi metodi:
+In seguito si può richiedere a ZCD di effettuare una chiamata a metodo remoto invocando:
 
-*   Il metodo `tcp_client` crea e ritorna una istanza di TcpClient.  
-    Con i metodi dell'oggetto TcpClient si effettua una chiamata in modalità **TcpClient**.
-*   Il metodo `send_unicast_request` trasmette in broadcast una chiamata in modalità **Unicast**.
-*   Il metodo `send_broadcast_request` trasmette in broadcast una chiamata in modalità **Broadcast**.
+*   La funzione `send_stream_net`. Illustrata in precedenza.
+*   La funzione `send_stream_system`. Illustrata in precedenza.
+*   La funzione `send_datagram_net`. Illustrata in precedenza.
+*   La funzione `send_datagram_system`. Illustrata in precedenza.
 
-### <a name="ZCD_tcp_listen"></a>TCP - server
+### stream_net_listen
 
-Il metodo `tcp_listen` avvia una tasklet che ascolta e gestisce le connessioni TCP provenienti dall'esterno.
+La funzione `stream_net_listen` oltre agli argomenti illustrati in precedenza riceve il delegato
+`IStreamDelegate stream_dlg` e anche un delegato `IErrorHandler error_handler` su cui, in caso
+di errore, la tasklet prima di terminare potrà chiamare il metodo `void error_handler(Error e)`.
 
-#### cosa riceve
+L'interfaccia `IStreamDelegate` è stata illustrata in precedenza.
 
-I dati che vengono passati al metodo `tcp_listen` sono:
-
-*   La porta TCP e l'indirizzo.
-*   Un delegato che ZCD potrà usare alla ricezione di una connessione per ottenere, se opportuno, un
-    "dispatcher" a cui passare il messaggio per l'esecuzione.
-*   Un delegato che la tasklet in ascolto potrà usare in caso di errore prima di terminare.
-
-Il delegato per `tcp_listen` da usare alla ricezione di una connessione è nella forma di una implementazione
-dell'interfaccia IZcdTcpDelegate. Il suo metodo:
-
-*   `IZcdTcpRequestHandler get_new_handler()`
-
-crea una istanza dell'interfaccia IZcdTcpRequestHandler apposita per gestire una connessione. I metodi di
-quest'ultima sono:
-
-*   `void set_unicast_id(string unicast_id)`
-*   `void set_method_name(string m_name)`
-*   `void add_argument(string argument)`
-*   `void set_caller_info(TcpCallerInfo caller_info)`
-*   `IZcdDispatcher? get_dispatcher()`
-
-La classe TcpCallerInfo contiene i membri:
-
-*   `string my_address`
-*   `string peer_address`
-*   `string source_id` (serializzazione di un *identificativo di identità*)
-
-L'interfaccia IZcdDispatcher è implementata da un oggetto che verrà istanziato alla chiamata
-di `get_dispatcher`. I suoi metodi sono:
-
-*   `string execute()`
-
-Il delegato per `tcp_listen` da usare in caso di errore nella `listen` o nella `accept` è nella
-forma di una implementazione dell'interfaccia IZcdTcpAcceptErrorHandler. I suoi metodi sono:
-
-*   `void error_handler(Error e)`
+La funzione `stream_net_listen` avvia una tasklet per gestire l'ascolto e poi ritorna al chiamante
+l'handler della tasklet.
 
 #### cosa fa la tasklet che gestisce il socket in ascolto
 
-La tasklet avviata dal metodo `tcp_listen` apre un socket TCP e si mette in ascolto sulla porta
-e l'indirizzo specificati. In caso di errore nella `listen` lo passa al metodo `error_handler` e
-poi termina.
+La tasklet apre un socket TCP e si mette in ascolto sulla porta e l'indirizzo specificati. Quando riceve
+una connessione avvia una nuova tasklet per gestirla. E si mette di nuovo in attesa di altre connessioni.
 
-Quando riceve una connessione chiama `get_new_handler` e passa l'istanza di IZcdTcpRequestHandler
-ad una nuova tasklet per gestire la connessione. In caso di errore nella `accept` lo passa al
-metodo `error_handler` e poi termina.
+In caso di errore nella `listen` o nella `accept` lo passa al metodo `error_handler` e
+poi termina.
 
 #### quali messaggi passano attraverso una connessione TCP
 
@@ -120,10 +86,10 @@ con la convenzione dei 4 byte di lunghezza. Si conviene quindi che, quando un cl
 che prevede una risposta, fino a che la risposta non è stata completamente ricevuta il client non usi
 la stessa connessione per trasmettere altri messaggi. Può, invece, aprirne immediatamente una nuova.
 
-L'albero JSON di un messaggio di richiesta ha come radice un nodo *OBJECT* con 5 membri: "method-name",
-"arguments", "source-id", "unicast-id", "wait-reply". Il membro "method-name" è un nodo *VALUE* di tipo
+L'albero JSON di un messaggio di richiesta ha come radice un nodo *OBJECT* con 6 membri: "method-name",
+"arguments", "source-id", "unicast-id", "src-nic", "wait-reply". Il membro "method-name" è un nodo *VALUE* di tipo
 stringa, il membro "arguments" è un nodo *ARRAY* in cui ogni elemento è un valido nodo radice, cioè *OBJECT*
-o *ARRAY*. I membri "source-id" e "unicast-id" sono nodi *OBJECT*. Il membro "wait-reply" è un nodo *VALUE*
+o *ARRAY*. I membri "source-id", "unicast-id", "src-nic" sono nodi *OBJECT*. Il membro "wait-reply" è un nodo *VALUE*
 di tipo booleano.
 
 L'albero JSON di un messaggio di risposta ha come radice un nodo *OBJECT* con 1 membro: "response". Il membro
@@ -133,8 +99,8 @@ L'albero JSON di un messaggio di risposta ha come radice un nodo *OBJECT* con 1 
 
 La tasklet che gestisce una connessione riceve questi parametri iniziali:
 
-*   IConnectedStreamSocket c - Il socket connesso.
-*   IZcdTcpRequestHandler req - Il delegato per le richieste.
+*   `IConnectedStreamSocket c` - Il socket connesso.
+*   `IStreamDelegate stream_dlg` - Il delegato per le richieste.
 
 La tasklet legge i 4 bytes che indicano la lunghezza del messaggio e poi legge il numero di bytes indicato.
 Se la connessione si chiude prima la tasklet termina.
@@ -142,55 +108,44 @@ Se la connessione si chiude prima la tasklet termina.
 Alla fine verifica di avere letto una stringa contenente un valido albero JSON. Tale JSON la libreria ZCD è
 in grado di interpretarlo, quindi la tasklet ne estrae le seguenti informazioni:
 
-*   Membro **method-name**. Una stringa con il nome del metodo remoto.
-*   Membro **arguments**. Un array di nodi JSON che saranno passati, in forma di altrettante singole
+*   Membro **method-name** in `string m_name`. Una stringa con il nome del metodo remoto.
+*   Membro **arguments** in `List<string> args`. Un array di nodi JSON che saranno passati, in forma di altrettante singole
     stringhe, al dispatcher come argomenti del metodo. Tali stringhe devono essere ognuna un valido JSON,
     quindi i nodi JSON dell'array devono essere di tipo *OBJECT* o *ARRAY*.
-*   Membro **source-id**. Un nodo JSON di tipo *OBJECT* che sarà passato, in forma di stringa, al dispatcher
-    come parte del CallerInfo.
-*   Membro **unicast-id**. Un nodo JSON di tipo *OBJECT* che sarà passato, in forma di stringa, al delegato
-    IZcdTcpRequestHandler.
-*   Membro **wait-reply**. Un booleano che dice se è prevista una risposta.
+*   Membro **source-id** in `string source_id`. Un nodo JSON di tipo *OBJECT*.
+*   Membro **unicast-id** in `string unicast_id`. Un nodo JSON di tipo *OBJECT*.
+*   Membro **src-nic** in `string src_nic`. Un nodo JSON di tipo *OBJECT*.
+*   Membro **wait-reply** in `bool wait_reply`. Un booleano che dice se è prevista una risposta.
 
 Se qualcuno di questi requisiti non è soddisfatto la tasklet chiude la connessione e termina.
 
 Di seguito la tasklet:
-*   Prepara una istanza di TcpCallerInfo con le informazioni che è in grado di ottenere tramite l'istanza
-    del socket connesso, cioè l'indirizzo IP del client remoto e il proprio indirizzo IP dove è stato contattato
-    e la stringa **source-id**.
-*   Chiama il metodo `set_unicast_id` sulla sua istanza di IZcdTcpRequestHandler. Si assume che l'oggetto
-    memorizzi la stringa **unicast-id**.
-*   Chiama il metodo `set_method_name` sulla sua istanza di IZcdTcpRequestHandler. Si assume che l'oggetto
-    memorizzi il nome del metodo.
-*   Chiama (quante volte necessario) il metodo `add_argument` sulla sua istanza di IZcdTcpRequestHandler. Si
-    assume che l'oggetto memorizzi gli argomenti da passare al metodo.
-*   Chiama il metodo `set_caller_info` sulla sua istanza di IZcdTcpRequestHandler. Si assume che l'oggetto
-    memorizzi l'istanza di TcpCallerInfo.
-*   Chiama il metodo `get_dispatcher` sulla sua istanza di IZcdTcpRequestHandler e ottiene un IZcdDispatcher *disp*.  
-    L'oggetto IZcdTcpRequestHandler a questo punto è in grado di stabilire se il messaggio è da processare. In
-    questo caso ritorna una istanza apposita di IZcdDispatcher. Altrimenti ritorna null.  
-    In ogni caso l'oggetto IZcdTcpRequestHandler resetta le sue impostazioni. Infatti l'eventuale oggetto
-    IZcdDispatcher restituito ha memorizzato le informazioni per l'esecuzione del metodo.
-*   **TODO** Se non si è ottenuto un dispatcher, nonostante la comunicazione sia avvenuta in TCP, può essere dovuto
-    al fatto che si cercava una *identità* nel nodo che non è stata trovata. Questa situazione non dovrebbe
-    necessariamente portare alla chiusura della connessione TCP, che di per sé rimane valida. Tuttavia andrebbe
-    segnalato uno specifico errore al chiamante.
-*   Se *disp* = *null* il messaggio va ignorato. La tasklet chiude la connessione e termina.
+*   Prepara una istanza di `StreamCallerInfo caller_info` con le informazioni:
+    *   `source_id`, `unicast_id`, `src_nic`, `wait_reply`.
+    *   `StreamNetListener listener(my_ip, tcp_port)`.
+*   Chiama il metodo `stream_dlg.get_dispatcher(caller_info)` e ottiene un `IStreamDispatcher? disp`.  
+    Il delegato è in grado di stabilire se il messaggio è da processare. In
+    questo caso ritorna una istanza apposita di `IStreamDispatcher`. Altrimenti ritorna `null`.
+*   Se `disp == null`:
+    *   Significa che si cercava una *identità* nel nodo che non è stata trovata.
+    *   Il messaggio va ignorato. La tasklet chiude la connessione e termina.
+    *   **TODO** Non sarebbe necessario chiudere la connessione TCP, che di per sé rimane valida. Tuttavia andrebbe
+        segnalato uno specifico errore al chiamante.
 *   Se il messaggio dichiarava di voler ricevere una risposta:
-    *   Esegue `resp = disp.execute()`.  
-        L'oggetto IZcdDispatcher deserializza gli argomenti. Esegue il metodo e ottiene il risultato (o l'eccezione).
+    *   Esegue `resp = disp.execute(m_name, args, caller_info)`.  
+        L'oggetto IStreamDispatcher deserializza gli argomenti. Esegue il metodo e ottiene il risultato (o l'eccezione).
         Serializza il risultato e lo restituisce come stringa JSON.  
         Questa istanza è di una classe fornita da MOD-RPC, quindi conosce le classi degli argomenti da passare e le
         eventuali eccezioni previste dal metodo.
     *   La tasklet ora verifica che la stringa `resp` restituita da `execute` sia un valido albero JSON. Può abortire
         il programma se non lo è.
     *   Prepara un albero JSON la cui radice è un nodo *OBJECT* con il membro **response** valorizzato con il nodo
-        radice di *resp*.
+        radice di `resp`.
     *   Genera una stringa dall'albero JSON.
     *   Trasmette la stringa (dopo i 4 bytes che ne indicano la lunghezza) al socket mittente.
 *   Altrimenti:
     *   Viene avviata una nuova tasklet:
-        *   Esegue `disp.execute()`.
+        *   Esegue `disp.execute(m_name, args, caller_info)`.
 *   Ascolta altre richieste.
 
 ### <a name="ZCD_tcp_client"></a>TCP - client

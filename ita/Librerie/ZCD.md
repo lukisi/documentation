@@ -434,8 +434,8 @@ La classe Listener è vuota. Viene ereditata dalle seguenti classi esposte dalla
 
 *   StreamNetListener. Prodotta da `stream_net_listen`. Contiene i suoi parametri `my_ip, tcp_port`.
 *   StreamSystemListener. Prodotta da `stream_system_listen`. Contiene i suoi parametri `listen_pathname`.
-*   DatagramNetListener. Prodotta da `datagram_net_listen`. Contiene i suoi parametri `my_dev, udp_port`.
-*   DatagramSystemListener. Prodotta da `datagram_system_listen`. Contiene i suoi parametri `listen_pathname, send_pathname`.
+*   DatagramNetListener. Prodotta da `datagram_net_listen`. Contiene i suoi parametri `my_dev, udp_port, ack_mac`.
+*   DatagramSystemListener. Prodotta da `datagram_system_listen`. Contiene i suoi parametri `listen_pathname, send_pathname, ack_mac`.
 
 Quindi la libreria ZCD passa questo oggetto CallerInfo ai delegati forniti dal suo utilizzatore.
 
@@ -498,9 +498,10 @@ stringhe in formato JSON. Si tratta delle seguenti strutture:
 *   Lista di argomenti da passare al metodo remoto. Passati da MOD-RPC a ZCD nel mittente e viceversa
     nel destinatario. Ogni elemento è una stringa in formato JSON.
 *   Identificativo `source_id`. Passato da MOD-RPC a ZCD nel mittente e viceversa nel destinatario.
-*   Identificativo `unicast_id`, per le chiamate unicast e tcp. Passato da MOD-RPC a ZCD nel mittente
+*   Identificativo `src_nic`. Passato da MOD-RPC a ZCD nel mittente e viceversa nel destinatario.
+*   Identificativo `unicast_id`, per la modalità stream. Passato da MOD-RPC a ZCD nel mittente
     e viceversa nel destinatario.
-*   Identificativo `broadcast_id`, per le chiamate broadcast. Passato da MOD-RPC a ZCD nel mittente e
+*   Identificativo `broadcast_id`, per la modalità datagram. Passato da MOD-RPC a ZCD nel mittente e
     viceversa nel destinatario.
 *   Esito restituito da un metodo remoto. Passato da MOD-RPC a ZCD nel destinatario e viceversa nel
     mittente. Può essere un valore di ritorno o una eccezione definita da MOD-RPC.
@@ -519,8 +520,8 @@ Comunque, la separazione dei due livelli è consigliabile per alcuni motivi:
 *   Se si usa il tool "rpcdesign" (o altri tool che possono essere sviluppati) partendo da una descrizione
     ad alto livello delle interfacce implementate dai metodi remoti si ottengono rapidamente delle classi
     da usare come stub e skeleton. In esse il lavoro di serializzazione e deserializzazione dei dati e i
-    controlli di correttezza sono già stati fatti e testati; quindi si può passare ad occuparsi immediatamente
-    degli algoritmi di alto livello (business logic).
+    controlli di correttezza sono già stati fatti e testati; quindi ci si può concentrare
+    sugli algoritmi di alto livello (business logic).
 *   Si può definire una versione stabile delle interfacce di comunicazione, realizzando ad esempio una libreria
     MOD-RPC versione 1.0. Qualsiasi versione di APP che si appoggia su questa libreria sarà quindi teoricamente
     in grado di comunicare con versioni differenti di APP che si appoggiano però sulla stessa libreria.
