@@ -110,6 +110,12 @@ La tasklet che gestisce una connessione riceve questi parametri iniziali:
 
 *   `IConnectedStreamSocket c` - Il socket connesso.
 *   `IStreamDelegate stream_dlg` - Il delegato per le richieste.
+*   `Listener listener` - Un oggetto che rappresenta la modalità con cui era in ascolto la tasklet
+    che ha ricevuto la connessione.  
+    Nel caso in esame (cioè `stream_net_listen`) esso è una `StreamNetListener listener(my_ip, tcp_port)`.
+    Ma vedremo in seguito (quando analizzeremo `stream_system_listen`) che la tasklet che gestisce
+    una connessione nel medium "system" è del tutto analoga a questa. Quindi questa tasklet riceve
+    una istanza di `Listener` e non è interessata a sapere di quale tipo sia.
 
 La tasklet legge i 4 bytes che indicano la lunghezza del messaggio e poi legge il numero di bytes indicato.
 Se la connessione si chiude prima la tasklet termina.
@@ -130,8 +136,7 @@ Se qualcuno di questi requisiti non è soddisfatto la tasklet chiude la connessi
 
 Di seguito la tasklet:
 *   Prepara una istanza di `StreamCallerInfo caller_info` con le informazioni:
-    *   `source_id`, `unicast_id`, `src_nic`, `wait_reply`.
-    *   `StreamNetListener listener(my_ip, tcp_port)`.
+    *   `source_id`, `unicast_id`, `src_nic`, `wait_reply`, `listener`.
 *   Chiama il metodo `stream_dlg.get_dispatcher(caller_info)` e ottiene un `IStreamDispatcher? disp`.  
     Il delegato è in grado di stabilire se il messaggio è da processare. In
     questo caso ritorna una istanza apposita di `IStreamDispatcher`. Altrimenti ritorna `null`.
@@ -213,7 +218,50 @@ Se deve lanciare una eccezione `ZCDError`, prima il socket che stava usando vien
 
 ### <a name="ZCD_stream_system_listen"></a>stream_system_listen
 
-**TODO**
+La funzione `TaskletSystem.ITaskletHandle stream_system_listen(...)` riceve questi argomenti:
+
+*   `string listen_pathname`. Indica dove ascoltare con un socket unix-domain per connessioni.
+*   `IStreamDelegate stream_dlg`.
+*   `IErrorHandler error_handler`.
+
+L'interfaccia `IStreamDelegate` è stata illustrata in precedenza.
+
+**TODO** La classe che implementa `IStreamDelegate` può essere la stessa che si usa per la funzione
+`stream_net_listen`. Anche l'istanza può essere unica. L'importante è che questa abbia conoscenza delle
+classi `StreamNetListener` e `StreamSystemListener`.
+
+Sul delegato `IErrorHandler error_handler`, in caso di errore, la tasklet prima di terminare potrà
+chiamare il metodo `void error_handler(Error e)`.
+
+La funzione `stream_system_listen` avvia una tasklet per gestire l'ascolto e poi ritorna al chiamante
+l'handler della tasklet.
+
+#### cosa fa la tasklet che gestisce il socket in ascolto
+
+La tasklet dovrebbe trovare che il pathname specificato non esiste ancora, quindi crearlo.
+
+La tasklet apre un socket unix-domain e si mette in ascolto sul pathname specificato. Quando riceve
+una connessione avvia una nuova tasklet per gestirla. E si mette di nuovo in attesa di altre connessioni.
+
+In caso di errore nella `listen` o nella `accept` lo passa al metodo `error_handler` e
+poi termina.
+
+Prima di terminare dovrebbe rimuovere il pathname.
+
+#### cosa fa la tasklet che gestisce una connessione
+
+I messaggi che transitano su una connessione nel medium "system" sono del tutto analoghi a quelli che transitano
+su una connessione nel medium "net".
+
+La tasklet che gestisce una connessione riceve questi parametri iniziali:
+
+*   `IConnectedStreamSocket c` - Il socket connesso.
+*   `IStreamDelegate stream_dlg` - Il delegato per le richieste.
+*   `Listener listener` - Un oggetto che rappresenta la modalità con cui era in ascolto la tasklet
+    che ha ricevuto la connessione.  
+    Questa volta sarà una `StreamSystemListener listener(listen_pathname)`.
+
+La tasklet è la stessa che gestisce le connessioni nel medium "net".
 
 ### <a name="ZCD_send_stream_system"></a>send_stream_system
 
