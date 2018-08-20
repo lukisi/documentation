@@ -57,11 +57,16 @@ In seguito si può richiedere a ZCD di effettuare una chiamata a metodo remoto i
 
 ### <a name="ZCD_stream_net_listen"></a>stream_net_listen
 
-La funzione `stream_net_listen` oltre agli argomenti illustrati in precedenza riceve il delegato
-`IStreamDelegate stream_dlg` e anche un delegato `IErrorHandler error_handler` su cui, in caso
-di errore, la tasklet prima di terminare potrà chiamare il metodo `void error_handler(Error e)`.
+La funzione `TaskletSystem.ITaskletHandle stream_net_listen(...)` riceve questi argomenti:
+
+*   `string my_ip, uint16 tcp_port`. Indicano dove ascoltare con il protocollo TCP.
+*   `IStreamDelegate stream_dlg`.
+*   `IErrorHandler error_handler`.
 
 L'interfaccia `IStreamDelegate` è stata illustrata in precedenza.
+
+Sul delegato `IErrorHandler error_handler`, in caso di errore, la tasklet prima di terminare potrà
+chiamare il metodo `void error_handler(Error e)`.
 
 La funzione `stream_net_listen` avvia una tasklet per gestire l'ascolto e poi ritorna al chiamante
 l'handler della tasklet.
@@ -154,91 +159,57 @@ Di seguito la tasklet:
 
 ### <a name="ZCD_send_stream_net"></a>send_stream_net
 
+La funzione `string send_stream_net(...) throws ZCDError` riceve questi argomenti:
+
+*   `string peer_ip, uint16 tcp_port`. Indicano dove connettersi con il protocollo TCP.
+*   `string source_id`.
+*   `string unicast_id`.
+*   `string src_nic`.
+*   `string m_name`. Il nome del metodo.
+*   `List<string> arguments`. Serializzazione di una lista di argomenti da passare al metodo.
+*   `bool wait_reply`.
+
+La funzione `send_stream_net` apre una connessione con un socket verso la destinazione indicata.  
 Per ridurre l'overhead di una connessione TCP, un client può stabilire una connessione TCP con un server ed
-utilizzarla per diversi messaggi. Il metodo `tcp_client` restituisce un'istanza di TcpClient che rappresenta
-una connessione con il server indicato.
+utilizzarla per diversi messaggi. Quindi di fatto la funzione internamente gestisce un pool di connessioni
+già aperte verso lo stesso indirizzo. Farà attenzione a usare una vecchia connessione solo se la precedente
+chiamata a metodo remoto con quel socket è terminata con successo.
 
-#### cosa riceve
+Se all'apertura della connessione (oppure in seguito durante la scrittura o lettura sul socket connesso)
+si verifica  un errore viene lanciata una eccezione `ZCDError`.
 
-Il metodo `tcp_client` riceve:
-*   L'indirizzo IP e la porta TCP del server da contattare.
-*   La stringa in formato JSON che serializza l'identificativo di identità del mittente **source-id**.
-*   La stringa in formato JSON che serializza l'identificativo di identità del destinatario **unicast-id**.
+Una volta che una connessione è stata stabilita, la funzione costruisce un albero JSON il cui nodo radice è
+un *OBJECT* con i membri:
 
-L'oggetto TcpClient che viene restituito memorizza queste informazioni. Inoltre esso incapsula un socket con
-il quale verrà stabilita la connessione. Ma la connessione non viene inizialmente aperta.
+*   Membro **method-name** da `string m_name`.
+*   Membro **arguments** da `List<string> arguments`. Un array di nodi JSON. Ogni elemento della lista `arguments`
+    deve essere un valido JSON: viene parsata per costruire l'albero JSON e poi il suo nodo radice viene
+    aggiunto a questo array.
+*   Membro **source-id** da `string source_id`. Un nodo JSON di tipo *OBJECT* che serializza l'identificativo di identità del mittente.
+*   Membro **unicast-id** da `string unicast_id`. Un nodo JSON di tipo *OBJECT* che serializza l'identificativo di identità del destinatario.
+*   Membro **src-nic** da `string src_nic`. Un nodo JSON di tipo *OBJECT* che serializza l'identificativo di identità del destinatario.
+*   Membro **wait-reply** da `bool wait_reply`. Il booleano per indicare se si attende una risposta.
 
-### TcpClient
-
-Ogni istanza di TcpClient lavora con il socket che incapsula. Tale oggetto può essere acceduto da diverse tasklet
-che lavorano in contemporanea, ma come abbiamo detto non è possibile usare la stessa connessione contemporaneamente
-per due operazioni. L'oggetto fornirà al suo utilizzatore questi metodi:
-
-*   `bool is_queue_empty` - Verificare se la connessione è immediatamente disponibile per avviare una operazione
-    (non ci sono altre operazioni in corso o accodate).
-*   `string enqueue_call` - Accodare una operazione.  
-    A questo metodo sono passati:
-
-    *   La stringa con il nome del metodo da chiamare.
-    *   Un array di stringhe in formato JSON, una per ogni argomento del metodo.
-    *   Un booleano per indicare se si attende una risposta.
-
-    Se la coda è vuota, questo metodo avvia una operazione nella connessione. Altrimenti accoda l'operazione,
-    garantendo la sequenzialità delle operazioni accodate. In ogni caso, il metodo non ritorna fino a quando
-    non ha eseguito l'operazione, cioè inviato il messaggio e ricevuto, se previsto, la risposta.  
-    Se il booleano dice di non voler attendere una risposta, il metodo restituisce una stringa vuota non appena
-    ha completato l'invio del messaggio. Altrimenti restituisce la risposta che riceve, che è una stringa in formato JSON.  
-    Se questo metodo viene chiamato immediatamente dopo aver verificato che la connessione è disponibile
-    (con il metodo precedente) si è certi che l'operazione in realtà non viene accodata, ma immediatamente avviata.
-
-Di norma il client esegue queste operazioni. Per prima cosa crea una istanza di TcpClient con il metodo
-`tcp_client` di ZCD e la memorizza per usarla in futuro. Quando vuole effettuare una chiamata non urgente
-chiama direttamente il metodo `enqueue_call` sull'istanza che aveva memorizzata. Quando vuole effettuare una
-chiamata urgente chiama il metodo `is_queue_empty` e se è vuota chiama immediatamente il metodo `enqueue_call`;
-se invece non è vuota crea una nuova istanza di TcpClient con il metodo `tcp_client` di ZCD, la sostituisce
-alla precedente e chiama su di essa il metodo `enqueue_call`.
-
-Quando una operazione viene avviata, se la connessione non è aperta viene aperta. L'oggetto non può venire
-distrutto (ci saranno riferimenti ad esso) fino a quando ci sono operazioni accodate o in corso. Quando
-l'oggetto viene distrutto (rimossi tutti i riferimenti), se la connessione è aperta viene chiusa.
-
-#### come procede una operazione
-
-Se la connessione non era aperta il TcpClient si occupa di aprirla. Se si verifica un errore viene lanciata
-una eccezione ZCDError.
-
-Il TcpClient costruisce un albero JSON il cui nodo radice è un *OBJECT* con i membri:
-
-*   Membro **method-name**. Il nome del metodo.
-*   Membro **arguments**. Un array di nodi JSON. Ogni stringa JSON dei parametri viene parsata per costruire
-    l'albero JSON e poi il nodo radice viene aggiunto a questo array.
-*   Membro **source-id**. Un nodo JSON di tipo *OBJECT* che serializza l'identificativo di identità del mittente.
-*   Membro **unicast-id**. Un nodo JSON di tipo *OBJECT* che serializza l'identificativo di identità del destinatario.
-*   Membro **wait-reply**. Il booleano per indicare se si attende una risposta.
-
-Dal JSON il TcpClient produce una stringa *msg*. Se durante la fase di costruzione di *msg* si verifica un
+Dal JSON la funzione produce una stringa *msg*. Se durante la fase di costruzione di *msg* si verifica un
 errore la libreria può abortire il programma.
 
-Il TcpClient trasmette la stringa *msg* alla connessione, preceduta da 4 bytes che ne indicano la lunghezza.
-Se si verifica un errore viene lanciata una eccezione ZCDError.
+La funzione trasmette la stringa *msg* alla connessione, preceduta da 4 bytes che ne indicano la lunghezza.
+Se si verifica un errore viene lanciata una eccezione `ZCDError`.
 
 Se non si vuole attendere una risposta, il metodo restituisce immediatamente una stringa vuota.
 
-Se bisogna attendere una risposta, il TcpClient la attende dalla stessa connessione, leggendola come sempre:
-prima 4 bytes e poi il numero di bytes riportati. Se si verifica un errore viene lanciata una eccezione ZCDError.
+Se bisogna attendere una risposta, la funzione la attende dalla stessa connessione, leggendola come sempre:
+prima 4 bytes e poi il numero di bytes riportati. Se si verifica un errore viene lanciata una eccezione `ZCDError`.
 
-La stringa ricevuta deve essere un valido albero JSON. Altrimenti viene lanciata una eccezione ZCDError.
+La stringa ricevuta deve essere un valido albero JSON. Altrimenti viene lanciata una eccezione `ZCDError`.
 
 Il nodo radice deve essere un *OBJECT* con il membro **response** che è un nodo valido come radice. Altrimenti viene
-lanciata una eccezione ZCDError.
+lanciata una eccezione `ZCDError`.
 
-Il TcpClient costruisce un nuovo albero con tale nodo e genera una stringa da esso. Restituisce la stringa.
+La funzione costruisce un nuovo albero con tale nodo e genera una stringa da esso. Restituisce la stringa.
 
-Se durante queste operazioni (cioè tra l'inizio della trasmissione del messaggio e la fine della ricezione della
-risposta) si verifica un errore che porta a lanciare una eccezione ZCDError, prima il socket viene scartato e
-sostituito con un nuovo socket costruito con gli stessi dati del precedente (indirizzo IP e porta TCP) non ancora
-connesso. Poi l'operazione in corso lancia l'eccezione ZCDError. Le altre operazioni, che eventualmente erano
-state accodate in precedenza, potranno essere avviate e di conseguenza una nuova connessione verrà tentata.
+Come abbiamo detto, la funzione internamente gestisce un pool di connessioni aperte verso un dato indirizzo.
+Se deve lanciare una eccezione `ZCDError`, prima il socket che stava usando viene rimosso dal pool.
 
 ### <a name="ZCD_stream_system_listen"></a>stream_system_listen
 
