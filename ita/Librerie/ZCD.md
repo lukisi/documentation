@@ -424,6 +424,7 @@ Se la tasklet che ha ricevuto il messaggio era in ascolto per connessioni, cioè
 Se invece la tasklet che ha ricevuto il messaggio era in ascolto per messaggi broadcast, cioè `datagram_net_listen` 
 o `datagram_system_listen`, viene prodotta una istanza di DatagramCallerInfo. Questa contiene:
 
+*   `int packet_id`.
 *   `string source_id`. 
 *   `string broadcast_id`
 *   `string src_nic`
@@ -484,7 +485,7 @@ dispatcher `IDatagramDispatcher` ottenuto dal delegato si prende cura di notific
 diverse *identità* di questo nodo che sono interessate; di fatto avvia una nuova tasklet per ogni identità
 interessata e chiama in essa il metodo sul relativo skeleton.  
 Inoltre, in questo caso, se il messaggio prevede una comunicazione di ACK da ogni destinatario che lo riceve,
-la libreria ZCD trasmette un unico ACK con un identificativo `string src_nic` dal quale si possa risalire
+la libreria ZCD trasmette un unico ACK con un identificativo `string ack_mac` dal quale si possa risalire
 all'interfaccia che ha ricevuto il messaggio.  
 Dall'altra parte, il nodo che riceve questo ACK deve essere in grado di associarlo
 all'intero set di *identità* di questo nodo che erano interessate.</sub>

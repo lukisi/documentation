@@ -283,51 +283,24 @@ sarà una funzione interna che farà questo lavoro in entrambi i casi.
 
 ### <a name="ZCD_datagram_net_listen"></a>datagram_net_listen
 
-Il metodo `udp_listen` avvia una tasklet che ascolta e gestisce i messaggi UDP provenienti dall'esterno.
+La funzione `TaskletSystem.ITaskletHandle datagram_net_listen(...)` riceve questi argomenti:
 
-#### cosa riceve
+*   `string my_dev, uint16 udp_port, string ack_mac`. Indicano dove ascoltare con il protocollo UDP
+    e l'identificativo (MAC addess) dell'interfaccia di rete propria del nodo.
+*   `IDatagramDelegate datagram_dlg`.
+*   `IErrorHandler error_handler`.
 
-I dati che vengono passati al metodo `udp_listen` sono:
+L'interfaccia `IDatagramDelegate` è stata illustrata in precedenza.
 
-*   La porta UDP e l'interfaccia di rete.
-*   Un delegato che ZCD potrà usare alla ricezione di un messaggio di tipo richiesta (si vedano sotto i
-    vari tipi di messaggio UDP) per ottenere, se opportuno, un "dispatcher" a cui passare il messaggio per l'esecuzione.
-*   Un delegato che ZCD potrà usare alla ricezione di un messaggio di tipo ACK o KEEP-ALIVE o risposta.
-*   Un delegato che la tasklet in ascolto potrà usare in caso di errore prima di terminare.
+Sul delegato `IErrorHandler error_handler`, in caso di errore, la tasklet prima di terminare potrà
+chiamare il metodo `void error_handler(Error e)`.
 
-Il delegato per udp_listen da usare alla ricezione di un messaggio di tipo richiesta è nella forma di una
-implementazione dell'interfaccia IZcdUdpRequestMessageDelegate. I metodi di quest'ultima sono:
-
-*   `IZcdDispatcher? get_dispatcher_unicast(int id, string unicast_id, string m_name, Gee.List<string> arguments, UdpCallerInfo caller_info)`
-*   `IZcdDispatcher? get_dispatcher_broadcast(int id, string broadcast_id, string m_name, Gee.List<string> arguments, UdpCallerInfo caller_info)`
-
-La classe UdpCallerInfo contiene i membri:
-
-*   `string dev`
-*   `string peer_address`
-*   `string source_id` (serializzazione di un *identificativo di identità*)
-
-L'interfaccia IZcdDispatcher è implementata da un oggetto che verrà istanziato alla chiamata di
-`get_dispatcher_unicast` o `get_dispatcher_broadcast`. I suoi metodi sono:
-
-*   `string execute()`
-
-Il delegato per `udp_listen` da usare alla ricezione di altri tipi di messaggio è nella forma di una
-implementazione dell'interfaccia IZcdUdpServiceMessageDelegate. I metodi di quest'ultima sono:
-
-*   `bool is_my_own_message(int id)`
-*   `void got_keep_alive(int id)`
-*   `void got_response(int id, string response)`
-*   `void got_ack(int id, string mac)`
-
-Il delegato per `udp_listen` da usare in caso di errore nella preparazione del socket è nella forma di
-una implementazione dell'interfaccia IZcdUdpCreateErrorHandler. I suoi metodi sono:
-
-*   `void error_handler(Error e)`
+La funzione `datagram_net_listen` avvia una tasklet per gestire l'ascolto e poi ritorna al chiamante
+l'handler della tasklet.
 
 #### cosa fa la tasklet che gestisce il socket in ascolto
 
-La tasklet avviata dal metodo `udp_listen` istanzia un socket UDP per la ricezione di messaggi broadcast
+La tasklet istanzia un socket UDP per la ricezione di messaggi broadcast
 (un TaskletSystem.IServerDatagramSocket) associato all'interfaccia di rete e alla porta specificate. Nel caso di
 errore lo passa al metodo `error_handler` e poi termina.
 
@@ -347,68 +320,45 @@ rete, cioè con indirizzo di destinazione IPv4 255.255.255.255.
 
 Ogni messaggio che il framework ZCD invia è costituito da un singolo pacchetto UDP. Visto che esiste un limite
 massimo (teorico di quasi 64 KB) alla dimensione di un pacchetto UDP, c'è la possibilità che un messaggio di
-grosse dimensioni sia impossibile da trasmettere correttamente con la modalità Unicast o Broadcast del framework.
+grosse dimensioni sia impossibile da trasmettere correttamente con la modalità "datagram" del framework.
 
 Esistono diversi tipi di messaggio. Ogni messaggio è un albero JSON che ha come nodo radice un oggetto con
 un membro. Dal nome del membro si deduce il tipo e di conseguenza come trattare il suo contenuto, che
 comunque è sempre un oggetto. Di seguito elenchiamo le tipologie, indicando il nome del membro sull'oggetto
 radice. Sotto ogni tipologia sono poi elencati i vari membri dell'oggetto.
 
-*   Messaggio di richiesta *Unicast*.  
-    Il membro ha nome "unicast-request" e il suo contenuto è un oggetto con i seguenti membri:
+*   Messaggio di *richiesta*.  
+    Il membro ha nome "request" e il suo contenuto è un oggetto che la libreria ZCD è
+    in grado di interpretare. Quindi la tasklet ne estrae le seguenti informazioni:
 
-    *   "ID" - un intero che identifica la richiesta Unicast.
-    *   "request" - un oggetto che codifica la chiamata, con i membri:
-        *   "unicast-id" - un nodo che è valido come radice, quindi *OBJECT* o *ARRAY*. Tale nodo sarà riprodotto
-            come stringa e passato al delegato. Identifica il nodo destinatario.
-        *   "method-name" - una stringa con il significato descritto in precedenza nel capitolo tcp_listen.
-        *   "arguments" - un array di oggetti con il significato descritto in precedenza.
-        *   "source-id" - un nodo che è valido come radice, quindi *OBJECT* o *ARRAY*. Tale nodo sarà riprodotto
-            come stringa e messo nel CallerInfo per essere passato al dispatcher. Identifica il nodo mittente.
-        *   "wait-reply" - un booleano con il significato descritto in precedenza.
+    *   Membro **packet-id** in `int packet_id`. Un intero che identifica la richiesta.
+    *   Membro **method-name** in `string m_name`. Una stringa con il significato descritto in precedenza.
+    *   Membro **arguments** in `List<string> args`. Un array di nodi JSON con il significato descritto in precedenza.
+    *   Membro **source-id** in `string source_id`. Un nodo JSON di tipo *OBJECT*.
+    *   Membro **broadcast-id** in `string broadcast_id`. Un nodo JSON di tipo *OBJECT*.
+    *   Membro **src-nic** in `string src_nic`. Un nodo JSON di tipo *OBJECT*.
+    *   Membro **send-ack** in `bool send_ack`. Un booleano che dice se è richiesto un messaggio di ACK.
 
-*   KEEP-ALIVE relativo ad una specifica richiesta *Unicast* con richiesta di risposta, che è stata ricevuta
-    correttamente ed è ancora in fase di elaborazione.  
-    Il membro ha nome "unicast-keepalive" e il suo contenuto è un oggetto con i seguenti membri:
+*   Messaggio di *ACK* relativo ad una specifica richiesta correttamente ricevuta.  
+    Il membro ha nome "ack" e il suo contenuto è un oggetto che la libreria ZCD è
+    in grado di interpretare. Quindi la tasklet ne estrae le seguenti informazioni:
 
-    *   "ID" - un intero che identifica la richiesta Unicast da mantenere in vita.
+    *   Membro **packet-id** in `int packet_id`. Un intero che identifica la richiesta.
+    *   Membro **ack-mac** in `string ack_mac`. L'identificativo (MAC addess) dell'interfaccia di rete
+        che ha ricevuto il messaggio.
 
-*   Messaggio di risposta (ad una specifica richiesta *Unicast*).  
-    Il membro ha nome "unicast-response" e il suo contenuto è un oggetto con i seguenti membri:
+#### cosa fa la tasklet che gestisce un datagram
 
-    *   "ID" - un intero che identifica la richiesta Unicast a cui si risponde.
-    *   "response" - un nodo valido come radice con il significato descritto in precedenza nel capitolo tcp_listen.
-
-*   Messaggio di richiesta *Broadcast*.  
-    Il membro ha nome "broadcast-request" e il suo contenuto è un oggetto con i seguenti membri:
-
-    *   "ID" - un intero che identifica la richiesta Broadcast.
-    *   "request" - un oggetto che codifica la chiamata, con i membri:
-        *   "broadcast-id" - un nodo che è valido come radice, quindi *OBJECT* o *ARRAY*. Tale nodo sarà riprodotto
-            come stringa e passato al delegato. Identifica i nodi destinatari.
-        *   "method-name" - una stringa con il significato descritto in precedenza nel capitolo tcp_listen.
-        *   "arguments" - un array di oggetti con il significato descritto in precedenza.
-        *   "source-id" - un nodo che è valido come radice, quindi *OBJECT* o *ARRAY*. Tale nodo sarà riprodotto
-            come stringa e messo nel CallerInfo per essere passato al dispatcher. Identifica il nodo mittente.
-        *   "send-ack" - un booleano che indica se si desidera il messaggio ACK.
-
-*   ACK relativo ad una specifica richiesta *Broadcast* correttamente ricevuta.  
-    Il membro ha nome "broadcast-ack" e il suo contenuto è un oggetto con i seguenti membri:
-
-    *   "ID" - un intero che identifica la richiesta Broadcast di cui si intende segnalare la corretta ricezione.
-    *   "MAC" - una stringa che rappresenta il MAC address della scheda di rete che ha ricevuto il messaggio, in
-        esadecimale in maiuscolo e con il separatore ":". Ad esempio "02:AF:78:2E:C8:B6".
-
-#### cosa fa la tasklet che gestisce un messaggio UDP
-
-La tasklet che gestisce un messaggio riceve questi parametri iniziali:
+La tasklet che gestisce un datagram (ad esempio un messaggio UDP) riceve questi parametri iniziali:
 
 *   `string msg` - Il messaggio ricevuto.
-*   `string dev` - L'interfaccia di rete da cui è stato ricevuto.
-*   `string peer_address` - L'indirizzo del mittente.
-*   `uint16 peer_port` - La porta del mittente.
-*   `IZcdUdpRequestMessageDelegate del_req` - Il delegato per le richieste.
-*   `IZcdUdpServiceMessageDelegate del_ser` - Il delegato per i messaggi di servizio.
+*   `IDatagramDelegate datagram_dlg` - Il delegato per le richieste.
+*   `Listener listener` - Un oggetto che rappresenta la modalità con cui era in ascolto la tasklet
+    che ha ricevuto il messaggio.  
+    Nel caso in esame (cioè `datagram_net_listen`) esso è una `DatagramNetListener listener(my_dev, udp_port, ack_mac)`.
+    Ma vedremo in seguito (quando analizzeremo `datagram_system_listen`) che la tasklet che gestisce
+    un messaggio nel medium "system" è del tutto analoga a questa. Quindi questa tasklet riceve
+    una istanza di `Listener` e non è interessata a sapere di quale tipo sia.
 
 La tasklet prima di tutto verifica la correttezza del messaggio, che deve essere un valido albero JSON,
 altrimenti termina. Analogamente, se il nodo radice non è di tipo oggetto la tasklet termina.
@@ -416,91 +366,36 @@ altrimenti termina. Analogamente, se il nodo radice non è di tipo oggetto la ta
 L'oggetto radice deve avere esattamente un membro. Il nome del membro deve essere uno di quelli indicati
 precedentemente. Altrimenti la tasklet termina.
 
-Se si tratta di una richiesta *Unicast*:
+Se si tratta di un messaggio di *richiesta*:
 
-*   La tasklet verifica di poter estrapolare, pena la sua terminazione, dall'albero le seguenti informazioni:
-    *   `int id`
-    *   `string unicast_id` che è un valido albero JSON
-    *   `string m_name`
-    *   `Gee.List<string> arguments` che sono validi alberi JSON
-    *   `string source_id` che è un valido albero JSON
-    *   `bool wait_reply`
-*   La tasklet chiama il metodo `is_my_own_message(id)` del delegato per i messaggi di servizio.  
-    Se la risposta è True significa che il messaggio è partito dal mio nodo, quindi la tasklet lo ignora e
-    termina. Questo controllo è necessario perché i pacchetti UDP con destinazione broadcast che il nodo
-    trasmette su una interfaccia di rete vengono ricevuti anche dal nodo stesso tramite il socket in ascolto
-    sulla stessa interfaccia, come quelli trasmessi da altri nodi.
-*   Prepara una istanza di UdpCallerInfo con le informazioni che ha sul client, cioè l'indirizzo IP del client
-    remoto e la scheda di rete dalla quale ha rilevato il messaggio e la stringa **source-id**.
-*   Chiama il metodo `get_dispatcher_unicast` sulla sua istanza di IZcdUdpRequestMessageDelegate e ottiene un
-    IZcdDispatcher *disp*.  
-    Tale metodo a questo punto è in grado di stabilire se il messaggio è da processare e da quale sua
-    *identità*; può esservene al massimo una in questo nodo. In questo caso ritorna una istanza apposita di
-    IZcdDispatcher che ha memorizzato le informazioni per l'esecuzione del metodo. Altrimenti ritorna null.
-*   Se *disp* = *null* il messaggio va ignorato. La tasklet termina.
-*   Se il messaggio dichiarava di voler ricevere una risposta:
-    *   Avvia una nuova tasklet `t_keepalive` con cui:
-        *   Periodicamente, fino a che non viene terminata la tasklet:
-            *   Prepara l'albero JSON contenente la keep-alive con quel id.
-            *   Trasmette sull'interfaccia *dev* in broadcast UDP la stringa generata dall'albero JSON.
-*   Esegue `resp = disp.execute()`.  
-    L'oggetto IZcdDispatcher deserializza gli argomenti. Esegue il metodo e ottiene il risultato (o l'eccezione).
-    Serializza il risultato e lo restituisce come stringa JSON.  
-    Questa istanza è di una classe fornita da MOD-RPC, quindi conosce le classi degli argomenti da passare e
-    le eventuali eccezioni previste dal metodo.
-*   Se il messaggio dichiarava di voler ricevere una risposta:
-    *   Termina la tasklet `t_keepalive`.
-    *   La tasklet ora verifica che la stringa `resp` restituita da `execute` sia un valido albero JSON. Può
-        abortire il programma se non lo è.
-    *   La tasklet prepara l'albero JSON contenente la risposta a Unicast con quel id e questa `resp`.
-    *   La tasklet trasmette sull'interfaccia *dev* in broadcast UDP la stringa generata dall'albero JSON.
-
-Se si tratta di una KEEP-ALIVE:
-
-*   La tasklet verifica di poter estrapolare, pena la sua terminazione, dall'albero le seguenti informazioni:
-    *   `int id`
-*   La tasklet chiama il metodo `got_keep_alive(id)` del delegato per i messaggi di servizio.
-
-Se si tratta di una risposta a *Unicast*:
-
-*   La tasklet verifica di poter estrapolare, pena la sua terminazione, dall'albero le seguenti informazioni:
-    *   `int id`
-    *   `string response` che è un valido albero JSON
-*   La tasklet chiama il metodo `got_response(id, response)` del delegato per i messaggi di servizio.
-
-Se si tratta di una richiesta *Broadcast*:
-
-*   La tasklet verifica di poter estrapolare, pena la sua terminazione, dall'albero le seguenti informazioni:
-    *   `int id`
-    *   `string broadcast_id` che è un valido albero JSON
-    *   `string m_name`
-    *   `Gee.List<string> arguments` che sono validi alberi JSON
-    *   `string source_id` che è un valido albero JSON
-    *   `bool send_ack`
-*   La tasklet chiama il metodo `is_my_own_message(id)` del delegato per i messaggi di servizio.  
+*   La tasklet verifica di poter estrapolare dall'albero JSON le informazioni sopra illustrate, pena la sua terminazione.
+*   La tasklet chiama il metodo `datagram_dlg.is_my_own_message(packet_id)`.  
     Se la risposta è True significa che il messaggio è partito dal mio nodo, quindi la tasklet lo ignora e termina.
-*   Se il messaggio dichiarava di voler ricevere un acknowledge:
-    *   Avvia una nuova tasklet con cui:
-        *   Per 3 volte a brevi intervalli (casuali tra 10 e 200 msec):
-            *   Prepara l'albero JSON contenente la ACK con quel id e il MAC address dell'interfaccia *dev*.
-            *   Trasmette sull'interfaccia *dev* in broadcast UDP la stringa generata dall'albero JSON.
-*   Prepara una istanza di UdpCallerInfo con le informazioni che ha sul client, cioè l'indirizzo IP del client
-    remoto e la scheda di rete dalla quale ha rilevato il messaggio e la stringa **source-id**.
-*   Chiama il metodo `get_dispatcher_broadcast` sulla sua istanza di IZcdUdpRequestMessageDelegate e ottiene un IZcdDispatcher *disp*.  
-    Tale metodo a questo punto è in grado di stabilire se il messaggio è da processare e da quali sue *identità*;
-    possono esservene più di una in questo nodo. In questo caso ritorna una istanza apposita di IZcdDispatcher che
-    ha memorizzato le informazioni per l'esecuzione del metodo. Altrimenti ritorna null.
-*   Se *disp* = *null* il messaggio va ignorato. La tasklet termina.
-*   Esegue `disp.execute()`.  
-    L'oggetto IZcdDispatcher deserializza gli argomenti. Esegue il metodo su ogni *identità* interessata. Non si
-    cura del risultato (o dell'eccezione) di ogni chiamata. Restituisce comunque una stringa vuota.
+*   Se il messaggio dichiarava di voler ricevere un acknowledge, cioè `send_ack`:
+    *   Prepara l'albero JSON contenente il messaggio di *ACK* con il `packet_id` del messaggio ricevuto e
+        il `ack_mac` che ha ricevuto come argomento.
+    *   In una nuova tasklet, per 3 volte a brevi intervalli casuali tra 10 e 200 msec, trasmette il messaggio
+        di *ACK* in un datagram sulla stessa interfaccia su cui ha ricevuto il messaggio. Questo lo fa chiamando
+        una sua funzione interna `send_ack_net(my_dev, udp_port, ...)` o `send_ack_system(send_pathname, ...)`
+        a seconda della tasklet in ascolto che ha ricevuto il datagram.
+*   Prepara una istanza di `DatagramCallerInfo caller_info` con le informazioni:
+    *   `packet_id`, `source_id`, `broadcast_id`, `src_nic`, `send_ack`, `listener`.
+*   Chiama il metodo `datagram_dlg.get_dispatcher(caller_info)` e ottiene un `IDatagramDispatcher? disp`.  
+    Il delegato è in grado di stabilire se il messaggio è da processare. In
+    questo caso ritorna una istanza apposita di `IDatagramDispatcher`. Altrimenti ritorna `null`.
+*   Se `disp == null`:
+    *   Il messaggio va ignorato. La tasklet termina.
+*   Esegue `disp.execute(m_name, args, caller_info)`.  
+    Come già discusso, se il messaggio aveva come destinatari delle *identità* piuttosto che dei *nodi*,
+    il dispatcher potrebbe dover avviare diverse tasklet e su esse eseguire il metodo sullo *skeleton* di
+    ogni *identità* interessata.
+*   Poi la tasklet termina.
 
-Se si tratta di una ACK:
+Se si tratta di un messaggio di *ACK*:
 
-*   La tasklet verifica di poter estrapolare, pena la sua terminazione, dall'albero le seguenti informazioni:
-    *   `int id`
-    *   `string mac`
-*   La tasklet chiama il metodo `got_ack(id, mac)` del delegato per i messaggi di servizio.
+*   La tasklet verifica di poter estrapolare dall'albero JSON le informazioni sopra illustrate, pena la sua terminazione.
+*   La tasklet chiama il metodo `datagram_dlg.got_ack(packet_id, ack_mac)` con il `packet_id` e
+    il `ack_mac` del messaggio ricevuto.
 
 ### <a name="ZCD_send_datagram_net"></a>send_datagram_net
 
