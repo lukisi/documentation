@@ -261,11 +261,25 @@ La tasklet che gestisce una connessione riceve questi parametri iniziali:
     che ha ricevuto la connessione.  
     Questa volta sarà una `StreamSystemListener listener(listen_pathname)`.
 
-La tasklet è la stessa che gestisce le connessioni nel medium "net".
+Il codice eseguito dalla tasklet è lo stesso che esegue la tasklet che gestisce le connessioni nel medium "net".
 
 ### <a name="ZCD_send_stream_system"></a>send_stream_system
 
-**TODO**
+La funzione `string send_stream_system(...) throws ZCDError` riceve questi argomenti:
+
+*   `string send_pathname`. Indica dove connettersi con un socket unix-domain per connessioni.
+*   `string source_id`.
+*   `string unicast_id`.
+*   `string src_nic`.
+*   `string m_name`. Il nome del metodo.
+*   `List<string> arguments`. Serializzazione di una lista di argomenti da passare al metodo.
+*   `bool wait_reply`.
+
+La funzione `send_stream_system` apre una connessione con un socket verso la destinazione indicata.  
+Non è necessario tenere conto dell'overhead di una connessione e gestire un pool di connessioni aperte.
+
+Il comportamento è del tutto similare a quello visto nella funzione `send_stream_net`. Probabilmente ci
+sarà una funzione interna che farà questo lavoro in entrambi i casi.
 
 ### <a name="ZCD_datagram_net_listen"></a>datagram_net_listen
 
