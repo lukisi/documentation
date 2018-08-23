@@ -107,19 +107,16 @@ prodotto permette di creare una interfaccia tra la libreria MOD-RPC e l'applicaz
 obbligata né ad avere dipendenze verso la libreria ZCD né a usare stringhe in formato JSON.
 
 La libreria ZCD ha bisogno di comporre e interpretare delle stringhe JSON ad uso interno. Ad esempio per
-comporre i messaggi delle chiamate o per i messaggi di ACK di cui parleremo in seguito.
+comporre i messaggi delle chiamate o per i messaggi di ACK di cui parleremo in seguito.  
 L'implementazione attuale di ZCD usa internamente la libreria JsonGlib per trattare le stringhe in formato
 JSON ma non espone questo dettaglio al suo utilizzatore.
 
 La libreria MOD-RPC sa che per interagire con ZCD ha bisogno di produrre e interpretare stringhe in formato
-JSON. Per questo anche essa può usare internamente la libreria JsonGlib, ma questo non viene imposto da ZCD.
-
-La libreria ZCD non è tenuta a saper interpretare il contenuto delle stringhe JSON che riceve da MOD-RPC,
-ma deve solo farle arrivare alla libreria MOD-RPC nel nodo remoto. Per questo la librerià MOD-RPC è libera
-di scegliere la sua strategia per comporre l'albero JSON a partire dalla struttura dati che vuole passare
-al metodo remoto. Ad esempio, la libreria MOD-RPC può scegliere di usare la serializzazione delle classi
-GObject come viene fornita dalla libreria JsonGlib senza per questo dover assumere che anche la libreria
-di basso livello ZCD ne faccia uso.
+JSON. Ad esempio per serializzare e deserializzare gli argomenti dei messaggi.  
+L'implementazione che descriveremo in questo documento (realizzata con "rpcdesign") usa internamente la
+libreria JsonGlib, ma questo non viene imposto da ZCD. Infatti la libreria ZCD non è tenuta a saper interpretare
+il contenuto delle stringhe JSON che riceve da MOD-RPC, ma deve solo farle arrivare alla libreria MOD-RPC nel
+nodo remoto.
 
 ## <a name="Trasmissioni"></a>Tipi di trasmissione
 
@@ -288,8 +285,8 @@ che la libreria di basso livello può mettersi in ascolto di messaggi nei seguen
     le scelte fatte nell'applicazione *ntkd* per mappare in un pathname le situazioni di comunicazione con messaggi
     broadcast che si possono incontrare.
 
-Nelle modalità di ascolto per messaggi abbiamo un parametro `string ack_mac`. Esso è da utilizzare nella
-trasmissione di messaggi *ack*.
+Le tasklet che ascoltano trasmissioni di tipo "datagram" ricevono un parametro `string ack_mac`. Esso è da utilizzare nella
+successiva trasmissione dei messaggi di *ACK* relativi ai messaggi di *richiesta* ricevuti.
 
 L'utilizzatore può inizializzare la libreria ZCD ordinandogli di mettersi in ascolto con delle tasklet in una
 o più di una di queste modalità.
@@ -381,7 +378,8 @@ In entrambe le modalità (stream e datagram) abbiamo dei parametri comuni.
     necessita di conoscere la classe dell'oggetto, ma solo che è un `Object` serializzabile.
 *   `source_id`. Una stringa in formato JSON che rappresenta il mittente.
 *   `unicast_id`. Una stringa in formato JSON che rappresenta il destinatario.
-*   `broadcast_id`. Una stringa in formato JSON che rappresenta il set di destinatari.  
+*   `broadcast_id`. Una stringa in formato JSON che rappresenta il set di destinatari.
+*   `src_nic`. Una stringa in formato JSON che rappresenta l'interfaccia di rete su cui il mittente trasmette.  
     Anche in questi casi per la libreria ZCD sono solo stringhe valide nel formato JSON.  
     La libreria MOD-RPC ha avuto l'incarico di produrle serializzando un oggetto e sarà in grado, dall'altro
     lato della comunicazione, di deserializzarle nella giusta forma.
@@ -451,8 +449,9 @@ Se il risultato non è nullo, su questo `IStreamDispatcher` viene chiamato il me
 `string execute(string m_name, List<string> args, StreamCallerInfo caller_info)`. Cioè di fatto viene
 processato il messaggio chiamando un metodo di uno skeleton che risiede in questo nodo. Si ottiene una
 stringa che è la serializzazione del risultato.  
-Al termine, se la richiesta conteneva `wait_reply`, la stringa risultato viene trasmessa dal destinatario
-del messaggio al suo mittente. Poi la tasklet termina.
+Ottenuta la stringa risultato, se la richiesta conteneva `wait_reply`, essa viene trasmessa dal destinatario
+del messaggio al suo mittente.  
+Poi la tasklet termina.
 
 Come si usa il delegato `datagram_dlg`: dobbiamo ricordare che i messaggi broadcast che si ricevono
 possono essere *request* o *ack*. Sulla ricezione di una *request* viene per prima cosa chiamato il

@@ -63,7 +63,10 @@ La funzione `TaskletSystem.ITaskletHandle stream_net_listen(...)` riceve questi 
 *   `IStreamDelegate stream_dlg`.
 *   `IErrorHandler error_handler`.
 
-L'interfaccia `IStreamDelegate` è stata illustrata in precedenza.
+L'interfaccia `IStreamDelegate` è stata illustrata nel documento di analisi.  
+Essa ha un metodo `IStreamDispatcher? get_dispatcher(StreamCallerInfo caller_info)`.
+Il suo valore di ritorno, se non nullo, è un oggetto che ha un metodo
+`string execute(string m_name, List<string> args, StreamCallerInfo caller_info)`.
 
 Sul delegato `IErrorHandler error_handler`, in caso di errore, la tasklet prima di terminare potrà
 chiamare il metodo `void error_handler(Error e)`.
@@ -115,7 +118,7 @@ La tasklet che gestisce una connessione riceve questi parametri iniziali:
     Nel caso in esame (cioè `stream_net_listen`) esso è una `StreamNetListener listener(my_ip, tcp_port)`.
     Ma vedremo in seguito (quando analizzeremo `stream_system_listen`) che la tasklet che gestisce
     una connessione nel medium "system" è del tutto analoga a questa. Quindi questa tasklet riceve
-    una istanza di `Listener` e non è interessata a sapere di quale tipo sia.
+    una generica istanza di `Listener`.
 
 La tasklet legge i 4 bytes che indicano la lunghezza del messaggio e poi legge il numero di bytes indicato.
 Se la connessione si chiude prima la tasklet termina.
@@ -293,7 +296,12 @@ La funzione `TaskletSystem.ITaskletHandle datagram_net_listen(...)` riceve quest
 *   `IDatagramDelegate datagram_dlg`.
 *   `IErrorHandler error_handler`.
 
-L'interfaccia `IDatagramDelegate` è stata illustrata in precedenza.
+L'interfaccia `IDatagramDelegate` è stata illustrata nel documento di analisi.  
+Essa ha il metodo `bool is_my_own_message(int packet_id)`.  
+Inoltre ha il metodo `IDatagramDispatcher? get_dispatcher(DatagramCallerInfo caller_info)`.
+Il suo valore di ritorno, se non nullo, è un oggetto che ha un metodo
+`void execute(string m_name, List<string> args, DatagramCallerInfo caller_info)`.  
+Infine ha il metodo `void got_ack(int packet_id, string ack_mac)`.
 
 Sul delegato `IErrorHandler error_handler`, in caso di errore, la tasklet prima di terminare potrà
 chiamare il metodo `void error_handler(Error e)`.
@@ -377,7 +385,7 @@ Se si tratta di un messaggio di *richiesta*:
     Se la risposta è True significa che il messaggio è partito dal mio nodo, quindi la tasklet lo ignora e termina.
 *   Se il messaggio dichiarava di voler ricevere un acknowledge, cioè `send_ack`:
     *   Prepara l'albero JSON contenente il messaggio di *ACK* con il `packet_id` del messaggio ricevuto e
-        il `ack_mac` che ha ricevuto come argomento.
+        il `ack_mac` che trova nel `listener` che ha ricevuto come argomento.
     *   In una nuova tasklet, per 3 volte a brevi intervalli casuali tra 10 e 200 msec, trasmette il messaggio
         di *ACK* in un datagram sulla stessa interfaccia su cui ha ricevuto il messaggio. Questo lo fa chiamando
         una sua funzione interna `send_ack_net(my_dev, udp_port, ...)` o `send_ack_system(send_pathname, ...)`
