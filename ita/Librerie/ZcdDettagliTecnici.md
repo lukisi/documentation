@@ -226,7 +226,7 @@ La funzione `TaskletSystem.ITaskletHandle stream_system_listen(...)` riceve ques
 
 L'interfaccia `IStreamDelegate` è stata illustrata in precedenza.
 
-**TODO** La classe che implementa `IStreamDelegate` può essere la stessa che si usa per la funzione
+La classe che implementa `IStreamDelegate` può essere la stessa che si usa per la funzione
 `stream_net_listen`. Anche l'istanza può essere unica. L'importante è che questa abbia conoscenza delle
 classi `StreamNetListener` e `StreamSystemListener`.
 
@@ -274,6 +274,9 @@ La funzione `string send_stream_system(...) throws ZCDError` riceve questi argom
 *   `string m_name`. Il nome del metodo.
 *   `List<string> arguments`. Serializzazione di una lista di argomenti da passare al metodo.
 *   `bool wait_reply`.
+
+La funzione deve verificare che il pathname specificato esista. Altrimenti lancia una
+eccezione `ZCDError`.
 
 La funzione `send_stream_system` apre una connessione con un socket verso la destinazione indicata.  
 Non è necessario tenere conto dell'overhead di una connessione e gestire un pool di connessioni aperte.
@@ -331,21 +334,22 @@ radice. Sotto ogni tipologia sono poi elencati i vari membri dell'oggetto.
     Il membro ha nome "request" e il suo contenuto è un oggetto che la libreria ZCD è
     in grado di interpretare. Quindi la tasklet ne estrae le seguenti informazioni:
 
-    *   Membro **packet-id** in `int packet_id`. Un intero che identifica la richiesta.
+    *   Membro **packet-id** in `int packet_id`. Un intero che identifica questo messaggio di *richiesta*.
     *   Membro **method-name** in `string m_name`. Una stringa con il significato descritto in precedenza.
     *   Membro **arguments** in `List<string> args`. Un array di nodi JSON con il significato descritto in precedenza.
     *   Membro **source-id** in `string source_id`. Un nodo JSON di tipo *OBJECT*.
     *   Membro **broadcast-id** in `string broadcast_id`. Un nodo JSON di tipo *OBJECT*.
     *   Membro **src-nic** in `string src_nic`. Un nodo JSON di tipo *OBJECT*.
-    *   Membro **send-ack** in `bool send_ack`. Un booleano che dice se è richiesto un messaggio di ACK.
+    *   Membro **send-ack** in `bool send_ack`. Un booleano che dice se è richiesto un messaggio di *ACK*.
 
 *   Messaggio di *ACK* relativo ad una specifica richiesta correttamente ricevuta.  
     Il membro ha nome "ack" e il suo contenuto è un oggetto che la libreria ZCD è
     in grado di interpretare. Quindi la tasklet ne estrae le seguenti informazioni:
 
-    *   Membro **packet-id** in `int packet_id`. Un intero che identifica la richiesta.
+    *   Membro **packet-id** in `int packet_id`. Un intero che identifica il messaggio di *richiesta* per il quale
+        questo messaggio è il relativo *ACK*.
     *   Membro **ack-mac** in `string ack_mac`. L'identificativo (MAC addess) dell'interfaccia di rete
-        che ha ricevuto il messaggio.
+        che ha ricevuto il messaggio di *richiesta*.
 
 #### cosa fa la tasklet che gestisce un datagram
 
@@ -358,7 +362,7 @@ La tasklet che gestisce un datagram (ad esempio un messaggio UDP) riceve questi 
     Nel caso in esame (cioè `datagram_net_listen`) esso è una `DatagramNetListener listener(my_dev, udp_port, ack_mac)`.
     Ma vedremo in seguito (quando analizzeremo `datagram_system_listen`) che la tasklet che gestisce
     un messaggio nel medium "system" è del tutto analoga a questa. Quindi questa tasklet riceve
-    una istanza di `Listener` e non è interessata a sapere di quale tipo sia.
+    una generica istanza di `Listener`.
 
 La tasklet prima di tutto verifica la correttezza del messaggio, che deve essere un valido albero JSON,
 altrimenti termina. Analogamente, se il nodo radice non è di tipo oggetto la tasklet termina.
@@ -377,7 +381,7 @@ Se si tratta di un messaggio di *richiesta*:
     *   In una nuova tasklet, per 3 volte a brevi intervalli casuali tra 10 e 200 msec, trasmette il messaggio
         di *ACK* in un datagram sulla stessa interfaccia su cui ha ricevuto il messaggio. Questo lo fa chiamando
         una sua funzione interna `send_ack_net(my_dev, udp_port, ...)` o `send_ack_system(send_pathname, ...)`
-        a seconda della tasklet in ascolto che ha ricevuto il datagram.
+        a seconda della tasklet in ascolto che ha ricevuto il datagram: cioè a seconda del `Listener listener`.
 *   Prepara una istanza di `DatagramCallerInfo caller_info` con le informazioni:
     *   `packet_id`, `source_id`, `broadcast_id`, `src_nic`, `send_ack`, `listener`.
 *   Chiama il metodo `datagram_dlg.get_dispatcher(caller_info)` e ottiene un `IDatagramDispatcher? disp`.  
@@ -399,53 +403,119 @@ Se si tratta di un messaggio di *ACK*:
 
 ### <a name="ZCD_send_datagram_net"></a>send_datagram_net
 
-Su iniziativa dell'utilizzatore di ZCD, per trasmettere una richiesta con il protocollo UDP a un nodo (o più
-di uno) diretto vicino, possono essere trasmessi i seguenti messaggi:
+La funzione `void send_datagram_net(...) throws ZCDError` riceve questi argomenti:
 
-*   Richiesta *Unicast*.  
-    L'utilizzatore di ZCD chiama la funzione `send_unicast_request` passando questi argomenti:
-    *   L'identificativo `int id` della richiesta Unicast.
-    *   La stringa in formato JSON per l'oggetto `unicast_id`.
-    *   La stringa con il nome del metodo da chiamare.
-    *   Un array di stringhe in formato JSON, una per ogni argomento del metodo.
-    *   La stringa in formato JSON per l'oggetto `source_id`.
-    *   Un booleano per indicare se si attende una risposta.
-    *   `string dev`.
-    *   `uint16 port`.
-    *   opzionalmente, `string? src_ip`.
-*   Richiesta *Broadcast*.  
-    L'utilizzatore di ZCD chiama la funzione `send_broadcast_request` passando questi argomenti:
-    *   L'identificativo `int id` della richiesta Broadcast.
-    *   La stringa in formato JSON per l'oggetto `broadcast_id`.
-    *   La stringa con il nome del metodo da chiamare.
-    *   Un array di stringhe in formato JSON, una per ogni argomento del metodo.
-    *   La stringa in formato JSON per l'oggetto `source_id`.
-    *   Un booleano per indicare se si vuole il messaggio di ACK.
-    *   `string dev`.
-    *   `uint16 port`.
-    *   opzionalmente, `string? src_ip`.
+*   `string my_dev, uint16 udp_port`. Indicano dove trasmettere con il protocollo UDP.
+*   `int packet_id`.
+*   `string source_id`.
+*   `string broadcast_id`.
+*   `string src_nic`.
+*   `string m_name`. Il nome del metodo.
+*   `List<string> arguments`. Serializzazione di una lista di argomenti da passare al metodo.
+*   `bool send_ack`.
 
-Tutte le funzioni sopra elencate hanno una implementazione molto semplice: costruiscono l'albero JSON dai
-dati passati, producono una stringa e la trasmettono in broadcast sull'interfaccia di rete e verso la porta
-indicati. Non hanno altri compiti.
+L'utilizzatore di ZCD dovrà aver cura di creare un `packet_id` univoco per ogni messaggio datagram che vuole
+trasmettere e fare in modo di farlo conoscere all'istanza di `IDatagramDelegate` che aveva passata alla
+funzione `datagram_net_listen` relativa a `my_dev`. Tale istanza infatti sarà invocata alla
+ricezione dei messaggi di *ACK* relativi.
 
-L'utilizzatore di ZCD dovrà aver cura di creare un *id* univoco per ogni messaggio inviato e fare in modo
-di farlo conoscere all'istanza di IZcdUdpServiceMessageDelegate (il delegato per i messaggi di servizio)
-che aveva passata alla funzione `udp_listen` relativa a *dev*. Tale istanza infatti sarà invocata alla
-ricezione dei messaggi relativi (keepalive, risposta a unicast, ack).
+La funzione costruisce un albero JSON il cui nodo radice è un *OBJECT* con i membri:
 
-Tutte le funzioni sopra elencate possono lanciare un ZCDError nel caso di problemi nella trasmissione della
-stringa JSON sulla rete. Per la costruzione del JSON invece non sono previsti errori; in particolare se le
-stringhe passate che devono contenere un valido JSON (`source_id`, `unicast_id`, `broadcast_id` e gli
-argomenti dei metodi) non sono ben formate le funzioni abortiscono il programma.
+*   Membro **packet-id** da `int packet_id`.
+*   Membro **method-name** da `string m_name`.
+*   Membro **arguments** da `List<string> arguments`. Un array di nodi JSON. Ogni elemento della lista `arguments`
+    deve essere un valido JSON: viene parsata per costruire l'albero JSON e poi il suo nodo radice viene
+    aggiunto a questo array.
+*   Membro **source-id** da `string source_id`. Un nodo JSON di tipo *OBJECT* che serializza l'identificativo di identità del mittente.
+*   Membro **broadcast-id** da `string broadcast_id`. Un nodo JSON di tipo *OBJECT* che serializza l'identificativo di identità del destinatario.
+*   Membro **src-nic** da `string src_nic`. Un nodo JSON di tipo *OBJECT* che serializza l'identificativo di identità del destinatario.
+*   Membro **send-ack** da `bool send_ack`. Il booleano per indicare se si richiede un messaggio di *ACK*.
+
+Dal JSON la funzione produce una stringa *msg*. Se durante la fase di costruzione di *msg* si verifica un
+errore la libreria può abortire il programma.
+
+La funzione `send_datagram_net` crea un socket per trasmettere un pacchetto broadcast UDP sull'interfaccia
+di rete indicata. Vi trasmette la stringa *msg*. Poi termina.
+
+Se nelle operazioni di creazione socket e trasmissione si verifica un errore viene lanciata una eccezione `ZCDError`.
 
 ### <a name="ZCD_datagram_system_listen"></a>datagram_system_listen
 
-**TODO**
+La funzione `TaskletSystem.ITaskletHandle datagram_system_listen(...)` riceve questi argomenti:
+
+*   `string listen_pathname, string send_pathname, string ack_mac`. Indicano il pathname dove ascoltare
+    i datagram (trasmessi dai nodi vicini) e il pathname dove trasmettere i datagram di *ACK*
+    e l'identificativo (MAC addess) dell'interfaccia di rete propria del nodo.
+*   `IDatagramDelegate datagram_dlg`.
+*   `IErrorHandler error_handler`.
+
+L'interfaccia `IDatagramDelegate` è stata illustrata in precedenza.
+
+La classe che implementa `IDatagramDelegate` può essere la stessa che si usa per la funzione
+`datagram_net_listen`. Anche l'istanza può essere unica. L'importante è che questa abbia conoscenza delle
+classi `DatagramNetListener` e `DatagramSystemListener`. Questo è vero in particolare perché nella ricezione
+di un datagram di *richiesta* che richiede un datagram di *ACK* il delegato deve sapere se vada
+chiamata la funzione interna `send_ack_net(my_dev, udp_port, ...)` o `send_ack_system(send_pathname, ...)`.
+
+Sul delegato `IErrorHandler error_handler`, in caso di errore, la tasklet prima di terminare potrà
+chiamare il metodo `void error_handler(Error e)`.
+
+La funzione `datagram_system_listen` avvia una tasklet per gestire l'ascolto e poi ritorna al chiamante
+l'handler della tasklet.
+
+#### cosa fa la tasklet che gestisce il socket in ascolto
+
+La tasklet dovrebbe trovare che il pathname specificato non esiste ancora, quindi crearlo.
+
+La tasklet apre un socket unix-domain e si mette in ascolto sul pathname specificato. Nel caso di
+errore lo passa al metodo `error_handler` e poi termina.
+
+Prima di terminare dovrebbe rimuovere il pathname.
+
+La tasklet mette il socket in attesa di un pacchetto con la chiamata `recvfrom`.
+
+La chiamata `recvfrom` può ritornare con successo, fornendo il messaggio ricevuto, oppure segnalare un errore.
+
+Nel caso di errore la tasklet produce un log e torna di seguito ad ascoltare (dopo un delay) con le stesse modalità.
+
+Nel caso di ricezione di un messaggio la tasklet avvia una nuova tasklet per gestire il messaggio e poi torna ad ascoltare.
+
+#### cosa fa la tasklet che gestisce un datagram
+
+I messaggi datagram trasmessi nel medium "system" sono del tutto analoghi a quelli che transitano
+su un dominio broadcast nel medium "net".
+
+La tasklet che gestisce un datagram riceve questi parametri iniziali:
+
+*   `string msg` - Il messaggio ricevuto.
+*   `IDatagramDelegate datagram_dlg` - Il delegato per le richieste.
+*   `Listener listener` - Un oggetto che rappresenta la modalità con cui era in ascolto la tasklet
+    che ha ricevuto il messaggio.  
+    Questa volta sarà un `DatagramSystemListener listener(listen_pathname, send_pathname, ack_mac)`.
+
+Il codice eseguito dalla tasklet è lo stesso che esegue la tasklet che gestisce i datagram nel medium "net".
 
 ### <a name="ZCD_send_datagram_system"></a>send_datagram_system
 
-**TODO**
+La funzione `void send_datagram_system(...) throws ZCDError` riceve questi argomenti:
+
+*   `string send_pathname`. Indica dove trasmettere con un socket unix-domain per pacchetti datagram.
+*   `int packet_id`.
+*   `string source_id`.
+*   `string broadcast_id`.
+*   `string src_nic`.
+*   `string m_name`. Il nome del metodo.
+*   `List<string> arguments`. Serializzazione di una lista di argomenti da passare al metodo.
+*   `bool send_ack`.
+
+La funzione deve verificare che il pathname specificato esista. Altrimenti lancia una
+eccezione `ZCDError`.
+
+La funzione `send_datagram_system` crea un socket unix-domain per trasmettere pacchetti datagram
+verso il pathname specificato.
+
+Il comportamento è del tutto similare a quello visto nella funzione `send_datagram_net`. Probabilmente ci
+sarà una funzione interna che farà questo lavoro in entrambi i casi.
 
 ## <a name="MODRPC"></a>MOD-RPC
 
