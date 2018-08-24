@@ -518,7 +518,8 @@ potrebbe interfacciarsi direttamente con la libreria ZCD.
 Comunque, la separazione dei due livelli è consigliabile per alcuni motivi:
 
 *   Se si usa il tool "rpcdesign" (o altri tool che possono essere sviluppati) partendo da una descrizione
-    ad alto livello delle interfacce implementate dai metodi remoti si ottengono rapidamente delle classi
+    ad alto livello delle interfacce implementate dai metodi remoti (in un formato apposito,
+    detto [RPC-IDL](ZcdRpcidl.md)) si ottengono rapidamente delle classi
     da usare come stub e skeleton. In esse il lavoro di serializzazione e deserializzazione dei dati e i
     controlli di correttezza sono già stati fatti e testati; quindi ci si può concentrare
     sugli algoritmi di alto livello (business logic).
@@ -528,7 +529,10 @@ Comunque, la separazione dei due livelli è consigliabile per alcuni motivi:
 
 ### <a name="Interfaccia_modrpc_app_con_rpcdesgin"></a>Interfaccia tra MOD-RPC e APP come realizzata con "rpcdesign"
 
-Le classi stub prodotte dal tool "rpcdesign" si occupano di serializzare ogni argomento per ogni metodo
+Abbiamo detto che il tool "rpcdesign" aiuta nella produzione di una libreria MOD-RPC che adotta un
+approccio di tipo stub-skeleton come interfaccia verso la APP.
+
+Le classi stub si occupano di serializzare ogni argomento per ogni metodo
 remoto. In questa implementazione il nodo radice è sempre un nodo di tipo *oggetto* con un solo membro di
 nome "argument". Il suo contenuto è:
 
@@ -542,7 +546,7 @@ nome "argument". Il suo contenuto è:
 *   Per le liste un nodo di tipo *array*, i cui elementi sono tutti dello stesso tipo in base al tipo della
     lista, come sopra.
 
-Le classi skeleton prodotte dal tool "rpcdesign" si occupano di deserializzare ogni argomento per ogni metodo
+Le classi skeleton si occupano di deserializzare ogni argomento per ogni metodo
 remoto e poi di invocare il metodo astratto che sarà fornito dalla APP. Il metodo può restituire un valore
 di ritorno o una eccezione. Se restituisce un valore la classe skeleton si occupa di serializzarlo. In
 questa implementazione il nodo radice è sempre un nodo di tipo *oggetto* con un solo membro di nome
@@ -552,30 +556,35 @@ Il suo contenuto è un oggetto con 3 membri di tipo stringa i cui nomi sono "err
 e "error-message" e i cui valori sono le rappresentazioni stringa dei relativi valori della struttura di
 errore definita in Glib, ad esempio `"SomeDomainError", "MY_ERROR_NAME", "Richiesta non accettata"`.
 
-Infine, le classi stub prodotte dal tool "rpcdesign" si occupano di deserializzare per ogni metodo il valore
+Infine, le classi stub si occupano di deserializzare per ogni metodo il valore
 di ritorno o l'eccezione. Il valore di ritorno viene restituito al chiamante. Oppure, l'eccezione viene
 ricreata e lanciata.
 
-Le classi stub e skeleton prodotte dal tool "rpcdesign" non fanno affidamento sui messaggi che ricevono
-dalla rete. Fanno i dovuti controlli e se il contenuto dei messaggi non rispetta le convenzioni stabilite
-(tipo degli argomenti, tipo del valore di ritorno, ...) non fanno crashare l'applicazione ma restituiscono
+Le classi stub e skeleton realizzano una implementazione della libreria di livello intermedio (cioè MOD-RPC) che
+verso la APP non lascia trasparire le problematiche della comunicazione. Il codice che implementa APP sa che MOD-RPC
+fornisce dei metodi per ottenere istanze di classi stub e che lui stesso (APP) deve fornire istanze di classi skeleton.
+La libreria MOD-RPC ovviamente espone le API (cioè le signature dei metodi) delle classi stub e skeleton, così come
+definite nel modello di dati espresso nel RPC-IDL.
+
+Per quanto riguarda le strutture dati `source_id`, `src_nic`, `unicast_id`, `broadcast_id`, queste lato client
+(cioè lato mittente di un messaggio) sono costruite da APP e poi passate quando chiama i metodi di MOD-RPC che
+forniscono le classi stub, per poi chiamarne i metodi remoti. Lato server (cioè lato ricevente di un messaggio)
+queste sono esaminate da APP nei delegati che fornisce a MOD-RPC quando lo mette in ascolto.  
+Per queste strutture dati, la loro definizione è demandata a APP. La libreria MOD-RPC si limita a definire
+una interfaccia vuota per ognuna di esse.  
+La loro serializzazione e deserializzazione avviene in MOD-RPC come per un "argument"/"return-value" di
+tipo `GLib.Object`.
+
+La libreria MOD-RPC non fa affidamento sui messaggi che riceve
+dalla rete. Fa i dovuti controlli e se il contenuto dei messaggi non rispetta le convenzioni stabilite
+(tipo degli argomenti, tipo del valore di ritorno, ...) non fa crashare l'applicazione ma restituisce
 apposite eccezioni.
 
-Le classi stub e skeleton prodotte dal tool "rpcdesign" realizzano una implementazione della libreria di
-livello intermedio (cioè MOD-RPC) che verso la APP non lascia trasparire affatto l'uso della serializzazione
-dei dati, tantomeno l'uso del formato JSON. Quindi APP può non avere alcuna cognizione della serializzazione
-con il formato JSON. Le cose che APP deve conoscere sono le classi stub e skeleton fornite da MOD-RPC con i
-loro metodi e le strutture dati che sono anche esse fornite da MOD-RPC.
-
-E' possibile comunque che alcune strutture dati che utilizza APP e che vuole passare nei messaggi ai nodi
-remoti non siano note alla libreria MOD-RPC. Consideriamo un metodo remoto la cui signature prevede come
-argomento (o valore di ritorno) una istanza di GLib.Object o di una interfaccia che richiede GLib.Object.
-Qualsiasi oggetto che deriva da Object può essere passato al metodo (o restituito da esso) purché sia in
-grado di essere serializzato e deserializzato con il meccanismo fornito da `Json.gobject_serialize`. Rimandiamo
+Siccome la maggior parte del lavoro di serializzazione e deserializzazione è svolto dalla libreria MOD-RPC
+la APP può non avere alcuna cognizione della serializzazione con il formato JSON. Deve tuttavia essere
+consapevole che le strutture dati complesse che transitano nei messaggi devono poter essere
+serializzate e deserializzate con il meccanismo fornito da `Json.gobject_serialize`. Rimandiamo
 alla documentazione di JsonGlib per maggiori dettagli.
-
-In questo caso la classe fornita da APP deve fare uso della libreria JsonGlib, quindi anche APP avrà una
-dipendenza su questa libreria.
 
 ## <a name="Dettagli_tecnici"></a>Dettagli tecnici
 

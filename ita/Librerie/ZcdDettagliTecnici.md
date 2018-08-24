@@ -545,16 +545,16 @@ modificare agendo solo sulle prime righe dei file.
 
 Nella descrizione dei metodi remoti possono essere indicati i nomi di classi e interfacce le cui istanze sono
 oggetti serializzabili da passare come argomenti o da ricevere come risultati. A tali oggetti vanno aggiunti
-quelli usati come `source_id`, `unicast_id` e `broadcast_id`.
+quelli usati come `source_id`, `src_nic`, `unicast_id` e `broadcast_id`.
 
-La libreria fornisce le interfacce ISourceID, IUnicastID, IBroadcastID. Inoltre, per ogni nome di tipo indicato
+La libreria fornisce le interfacce `ISourceID`, `ISrcNic`, `IUnicastID`, `IBroadcastID`. Inoltre, per ogni nome di tipo indicato
 nella descrizione dei metodi remoti come argomento o come valore di ritorno, oltre ai tipi base, fornisce o una
 classe o una interfaccia (se il nome inizia con una 'I' maiuscola seguita da un'altra lettera maiuscola). Se si
 tratta di una classe, il tool "rpcdesign" la prepara vuota. Sarà lo sviluppatore a completarla con i dati che
 servono e ad accertarsi che possa essere serializzata e deserializzata con `Json.gobject_serialize` e
 `Json.gobject_deserialize` di JsonGlib.
 
-Se si tratta di una interfaccia (come per le interfacce ISourceID, IUnicastID, IBroadcastID) il tool "rpcdesign"
+Se si tratta di una interfaccia (come per le interfacce `ISourceID`, `ISrcNic`, `IUnicastID`, `IBroadcastID`) il tool "rpcdesign"
 la prepara vuota. Il programmatore potrà anche optare per lasciare la libreria inalterata, come preparata dal
 tool "rpcdesign", e fornire la classe che la implementa direttamente nell'applicazione che usa la libreria di
 livello intermedio. Anche in questo caso, in tale applicazione, dovrà accertarsi che possa essere serializzata
@@ -579,32 +579,38 @@ Facciamo un esempio. Il file interfaces.rpcidl presenta la classe radice `NodeMa
 membro `InfoManager info_manager`. Questo ha il metodo `string get_name() throws AccessDeniedError`. La libreria
 prodotta da "rpcdesign" fornirà queste interfacce:
 
-*   SampleRpc.IInfoManagerSkeleton.  
+*   `SampleRpc.IInfoManagerSkeleton`.  
     Prevede il metodo astratto:
     *   `string get_name(SampleRpc.CallerInfo? caller=null) throws AccessDeniedError`
-*   SampleRpc.INodeManagerSkeleton.  
+*   `SampleRpc.INodeManagerSkeleton`.  
     Prevede il metodo astratto:
     *   `SampleRpc.IInfoManagerSkeleton info_manager_getter()`
-*   SampleRpc.IRpcDelegate.  
+*   `SampleRpc.IRpcDelegate`.  
     Prevede il metodo astratto:
     *   `Gee.List<SampleRpc.INodeManagerSkeleton> get_node_manager_set(SampleRpc.CallerInfo caller)`
-*   SampleRpc.IRpcErrorHandler.  
+*   `SampleRpc.IRpcErrorHandler`.  
     Prevede il metodo astratto:
     *   `void error_handler(Error e)`
 
-**Nota 1**: Tutti i metodi remoti nell'interfaccia skeleton ricevono un argomento aggiuntivo SampleRpc.CallerInfo
+**Nota 1**: Tutti i metodi remoti nell'interfaccia skeleton ricevono un argomento aggiuntivo `SampleRpc.CallerInfo`
 che contiene alcune informazioni sul richiedente. Il contenuto varia a seconda del metodo usato per inviare il
-messaggio (TcpClient, Unicast, Broadcast).
+messaggio (stream/datagram, net/system).
 
-**Nota 2**: L'interfaccia IRpcDelegate ha un metodo per ogni root-dispatcher. Per ogni richiesta che si riceve
+**Nota 2**: L'interfaccia `IRpcDelegate` ha un metodo per ogni root-dispatcher. Per ogni richiesta che si riceve
 lato server la prima parte del nome del metodo remoto indica il root-dispatcher da usare; la libreria MOD-RPC
-prende questo prefisso e sceglie il metodo di IRpcDelegate da chiamare.
+prende questo prefisso e sceglie il metodo di `IRpcDelegate` da chiamare.
 
 La libreria MOD-RPC fornisce inoltre alcune chiamate di inizializzazione:
 
 *   `void SampleRpc.init_tasklet_system(ITasklet _tasklet)`
-*   `void SampleRpc.tcp_listen(SampleRpc.IRpcDelegate dlg, SampleRpc.IRpcErrorHandler err, uint16 port, string? my_addr = null)`
-*   `void SampleRpc.udp_listen(SampleRpc.IRpcDelegate dlg, SampleRpc.IRpcErrorHandler err, uint16 port, string dev)`
+*   `void SampleRpc.stream_net_listen(SampleRpc.IRpcDelegate dlg, SampleRpc.IRpcErrorHandler err,`  
+    `string my_ip, uint16 tcp_port)`
+*   `void SampleRpc.stream_system_listen(SampleRpc.IRpcDelegate dlg, SampleRpc.IRpcErrorHandler err,`  
+    `string listen_pathname)`
+*   `void SampleRpc.datagram_net_listen(SampleRpc.IRpcDelegate dlg, SampleRpc.IRpcErrorHandler err,`  
+    `string my_dev, uint16 udp_port, string ack_mac)`
+*   `void SampleRpc.datagram_system_listen(SampleRpc.IRpcDelegate dlg, SampleRpc.IRpcErrorHandler err,`  
+    `string listen_pathname, string send_pathname, string ack_mac)`
 
 La funzione `init_tasklet_system` deve essere chiamata da APP come inizializzazione della libreria, sia che APP
 faccia da client, sia che faccia da server. Essa serve a passare l'implementazione del sistema di tasklet,
