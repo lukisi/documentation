@@ -139,7 +139,7 @@ Se qualcuno di questi requisiti non è soddisfatto la tasklet chiude la connessi
 
 Di seguito la tasklet:
 *   Prepara una istanza di `StreamCallerInfo caller_info` con le informazioni:
-    *   `source_id`, `unicast_id`, `src_nic`, `wait_reply`, `listener`.
+    *   `source_id`, `src_nic`, `unicast_id`, `m_name`, `wait_reply`, `listener`.
 *   Chiama il metodo `stream_dlg.get_dispatcher(caller_info)` e ottiene un `IStreamDispatcher? disp`.  
     Il delegato è in grado di stabilire se il messaggio è da processare. In
     questo caso ritorna una istanza apposita di `IStreamDispatcher`. Altrimenti ritorna `null`.
@@ -171,8 +171,8 @@ La funzione `string send_stream_net(...) throws ZCDError` riceve questi argoment
 
 *   `string peer_ip, uint16 tcp_port`. Indicano dove connettersi con il protocollo TCP.
 *   `string source_id`.
-*   `string unicast_id`.
 *   `string src_nic`.
+*   `string unicast_id`.
 *   `string m_name`. Il nome del metodo.
 *   `List<string> arguments`. Serializzazione di una lista di argomenti da passare al metodo.
 *   `bool wait_reply`.
@@ -272,8 +272,8 @@ La funzione `string send_stream_system(...) throws ZCDError` riceve questi argom
 
 *   `string send_pathname`. Indica dove connettersi con un socket unix-domain per connessioni.
 *   `string source_id`.
-*   `string unicast_id`.
 *   `string src_nic`.
+*   `string unicast_id`.
 *   `string m_name`. Il nome del metodo.
 *   `List<string> arguments`. Serializzazione di una lista di argomenti da passare al metodo.
 *   `bool wait_reply`.
@@ -391,7 +391,7 @@ Se si tratta di un messaggio di *richiesta*:
         una sua funzione interna `send_ack_net(my_dev, udp_port, ...)` o `send_ack_system(send_pathname, ...)`
         a seconda della tasklet in ascolto che ha ricevuto il datagram: cioè a seconda del `Listener listener`.
 *   Prepara una istanza di `DatagramCallerInfo caller_info` con le informazioni:
-    *   `packet_id`, `source_id`, `broadcast_id`, `src_nic`, `send_ack`, `listener`.
+    *   `packet_id`, `source_id`, `src_nic`, `broadcast_id`, `m_name`, `send_ack`, `listener`.
 *   Chiama il metodo `datagram_dlg.get_dispatcher(caller_info)` e ottiene un `IDatagramDispatcher? disp`.  
     Il delegato è in grado di stabilire se il messaggio è da processare. In
     questo caso ritorna una istanza apposita di `IDatagramDispatcher`. Altrimenti ritorna `null`.
@@ -416,8 +416,8 @@ La funzione `void send_datagram_net(...) throws ZCDError` riceve questi argoment
 *   `string my_dev, uint16 udp_port`. Indicano dove trasmettere con il protocollo UDP.
 *   `int packet_id`.
 *   `string source_id`.
-*   `string broadcast_id`.
 *   `string src_nic`.
+*   `string broadcast_id`.
 *   `string m_name`. Il nome del metodo.
 *   `List<string> arguments`. Serializzazione di una lista di argomenti da passare al metodo.
 *   `bool send_ack`.
@@ -510,8 +510,8 @@ La funzione `void send_datagram_system(...) throws ZCDError` riceve questi argom
 *   `string send_pathname`. Indica dove trasmettere con un socket unix-domain per pacchetti datagram.
 *   `int packet_id`.
 *   `string source_id`.
-*   `string broadcast_id`.
 *   `string src_nic`.
+*   `string broadcast_id`.
 *   `string m_name`. Il nome del metodo.
 *   `List<string> arguments`. Serializzazione di una lista di argomenti da passare al metodo.
 *   `bool send_ack`.
@@ -568,14 +568,14 @@ La libreria fornisce inoltre una interfaccia per il delegato che essa stessa use
 classe radice. Infine fornisce una interfaccia per il gestore di errori; questo sarà invocato nelle tasklet che
 stanno in ascolto sui socket in caso di errori che causano la terminazione delle stesse tasklet.
 
-L'applicazione APP che voglia essere in grado di fare da server dovrà fornire una implementazione per ognuna di
+L'applicazione APP dovrà fornire una implementazione per ognuna di
 queste interfacce. L'istanza del delegato e quella del gestore di errori andranno passate alla libreria nella
 fase di inizializzazione, cioè, come vedremo dopo, quando si avviano le tasklet che stanno in ascolto sui socket.
 
 La libreria, attraverso il delegato, sarà in grado, quando riceve una richiesta, di ottenere le istanze di classi
 radice e classi modulo al fine di chiamare un metodo remoto.
 
-Facciamo un esempio. Il file interfaces.rpcidl presenta la classe radice `NodeManager node_manager`. Ha un
+Facciamo un esempio di RPC-IDL. Il file interfaces.rpcidl presenta la classe radice `NodeManager node_manager`. Ha un
 membro `InfoManager info_manager`. Questo ha il metodo `string get_name() throws AccessDeniedError`. La libreria
 prodotta da "rpcdesign" fornirà queste interfacce:
 
@@ -612,61 +612,105 @@ La libreria MOD-RPC fornisce inoltre alcune chiamate di inizializzazione:
 *   `void SampleRpc.datagram_system_listen(SampleRpc.IRpcDelegate dlg, SampleRpc.IRpcErrorHandler err,`  
     `string listen_pathname, string send_pathname, string ack_mac)`
 
-La funzione `init_tasklet_system` deve essere chiamata da APP come inizializzazione della libreria, sia che APP
-faccia da client, sia che faccia da server. Essa serve a passare l'implementazione del sistema di tasklet,
-richiesto dalla libreria ZCD.
+La funzione `init_tasklet_system` deve essere chiamata da APP come inizializzazione della libreria. Essa serve
+a passare l'implementazione del sistema di tasklet, richiesto dalla libreria ZCD.
 
-Le funzioni `tcp_listen` e `udp_listen` vanno chiamate da APP solo se APP è interessata a ricevere connessioni TCP
-o pacchetti UDP. C'è una differenza tra le due.
+Per ogni indirizzo IP proprio del nodo in cui è eseguita, la APP chiama una volta la funzione `stream_net_listen`.  
+Per ogni interfaccia di rete propria del nodo in cui è eseguita, la APP chiama una volta la funzione `datagram_net_listen`.  
+Con modalità analoghe, nei processi che all'interno di un sistema (in una testsuite) simulano ciascuno un nodo, sono
+usate le funzioni `stream_system_listen` e `datagram_system_listen`.  
+Ognuna di queste funzioni avvia una nuova tasklet perché stia in ascolto di messaggi.
 
-La funzione `tcp_listen` va chiamata da APP se vuole essere in grado di ricevere connessioni di iniziativa di un
-nodo remoto. Questa chiamata non è necessaria se APP vuole solo iniziare connessioni verso un nodo remoto. In
-questo caso, dopo aver iniziato la connessione la APP sarebbe comunque in grado di inviare messaggi e anche di
-ricevere risposte, attraverso la stessa connessione.
+In realtà ognuna di queste funzioni chiama semplicemente la funzione omonima nella libreria di basso livello.
+È la libreria di basso livello che avvia una tasklet in ascolto di messaggi. Quello che fa la libreria MOD-RPC in queste
+funzioni è costruire un delegato (`zcd.IStreamDelegate` o `zcd.IDatagramDelegate`) adatto alla funzione della libreria
+di basso livello sulla base del delegato (`SampleRpc.IRpcDelegate`) che riceve dalla APP.  
+Quando la libreria di basso livello (nella tasklet in ascolto, o meglio in gestione di una precisa connessione
+o datagram) riceve un messaggio, produce un `zcd.CallerInfo` e lo passa al delegato `zcd.IStreamDelegate`
+o `zcd.IDatagramDelegate` prodotto da MOD-RPC. Questo dai dati del `zcd.CallerInfo` produce un `SampleRpc.CallerInfo`
+e lo passa al delegato `SampleRpc.IRpcDelegate` ricevuto dalla APP.
 
-La funzione `udp_listen`, invece, va chiamata da APP se vuole essere in grado di ricevere pacchetti da un nodo remoto.
-Senza questa chiamata APP sarebbe comunque in grado di inviare pacchetti UDP ad un nodo remoto, ma non di ricevere risposte.
+Ricordiamo cosa intendiamo dire con "lo passa al delegato".  
+Nel caso di un `zcd.IStreamDelegate` significa che chiama il suo metodo
+`IStreamDispatcher? get_dispatcher(StreamCallerInfo caller_info)`
+con questo argomento. Se il risultato che ottiene non è nullo ci chiamerà in seguito il metodo
+`string execute(string m_name, List<string> args, StreamCallerInfo caller_info)`.  
+Nel caso di un `zcd.IDatagramDelegate` significa che chiama il suo metodo
+`IDatagramDispatcher? get_dispatcher(DatagramCallerInfo caller_info)`
+con questo argomento. Se il risultato che ottiene non è nullo ci chiamerà in seguito il metodo
+`void execute(string m_name, List<string> args, DatagramCallerInfo caller_info)`.  
+Nel caso di un `SampleRpc.IRpcDelegate` significa che chiama il suo metodo
+`Gee.List<SampleRpc.INodeManagerSkeleton> get_node_manager_set(SampleRpc.CallerInfo caller)`
+(`node_manager` fa parte del nostro esempio di RPC-IDL) con questo argomento. Se il risultato che ottiene
+non è vuoto, su ognuno degli skeleton chiamerà in seguito il metodo specificato in `m_name`.
 
-La funzione `tcp_listen` e la funzione `udp_listen` avviano entrambe una nuova tasklet perché stia in ascolto di
-connessioni o messaggi. Queste due tipologie di tasklet producono due diversi tipi di oggetti CallerInfo: la prima per
-ogni connessione produce una istanza di SampleRpc.TcpclientCallerInfo, la seconda per ogni messaggio ricevuto
-produce o una istanza di SampleRpc.UnicastCallerInfo oppure di SampleRpc.BroadcastCallerInfo.
+La classe `SampleRpc.CallerInfo` è analoga alla classe `CallerInfo` usata nella libreria ZCD di basso livello.
 
-Di norma si chiama la funzione `tcp_listen` una sola volta per gestire tutte le connessioni provenienti da qualsiasi
-interfaccia di rete e per qualsiasi indirizzo locale del nodo. Invece si chiama la funzione `udp_listen` una volta
-per ogni interfaccia di rete, per gestire i pacchetti rilevati tramite quella interfaccia.
+La classe CallerInfo è vuota. Viene ereditata dalle classi StreamCallerInfo e DatagramCallerInfo.
 
-Ad esempio si può avviare una tasklet che ascolta i messaggi TCP per qualsiasi indirizzo dell'host + una tasklet che
-ascolta i messaggi UDP sulla interfaccia "eth0" + una tasklet che ascolta i messaggi UDP sulla interfaccia "wlan0", e così via.
+Se la tasklet che ha ricevuto il messaggio era in ascolto per connessioni, cioè `stream_net_listen` o
+`stream_system_listen`, viene prodotta una istanza di StreamCallerInfo. Questa contiene:
 
-Per ognuna di queste tasklet in ascolto, l'applicazione APP ha inizialmente fornito un delegato *dlg* che è una istanza
-di SampleRpc.IRpcDelegate e un gestore di errori *err* che è una istanza di SampleRpc.IRpcErrorHandler.
+*   `ISourceID source_id`. 
+*   `ISrcNic src_nic`
+*   `IUnicastID unicast_id`
+*   `string m_name`
+*   `bool wait_reply`
+*   `Listener listener`
 
-Supponiamo ora che una di queste tasklet ha ricevuto un messaggio, composto dal nome del metodo e dai suoi argomenti.
-Inoltre ha composto il CallerInfo *caller* il quale contiene ora il `broadcast_id` o il `unicast_id`, oltre che il
-`source_id` e altre info sulla comunicazione di rete attraverso cui è giunto il messaggio.
+Se invece la tasklet che ha ricevuto il messaggio era in ascolto per messaggi broadcast, cioè `datagram_net_listen` 
+o `datagram_system_listen`, viene prodotta una istanza di DatagramCallerInfo. Questa contiene:
 
-Continuando con l'esempio precedente, la libreria MOD-RPC chiama
-`Gee.List<INodeManagerSkeleton> root = dlg.get_node_manager_set(caller);`. Questo metodo implementato dall'istanza
-fornita da APP decide in base a questo *caller* se restituire zero, una o più istanze dell'interfaccia skeleton
-della classe radice. Infatti, il delegato della libreria ZCD per restituire un *dispatcher* deve basarsi sul
-`unicast_id` o sul `broadcast_id`; individua zero, una o più *identità* del suo nodo che sono destinatari del messaggio.
+*   `int packet_id`.
+*   `ISourceID source_id`. 
+*   `ISrcNic src_nic`
+*   `IBroadcastID broadcast_id`
+*   `string m_name`
+*   `bool send_ack`
+*   `Listener listener`
 
-Sulla base di questa lista di istanze skeleton, se non è vuota, viene poi preparata una istanza di IZcdDispatcher.
-Su questa istanza verrà ora chiamato il metodo `execute`. In tale metodo essa esamina il nome del metodo, individua
-il percorso da fare (es: `root.info_manager.get_name`), deserializza gli argomenti. Poi, per ogni istanza skeleton
-che era nella lista, chiama il metodo. Se le istanze sono più d'una il metodo `execute` restituirà stringa vuota
-poiché la chiamata è in modalità Broadcast.
+La classe Listener è vuota. Viene ereditata dalle seguenti classi:
 
-Se la chiamata era in modalità Broadcast o se una risposta non era richiesta, allora la chiamata (o le chiamate)
-al metodo remoto sono fatte in una nuova tasklet e il metodo subito restituisce una stringa vuota. Altrimenti la
-chiamata (in questo caso sicuramente una) al metodo remoto viene fatta, si ottiene l'esito (il valore di ritorno
-o una eccezione) lo si serializza e si restituisce nella forma di una stringa.
+*   StreamNetListener. Prodotta da `stream_net_listen`. Contiene i suoi parametri `my_ip, tcp_port`.
+*   StreamSystemListener. Prodotta da `stream_system_listen`. Contiene i suoi parametri `listen_pathname`.
+*   DatagramNetListener. Prodotta da `datagram_net_listen`. Contiene i suoi parametri `my_dev, udp_port, ack_mac`.
+*   DatagramSystemListener. Prodotta da `datagram_system_listen`. Contiene i suoi parametri `listen_pathname, send_pathname, ack_mac`.
 
+Il delegato interrogato dalle tasklet alla ricezione di un messaggio, diversamente da quanto avveniva
+nella libreria di basso livello, è uno solo. Una stessa istanza di `SampleRpc.IRpcDelegate dlg` può occuparsi
+sia dei messaggi di tipo "stream" sia di quelli di tipo "datagram".
+
+Proseguiamo considerando il nostro esempio di RPC-IDL. Assumiamo il caso di un messaggio ricevuto con la modalità
+"stream"; sarà banale comprendere come differiscono solo leggermente le operazioni nel caso di messaggi ricevuti
+con la modalità "datagram".  
+La tasklet avviata dalla libreria di basso livello per la gestione delle connessioni ha ricevuto una connessione
+e ha avviato una nuova tasklet per gestirla. Quest'ultima ha letto dal socket connesso un messaggio e si
+appresta a gestirlo.  
+Essa chiama `IStreamDispatcher? get_dispatcher(StreamCallerInfo caller_info)` sul `IStreamDelegate stream_dlg`
+fornito da MOD-RPC.  
+Questo per prima cosa vede che la parte iniziale di `m_name` è `node_manager`.
+Allora costruisce un analoga istanza di `SampleRpc.CallerInfo caller` e poi
+chiama `Gee.List<INodeManagerSkeleton> get_node_manager_set(caller)` sul `SampleRpc.IRpcDelegate dlg`
+fornito da APP.  
+Quest'ultima conosce le diverse classi `SampleRpc.CallerInfo` descritte sopra. In base al `caller` ricevuto
+(ad esempio guardando `unicast_id` o `broadcast_id` o altro)
+decide se restituire zero, una o più istanze dell'interfaccia skeleton della classe radice.  
+Ora MOD-RPC (sempre nel codice che implementa `IStreamDelegate.get_dispatcher` nel nostro esempio)
+sulla base di questa lista di istanze skeleton, se non è vuota, prepara una istanza di `IStreamDispatcher`
+che restituisce alla libreria di basso livello. Altrimenti restituisce `null`.  
+La libreria di basso livello, se ottiene un dispatcher non nullo, chiama il suo metodo `execute(m_name, args, caller_info)`
+dal quale si attenderà una stringa con la risposta serializzata. Se questa vada trasmessa o meno al mittente
+del messaggio se ne occuperà la libreria di basso livello.  
+Il metodo `execute`, nel `IStreamDispatcher` fornito da MOD-RPC, esamina il nome del metodo, individua il percorso da
+fare (es: `root.info_manager.get_name(...)`).  
+Poi deserializza gli argomenti.  
 Se durante la deserializzazione degli argomenti si riscontra un problema (ad esempio non sono del tipo previsto
 dalla signature del metodo, oppure un oggetto è di una classe sconosciuta al programma, oppure un oggetto viene
-deserializzato ma non contiene tutte le proprietà requisito della sua classe) il metodo `execute` dell'istanza
-di IZcdDispatcher non richiama affatto il metodo remoto, invece serializza e restituisce una eccezione DeserializeError.
+deserializzato ma non contiene tutte le proprietà requisito della sua classe) il metodo `execute`
+serializza e restituisce una eccezione DeserializeError.  
+Poi, per ogni istanza skeleton che era nella lista, chiama il metodo. Siccome nel nostro esempio il messaggio era
+in modalità "stream", la lista aveva un solo skeleton. Quindi il metodo `execute` ottenuto l'esito del metodo
+chiamato (il valore di ritorno o una eccezione) lo serializza e restituisce nella forma di una stringa.
 
 Le classi fornite da APP per implementare le interfacce skeleton, in particolare quelle dei singoli moduli, avranno
 quindi solo il compito di implementare la business logic dei singoli metodi remoti come fossero comuni metodi.
@@ -675,7 +719,7 @@ previsto dalla signature oppure lanciare una delle eccezioni previste dalla sign
 
 ### <a name="MODRPC_client"></a>Lato client
 
-Per l'applicazione APP che voglia essere in grado di fare da client, invece, la libreria MOD-RPC fornisce una
+La libreria fornisce una
 interfaccia stub per la classe radice e una per ogni modulo membro. La libreria fornisce alcune funzioni all'applicazione
 per ottenere una istanza dello stub radice, una funzione per ogni modalità di invio del messaggio.
 
