@@ -45,12 +45,12 @@ be to modify the Tor code and starting from there. Is it feasible?
 
 
 {{{
-	Dest  <--> ... <-->  X  <--> ... <-->  Y  <--> ... <-->  Source
-	      MASQ     MASQ  |	MASQ	 MASQ	  MASQ	   MASQ    |
-	                     |					   |
-			     |					   |
-			     |					   |
-			     |______ IPIP encrypted tunnel ________|
+        Dest  <--> ... <-->  X  <--> ... <-->  Y  <--> ... <-->  Source
+              MASQ     MASQ  |  MASQ     MASQ     MASQ     MASQ    |
+                             |                                     |
+                             |                                     |
+                             |                                     |
+                             |______ IPIP encrypted tunnel ________|
 
 `...'  indicates an indefinite number of ntk nodes linked toghether
 }}}
@@ -95,8 +95,8 @@ For this reason, S contacts X through a series of masqueraded connections:
  
  * The nodes between S and X, will MASQUERADE the packets of S:
 {{{
-	X  <--   A  <--   B  <--   C  <--  S
-	   MASQ     MASQ     MASQ     MASQ
+        X  <--   A  <--   B  <--   C  <--  S
+           MASQ     MASQ     MASQ     MASQ
 }}}
 In this way, C masquerades S, B masquerades C, and so on. The final packet
 received by X is A(B(C(S))).
@@ -116,14 +116,14 @@ packets it sends to D, will go through the encrypted tunnel.
 ==== Step three: Iteration ====
 
 S can tell X to iterate the first two steps `n' times:
-	
-	* X will create an (anonymous) encrypted tunnel with X_1
+        
+        * X will create an (anonymous) encrypted tunnel with X_1
 
-	* X_1 creates the tunnel with X_2
+        * X_1 creates the tunnel with X_2
 
-	* ...
+        * ...
 
-	* X_(n-1) creates the tunnel with X_n
+        * X_(n-1) creates the tunnel with X_n
 
 
 ==== Step four: Connection established ====
@@ -140,9 +140,9 @@ S and D can now communicate.
 == Hidden server ==
 
 
-{{{				     /            \
-	   Srv <---- enc tunnel --->   Hub nodes    <--- enc tunnel ---- Client
-      netsukuku.org		     \            /
+{{{                                  /            \
+           Srv <---- enc tunnel --->   Hub nodes    <--- enc tunnel ---- Client
+      netsukuku.org                  \            /
 }}}
 
 The hidden server method allows to hide the real IP of a node which needs to

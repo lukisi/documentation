@@ -13,7 +13,7 @@ una interfaccia al suo utilizzatore. In questa interfaccia le operazioni di bass
 l'unico requisito che essa impone al suo utilizzatore è che le strutture dati complesse usate come
 argomenti e valori di ritorno dei metodi remoti esposti devono essere serializzabili tramite l'uso
 della libreria json-glib.  
-Questo requisito è di competenza dei singoli moduli in cui il demone *ntkd* è scoposto. Sono essi
+Questo requisito è di competenza dei singoli moduli in cui il demone *ntkd* è scomposto. Sono essi
 infatti a definire i metodi remoti.
 
 Vediamo quali altri requisiti sono richiesti dalla libreria *ntkdrpc* e come sono implementati direttamente
@@ -22,7 +22,7 @@ E d'altra parte quali servizi sono forniti dalla libreria *ntkdrpc* e come il
 demone *ntkd* li sfrutta.
 
 Per quanto il linguaggio Vala lo consente, si cercherà di mettere tutto il codice relativo a queste
-mansioni nel file sorgente `ntkd_rpc.vala`.
+mansioni in alcuni file sorgente dentro la cartella `rpc`.
 
 ### Avvio
 
@@ -32,12 +32,10 @@ metodi remoti.
 
 Poi il programma deve inizializzare la libreria *ntkdrpc* e passargli l'implementazione del sistema di tasklet.
 
-Poi il programma chiama `tcp_listen` per avviare una tasklet che si mette in ascolto delle
-connessioni via TCP. In seguito il programma chiamerà `udp_listen` una volta per ogni interfaccia
-di rete da gestire (dopo aver abilitato l'interfaccia di rete stessa) per avviare una tasklet che
-si mette in ascolto dei messaggi via UDP sulla suddetta interfaccia.  
-Per supportare queste chiamate, il programma dovrà preparare una istanza di `IRpcDelegate` e una
-istanza di `IRpcErrorHandler`, come vedremo in dettaglio più sotto.
+Poi il programma chiama `stream_net_listen` e `datagram_net_listen` ... **TODO: completare**
+
+Per supportare queste chiamate, il programma dovrà preparare una istanza di `IDelegate` e una
+istanza di `IErrorHandler`, come vedremo in dettaglio più sotto.
 
 ### Chiusura
 
@@ -45,19 +43,14 @@ In fase di chiusura del demone, il programma *ntkd* dovrà (per quanto concerne 
 interazioni con la libreria *ntkdrpc*) semplicemente terminare tutte le tasklet che erano in
 ascolto di messaggi e connessioni. Per questo il programma deve mantenere gli *handle* di queste tasklet.
 
-### IRpcDelegate
+### IDelegate
 
 L'interfaccia di reperimento dello skeleton radice. Prevede il metodo `get_addr_set(caller)` che a
 partire da un `CallerInfo` restituisce una lista di `IAddressManagerSkeleton`.
 
-Il demone *ntkd* deve fornire una istanza di questa interfaccia. Essa prende le informazioni contenute
-nel `CallerInfo` (che a sua volta può essere un `BroadcastCallerInfo`, o un `TcpclientCallerInfo` o un
-`UnicastCallerInfo`) e da queste deve decidere quali istanze di `IAddressManagerSkeleton` restituire.
+... **TODO: completare**
 
-Lo fa usando il modulo Neighborhood, che mette a disposizione i metodi `get_dispatcher` e
-`get_dispatcher_set` di `NeighborhoodManager`.
-
-### IRpcErrorHandler
+### IErrorHandler
 
 L'interfaccia di gestione degli errori che possono presentarsi nelle fasi gestite da ZCD.
 Prevede il metodo `void error_handler (GLib.Error e)`.
@@ -96,13 +89,11 @@ il codice che restituisce le istanze skeleton dei suddetti moduli.
 ### Interfacce stub
 
 Per la classe radice e per ognuna delle classi che prevedono scambi di messaggi RPC
-la libreria *ntkdrpc* fornisce una interfaccia stub. Inoltre fornisce tre metodi per
+la libreria *ntkdrpc* fornisce una interfaccia stub. Inoltre fornisce alcuni metodi per
 ottenere (secondo le tre modalità di chiamata dei metodi remoti supportate da ZCD) una
 istanza della interfaccia della classe radice. Questi metodi sono:
 
-*   `get_addr_tcp_client`
-*   `get_addr_unicast`
-*   `get_addr_broadcast`
+... **TODO: completare**
 
 Il programma *ntkd* può chiamare uno di questi metodi e ottenere una istanza della classe
 radice `IAddressManagerStub`. Quando è in possesso di questa istanza, può chiamare i suoi
