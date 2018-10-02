@@ -193,9 +193,29 @@ Ora, quando `qspntester-6543` vuole trasmettere si accorge che `send_6543_eth0` 
 Supponiamo di voler emulare un dominio radio. Questi hanno una particolare caratteristica: supponiamo che il
 nodo beta ha un nic radio collegato allo stesso dominio broadcast (stesso canale, stesso SSID) a
 cui è collegato il nodo alfa e il nodo gamma; allora se beta è in grado di comunicare sia con alfa sia con
-gamma questo non implica che il nodo alfa sia in grado di comunicare direttamente con il nodo gamma.  
-Per simulare una tale situazione occorre che il processo "domain" possa accettare una configurazione
-molto più dettagliata rispetto a quanto visto sopra.
+gamma questo non implica che il nodo alfa sia in grado di comunicare direttamente con il nodo gamma.
+
+Si può fare con un processo (non adatto a simulare la mobilità dei nodi) che sappia fin dall'inizio per una
+particolare scheda di rete di un particolare processo, quali altre interfacce di rete di altri processi
+possono ricevere i pacchetti trasmessi dalla prima.  
+Ad esempio, assumiamo che i nodi alfa beta e gamma di cui sopra abbiano i pid rispettivamente 1234,
+6543 e 6789. Lanciamo:
+
+*   `radio-domain -i 1234_wlan0 -o 6543_wlan0`.  
+    Crea `send_1234_wlan0` e si mette in ascolto su esso.  
+    Quando riceve:
+    *   prova a scrivere su `recv_6543_wlan0` ma soltanto se già esiste.
+
+*   `radio-domain -i 6543_wlan0 -o 1234_wlan0 -o 6789_wlan0`.  
+    Crea `send_6543_wlan0` e si mette in ascolto su esso.  
+    Quando riceve:
+    *   prova a scrivere su `recv_1234_wlan0` ma soltanto se già esiste.
+    *   prova a scrivere su `recv_6789_wlan0` ma soltanto se già esiste.
+
+*   `radio-domain -i 6789_wlan0 -o 6543_wlan0`.  
+    Crea `send_6789_wlan0` e si mette in ascolto su esso.  
+    Quando riceve:
+    *   prova a scrivere su `recv_6543_wlan0` ma soltanto se già esiste.
 
 ## <a name="Tasklet_listen"></a>Tasklet in ascolto
 

@@ -39,25 +39,30 @@ La libreria ZCD usa JsonGlib. All'utilizzatore di ZCD non viene imposto di avere
 
 ### <a name="ZCD_Inizializzazione"></a>Inizializzazione
 
-ZCD viene "inizializzata" con alcune chiamate.
+ZCD viene "inizializzata" con la chiamata della funzione `init_tasklet_system`. Questa
+fornisce l'implementazione delle interfacce usate per le comunicazioni allo schedulatore delle tasklet.
 
-*   La funzione `init_tasklet_system` fornisce la implementazione delle interfacce usate per le comunicazioni
-    allo schedulatore delle tasklet.
-*   La funzione `stream_net_listen`.
-*   La funzione `stream_system_listen`.
-*   La funzione `datagram_net_listen`.
-*   La funzione `datagram_system_listen`.
+In seguito, durante la vita dell'applicazione, può essere richiesto alla libreria ZCD di mettersi
+in ascolto con varie modalità con queste funzioni:
 
-In seguito si può richiedere a ZCD di effettuare una chiamata a metodo remoto invocando:
+*   `stream_net_listen`.
+*   `stream_system_listen`.
+*   `datagram_net_listen`.
+*   `datagram_system_listen`.
 
-*   La funzione `send_stream_net`.
-*   La funzione `send_stream_system`.
-*   La funzione `send_datagram_net`.
-*   La funzione `send_datagram_system`.
+Ognuna di queste avvia una tasklet e restituisce un handle con il quale è possibile interromperla.  
+Si tratta di una istanza dell'interfaccia `IListenerHandle`, che comprende il metodo `void kill()`.
+
+In seguito si può richiedere a ZCD di effettuare una chiamata a metodo remoto invocando queste funzioni:
+
+*   `send_stream_net`.
+*   `send_stream_system`.
+*   `send_datagram_net`.
+*   `send_datagram_system`.
 
 ### <a name="ZCD_stream_net_listen"></a>stream_net_listen
 
-La funzione `TaskletSystem.ITaskletHandle stream_net_listen(...)` riceve questi argomenti:
+La funzione `IListenerHandle stream_net_listen(...)` riceve questi argomenti:
 
 *   `string my_ip, uint16 tcp_port`. Indicano dove ascoltare con il protocollo TCP.
 *   `IStreamDelegate stream_dlg`.
@@ -72,7 +77,10 @@ Sul delegato `IErrorHandler error_handler`, in caso di errore, la tasklet prima 
 chiamare il metodo `void error_handler(Error e)`.
 
 La funzione `stream_net_listen` avvia una tasklet per gestire l'ascolto e poi ritorna al chiamante
-l'handler della tasklet.
+l'handler di questo listener.  
+Questo handler può essere usato per interrompere senza errori questa tasklet. Ad esempio qualora
+l'indirizzo IP su cui ci si è messi in ascolto stia per venire rimosso dagli indirizzi assegnati
+a questo nodo.
 
 #### cosa fa la tasklet che gestisce il socket in ascolto
 
@@ -180,11 +188,26 @@ La funzione `string send_stream_net(...) throws ZCDError` riceve questi argoment
 La funzione `send_stream_net` apre una connessione con un socket verso la destinazione indicata.  
 Per ridurre l'overhead di una connessione TCP, un client può stabilire una connessione TCP con un server ed
 utilizzarla per diversi messaggi. Quindi di fatto la funzione internamente gestisce un pool di connessioni
-già aperte verso lo stesso indirizzo. Farà attenzione a usare una vecchia connessione solo se la precedente
-chiamata a metodo remoto con quel socket è terminata con successo.
+già aperte verso lo stesso indirizzo e pronte per l'uso.
 
-Se all'apertura della connessione (oppure in seguito durante la scrittura o lettura sul socket connesso)
-si verifica  un errore viene lanciata una eccezione `ZCDError`.
+Se viene trovata una connessione aperta e pronta nel pool, la funzione la toglie dal pool, per accertarsi
+che la tasklet su cui si trova in esecuzione sia l'unica che la sta usando.  
+Di seguito, per prima cosa la funzione usa il socket connesso per scriverci. Se questa operazione va
+in errore, il socket connesso viene scartato e la funzione riparte da capo. Cioè guarda di nuovo se
+nel pool c'è un socket da usare, altrimenti apre una nuova connessione con un nuovo socket.
+
+Se all'apertura della connessione con un nuovo socket si verifica un errore viene lanciata una
+eccezione `ZCDError`.  
+Se durante la scrittura sul socket nuovo (appena creato e connesso) si verifica un errore viene lanciata una
+eccezione `ZCDError`.  
+Se durante la lettura dal socket connesso (appena creato o preso dal pool, in questo caso è lo stesso perché
+ormai la trasmissione della richiesta è stata fatta e eravamo in attesa della risposta) si verifica
+un errore viene lanciata una eccezione `ZCDError`.  
+In tutti i casi in cui viene lanciata una eccezione `ZCDError`, il socket non viene messo nel pool prima di uscire
+dalla funzione.
+
+Quando la funzione avrà completato con successo la comunicazione per cui è stata invocata, prima di terminare
+metterà nel pool il socket con cui ha lavorato, il quale è pronto per l'uso con una connessione già aperta.
 
 Una volta che una connessione è stata stabilita, la funzione costruisce un albero JSON il cui nodo radice è
 un *OBJECT* con i membri:
@@ -202,26 +225,25 @@ Dal JSON la funzione produce una stringa *msg*. Se durante la fase di costruzion
 errore la libreria può abortire il programma.
 
 La funzione trasmette la stringa *msg* alla connessione, preceduta da 4 bytes che ne indicano la lunghezza.
-Se si verifica un errore viene lanciata una eccezione `ZCDError`.
+Il comportamento in caso di errore qui è stato già descritto.
 
-Se non si vuole attendere una risposta, il metodo restituisce immediatamente una stringa vuota.
+Se non si vuole attendere una risposta, il metodo restituisce immediatamente una stringa vuota.  
+Come abbiamo detto, prima di terminare con successo (restituendo la stringa vuota) il socket che stava usando viene messo nel pool.
 
 Se bisogna attendere una risposta, la funzione la attende dalla stessa connessione, leggendola come sempre:
-prima 4 bytes e poi il numero di bytes riportati. Se si verifica un errore viene lanciata una eccezione `ZCDError`.
+prima 4 bytes e poi il numero di bytes riportati. Il comportamento in caso di errore qui è stato già descritto.
 
 La stringa ricevuta deve essere un valido albero JSON. Altrimenti viene lanciata una eccezione `ZCDError`.
 
 Il nodo radice deve essere un *OBJECT* con il membro **response** che è un nodo valido come radice. Altrimenti viene
 lanciata una eccezione `ZCDError`.
 
-La funzione costruisce un nuovo albero con tale nodo e genera una stringa da esso. Restituisce la stringa.
-
-Come abbiamo detto, la funzione internamente gestisce un pool di connessioni aperte verso un dato indirizzo.
-Se deve lanciare una eccezione `ZCDError`, prima il socket che stava usando viene rimosso dal pool.
+La funzione costruisce un nuovo albero con tale nodo e genera una stringa da esso. Restituisce la stringa.  
+Come abbiamo detto, prima di terminare con successo (restituendo la stringa) il socket che stava usando viene messo nel pool.
 
 ### <a name="ZCD_stream_system_listen"></a>stream_system_listen
 
-La funzione `TaskletSystem.ITaskletHandle stream_system_listen(...)` riceve questi argomenti:
+La funzione `IListenerHandle stream_system_listen(...)` riceve questi argomenti:
 
 *   `string listen_pathname`. Indica dove ascoltare con un socket unix-domain per connessioni.
 *   `IStreamDelegate stream_dlg`.
@@ -237,11 +259,15 @@ Sul delegato `IErrorHandler error_handler`, in caso di errore, la tasklet prima 
 chiamare il metodo `void error_handler(Error e)`.
 
 La funzione `stream_system_listen` avvia una tasklet per gestire l'ascolto e poi ritorna al chiamante
-l'handler della tasklet.
+l'handler di questo listener.  
+Questo handler può essere usato per interrompere senza errori questa tasklet. Ad esempio qualora
+il pathname su cui ci si è messi in ascolto stia per venire rimosso dai pathname assegnati
+a questo processo.  
+In questo caso, prima di terminare dovrebbe rimuovere il pathname.
 
 #### cosa fa la tasklet che gestisce il socket in ascolto
 
-La tasklet dovrebbe trovare che il pathname specificato non esiste ancora, quindi crearlo.
+La tasklet dovrebbe trovare che il pathname specificato non esiste ancora, quindi crearlo. Altrimenti abortisce il programma.
 
 La tasklet apre un socket unix-domain e si mette in ascolto sul pathname specificato. Quando riceve
 una connessione avvia una nuova tasklet per gestirla. E si mette di nuovo in attesa di altre connessioni.
@@ -249,7 +275,7 @@ una connessione avvia una nuova tasklet per gestirla. E si mette di nuovo in att
 In caso di errore nella `listen` o nella `accept` lo passa al metodo `error_handler` e
 poi termina.
 
-Prima di terminare dovrebbe rimuovere il pathname.
+Prima di terminare con errore, dovrebbe rimuovere il pathname.
 
 #### cosa fa la tasklet che gestisce una connessione
 
@@ -279,7 +305,9 @@ La funzione `string send_stream_system(...) throws ZCDError` riceve questi argom
 *   `bool wait_reply`.
 
 La funzione deve verificare che il pathname specificato esista. Altrimenti lancia una
-eccezione `ZCDError`.
+eccezione `ZCDError`.  
+Sarebbe infatti la situazione analoga a quando si prova a connettersi ad un indirizzo IP e si rileva
+che non esiste o non è raggiungibile.
 
 La funzione `send_stream_system` apre una connessione con un socket verso la destinazione indicata.  
 Non è necessario tenere conto dell'overhead di una connessione e gestire un pool di connessioni aperte.
@@ -289,7 +317,7 @@ sarà una funzione interna che farà questo lavoro in entrambi i casi.
 
 ### <a name="ZCD_datagram_net_listen"></a>datagram_net_listen
 
-La funzione `TaskletSystem.ITaskletHandle datagram_net_listen(...)` riceve questi argomenti:
+La funzione `IListenerHandle datagram_net_listen(...)` riceve questi argomenti:
 
 *   `string my_dev, uint16 udp_port, string ack_mac`. Indicano dove ascoltare con il protocollo UDP
     e l'identificativo (MAC addess) dell'interfaccia di rete propria del nodo.
@@ -307,7 +335,10 @@ Sul delegato `IErrorHandler error_handler`, in caso di errore, la tasklet prima 
 chiamare il metodo `void error_handler(Error e)`.
 
 La funzione `datagram_net_listen` avvia una tasklet per gestire l'ascolto e poi ritorna al chiamante
-l'handler della tasklet.
+l'handler di questo listener.  
+Questo handler può essere usato per interrompere senza errori questa tasklet. Ad esempio qualora
+l'interfaccia di rete su cui ci si è messi in ascolto stia per venire rimossa dalle interfacce
+gestite.
 
 #### cosa fa la tasklet che gestisce il socket in ascolto
 
@@ -449,7 +480,7 @@ Se nelle operazioni di creazione socket e trasmissione si verifica un errore vie
 
 ### <a name="ZCD_datagram_system_listen"></a>datagram_system_listen
 
-La funzione `TaskletSystem.ITaskletHandle datagram_system_listen(...)` riceve questi argomenti:
+La funzione `IListenerHandle datagram_system_listen(...)` riceve questi argomenti:
 
 *   `string listen_pathname, string send_pathname, string ack_mac`. Indicano il pathname dove ascoltare
     i datagram (trasmessi dai nodi vicini) e il pathname dove trasmettere i datagram di *ACK*
@@ -469,16 +500,20 @@ Sul delegato `IErrorHandler error_handler`, in caso di errore, la tasklet prima 
 chiamare il metodo `void error_handler(Error e)`.
 
 La funzione `datagram_system_listen` avvia una tasklet per gestire l'ascolto e poi ritorna al chiamante
-l'handler della tasklet.
+l'handler di questo listener.  
+Questo handler può essere usato per interrompere senza errori questa tasklet. Ad esempio qualora
+il pathname su cui ci si è messi in ascolto stia per venire rimosso dai pathname assegnati
+a questo processo.  
+In questo caso, prima di terminare dovrebbe rimuovere il pathname.
 
 #### cosa fa la tasklet che gestisce il socket in ascolto
 
-La tasklet dovrebbe trovare che il pathname specificato non esiste ancora, quindi crearlo.
+La tasklet dovrebbe trovare che il pathname specificato non esiste ancora, quindi crearlo. Altrimenti abortisce il programma.
 
 La tasklet apre un socket unix-domain e si mette in ascolto sul pathname specificato. Nel caso di
-errore lo passa al metodo `error_handler` e poi termina.
+errore nella creazione/configurazione del socket, lo passa al metodo `error_handler` e poi termina.
 
-Prima di terminare dovrebbe rimuovere il pathname.
+Prima di terminare con errore, dovrebbe rimuovere il pathname.
 
 La tasklet mette il socket in attesa di un pacchetto con la chiamata `recvfrom`.
 
@@ -516,8 +551,13 @@ La funzione `void send_datagram_system(...) throws ZCDError` riceve questi argom
 *   `List<string> arguments`. Serializzazione di una lista di argomenti da passare al metodo.
 *   `bool send_ack`.
 
-La funzione deve verificare che il pathname specificato esista. Altrimenti lancia una
-eccezione `ZCDError`.
+La funzione deve verificare che il pathname specificato esista. Altrimenti ignora il messaggio e
+ritorna al chiamante.  
+Sarebbe infatti la situazione analoga a quando si scrive su una interfaccia di rete ma non viene
+raggiunto nessuno. In pratica, rimandando alle modalità descritte nel documento ntkd-RPC nella
+sezione [Tipi di medium](../DemoneNTKD/RPC.md#Medium) per mappare in un pathname le situazioni di
+comunicazione con messaggi broadcast, sarebbe dovuto al fatto che non è stato avviato il relativo
+processo "domain" o "radio-domain".
 
 La funzione `send_datagram_system` crea un socket unix-domain per trasmettere pacchetti datagram
 verso il pathname specificato.

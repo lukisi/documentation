@@ -92,7 +92,7 @@ scopi differenti.
 
 Quando si vuole realizzare una applicazione che usa ZCD, bisogna per prima cosa definire le strutture dati
 da trasmettere e individuare i metodi remoti con le loro signature. Da questo sarà possibile realizzare la
-libreria di livello intermedio MOD-RPC specifica per questo modello di dati. Ad esempio per il demone ntkd
+libreria di livello intermedio MOD-RPC specifica per questo modello di dati. Ad esempio per il demone *ntkd*
 si realizzerà la libreria *ntkdrpc*. Tale libreria avrà come diretta dipendenza la libreria ZCD, ma questo
 è un dettaglio implementativo che può non essere esposto al suo utilizzatore.
 
@@ -250,7 +250,7 @@ Nel documento [ntkd-RPC](../DemoneNTKD/RPC.md) descriveremo il livello intermedi
 
 ### <a name="Tasklet_listen"></a>Tasklet in ascolto
 
-Un programma che usa il framework ZCD per prima cosa inizializza la libreria ZCD indicando dove ascoltare.
+Un programma che usa il framework ZCD deve indicare dove intende mettersi in ascolto.
 
 Rammentando le modalità di trasmissione e i medium previsti dal framework, abbiamo come conseguenza
 che la libreria di basso livello può mettersi in ascolto di messaggi nei seguenti modi:
@@ -264,7 +264,7 @@ che la libreria di basso livello può mettersi in ascolto di messaggi nei seguen
     in ascolto in questo modo.  
     L'utilizzatore specifica un pathname di ascolto che deve essere univoco all'interno del set di processi
     che compongono la testsuite e deve riflettere la modalità di comunicazione con connessione.  
-    Indicheremo nel documento ntkd-RPC nella sezione [Tasklet in ascolto](../DemoneNTKD/RPC.md#Tasklet_listen)
+    Indicheremo nel documento ntkd-RPC nella sezione [Tipi di medium](../DemoneNTKD/RPC.md#Medium)
     le scelte fatte nell'applicazione *ntkd* per mappare in un pathname le situazioni di comunicazione con connessione
     che si possono incontrare.
 1.  Attendere messaggi broadcast con il protocollo UDP (su una precisa porta UDP) su una propria interfaccia di
@@ -274,22 +274,32 @@ che la libreria di basso livello può mettersi in ascolto di messaggi nei seguen
     al quale è collegata quella interfaccia di rete.  
     La libreria espone la funzione `datagram_net_listen(my_dev, udp_port, string ack_mac)` che avvia una tasklet che si mette
     in ascolto in questo modo.  
-    L'utilizzatore specifica il dev-name della propria interfaccia di rete e la porta UDP.
+    L'utilizzatore specifica il dev-name della propria interfaccia di rete e la porta UDP.  
+    Le tasklet che ascoltano trasmissioni di tipo "datagram" ricevono un parametro `string ack_mac`. Esso è da utilizzare nella
+    successiva trasmissione dei messaggi di *ACK* relativi ai messaggi di *richiesta* ricevuti.
 1.  Attendere messaggi su un socket unix-domain legato ad uno specifico pathname.  
     La libreria espone la funzione `datagram_system_listen(listen_pathname, send_pathname, string ack_mac)` che avvia una tasklet
     che si mette in ascolto in questo modo.  
     L'utilizzatore specifica un pathname di ascolto che deve essere univoco all'interno del set di processi
     che compongono la testsuite e deve riflettere la modalità di comunicazione con messaggi broadcast. Inoltre
     specifica un pathname di trasmissione per la trasmissione dei pacchetti ACK.  
-    Indicheremo nel documento ntkd-RPC nella sezione [Tasklet in ascolto](../DemoneNTKD/RPC.md#Tasklet_listen)
+    Le tasklet che ascoltano trasmissioni di tipo "datagram" ricevono un parametro `string ack_mac`. Esso è da utilizzare nella
+    successiva trasmissione dei messaggi di *ACK* relativi ai messaggi di *richiesta* ricevuti.  
+    Indicheremo nel documento ntkd-RPC nella sezione [Tipi di medium](../DemoneNTKD/RPC.md#Medium)
     le scelte fatte nell'applicazione *ntkd* per mappare in un pathname le situazioni di comunicazione con messaggi
     broadcast che si possono incontrare.
 
-Le tasklet che ascoltano trasmissioni di tipo "datagram" ricevono un parametro `string ack_mac`. Esso è da utilizzare nella
-successiva trasmissione dei messaggi di *ACK* relativi ai messaggi di *richiesta* ricevuti.
+L'utilizzatore può ordinare alla libreria ZCD di mettersi in ascolto con delle tasklet in una
+o più di una di queste modalità. Per ogni tasklet che viene così avviata l'utilizzatore deve ottenere
+un handle col quale possa essere in grado in futuro di terminare la tasklet.
 
-L'utilizzatore può inizializzare la libreria ZCD ordinandogli di mettersi in ascolto con delle tasklet in una
-o più di una di queste modalità.
+Durante il corso della vita del programma può essere necessario avviare nuove tasklet di ascolto (sia di tipologia
+stream che datagram) e terminarne alcune.  
+Ad esempio, nel caso del demone *ntkd* alcuni indirizzi IP su cui questo dovrà mettersi in ascolto
+(quelli routabili interni ad un g-nodo) possono cambiare nel tempo. Quindi quando stanno per essere rimossi
+i vecchi indirizzi IP propri del nodo bisogna prima terminare le tasklet in ascolto su di essi. Anche per
+il caso di tasklet in ascolto per datagram su una particolare interfaccia di rete, il demone *ntkd*
+dovrebbe prevedere la possibilità di aggiungere o rimuovere dinamicamente le interfacce gestite.
 
 ### <a name="Send"></a>Chiamate a metodi remoti
 
@@ -315,8 +325,8 @@ che ci sono diverse modalità, per ognuna delle quali ZCD mette a disposizione u
     L'utilizzatore specifica il dev-name della propria interfaccia di rete e la porta UDP.
 1.  Inviare un messaggio su un socket unix-domain legato ad uno specifico pathname.  
     La libreria espone la funzione `send_datagram_system(send_pathname, ...)` che trasmette in questo modo.  
-    L'utilizzatore specifica un pathname sul quale sa che il destinatario è in ascolto e che riflette la modalità di
-    comunicazione con messaggi broadcast.
+    L'utilizzatore specifica un pathname sul quale sa che un programma di proxy è in ascolto. Come è spiegato nel
+    documento ntkd-RPC nella sezione [Tipi di medium](../DemoneNTKD/RPC.md#Medium).
 
 #### Modalità stream
 
@@ -352,7 +362,7 @@ sono:
     interfaccia di rete del mittente che ha usato per trasmettere il messaggio.
 *   `string m_name`. Nome del metodo (ignoto al framework ZCD) da eseguire sul destinatario.
 *   `List<string> arguments`. Serializzazione di una lista di oggetti da passare al metodo.
-*   `bool send_ack`. Indica se il mittente richiede ai nodi che ricevono il messaggio la trasimssione
+*   `bool send_ack`. Indica se il mittente richiede ai nodi che ricevono il messaggio la trasmissione
     di un pacchetto di ACK.  
     Se è così, ogni nodo che rileva il messaggio da una sua interfaccia di rete trasmette subito sulla stessa
     interfaccia (quindi sullo stesso dominio broadcast su cui il mittente ha trasmesso) un pacchetto ACK in
@@ -367,8 +377,8 @@ sono:
 In entrambe le modalità (stream e datagram) abbiamo dei parametri comuni.
 
 *   `m_name`. Il nome del metodo da chiamare. Per ZCD questa è semplicemente una stringa.  
-    La libreria MOD-RPC può avere qualche ulteriore convenzione, ad esempio il nome della classe dello stub
-    seguito da un punto e dal nome del metodo.
+    La libreria MOD-RPC può avere qualche ulteriore convenzione, ad esempio il nome di un attributo della classe
+    dello skeleton radice, seguito da un punto e dal nome del metodo.
 *   `arguments`. Un elenco di stringhe in formato JSON che rappresentano gli argomenti del metodo nell'ordine in cui
     sono nella sua signature. Per ZCD sono semplicemente stringhe valide nel formato JSON.  
     La libreria MOD-RPC ha avuto l'incarico di produrle serializzando dei dati e sarà in grado, dall'altro
