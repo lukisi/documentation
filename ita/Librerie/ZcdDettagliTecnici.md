@@ -392,7 +392,7 @@ radice. Sotto ogni tipologia sono poi elencati i vari membri dell'oggetto.
 
 #### cosa fa la tasklet che gestisce un datagram
 
-La tasklet che gestisce un datagram (ad esempio un messaggio UDP) riceve questi parametri iniziali:
+La tasklet che gestisce un datagram riceve questi parametri iniziali:
 
 *   `string msg` - Il messaggio ricevuto.
 *   `IDatagramDelegate datagram_dlg` - Il delegato per le richieste.

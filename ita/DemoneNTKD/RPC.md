@@ -99,8 +99,8 @@ Per simulare un socket in ascolto per connessioni su un suo indirizzo IP:
     *   Se l'indirizzo IP è globale (o anonimizzante) sia `<netid>` l'identificativo della rete.
     *   Se è interno ad un g-nodo di livello *i* sia `<netid>` l'identificativo del g-nodo di livello *i*.
 
-    In entrambi i casi assumiamo come requisito che tali identificativi non cambiano nel tempo di vita
-    della testsuite.  
+    In entrambi i casi assumiamo come **requisito che tali identificativi non cambiano**
+    **nel tempo di vita della testsuite**.  
     Allora il pathname sarà `conn_<netid>_<ip>`.
     
 #### Emulazione modalità datagram
@@ -114,79 +114,59 @@ un socket impostato a "set_broadcast" e associato ad un certo nic. Il risultato 
 transita sul dominio broadcast sul quale è "collegato" quel nic. Quindi viene rilevato da qualsiasi altro
 nic collegato allo stesso dominio broadcast.
 
-Per simulare un socket che opera (in ascolto o in trasmissione) con messaggi broadcast su un NIC:
+Per simulare un socket che opera (in ascolto o in trasmissione) con messaggi broadcast su un suo pseudo-NIC:
 
-*   Il nic-name `<dev>` assumiamo che sia univoco solo nel nodo, cioè nel processo. Sia `<pid>`
-    l'identificativo del processo.  
-    Allora una parte del pathname sarà `<pid>_<dev>`.
+*   Sia `<dev>` l'identificativo univoco di quel NIC (in realtà pseudo-NIC) all'interno del nodo (in realtà del processo).  
+    Sia `<pid>` l'identificativo del processo. Però, invece di usare l'identificativo del processo assegnato dal
+    Sistema Operativo, lasciamo che sia l'utente a specificarlo quando lancia l'applicazione. In questo modo l'utente
+    conoscendolo in anticipo può indicarlo a un altro programma, come illustreremo a breve.  
+    Allora **una parte** del pathname sarà `<pid>_<dev>`.
 
 Per simulare queste operazioni in una testsuite in cui più processi (all'interno di un sistema) simulano più
 nodi (all'interno di una rete) occorre attivare anche altri processi "domain" che emulano un dominio di broadcast.
 
-Ad esempio si voglia simulare un nodo "alfa" e un nodo "beta" i quali entrambi hanno una interfaccia "eth0" sullo
+Ad esempio si voglia simulare un nodo "alfa" (a cui assegneremo il pid 1234) e un nodo "beta"
+(a cui assegneremo il pid 6543) i quali entrambi hanno una interfaccia "eth0" sullo
 stesso dominio, che chiameremo dominio "tau". Vogliamo lanciare il comando "qspntester" su entrambi i nodi (simulati)
 indicando l'interfaccia "eth0".
 
-Per emulare il dominio "tau", si lancia `domain` e si prende nota del suo pid per comunicare in seguito con esso.
+Per emulare il dominio "tau", si lancia `domain -i 1234_eth0 -i 6543_eth0`.  
+Questo processo avvia una tasklet associata a `1234_eth0`. Questa **crea** il pathname `send_1234_eth0`. Poi si mette in
+ascolto con un socket unix-domain su quel pathname. Quando questa tasklet riceve un pacchetto fa da proxy:
+avviando una nuova tasklet per ogni pathname diverso da `1234_eth0` (lo stesso NIC che trasmette un pacchetto non
+può al contempo riceverlo, altrimenti si formerebbe un loop) che gli è stato passato come argomento, trasmette lo
+stesso pacchetto scrivendolo con un socket unix-domain sul pathname `recv_<pathname>`, **ma solo** se questo
+pathname esiste già. Nel nostro caso si tratta del pathname `recv_6543_eth0`.  
+Inoltre, in modo analogo, il processo avvia una tasklet associata a `6543_eth0` che si mette in ascolto
+sul pathname `send_6543_eth0`. Quando questa tasklet riceve un pacchetto fa da proxy: trasmette lo
+stesso pacchetto scrivendolo sul pathname `recv_1234_eth0`.
 
-Per "alfa", si lancia `qspntester -I eth0` che crea il processo pid 1234. Tale processo computa un pathname `1234_eth0` per
+Per "alfa", si lancia `qspntester -p 1234 -I eth0`. Tale processo computa un pathname `1234_eth0` per
 rappresentare il suo pseudonic `eth0`.  
-Quando questo processo vuole stare in ascolto per messaggi broadcast su questo pseudonic, in realtà si
-mette in ascolto su un socket unix-domain con il pathname `recv_1234_eth0`.  
+Quando questo processo vuole stare in ascolto per messaggi broadcast su questo pseudonic, in realtà **crea** il
+pathname `recv_1234_eth0` e si mette in ascolto con un socket unix-domain su quel pathname.  
 Per il momento nessuno scrive su `recv_1234_eth0`.  
-Quando questo processo vuole trasmettere un pacchetto tramite questo pseudonic, in realtà lo scrive su
-un socket unix-domain con il pathname `send_1234_eth0`.  
-Per il momento nessuno ascolta su `send_1234_eth0`.
+Quando questo processo vuole trasmettere un pacchetto tramite questo pseudonic, in realtà lo scrive con
+un socket unix-domain sul pathname `send_1234_eth0`, **ma solo** se questo pathname esiste già.  
+Abbiamo visto pocanzi che il processo `domain` ascolta su `send_1234_eth0`.
 
-Per "beta", si lancia `qspntester -I eth0` che crea il processo pid 6543. Tale processo computa un pathname `6543_eth0` per
+Per "beta", si lancia `qspntester -p 6543 -I eth0`. Tale processo computa un pathname `6543_eth0` per
 rappresentare il suo pseudonic `eth0`.  
-Quando questo processo vuole stare in ascolto per messaggi broadcast su questo pseudonic, in realtà si
-mette in ascolto su un socket unix-domain con il pathname `recv_6543_eth0`.  
+Quando questo processo vuole stare in ascolto per messaggi broadcast su questo pseudonic, in realtà **crea** il
+pathname `recv_6543_eth0` e si mette in ascolto con un socket unix-domain su quel pathname.  
 Per il momento nessuno scrive su `recv_6543_eth0`.  
-Quando questo processo vuole trasmettere un pacchetto tramite questo pseudonic, in realtà lo scrive su
-un socket unix-domain con il pathname `send_6543_eth0`.  
-Per il momento nessuno ascolta su `send_6543_eth0`.
+Quando questo processo vuole trasmettere un pacchetto tramite questo pseudonic, in realtà lo scrive con
+un socket unix-domain sul pathname `send_6543_eth0`, **ma solo** se questo pathname esiste già.  
+Abbiamo visto pocanzi che il processo `domain` ascolta su `send_6543_eth0`.
 
-Per collegare `eth0` di "alfa" al dominio "tau" dobbiamo comunicare al processo `domain` di cui sopra che
-è ora attaccato il nic `1234_eth0`. Questo processo avvia una tasklet associata a `1234_eth0` che si mette
-in ascolto su un socket unix-domain con il pathname `send_1234_eth0`. Inoltre mette in una lista
-il pathname `1234_eth0`.  
-Ora se il processo che simula "alfa" trasmette un pacchetto, cioè scrive sul socket unix-domain con il
-pathname `send_1234_eth0`, il processo `domain` lo riceve tramite la sua tasklet associata a `1234_eth0`.
-Allora cerca nella sua lista se c'è un pathname diverso da `1234_eth0`. Ma non ne trova, quindi non fa nulla.
-Infatti un nic che trasmette un pacchetto non può al contempo rilevarlo.
+Adesso supponiamo che il nodo "beta" vuole scrivere un pacchetto sul suo pseudonic "eth0". Lo
+scrive con un socket unix-domain sul pathname `send_6543_eth0`. Quindi il processo "domain"
+lo riceve tramite la sua tasklet associata a `6543_eth0` e lo copia sul pathname `recv_1234_eth0`.
+Quindi il nodo "alfa" lo riceve.
 
-Per collegare `eth0` di "beta" al dominio "tau" dobbiamo comunicare al processo `domain` di cui sopra che
-è ora attaccato il nic `6543_eth0`. Questo processo avvia una tasklet associata a `6543_eth0` che si mette
-in ascolto su un socket unix-domain con il pathname `send_6543_eth0`. Inoltre mette nella lista
-il pathname `6543_eth0`.  
-Ora se il processo che simula "alfa" trasmette un pacchetto, cioè scrive sul socket unix-domain con il
-pathname `send_1234_eth0`, il processo `domain` lo riceve tramite la sua tasklet associata a `1234_eth0`.
-Allora cerca nella sua lista se c'è un pathname diverso da `1234_eth0`. E trova `6543_eth0`. Allora
-fa da proxy: avviando una nuova tasklet per ogni pathname diverso da `1234_eth0` trovato, trasmette lo
-stesso pacchetto scrivendolo su un socket unix-domain con il pathname `recv_<pathname>`. Nel nostro caso
-lo scrive su `recv_6543_eth0`. Quindi il processo che simula "beta" lo riceve.
-
-Oppure, invece di ispezionare il PID dei processi e comunicare con il processo `domain` in seguito
-al suo avvio, si potrebbe aggiungere un parametro al processo `qspntester` per indicare il valore da assegnare
-al segnaposto `<pid>`.  
-Ad esempio lanciamo `qspntester -p 1234 -I eth0`. Il processo `qspntester-1234` crea `recv_1234_eth0` e si mette in
-ascolto su esso. Quando vuole trasmettere prova a scrivere su `send_1234_eth0` ma soltanto se già esiste.
-Per il momento nessuno scrive su `recv_1234_eth0` e se `qspntester-1234` vuole trasmettere si accorge che
-`send_1234_eth0` non esiste e quindi non fa nulla.  
-A questo punto banalmente il processo `domain` potrà sapere fin dal suo avvio su quali pathname stare in
-ascolto. Ad esempio `domain -i 1234_eth0 -i 6543_eth0`.  
-Il processo `domain` crea `send_1234_eth0` e `send_6543_eth0` e si mette in ascolto su essi. Quando riceve
-da `send_1234_eth0` prova a scrivere su `recv_6543_eth0` ma soltanto se già esiste. Allo stesso modo quando riceve
-da `send_6543_eth0` prova a scrivere su `recv_1234_eth0` ma soltanto se già esiste.  
-Adesso quando `qspntester-1234` vuole trasmettere si accorge che `send_1234_eth0` esiste e quindi scrive lì. Il processo
-`domain` lo riceve e vorrebbe trasmetterlo su `recv_6543_eth0` ma si accorge che non esiste e quindi non fa nulla.
-Per il momento ancora nessuno scrive su `recv_1234_eth0`.  
-Poi possiamo lanciare `qspntester -p 6543 -I eth0`. Il processo `qspntester-6543` crea `recv_6543_eth0` e si mette in
-ascolto su esso. Quando vuole trasmettere prova a scrivere su `send_6543_eth0` ma soltanto se già esiste.  
-Ora, quando `qspntester-6543` vuole trasmettere si accorge che `send_6543_eth0` esiste e quindi scrive lì. Il processo
-`domain` lo riceve e vorrebbe trasmetterlo su `recv_1234_eth0`, che esiste e quindi scrive lì. Il processo
-`qspntester-1234` lo riceve. E cosi via.
+Si intuisce facilmente, sebbene abbiamo fatto un esempio con due soli nodi, che questo meccanismo
+consente di emulare efficacemente un dominio in cui un nodo trasmette in broadcast un pacchetto
+e questo viene rilevato da *n* altri nodi.
 
 #### Emulazione radio
 
