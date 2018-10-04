@@ -16,8 +16,6 @@
     1.  [Lato client](#MODRPC_client)
     1.  [Serializzazione e deserializzazione di argomenti, valori di ritorno e eccezioni](#MODRPC_argomenti)
 1.  [APP](#APP)
-    1.  [Lato server](#APP_Server)
-    1.  [Lato client](#APP_Client)
 
 ## <a name="ZCD"></a>ZCD
 
@@ -604,13 +602,22 @@ e deserializzata con `Json.gobject_serialize` e `Json.gobject_deserialize` di Js
 
 La libreria fornisce una interfaccia skeleton per la classe radice e una per ogni modulo membro.
 
+L'applicazione APP dovrà fornire una implementazione per ognuna di queste interfacce.
+
 La libreria fornisce inoltre una interfaccia per il delegato che essa stessa userà per reperire le istanze della
 classe radice. Infine fornisce una interfaccia per il gestore di errori; questo sarà invocato nelle tasklet che
 stanno in ascolto sui socket in caso di errori che causano la terminazione delle stesse tasklet.
 
-L'applicazione APP dovrà fornire una implementazione per ognuna di
-queste interfacce. L'istanza del delegato e quella del gestore di errori andranno passate alla libreria nella
-fase di inizializzazione, cioè, come vedremo dopo, quando si avviano le tasklet che stanno in ascolto sui socket.
+L'applicazione APP dovrà fornire una implementazione per ognuna di queste interfacce.  
+Una istanza di delegato e una di gestore di errori andranno passate alla libreria quando si avviano le tasklet
+che stanno in ascolto sui socket nelle varie modalità e con gli specifici parametri.
+
+Ad esempio l'applicazione potrebbe avviare una tasklet per ascoltare in modalità "stream" sul proprio indirizzo
+IP 10.0.0.15 e una sul 10.1.0.1. Inoltre potrebbe avviare una tasklet per ascoltare in modalità "datagram" sulla
+propria interfaccia "eth0" e una su "eth1". In ognuna di queste 4 chiamate deve indicare una istanza di
+delegato e una di gestore di errori.  
+Le istanze indicate potrebbero essere le stesse, oppure diverse istanze di una medesima classe. A seconda che
+sia necessario a quella istanza identificare la specifica tasklet da cui è stato invocato un suo metodo.
 
 La libreria, attraverso il delegato, sarà in grado, quando riceve una richiesta, di ottenere le istanze di classi
 radice e classi modulo al fine di chiamare un metodo remoto.
@@ -625,10 +632,10 @@ prodotta da "rpcdesign" fornirà queste interfacce:
 *   `SampleRpc.INodeManagerSkeleton`.  
     Prevede il metodo astratto:
     *   `SampleRpc.IInfoManagerSkeleton info_manager_getter()`
-*   `SampleRpc.IRpcDelegate`.  
+*   `SampleRpc.IDelegate`.  
     Prevede il metodo astratto:
     *   `Gee.List<SampleRpc.INodeManagerSkeleton> get_node_manager_set(SampleRpc.CallerInfo caller)`
-*   `SampleRpc.IRpcErrorHandler`.  
+*   `SampleRpc.IErrorHandler`.  
     Prevede il metodo astratto:
     *   `void error_handler(Error e)`
 
@@ -636,20 +643,20 @@ prodotta da "rpcdesign" fornirà queste interfacce:
 che contiene alcune informazioni sul richiedente. Il contenuto varia a seconda del metodo usato per inviare il
 messaggio (stream/datagram, net/system).
 
-**Nota 2**: L'interfaccia `IRpcDelegate` ha un metodo per ogni root-dispatcher. Per ogni richiesta che si riceve
+**Nota 2**: L'interfaccia `IDelegate` ha un metodo per ogni root-dispatcher. Per ogni richiesta che si riceve
 lato server la prima parte del nome del metodo remoto indica il root-dispatcher da usare; la libreria MOD-RPC
-prende questo prefisso e sceglie il metodo di `IRpcDelegate` da chiamare.
+prende questo prefisso e sceglie il metodo di `IDelegate` da chiamare.
 
 La libreria MOD-RPC fornisce inoltre alcune chiamate di inizializzazione:
 
 *   `void SampleRpc.init_tasklet_system(ITasklet _tasklet)`
-*   `void SampleRpc.stream_net_listen(SampleRpc.IRpcDelegate dlg, SampleRpc.IRpcErrorHandler err,`  
+*   `void SampleRpc.stream_net_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
     `string my_ip, uint16 tcp_port)`
-*   `void SampleRpc.stream_system_listen(SampleRpc.IRpcDelegate dlg, SampleRpc.IRpcErrorHandler err,`  
+*   `void SampleRpc.stream_system_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
     `string listen_pathname)`
-*   `void SampleRpc.datagram_net_listen(SampleRpc.IRpcDelegate dlg, SampleRpc.IRpcErrorHandler err,`  
+*   `void SampleRpc.datagram_net_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
     `string my_dev, uint16 udp_port, string ack_mac)`
-*   `void SampleRpc.datagram_system_listen(SampleRpc.IRpcDelegate dlg, SampleRpc.IRpcErrorHandler err,`  
+*   `void SampleRpc.datagram_system_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
     `string listen_pathname, string send_pathname, string ack_mac)`
 
 La funzione `init_tasklet_system` deve essere chiamata da APP come inizializzazione della libreria. Essa serve
@@ -664,11 +671,11 @@ Ognuna di queste funzioni avvia una nuova tasklet perché stia in ascolto di mes
 In realtà ognuna di queste funzioni chiama semplicemente la funzione omonima nella libreria di basso livello.
 È la libreria di basso livello che avvia una tasklet in ascolto di messaggi. Quello che fa la libreria MOD-RPC in queste
 funzioni è costruire un delegato (`zcd.IStreamDelegate` o `zcd.IDatagramDelegate`) adatto alla funzione della libreria
-di basso livello sulla base del delegato (`SampleRpc.IRpcDelegate`) che riceve dalla APP.  
+di basso livello sulla base del delegato (`SampleRpc.IDelegate`) che riceve dalla APP.  
 Quando la libreria di basso livello (nella tasklet in ascolto, o meglio in gestione di una precisa connessione
 o datagram) riceve un messaggio, produce un `zcd.CallerInfo` e lo passa al delegato `zcd.IStreamDelegate`
 o `zcd.IDatagramDelegate` prodotto da MOD-RPC. Questo dai dati del `zcd.CallerInfo` produce un `SampleRpc.CallerInfo`
-e lo passa al delegato `SampleRpc.IRpcDelegate` ricevuto dalla APP.
+e lo passa al delegato `SampleRpc.IDelegate` ricevuto dalla APP.
 
 Ricordiamo cosa intendiamo dire con "lo passa al delegato".  
 Nel caso di un `zcd.IStreamDelegate` significa che chiama il suo metodo
@@ -679,7 +686,7 @@ Nel caso di un `zcd.IDatagramDelegate` significa che chiama il suo metodo
 `IDatagramDispatcher? get_dispatcher(DatagramCallerInfo caller_info)`
 con questo argomento. Se il risultato che ottiene non è nullo ci chiamerà in seguito il metodo
 `void execute(string m_name, List<string> args, DatagramCallerInfo caller_info)`.  
-Nel caso di un `SampleRpc.IRpcDelegate` significa che chiama il suo metodo
+Nel caso di un `SampleRpc.IDelegate` significa che chiama il suo metodo
 `Gee.List<SampleRpc.INodeManagerSkeleton> get_node_manager_set(SampleRpc.CallerInfo caller)`
 (`node_manager` fa parte del nostro esempio di RPC-IDL) con questo argomento. Se il risultato che ottiene
 non è vuoto, su ognuno degli skeleton chiamerà in seguito il metodo specificato in `m_name`.
@@ -717,8 +724,9 @@ La classe Listener è vuota. Viene ereditata dalle seguenti classi:
 *   DatagramSystemListener. Prodotta da `datagram_system_listen`. Contiene i suoi parametri `listen_pathname, send_pathname, ack_mac`.
 
 Il delegato interrogato dalle tasklet alla ricezione di un messaggio, diversamente da quanto avveniva
-nella libreria di basso livello, è uno solo. Una stessa istanza di `SampleRpc.IRpcDelegate dlg` può occuparsi
-sia dei messaggi di tipo "stream" sia di quelli di tipo "datagram".
+nella libreria di basso livello, è una istanza di una medesima interfaccia. Sia i messaggi ricevuti con
+modalità "stream", sia quelli "datagram", possono essere gestiti chiamando un metodo comune dell'interfaccia
+`SampleRpc.IDelegate dlg`.
 
 Proseguiamo considerando il nostro esempio di RPC-IDL. Assumiamo il caso di un messaggio ricevuto con la modalità
 "stream"; sarà banale comprendere come differiscono solo leggermente le operazioni nel caso di messaggi ricevuti
@@ -730,7 +738,7 @@ Essa chiama `IStreamDispatcher? get_dispatcher(StreamCallerInfo caller_info)` su
 fornito da MOD-RPC.  
 Questo per prima cosa vede che la parte iniziale di `m_name` è `node_manager`.
 Allora costruisce un analoga istanza di `SampleRpc.CallerInfo caller` e poi
-chiama `Gee.List<INodeManagerSkeleton> get_node_manager_set(caller)` sul `SampleRpc.IRpcDelegate dlg`
+chiama `Gee.List<INodeManagerSkeleton> get_node_manager_set(caller)` sul `SampleRpc.IDelegate dlg`
 fornito da APP.  
 Quest'ultima conosce le diverse classi `SampleRpc.CallerInfo` descritte sopra. In base al `caller` ricevuto
 (ad esempio guardando `unicast_id` o `broadcast_id` o altro)
@@ -781,9 +789,9 @@ L'altra è DeserializeError; può essere trasmessa (in forma serializzata) come 
 remoto se ha riscontrato problemi nel deserializzare gli argomenti che il nodo locale ha passato; oppure può
 essere lanciata dalla libreria nel nodo locale per segnalare un problema nel deserializzare il valore di ritorno.
 
-Un caso particolare è il valore di ritorno di un metodo chiamato in modalità Broadcast oppure con `wait_reply`
-a *false*. In questi casi lo stub non attende una risposta e quindi il metodo che è stato chiamato non ha un
-valore da restituire. Se il metodo doveva restituire *void* non è un problema e questo è il caso più comune per
+Un caso particolare è il valore di ritorno di un metodo chiamato in modalità "datagram", oppure in modalità "stream" ma
+con `wait_reply` a *false*. In questi casi lo stub non attende una risposta e quindi il metodo che è stato chiamato non
+ha un valore da restituire. Se il metodo doveva restituire *void* non è un problema e questo è il caso più comune per
 questi tipi di chiamata a metodo remoto. Tuttavia qualche metodo che restituisce un valore può essere a volte
 chiamato in questa modalità. In questo caso il metodo dello stub lancia l'eccezione StubError con il codice
 `DID_NOT_WAIT_REPLY`. L'applicazione APP deve essere consapevole di tale possibile situazione che in realtà indica
@@ -796,35 +804,19 @@ attraverso la rete, ricevere la risposta (valore di ritorno o eccezione), deseri
 
 Le funzioni fornite dalla libreria per ottenere una istanza dello stub radice sono:
 
-*   `INodeManagerStub get_node_manager_tcp_client(string peer_address, uint16 peer_port, ISourceID source_id, IUnicastID unicast_id)`
-*   `INodeManagerStub get_node_manager_unicast(string dev, uint16 port, string src_ip, ISourceID source_id, IUnicastID unicast_id, bool wait_reply)`
-*   `INodeManagerStub get_node_manager_broadcast(Gee.List<string> devs, Gee.List<string> src_ips, uint16 port, ISourceID source_id, IBroadcastID broadcast_id, SampleRpc.IAckCommunicator? notify_ack=null)`
+*   `INodeManagerStub get_node_manager_stream_net(string peer_ip, uint16 tcp_port, ISourceID source_id, IUnicastID unicast_id, ISrcNic src_nic, bool wait_reply)`
+*   `INodeManagerStub get_node_manager_stream_system(string send_pathname, ISourceID source_id, IUnicastID unicast_id, ISrcNic src_nic, bool wait_reply)`
+*   `INodeManagerStub get_node_manager_datagram_net(string my_dev, uint16 udp_port, int packet_id, ISourceID source_id, IBroadcastID broadcast_id, ISrcNic src_nic, SampleRpc.IAckCommunicator? notify_ack=null)`
+*   `INodeManagerStub get_node_manager_datagram_system(string send_pathname, int packet_id, ISourceID source_id, IBroadcastID broadcast_id, ISrcNic src_nic, SampleRpc.IAckCommunicator? notify_ack=null)`
 
-La classe che si ottiene con la funzione `get_node_manager_tcp_client` implementa anche l'interfaccia ITcpClientRootStub.
-Tale interfaccia offre questi metodi:
-
-*   `bool get_hurry()`
-*   `void set_hurry(bool new_value)`  
-    L'impostazione di `hurry` dice se il prossimo metodo chiamato è urgente.
-*   `bool get_wait_reply()`
-*   `void set_wait_reply(bool new_value)`  
-    L'impostazione di `wait_reply` dice se per il prossimo metodo chiamato si desidera attendere una risposta.
-
-La funzione `get_node_manager_broadcast` accetta una istanza di SampleRpc.IAckCommunicator. Se non è *null* allora
+Le funzioni `*_datagram_*` accettano una istanza di SampleRpc.IAckCommunicator. Se non è *null* allora
 lo stub prodotto, quando dovrà chiamare un metodo remoto, richiederà l'invio di un messaggio di ACK da parte dei
 nodi che ricevono il messaggio. Poi avvierà una nuova tasklet prima di terminare (con void oppure lanciando
-l'eccezione `DID_NOT_WAIT_REPLY`). Nella nuova tasklet attenderà il tempo massimo e infine chiamerà il seguente
+l'eccezione `StubError.DID_NOT_WAIT_REPLY`). Nella nuova tasklet attenderà il tempo massimo e infine chiamerà il seguente
 metodo dell'interfaccia SampleRpc.IAckCommunicator:
 
 *   `void process_macs_list(Gee.List<string> macs_list)`  
     A parametro riceve l'elenco dei MAC address dei vicini che hanno ricevuto il messaggio.
-
-Inoltre, la funzione `get_node_manager_broadcast` accetta una lista di interfacce di rete e una lista di relativi
-indirizzi IP. Lo stub prodotto, quando dovrà chiamare un metodo remoto, deve trasmettere (o cercare di trasmettere)
-il messaggio su tutte le interfacce di rete indicate, per ognuna usando il relativo indirizzo IP come *source*.
-Se si verifica un errore nella trasmissione su tutte le interfacce di rete allora la chiamata al metodo remoto lancia uno StubError.
-
-Ma se almeno una trasmissione non ha dato problemi il chiamante non vede problemi.
 
 ### <a name="MODRPC_argomenti"></a>Serializzazione e deserializzazione di argomenti, valori di ritorno e eccezioni
 
@@ -832,9 +824,9 @@ Come detto nell'analisi funzionale, la libreria MOD-RPC ha il compito di:
 
 *   Lato client serializzare ogni argomento di una chiamata a metodo remoto in una stringa che rappresenta un
     valido albero JSON.
-*   Lato client serializzare l'istanza di ISourceID e l'istanza di IUnicastID / IBroadcastID della chiamata in
+*   Lato client serializzare le istanze di ISourceID, IUnicastID / IBroadcastID, ISrcNic della chiamata in
     una stringa che rappresenta un valido albero JSON.
-*   Lato server deserializzare ogni stringa ricevuta (compreso `source_id` e `unicast_id` / `broadcast_id`) nel
+*   Lato server deserializzare ogni stringa ricevuta (compreso `source_id`, `unicast_id` / `broadcast_id` e `src_nic`) nel
     relativo argomento.
 *   Lato server serializzare l'esito di una chiamata (può essere il valore di ritorno o una eccezione dichiarata
     nella signature) in una stringa che rappresenta un valido albero JSON.
@@ -885,8 +877,8 @@ Per gli argomenti del metodo remoto, ogni albero JSON ha per radice un oggetto c
 
 #### Serializzazione di ISourceID, IUnicastID, IBroadcastID
 
-Per serializzare una istanza dell'oggetto che si usa come ISourceID, o di quello che si usa come IUnicastID, o di quello
-che si usa come IBroadcastID, si opera come per un argomento che è una istanza (non null) di una classe che deriva da
+Per serializzare una istanza di oggetto usato come ISourceID, IUnicastID, IBroadcastID, o ISrcNic
+si opera come per un argomento che è una istanza (non null) di una classe che deriva da
 GLib.Object. Cioè l'albero JSON ha per radice un oggetto con i membri "typename" e "value".
 
 #### Note sulla deserializzazione di un Object
@@ -898,8 +890,8 @@ Il membro "typename" è un nodo *VALUE* che contiene la stringa *typename* con c
 esegue `Type type = Type.from_name(typename);`.
 
 L'esecuzione del metodo `Type.from_name` non andrà a buon fine se l'applicazione che vuole deserializzare non ha già
-usato almeno una volta la classe *typename*. Questo può essere fatto, ad esempio per la classe License, con il codice
-`typeof(License).class_peek();`. Questa "inizializzazione" va fatta dall'applicazione APP. L'implementazione di questa
+usato almeno una volta la classe *typename*. Questo può essere fatto con il codice
+`typeof(<class_name>).class_peek();`. Questa "inizializzazione" va fatta dall'applicazione APP. L'implementazione di questa
 inizializzazione non può essere demandata alla libreria MOD-RPC, perché alcune classi serializzabili potrebbero essere
 fornite da APP e usate in metodi remoti che accettano una interfaccia o una classe base.
 
@@ -973,7 +965,7 @@ La classe skeleton esamina il contenuto del nodo "argument":
         *   Esegue `((SampleRpc.ISerializable)obj).check_serialization()` e se ritorna *false* verrà lanciato un DeserializeError.
     *   Sarà passato *obj*.
 
-#### Deserializzazione di ISourceID, IUnicastID, IBroadcastID
+#### Deserializzazione di ISourceID, IUnicastID, IBroadcastID, ISrcNic
 
 La libreria MOD-RPC riceve la stringa JSON di tali identificativi dalla libreria ZCD. Essa ha già verificato che
 questa rappresenti un valido albero JSON. Se questo requisito non è soddisfatto è quindi lecito che la libreria
@@ -1023,69 +1015,8 @@ Se è "error...", la classe stub:
 *   Verifica che esista il codice "error-code". Altrimenti verrà lanciato un DeserializeError.
 *   Crea e solleva l'eccezione indicata da "error-domain", "error-code" e "error-message".
 
-#### Specifiche di trasmissione e ricezione
-
-**Modo TCP**
-
-Il metodo per ottenere uno stub `get_node_manager_tcp_client` prevede questi parametri:
-
-*   Oggetto `source_id` che identifica il mittente.
-*   Oggetto `unicast_id` che identifica il destinatario.
-*   Indirizzo IP del destinatario.
-*   Porta TCP del destinatario.
-
-Lato server, alla ricezione di una connessione, viene valorizzato un oggetto SampleRpc.TcpclientCallerInfo che contiene:
-
-*   Oggetto `source_id` che identifica il mittente.
-*   Oggetto `unicast_id` che identifica il destinatario.
-*   Indirizzo IP del nodo corrente che è stato usato come destinazione.
-*   Indirizzo IP del mittente.
-
-**Modo Unicast**
-
-Il metodo per ottenere uno stub `get_node_manager_unicast` prevede questi parametri:
-
-*   Oggetto `source_id` che identifica il mittente.
-*   Oggetto `unicast_id` che identifica il destinatario.
-*   Nome dell'interfaccia di rete per la trasmimssione e relativo indirizzo IP *source*.
-*   Porta UDP della trasmissione.
-*   Booleano per indicare se si vuole attendere una risposta.
-
-Lato server, alla ricezione di un messaggio, viene valorizzato un oggetto UnicastCallerInfo che contiene:
-
-*   Oggetto `source_id` che identifica il mittente.
-*   Oggetto `unicast_id` che identifica il destinatario.
-*   Nome dell'interfaccia di rete dove il messaggio è stato rilevato.
-*   Indirizzo IP del mittente.
-
-**Modo Broadcast**
-
-Il metodo per ottenere uno stub `get_node_manager_broadcast` prevede questi parametri:
-
-*   Oggetto `source_id` che identifica il mittente.
-*   Oggetto `broadcast_id` che identifica i destinatari.
-*   Nomi delle interfacce di rete per la trasmimssione e relativi indirizzi IP *source*.
-*   Porta UDP della trasmissione.
-*   Istanza di IAckCommunicator (oppure NULL se non siamo interessati) per rilevare se alcuni nodi diretti vicini
-    di cui siamo a conoscenza non hanno risposto con un messaggio di ACK.
-
-Lato server, alla ricezione di un messaggio, viene valorizzato un oggetto BroadcastCallerInfo che contiene:
-
-*   Oggetto `source_id` che identifica il mittente.
-*   Oggetto `broadcast_id` che identifica i destinatari.
-*   Nome dell'interfaccia di rete dove il messaggio è stato rilevato.
-*   Indirizzo IP del mittente.
-
 ## <a name="APP"></a>APP
 
-In questa sezione descriveremo a grandi linee come si realizza (di norma) una applicazione che fa uso della libreria di
-livello intermedio come viene prodotta dal tool "rpcdesign".
-
-### <a name="APP_Server"></a>Lato server
-
-Bla bla bla.
-
-### <a name="APP_Client"></a>Lato client
-
-Bla bla bla.
-
+Per farsi una idea di come si realizza una applicazione che fa uso della libreria di
+livello intermedio come viene prodotta dal tool "rpcdesign", consigliamo la lettura del
+documento di analisi relativa al [demone ntkd](../DemoneNTKD/RPC.md).
