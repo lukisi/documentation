@@ -219,9 +219,13 @@ Il framework ZCD prevede due tipi di medium per la trasmissione:
     Due processi in esecuzione su uno stesso sistema comunicano tra loro.  
     Si realizzano queste comunicazioni usando i socket unix-domain.  
     Lato server questi socket sono associati (in entrambe le modalità di trasmissione)
-    ad un pathname su cui questo processo è in ascolto.  
+    ad un pathname: questo pathname è creato da questo stesso processo, subito prima di
+    mettersi in ascolto su di esso. Se il pathname esiste già il processo rifiuta di mettersi
+    in ascolto e va in errore (fatale).  
     Lato client questi socket sono associati (in entrambe le modalità di trasmissione)
-    ad un pathname di destinazione su cui un altro processo è in ascolto.
+    ad un pathname di destinazione: un altro processo dovrebbe aver già creato questo pathname
+    ed essersi messo in ascolto su di esso. Se non è così il messaggio non viene in realtà
+    trasmesso, ma non si tratta di un errore fatale, il processo lo ignora.
 
 #### Medium net
 
@@ -244,9 +248,7 @@ usando questi socket.
 
 ## <a name="Livello_basso"></a>Libreria ZCD di basso livello
 
-Nel resto del documento presente analiziamo la libreria ZCD, quella di basso livello.
-
-Nel documento [ntkd-RPC](../DemoneNTKD/RPC.md) descriveremo il livello intermedio e il livello applicativo.
+Analiziamo la libreria ZCD, quella di basso livello.
 
 ### <a name="Tasklet_listen"></a>Tasklet in ascolto
 

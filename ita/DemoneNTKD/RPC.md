@@ -45,7 +45,7 @@ un messaggio senza pretendere un puntuale risultato in queste circostanze:
 *   TODO
 
 Nel demone *ntkd* la modalità unicast-stream è usata come "rafforzativo" (cioè per ribadire un messaggio
-broadcast quando ci si accorge che questo non è stato recepito) in queste circostanze:
+broadcast quando ci si accorge che questo non è stato recepito, con `wait_reply=false`) in queste circostanze:
 
 *   TODO
 
@@ -217,9 +217,16 @@ nodo *b*, indichiamola con *b<sub>0</sub>*.
 Ricordiamo che il framework ZCD identifica il mittente e il destinatario (o i destinatari) di ogni
 messaggio attraverso delle classi che sono rappresentate con le interfacce ISourceID, IUnicastID
 e IBroadcastID.  
+Inoltre, nel caso di messaggi scambiati tra diretti vicini, identifica l'interfaccia di rete da cui
+il messaggio è trasmesso e l'interfaccia di rete a cui è diretto. Questo lo fa attraverso una classe
+rappresentata con l'interfaccia ISrcNic per il mittente e attraverso la specifica tasklet che rileva
+il messaggio nel destinatario (identificata nell'oggetto Listener del CallerInfo).  
 Lato client permette di costruire degli stub che trasmettono messaggi (cioè chiamano procedure remote)
-da un ISourceID a un IUnicastID oppure a un IBroadcastID. Lato server alla recezione di un messaggio
-sulla base degli oggetti ISourceID, IUnicastID/IBroadcastID ricevuti individua zero/uno/molti skeleton
+permettendo al suo utilizzatore di specificare un ISourceID, un ISrcNic, un IUnicastID, un IBroadcastID,
+oltre che indicare un `peer_ip` o un `my_dev`.  
+Lato server alla recezione di un messaggio costruisce un CallerInfo, indicando in esso la tasklet in
+ascolto (Listener) e gli oggetti indicati nel messaggio (ISourceID, ISrcNic, IUnicastID, IBroadcastID).
+Sulla base del CallerInfo il suo utilizzatore potrà individuare zero/uno/molti skeleton
 a cui far eseguire una procedura.
 
 I delegati passati al framework ZCD sono in grado di riconoscere gli oggetti ISourceID, IUnicastID/IBroadcastID
@@ -312,24 +319,21 @@ venire specificate dal demone ntkd alla creazione dello stub.
     destinatario. Ma questo ZCD non è tenuto a saperlo.
 *   `ISrcNic src_nic`. Identifica il NIC usato dal nodo mittente.  
     In questo caso si tratta di un StreamSrcNic, quindi rappresenta un indirizzo linklocal che il nodo
-    mittente ha assegnato a una delle sue interfacce di rete. Ma questo ZCD non è tenuto a saperlo.  
-    **TODO**: In `build_json_request` della libreria di basso livello ZCD
-    dobbiamo aggiungere l'argomento `string src_nic` in cui è serializzato l'oggetto ISrcNic.
+    mittente ha assegnato a una delle sue interfacce di rete. Ma questo ZCD non è tenuto a saperlo.
 *   Se lo stub resta in attesa della risposta. Booleano `wait_reply`.
 
 ##### ricezione lato server
 
-Quando nel nodo *b* il framework ZCD riceve il messaggio esso riconosce dalla
-modalità di trasmissione (di tipo STREAM, che prevede l'argomento IUnicastID) che si tratta di un
-messaggio unicast, quindi prepara una istanza di CallerInfo specifica per i messaggi unicast.  
+Nel nodo *b*, a ricevere il messaggio è una tasklet avviata dal framework ZCD con la funzione `stream_net_listen`
+o `stream_system_listen`. Questa prepara una istanza di CallerInfo specifica per i messaggi unicast.  
 Nell'oggetto CallerInfo il framework ZCD include le informazioni convogliate nel protocollo del
 framework ZCD e anche la conoscenza della modalità con cui era in ascolto la tasklet che ha recepito
 il messaggio. In questo caso un ascolto di connessioni su uno specifico indirizzo IP linklocal
-(associato ad una specifica nostra interfaccia di rete) oppure su uno specifico unix-domain socket.
-Diciamo che questa informazione è nel campo `ListenMode listen_mode` (non da serializzare)
-dell'oggetto CallerInfo.
+(associato ad una specifica nostra interfaccia di rete) oppure su uno specifico pathname.
+Questa informazione è nel campo `Listener listener` dell'oggetto CallerInfo: può essere un
+StreamNetListener (con i campi `my_ip` e `tcp_port`) o un StreamSystemListener (con il campo `listen_pathname`).
 
-Poi passa il CallerInfo ad un delegato fornito dal demone ntkd (un `Netsukuku.IRpcDelegate`) il cui compito
+Poi passa il CallerInfo ad un delegato fornito dal demone ntkd (un `Netsukuku.IDelegate`) il cui compito
 è di reperire un set di istanze skeleton su cui il messaggio va processato.  
 Le operazioni complete che si svolgono lato server quando viene recepito un messaggio
 sono illustrate nel documento [RPCLatoServer](../DemoneNTKD/RPCLatoServer.md).
@@ -445,7 +449,7 @@ framework ZCD e anche la conoscenza della modalità `ListenMode listen_mode` con
 la tasklet che ha recepito il messaggio. In questo caso un ascolto di connessioni su uno specifico
 indirizzo IP routabile oppure su uno specifico unix-domain socket.
 
-Poi passa il CallerInfo al delegato `Netsukuku.IRpcDelegate`.
+Poi passa il CallerInfo al delegato `Netsukuku.IDelegate`.
 Il delegato riconosce dal CallerInfo che si tratta di un
 messaggio unicast, quindi chiama il metodo `get_dispatcher` dello *SkeletonFactory*
 passandogli il CallerInfo.  
