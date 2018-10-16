@@ -86,45 +86,54 @@ L'interfaccia ITasklet prevede questi metodi:
     Il valore restituito dalla funzione sarà sempre non negativo. In caso di errore la funzione lancia un apposito Error.  
     Il valore di ritorno 0 è possibile, indica che niente è stato scritto.
 *   `IServerStreamSocket get_server_stream_socket(string my_addr, uint16 my_tcp_port) throws Error`  
-    Crea un socket e lo mette in ascolto su un proprio indirizzo IP specificando una porta TCP.  
+    Crea un socket *stream* e lo mette in ascolto su un proprio indirizzo IP specificando una porta TCP.  
     La chiamata di sistema eseguita in questa funzione non è bloccante, ma le successive operazioni di lettura e scrittura
     nel socket lo saranno; si veda sotto i metodi previsti dall'interfaccia IServerStreamSocket. Ottenere il socket tramite questa
     funzione consentirà in seguito di effettuare le altre operazioni bloccando solo la tasklet corrente e consentendo
     alle altre di proseguire.
 *   `IConnectedStreamSocket get_client_stream_socket(string dest_addr, uint16 dest_tcp_port) throws Error`  
-    Crea un socket client (senza specificare un proprio indirizzo IP né una propria porta) e lo connette ad un server specificando
+    Crea un socket *stream* client (senza specificare un proprio indirizzo IP né una propria porta) e lo connette ad un server specificando
     l'indirizzo IP e la porta TCP di destinazione. E' bloccante per la tasklet corrente, ma consente alle altre di
     proseguire. Anche le successive operazioni sul socket saranno bloccanti; si veda sotto i metodi previsti
     dall'interfaccia IConnectedStreamSocket. Il meccanismo fornito consentirà di bloccare solo la tasklet corrente.
 *   `IServerDatagramSocket get_server_datagram_socket(uint16 udp_port, string my_dev) throws Error`  
-    Crea un socket UDP, lo associa ad una propria specifica interfaccia di rete, lo abilita alla ricezione di messaggi broadcast
+    Crea un socket *datagram*, lo associa ad una propria specifica interfaccia di rete, lo abilita alla ricezione di messaggi UDP broadcast
     sulla porta specificata. La chiamata non è bloccante, ma le successive operazioni lo saranno; si veda sotto i metodi
     previsti dall'interfaccia IServerDatagramSocket. Ottenere il socket tramite questo meccanismo consentirà in seguito
     di effettuare le altre operazioni bloccando solo la tasklet corrente e consentendo alle altre di proseguire.
 *   `IClientDatagramSocket get_client_datagram_socket(uint16 udp_port, string my_dev) throws Error`  
-    Crea un socket client effimero (non legato a un proprio indirizzo IP né ad una porta) UDP,
-    lo associa ad una propria specifica interfaccia di rete, lo abilita all'invio di messaggi broadcast sulla
-    porta specificata. La chiamata non è bloccante, ma
+    Crea un socket *datagram* client, lo associa ad una propria specifica interfaccia di rete,
+    lo abilita all'invio di messaggi UDP broadcast sulla porta specificata. La chiamata non è bloccante, ma
     le successive operazioni lo saranno; si veda sotto i metodi previsti dall'interfaccia IClientDatagramSocket. Ottenere
     il socket tramite questo meccanismo consentirà in seguito di effettuare le altre operazioni bloccando solo la tasklet
     corrente e consentendo alle altre di proseguire.
 *   `IServerStreamLocalSocket get_server_stream_local_socket(string listen_pathname) throws Error`  
-    Crea un socket locale (unix-domain) e lo mette in ascolto su uno specifico pathname. Il pathname specificato deve essere
+    Crea un socket *stream* locale (unix-domain) e lo mette in ascolto su uno specifico pathname. Il pathname specificato deve essere
     creato in questo momento; se esisteva già la chiamata lancia una eccezione.  
     La funzionalità è analoga alla `get_server_stream_socket`, ma usa la modalità locale come meccanismo di IPC.
     Questo meccanismo di IPC è usato per le testsuite in cui diversi processi in un unico sistema simulano diversi nodi
-    di una rete di computer.  
+    di una rete di computer. Il pathname rappresenta un indirizzo IP assegnato (virtualmente) al nodo simulato.  
     Si veda sotto i metodi previsti dall'interfaccia IServerStreamLocalSocket.
 *   `IConnectedStreamLocalSocket get_client_stream_local_socket(string send_pathname) throws Error`  
-    Crea un socket locale client (senza specificare un proprio pathname) e lo connette ad un server specificando
+    Crea un socket *stream* locale client (senza specificare un proprio pathname) e lo connette ad un server specificando
     il pathname di destinazione. Se il pathname non esiste, significa che nessun processo è in ascolto, quindi la chiamata
     lancia una eccezione.  
     La funzionalità è analoga alla `get_client_stream_socket`, ma usa la modalità locale come meccanismo di IPC.  
     Si veda sotto i metodi previsti dall'interfaccia IConnectedStreamLocalSocket.
 *   `IServerDatagramLocalSocket get_server_datagram_local_socket(string listen_pathname) throws Error`  
-    ...
+    Crea un socket *datagram* locale, e lo mette in ascolto su uno specifico pathname. Il pathname specificato deve essere
+    creato in questo momento; se esisteva già la chiamata lancia una eccezione.  
+    La funzionalità è analoga alla `get_server_datagram_socket`, ma usa la modalità locale come meccanismo di IPC.
+    Questo meccanismo di IPC è usato per le testsuite in cui diversi processi in un unico sistema simulano diversi nodi
+    di una rete di computer. Il pathname rappresenta una pseudo-interfaccia di rete del nodo simulato.  
+    Si veda sotto i metodi previsti dall'interfaccia IServerDatagramLocalSocket.
 *   `IClientDatagramLocalSocket get_client_datagram_local_socket(string send_pathname) throws Error`  
-    ...
+    Crea un socket *datagram* locale client (senza specificare un proprio pathname) e lo prepara a trasmettere messaggi
+    ad un server specificando il pathname di destinazione. La chiamata non è bloccante, ma
+    le successive operazioni lo saranno. Si veda sotto i metodi previsti dall'interfaccia IClientDatagramLocalSocket.  
+    La funzionalità è analoga alla `get_client_datagram_socket`, ma usa la modalità locale come meccanismo di IPC.  
+    Al momento della trasmissione del messaggio, se il pathname di destinazione non esiste, significa che nessun processo
+    è in ascolto, quindi la chiamata lancia una eccezione.
 *   `IChannel get_channel()`  
     Crea un canale.
 
@@ -169,7 +178,8 @@ L'interfaccia IConnectedStreamSocket si usa su entrambi gli end point della conn
     Il valore restituito dalla funzione sarà sempre non negativo. In caso di errore la funzione lancia un apposito Error.  
     Il valore di ritorno 0 indica che niente è stato scritto (non che la connessione è stata chiusa).
 *   `void send(uint8* b, size_t len) throws Error`  
-    Iterando chiamate alla funzione `send_part` sopra esposta, completa la trasmissione all'altro end point della connessione.
+    Iterando chiamate alla funzione `send_part` sopra esposta, ritorna quando tutti i byte richiesti sono stati trasmessi
+    all'altro end point della connessione.
 *   `void close() throws Error`  
     Chiude questa connessione.  
     Di norma la chiamata `close` (per convenzione nel caso d'uso di Netsukuku) viene fatta sul client. Il server se ne avvede
@@ -180,14 +190,19 @@ L'interfaccia IServerDatagramSocket prevede questi metodi:
 *   `size_t recvfrom(uint8* b, size_t maxlen) throws Error`  
     Blocca la tasklet in attesa di leggere un pacchetto UDP broadcast tramite l'interfaccia di rete, ma consente alle
     altre tasklet di proseguire.
-*   `void close() throws Error`
+*   `void close() throws Error`  
+    Distrugge il socket che era in ascolto sull'interfaccia di rete.  
+    L'interfaccia IServerDatagramSocket è usata con socket in ascolto su una propria interfaccia di rete. Può succedere che
+    non si voglia più gestire una propria interfaccia di rete.
 
 L'interfaccia IClientDatagramSocket prevede questi metodi:
 
 *   `size_t sendto(uint8* b, size_t len) throws Error`  
     Blocca la tasklet in attesa di inviare un pacchetto UDP broadcast sull'interfaccia di rete, ma consente alle altre
     tasklet di proseguire.
-*   `void close() throws Error`
+*   `void close() throws Error`  
+    Distrugge il socket che era stato creato per trasmettere sull'interfaccia di rete. Di norma per ogni messaggio da trasmettere
+    viene creato un socket nuovo; quindi trasmesso il messaggio è normale rimuovere il socket.
 
 L'interfaccia IServerStreamLocalSocket si usa lato server. Essa prevede questi metodi:
 
@@ -198,6 +213,34 @@ L'interfaccia IServerStreamLocalSocket si usa lato server. Essa prevede questi m
     Questa interfaccia è usata nelle simulazioni, con socket locali. Il pathname rappresenta un proprio indirizzo IP.
     Come la chiamata della funzione `get_server_stream_local_socket` aveva creato il pathname, così la chiamata della funzione
     `close` sul relativo oggetto `IServerStreamLocalSocket` lo rimuove.
+
+L'interfaccia IConnectedStreamLocalSocket si usa su entrambi gli end point della connessione. Essa prevede questi metodi:
+
+*   `size_t recv(uint8* b, size_t maxlen) throws Error`  
+    Analogo al metodo omonimo nell'interfaccia IConnectedStreamSocket, ma usa la modalità locale come meccanismo di IPC.
+*   `size_t send_part(uint8* b, size_t len) throws Error`  
+    Analogo al metodo omonimo nell'interfaccia IConnectedStreamSocket, ma usa la modalità locale come meccanismo di IPC.
+*   `void send(uint8* b, size_t len) throws Error`  
+    Analogo al metodo omonimo nell'interfaccia IConnectedStreamSocket, ma usa la modalità locale come meccanismo di IPC.
+*   `void close() throws Error`  
+    Analogo al metodo omonimo nell'interfaccia IConnectedStreamSocket, ma usa la modalità locale come meccanismo di IPC.
+
+L'interfaccia IServerDatagramLocalSocket prevede questi metodi:
+
+*   `size_t recvfrom(uint8* b, size_t maxlen) throws Error`  
+    Analogo al metodo omonimo nell'interfaccia IServerDatagramSocket, ma usa la modalità locale come meccanismo di IPC.
+*   `void close() throws Error`  
+    Analogo al metodo omonimo nell'interfaccia IServerDatagramSocket, ma usa la modalità locale come meccanismo di IPC.  
+    Questa interfaccia è usata nelle simulazioni, con socket locali. Il pathname rappresenta una propria interfaccia di rete.
+    Come la chiamata della funzione `get_server_datagram_local_socket` aveva creato il pathname, così la chiamata della funzione
+    `close` sul relativo oggetto `IServerDatagramLocalSocket` lo rimuove.
+
+L'interfaccia IClientDatagramLocalSocket prevede questi metodi:
+
+*   `size_t sendto(uint8* b, size_t len) throws Error`  
+    Analogo al metodo omonimo nell'interfaccia IClientDatagramSocket, ma usa la modalità locale come meccanismo di IPC.
+*   `void close() throws Error`  
+    Analogo al metodo omonimo nell'interfaccia IClientDatagramSocket, ma usa la modalità locale come meccanismo di IPC.
 
 L'interfaccia IChannel prevede questi metodi:
 
