@@ -1,11 +1,13 @@
 # Tasklet System
 
-1.  [Tasklet](#Tasklet)
-    1.  [Interfacce](#Interfacce)
-    1.  [Tasklet sequenziali](#sequenziali)
-    1.  [Inizializzazione](#Inizializzazione)
+1.  [Obiettivi](#Obiettivi)
+1.  [Interfacce](#Interfacce)
+1.  [Inizializzazione](#Inizializzazione)
+1.  [Avvio nuove tasklet](#Avvio)
+1.  [Comunicazioni sulla rete](#Rete)
+1.  [Tasklet sequenziali](#sequenziali)
 
-## <a name="Tasklet"></a>Tasklet
+## <a name="Obiettivi"></a>Obiettivi
 
 Quasi tutti i moduli che compongono il demone *ntkd* fanno uso di *tasklet* per svolgere i loro compiti. Si
 tratta di thread cooperativi, cioè che permettono allo schedulatore di passare l'esecuzione ad un altro thread
@@ -21,8 +23,8 @@ L'autorizzazione a schedulare altre tasklet viene data da parte della tasklet co
     *   Attesa di un certo tempo.
     *   Lettura del contenuto di un file.
     *   Scrittura di un file.
-    *   Attesa di una comunicazione dalla rete.
-    *   Invio di una comunicazione nella rete.
+    *   Attesa di una comunicazione dalla rete. Include comunicazioni inter-processo nello stesso sistema.
+    *   Invio di una comunicazione nella rete. Idem.
     *   Esecuzione di un comando e attesa dell'esito.
 
 Inoltre la tasklet corrente può creare altre tasklet, attraverso la funzione *spawn*. Questo consiste nel dire
@@ -42,7 +44,8 @@ La tasklet corrente può richiedere di terminare se stessa, con un eventuale val
 dalla profondità di chiamate nel suo stack che ha raggiunto.
 
 Due tasklet possono comunicare tra loro attraverso un *canale*. Se due tasklet condividono un canale questo
-fornisce loro un meccanismo per comunicare tra loro senza bloccarsi.
+fornisce loro un meccanismo per comunicare tra loro (a loro scelta in modo sincrono o asincrono) senza mai bloccare
+le altre tasklet.
 
 E' stata realizzata una libreria che contiene alcune interfacce di programmazione verso un generico sistema di
 tasklet. Si chiama *tasklet-system*.
@@ -59,7 +62,7 @@ Si cerca così di rendere i vari moduli del demone *ntkd* indipendenti dalla imp
 prima implementazione che useremo nel demone sarà la libreria PthTasklet basata su GNU/Pth, ma dovrebbe essere
 possibile usare altre implementazioni.
 
-### <a name="Interfacce"></a>Interfacce
+## <a name="Interfacce"></a>Interfacce
 
 L'interfaccia ITasklet prevede questi metodi:
 
@@ -71,34 +74,57 @@ L'interfaccia ITasklet prevede questi metodi:
     Termina la tasklet corrente.
 *   `ITaskletHandle spawn(ITaskletSpawnable sp, bool joinable=false)`  
     Crea una nuova tasklet, come descritto sotto.
-*   `TaskletCommandResult exec_command(string cmdline)`  
-    Avvia un nuovo processo e attende il suo esito. E' bloccante per la tasklet corrente, ma consente alle altre di proseguire.
+*   `TaskletCommandResult exec_command(List<string> argv)`  
+    Avvia un nuovo processo (di cui specifica il comando da eseguire) e attende il suo esito. E' bloccante per la tasklet
+    corrente, ma consente alle altre di proseguire.
 *   `size_t read(int fd, void* b, size_t maxlen) throws Error`  
     Dato il file-descriptor di un file aperto, bloccando solo la tasklet corrente, legge dal file.  
-    Il valore restituito dalla funzione sarà sempre positivo. In caso di errore la funzione lancia un apposito Error.
+    Il valore restituito dalla funzione sarà sempre non negativo. In caso di errore la funzione lancia un apposito Error.  
+    Il valore di ritorno 0 indica fine-del-file.
 *   `size_t write(int fd, void* b, size_t count) throws Error`  
     Dato il file-descriptor di un file aperto, bloccando solo la tasklet corrente, scrive sul file.  
-    Il valore restituito dalla funzione sarà sempre positivo. In caso di errore la funzione lancia un apposito Error.
-*   `IServerStreamSocket get_server_stream_socket(uint16 port) throws Error`  
-    Crea un socket e lo mette in ascolto su una porta TCP. La chiamata non è bloccante, ma le successive operazioni
-    lo saranno; si veda sotto i metodi previsti dall'interfaccia IServerStreamSocket. Ottenere il socket tramite questo
-    meccanismo consentirà in seguito di effettuare le altre operazioni bloccando solo la tasklet corrente e consentendo
+    Il valore restituito dalla funzione sarà sempre non negativo. In caso di errore la funzione lancia un apposito Error.  
+    Il valore di ritorno 0 è possibile, indica che niente è stato scritto.
+*   `IServerStreamSocket get_server_stream_socket(string my_addr, uint16 my_tcp_port) throws Error`  
+    Crea un socket e lo mette in ascolto su un proprio indirizzo IP specificando una porta TCP.  
+    La chiamata di sistema eseguita in questa funzione non è bloccante, ma le successive operazioni di lettura e scrittura
+    nel socket lo saranno; si veda sotto i metodi previsti dall'interfaccia IServerStreamSocket. Ottenere il socket tramite questa
+    funzione consentirà in seguito di effettuare le altre operazioni bloccando solo la tasklet corrente e consentendo
     alle altre di proseguire.
-*   `IConnectedStreamSocket get_client_stream_socket(string dest_addr, uint16 dest_port, string? my_addr=null) throws Error`  
-    Crea un socket e lo connette ad un server TCP. E' bloccante per la tasklet corrente, ma consente alle altre di
+*   `IConnectedStreamSocket get_client_stream_socket(string dest_addr, uint16 dest_tcp_port) throws Error`  
+    Crea un socket client (senza specificare un proprio indirizzo IP né una propria porta) e lo connette ad un server specificando
+    l'indirizzo IP e la porta TCP di destinazione. E' bloccante per la tasklet corrente, ma consente alle altre di
     proseguire. Anche le successive operazioni sul socket saranno bloccanti; si veda sotto i metodi previsti
     dall'interfaccia IConnectedStreamSocket. Il meccanismo fornito consentirà di bloccare solo la tasklet corrente.
-*   `IServerDatagramSocket get_server_datagram_socket(uint16 port, string dev) throws Error`  
-    Crea un socket UDP, lo associa ad una specifica interfaccia di rete, lo abilita alla ricezione di messaggi broadcast
+*   `IServerDatagramSocket get_server_datagram_socket(uint16 udp_port, string my_dev) throws Error`  
+    Crea un socket UDP, lo associa ad una propria specifica interfaccia di rete, lo abilita alla ricezione di messaggi broadcast
     sulla porta specificata. La chiamata non è bloccante, ma le successive operazioni lo saranno; si veda sotto i metodi
     previsti dall'interfaccia IServerDatagramSocket. Ottenere il socket tramite questo meccanismo consentirà in seguito
     di effettuare le altre operazioni bloccando solo la tasklet corrente e consentendo alle altre di proseguire.
-*   `IClientDatagramSocket get_client_datagram_socket(uint16 port, string dev, string? my_addr=null) throws Error`  
-    Crea un socket UDP, lo associa ad una specifica interfaccia di rete, lo abilita all'invio di messaggi broadcast sulla
-    porta specificata, opzionalmente specificando l'indirizzo IP da usare come *source*. La chiamata non è bloccante, ma
+*   `IClientDatagramSocket get_client_datagram_socket(uint16 udp_port, string my_dev) throws Error`  
+    Crea un socket client effimero (non legato a un proprio indirizzo IP né ad una porta) UDP,
+    lo associa ad una propria specifica interfaccia di rete, lo abilita all'invio di messaggi broadcast sulla
+    porta specificata. La chiamata non è bloccante, ma
     le successive operazioni lo saranno; si veda sotto i metodi previsti dall'interfaccia IClientDatagramSocket. Ottenere
     il socket tramite questo meccanismo consentirà in seguito di effettuare le altre operazioni bloccando solo la tasklet
     corrente e consentendo alle altre di proseguire.
+*   `IServerStreamLocalSocket get_server_stream_local_socket(string listen_pathname) throws Error`  
+    Crea un socket locale (unix-domain) e lo mette in ascolto su uno specifico pathname. Il pathname specificato deve essere
+    creato in questo momento; se esisteva già la chiamata lancia una eccezione.  
+    La funzionalità è analoga alla `get_server_stream_socket`, ma usa la modalità locale come meccanismo di IPC.
+    Questo meccanismo di IPC è usato per le testsuite in cui diversi processi in un unico sistema simulano diversi nodi
+    di una rete di computer.  
+    Si veda sotto i metodi previsti dall'interfaccia IServerStreamLocalSocket.
+*   `IConnectedStreamLocalSocket get_client_stream_local_socket(string send_pathname) throws Error`  
+    Crea un socket locale client (senza specificare un proprio pathname) e lo connette ad un server specificando
+    il pathname di destinazione. Se il pathname non esiste, significa che nessun processo è in ascolto, quindi la chiamata
+    lancia una eccezione.  
+    La funzionalità è analoga alla `get_client_stream_socket`, ma usa la modalità locale come meccanismo di IPC.  
+    Si veda sotto i metodi previsti dall'interfaccia IConnectedStreamLocalSocket.
+*   `IServerDatagramLocalSocket get_server_datagram_local_socket(string listen_pathname) throws Error`  
+    ...
+*   `IClientDatagramLocalSocket get_client_datagram_local_socket(string send_pathname) throws Error`  
+    ...
 *   `IChannel get_channel()`  
     Crea un canale.
 
@@ -123,29 +149,35 @@ L'interfaccia IServerStreamSocket si usa lato server. Essa prevede questi metodi
 
 *   `IConnectedStreamSocket accept() throws Error`  
     Blocca la tasklet corrente in attesa di una connessione, ma consente alle altre tasklet di proseguire.
-*   `void close() throws Error`
+*   `void close() throws Error`  
+    Distrugge il socket che era in ascolto di connessioni.  
+    Questa interfaccia è usata con socket in ascolto su un proprio indirizzo IP. Può succedere che non si voglia più gestire un
+    certo proprio indirizzo IP (ad esempio nel caso di Netsukuku si può dover rimuovere un proprio indirizzo IP).
 
 L'interfaccia IConnectedStreamSocket si usa su entrambi gli end point della connessione. Essa prevede questi metodi:
 
-*   `unowned string _peer_address_getter()`  
-    In realtà si chiama con la property `peer_address`. Si usa sul server dopo aver ricevuto una connessione. Riporta
-    l'indirizzo del client.
-*   `unowned string _my_address_getter()`  
-    In realtà si chiama con la property `my_address`. Si usa sul server dopo aver ricevuto una connessione. Riporta
-    l'indirizzo a cui il server è stato contattato.
 *   `size_t recv(uint8* b, size_t maxlen) throws Error`  
     Blocca la tasklet in attesa di dati dall'altro end point della connessione, ma consente alle altre tasklet di proseguire.  
-    Il valore restituito dalla funzione sarà sempre positivo. In caso di errore la funzione lancia un apposito Error.
-    In particolare in caso di 0 bytes (connessione chiusa) viene lanciato l'errore `IOError.Closed`. Questo vale per
-    tutte le funzioni di lettura e scrittura sui socket.
+    Il valore restituito dalla funzione sarà sempre non negativo. In caso di errore la funzione lancia un apposito Error.  
+    Il valore di ritorno 0 indica che la connessione è stata chiusa (presumibilmente dall'altro lato).
+*   `size_t send_part(uint8* b, size_t len) throws Error`  
+    Blocca la tasklet in attesa di trasmettere dati all'altro end point della connessione, ma consente alle
+    altre tasklet di proseguire.  
+    Questa funzione esegue la trasmissione a basso livello: come è noto restituisce il numero di byte effettivamente
+    trasmessi, che può essere minore di quanti richiesti. È fornita anche la funzione `send` sotto illustrata che
+    si occupa di iterare questa funzione fin quando tutti i dati sono stati trasmessi.  
+    Il valore restituito dalla funzione sarà sempre non negativo. In caso di errore la funzione lancia un apposito Error.  
+    Il valore di ritorno 0 indica che niente è stato scritto (non che la connessione è stata chiusa).
 *   `void send(uint8* b, size_t len) throws Error`  
-    Blocca la tasklet in attesa di completare la trasmissione all'altro end point della connessione, ma consente alle
-    altre tasklet di proseguire.
-*   `void close() throws Error`
+    Iterando chiamate alla funzione `send_part` sopra esposta, completa la trasmissione all'altro end point della connessione.
+*   `void close() throws Error`  
+    Chiude questa connessione.  
+    Di norma la chiamata `close` (per convenzione nel caso d'uso di Netsukuku) viene fatta sul client. Il server se ne avvede
+    ricevendo il valore di ritorno 0 nella sua chiamata di `recv`.
 
 L'interfaccia IServerDatagramSocket prevede questi metodi:
 
-*   `size_t recvfrom(uint8* b, size_t maxlen, out rmt_ip, out rmt_port) throws Error`  
+*   `size_t recvfrom(uint8* b, size_t maxlen) throws Error`  
     Blocca la tasklet in attesa di leggere un pacchetto UDP broadcast tramite l'interfaccia di rete, ma consente alle
     altre tasklet di proseguire.
 *   `void close() throws Error`
@@ -156,6 +188,16 @@ L'interfaccia IClientDatagramSocket prevede questi metodi:
     Blocca la tasklet in attesa di inviare un pacchetto UDP broadcast sull'interfaccia di rete, ma consente alle altre
     tasklet di proseguire.
 *   `void close() throws Error`
+
+L'interfaccia IServerStreamLocalSocket si usa lato server. Essa prevede questi metodi:
+
+*   `IConnectedStreamLocalSocket accept() throws Error`  
+    Blocca la tasklet corrente in attesa di una connessione, ma consente alle altre tasklet di proseguire.
+*   `void close() throws Error`  
+    Distrugge il socket che era in ascolto di connessioni.  
+    Questa interfaccia è usata nelle simulazioni, con socket locali. Il pathname rappresenta un proprio indirizzo IP.
+    Come la chiamata della funzione `get_server_stream_local_socket` aveva creato il pathname, così la chiamata della funzione
+    `close` sul relativo oggetto `IServerStreamLocalSocket` lo rimuove.
 
 L'interfaccia IChannel prevede questi metodi:
 
@@ -173,6 +215,17 @@ L'interfaccia IChannel prevede questi metodi:
 *   `Value recv_with_timeout(int timeout_msec) throws ChannelError`  
     Legge il prossimo messaggio. Blocca la tasklet in attesa di un messaggio se non ce ne sono, ma prevede un tempo
     massimo di attesa oltre il quale riprende il controllo.
+
+## <a name="Inizializzazione"></a>Inizializzazione
+
+Il demone *ntkd* inizializza una libreria di implementazione (ad esempio PthTasklet) e ottiene una istanza di una
+classe che implementa l'interfaccia ITasklet.
+
+I moduli del demone *ntkd* che fanno uso delle tasklet vengono inizializzati con il metodo statico `init`, nel quale
+il modulo principale fornisce una istanza di ITasklet. In pratica in questo modo dichiara di poter fornire
+le implementazioni di tutte le interfacce viste sopra per le comunicazioni allo schedulatore.
+
+## <a name="Avvio"></a>Avvio nuove tasklet
 
 Quando si desidera avviare una tasklet occorre creare appositamente una istanza di una classe che implementa
 l'interfaccia ITaskletSpawnable. Tale classe ha come membri tutti i dati che andrebbero passati alla funzione che
@@ -200,7 +253,47 @@ Nella nuova tasklet, la funzione `real_func` riceve il dato come (void *) e ne f
 richiama il suo metodo `func` e memorizza il suo valore di ritorno. Infine rimuove il riferimento all'istanza di
 ITaskletSpawnable e poi termina restituendo il valore di ritorno di `func`.
 
-### <a name="sequenziali"></a>Tasklet sequenziali
+## <a name="Rete"></a>Comunicazioni sulla rete
+
+Abbiamo visto che le operazioni che prevedono una comunicazione tra processi sono bloccanti per la tasklet
+corrente. Sia quando si attende un messaggio (da un altro nodo della rete o da un altro processo nel nostro
+stesso sistema) sia quando si trasmette un messaggio. Quindi queste operazioni svolte da una tasklet danno
+implicitamente l'autorizzazione allo schedulatore di passare il controllo ad altre tasklet in attesa di
+eventi che permettano a questa tasklet di procedere.
+
+*   Attesa di una connessione su un socket associato ad un proprio indirizzo IP e una porta TCP. Dalla rete.
+*   Richiesta di connessione verso un socket identificato con un indirizzo IP e una porta TCP. Sulla rete.
+*   Attesa di una connessione su un socket associato ad un pathname. Nel sistema.
+*   Richiesta di connessione verso un socket identificato con un pathname. Nel sistema.
+*   Attesa di lettura su un socket connesso. Dalla rete o nel sistema.
+*   Richiesta di scrittura verso un socket connesso. Sulla rete o nel sistema.
+*   Attesa di lettura di un messaggio (senza previa connessione) su un socket associato ad una propria
+    interfaccia di rete e una porta UDP. Per rilevare messagi broadcast nel dominio broadcast a cui
+    l'interfaccia è collegata. Dalla rete.
+*   Richiesta di scrittura di un messaggio (senza previa connessione) su un socket associato ad una propria
+    interfaccia di rete e una porta UDP. Per trasmettere messagi broadcast nel dominio broadcast a cui
+    l'interfaccia è collegata. Sulla rete.
+*   Attesa di lettura di un messaggio (senza previa connessione) su un socket associato ad un pathname.
+    Per emulare il rilevamento di messagi broadcast nel dominio broadcast a cui
+    una pseudo-interfaccia è collegata. Nel sistema.
+*   Richiesta di scrittura di un messaggio (senza previa connessione) su un socket associato ad un pathname.
+    Per emulare la trasmissione di messagi broadcast nel dominio broadcast a cui
+    una pseudo-interfaccia è collegata. Nel sistema.
+
+*Nota*: il primario obiettivo nella realizzazione di questa API è il demone che realizza lo scambio di messaggi
+nel protocollo Netsukuku. In esso si è convenuto che i messaggi possono essere scambiati solo in due modalità:
+per connessione verso uno specifico indirizzo IP oppure per messaggio in broadcast su una propria specifica
+interfaccia di rete.  
+Cioè: non è previsto un messaggio *datagram* (UDP) verso uno specifico indirizzo IP.
+
+*Nota*: per comprendere come si intenda simulare in una testsuite le comunicazioni in modalità *datagram* con
+indirizzamento "broadcast" attraverso un socket locale associato ad un pathname, rimandiamo al documento
+ntkd-RPC nella sezione [Tipi di medium](../DemoneNTKD/RPC.md#Medium).
+
+
+
+
+## <a name="sequenziali"></a>Tasklet sequenziali
 
 La libreria *tasklet-system* fornisce anche un metodo per assicurare che alcune tasklet vengano eseguite in sequenza.
 Usiamo un esempio per illustrare cosa si intende con questa espressione.
@@ -239,10 +332,3 @@ La classe DispatchableTasklet fornisce questi metodi:
     il suo avvio, oppure non attendere affatto.
 *   `bool is_emtpy()`  
     Dice se non ci sono tasklet in esecuzione o in attesa in questo raccoglitore.
-
-### <a name="Inizializzazione"></a>Inizializzazione
-
-I moduli del demone *ntkd* che fanno uso delle tasklet vengono inizializzati con il metodo statico `init`, nel quale
-il modulo principale fornisce una istanza di ITasklet. In pratica in questo modo dichiara di poter fornire
-le implementazioni di tutte le interfacce viste sopra per le comunicazioni allo schedulatore.
-

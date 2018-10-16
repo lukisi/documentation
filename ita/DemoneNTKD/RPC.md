@@ -133,13 +133,12 @@ indicando l'interfaccia "eth0".
 Per emulare il dominio "tau", si lancia `domain -i 1234_eth0 -i 6543_eth0`.  
 Questo processo avvia una tasklet associata a `1234_eth0`. Questa **crea** il pathname `send_1234_eth0`. Poi si mette in
 ascolto con un socket unix-domain su quel pathname. Quando questa tasklet riceve un pacchetto fa da proxy:
-avviando una nuova tasklet per ogni pathname diverso da `1234_eth0` (lo stesso NIC che trasmette un pacchetto non
-può al contempo riceverlo, altrimenti si formerebbe un loop) che gli è stato passato come argomento, trasmette lo
+avviando una nuova tasklet per ogni pathname (anche lo stesso NIC che trasmette un pacchetto
+può al contempo riceverlo) che gli è stato passato come argomento, trasmette lo
 stesso pacchetto scrivendolo con un socket unix-domain sul pathname `recv_<pathname>`, **ma solo** se questo
-pathname esiste già. Nel nostro caso si tratta del pathname `recv_6543_eth0`.  
+pathname esiste già.  
 Inoltre, in modo analogo, il processo avvia una tasklet associata a `6543_eth0` che si mette in ascolto
-sul pathname `send_6543_eth0`. Quando questa tasklet riceve un pacchetto fa da proxy: trasmette lo
-stesso pacchetto scrivendolo sul pathname `recv_1234_eth0`.
+sul pathname `send_6543_eth0`. Anche questa quando riceve un pacchetto fa da proxy.
 
 Per "alfa", si lancia `qspntester -p 1234 -I eth0`. Tale processo computa un pathname `1234_eth0` per
 rappresentare il suo pseudonic `eth0`.  
@@ -162,7 +161,9 @@ Abbiamo visto pocanzi che il processo `domain` ascolta su `send_6543_eth0`.
 Adesso supponiamo che il nodo "beta" vuole scrivere un pacchetto sul suo pseudonic "eth0". Lo
 scrive con un socket unix-domain sul pathname `send_6543_eth0`. Quindi il processo "domain"
 lo riceve tramite la sua tasklet associata a `6543_eth0` e lo copia sul pathname `recv_1234_eth0`.
-Quindi il nodo "alfa" lo riceve.
+Quindi il nodo "alfa" lo riceve.  
+Anche il nodo "beta" stesso lo riceve: deve saper riconoscere che è stato trasmesso da lui stesso
+e quindi (probabilmente) ignorarlo.
 
 Si intuisce facilmente, sebbene abbiamo fatto un esempio con due soli nodi, che questo meccanismo
 consente di emulare efficacemente un dominio in cui un nodo trasmette in broadcast un pacchetto
@@ -184,17 +185,20 @@ Ad esempio, assumiamo che i nodi alfa beta e gamma di cui sopra abbiano i pid ri
 *   `radio-domain -i 1234_wlan0 -o 6543_wlan0`.  
     Crea `send_1234_wlan0` e si mette in ascolto su esso.  
     Quando riceve:
+    *   prova a scrivere su `recv_1234_wlan0` ma soltanto se già esiste.
     *   prova a scrivere su `recv_6543_wlan0` ma soltanto se già esiste.
 
 *   `radio-domain -i 6543_wlan0 -o 1234_wlan0 -o 6789_wlan0`.  
     Crea `send_6543_wlan0` e si mette in ascolto su esso.  
     Quando riceve:
+    *   prova a scrivere su `recv_6543_wlan0` ma soltanto se già esiste.
     *   prova a scrivere su `recv_1234_wlan0` ma soltanto se già esiste.
     *   prova a scrivere su `recv_6789_wlan0` ma soltanto se già esiste.
 
 *   `radio-domain -i 6789_wlan0 -o 6543_wlan0`.  
     Crea `send_6789_wlan0` e si mette in ascolto su esso.  
     Quando riceve:
+    *   prova a scrivere su `recv_6789_wlan0` ma soltanto se già esiste.
     *   prova a scrivere su `recv_6543_wlan0` ma soltanto se già esiste.
 
 ## <a name="Tasklet_listen"></a>Tasklet in ascolto
