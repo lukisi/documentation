@@ -14,7 +14,7 @@
     1.  [Interfaccia tra MOD-RPC e APP come realizzata con "rpcdesign"](#Interfaccia_modrpc_app_con_rpcdesgin)
 1.  [Dettagli tecnici](#Dettagli_tecnici)
 
-## <a name="Obiettivo"></a>Obiettivo
+## <a id="Obiettivo"></a>Obiettivo
 
 I nodi di una rete Netsukuku per eseguire l'algoritmo distribuito di esplorazione della rete si devono
 passare dei messaggi.
@@ -47,7 +47,7 @@ documento tratteremo concetti generali. Per una panoramica su come il demone Net
 rimandiamo al documento [ntkd-RPC](../DemoneNTKD/RPC.md). Nel presente documento faremo anche dei rimandi puntuali a
 sezioni del documento ntkd-RPC.
 
-## <a name="Divisione_logica_3_livelli"></a>Divisione della logica in 3 livelli
+## <a id="Divisione_logica_3_livelli"></a>Divisione della logica in 3 livelli
 
 Il framework ZCD suddivide la logica delle operazioni in 3 livelli.
 
