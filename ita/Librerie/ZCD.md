@@ -2,17 +2,17 @@
 
 1.  [Obiettivo](#obiettivo)
 1.  [Divisione della logica in 3 livelli](#divisione-della-logica-in-3-livelli)
-1.  [Deploy e dipendenze dei 3 livelli](#Deploy_e_dipendenze)
-1.  [Tipi di trasmissione](#Trasmissioni)
-1.  [Tipi di medium](#Medium)
-1.  [Libreria ZCD di basso livello](#Livello_basso)
-    1.  [Tasklet in ascolto](#Tasklet_listen)
-    1.  [Chiamate a metodi remoti](#Send)
-    1.  [Interazioni tra la libreria ZCD e il suo utilizzatore](#Interazioni)
+1.  [Deploy e dipendenze dei 3 livelli](#deploy-e-dipendenze-dei-3-livelli)
+1.  [Tipi di trasmissione](#tipi-di-trasmissione)
+1.  [Tipi di medium](#tipi-di-medium)
+1.  [Libreria ZCD di basso livello](#libreria-zcd-di-basso-livello)
+    1.  [Tasklet in ascolto](#tasklet-in-ascolto)
+    1.  [Chiamate a metodi remoti](#chiamate-a-metodi-remoti)
+    1.  [Interazioni tra la libreria ZCD e il suo utilizzatore](#interazioni-tra-la-libreria-zcd-e-il-suo-utilizzatore)
 
-1.  [Interfacce tra i livelli](#Interfacce_tra_livelli)
-    1.  [Interfaccia tra MOD-RPC e APP come realizzata con "rpcdesign"](#Interfaccia_modrpc_app_con_rpcdesgin)
-1.  [Dettagli tecnici](#Dettagli_tecnici)
+1.  [Interfacce tra i livelli](#interfacce-tra-i-livelli)
+    1.  [Interfaccia tra MOD-RPC e APP come realizzata con "rpcdesign"](#interfaccia-tra-mod-rpc-e-app-come-realizzata-con-rpcdesign)
+1.  [Dettagli tecnici](#dettagli-tecnici)
 
 ## Obiettivo
 
@@ -81,7 +81,7 @@ una applicazione oppure a sua volta una libreria o un modulo. Il ruolo di questa
 metodi remoti negli altri nodi, sia implementare i metodi remoti che sono chiamati dagli altri nodi su questo
 nodo. Cioè si occupa della business logic.
 
-## <a name="Deploy_e_dipendenze"></a>Deploy e dipendenze dei 3 livelli
+## Deploy e dipendenze dei 3 livelli
 
 Per brevità chiamiamo ZCD la libreria di livello basso e MOD-RPC la libreria di livello intermedio che
 implementa il modello di dati. Chiamiamo APP l'applicazione (che può a sua volta essere una libreria) che
@@ -118,7 +118,7 @@ libreria JsonGlib, ma questo non viene imposto da ZCD. Infatti la libreria ZCD n
 il contenuto delle stringhe JSON che riceve da MOD-RPC, ma deve solo farle arrivare alla libreria MOD-RPC nel
 nodo remoto.
 
-## <a name="Trasmissioni"></a>Tipi di trasmissione
+## Tipi di trasmissione
 
 Il framework ZCD prevede due tipi di trasmissione:
 
@@ -197,7 +197,7 @@ torna ad ascoltare.
     *   Passa al *delegato* le informazioni estrapolate dal pacchetto "ACK". Questi
         non restituirà nulla: la tasklet potrà terminare.
 
-## <a name="Medium"></a>Tipi di medium
+## Tipi di medium
 
 Il framework ZCD prevede due tipi di medium per la trasmissione:
 
@@ -246,11 +246,11 @@ Nel documento ntkd-RPC nella sezione [Tipi di medium](../DemoneNTKD/RPC.md#tipi-
 meccanismo che consente, nel caso di modalità "datagram", di emulare un dominio broadcast
 usando questi socket.
 
-## <a name="Livello_basso"></a>Libreria ZCD di basso livello
+## Libreria ZCD di basso livello
 
 Analiziamo la libreria ZCD, quella di basso livello.
 
-### <a name="Tasklet_listen"></a>Tasklet in ascolto
+### Tasklet in ascolto
 
 Un programma che usa il framework ZCD deve indicare dove intende mettersi in ascolto.
 
@@ -303,7 +303,7 @@ i vecchi indirizzi IP propri del nodo bisogna prima terminare le tasklet in asco
 il caso di tasklet in ascolto per datagram su una particolare interfaccia di rete, il demone *ntkd*
 dovrebbe prevedere la possibilità di aggiungere o rimuovere dinamicamente le interfacce gestite.
 
-### <a name="Send"></a>Chiamate a metodi remoti
+### Chiamate a metodi remoti
 
 Quando l'utilizzatore di ZCD vuole chiamare un metodo remoto invoca un metodo di ZCD.
 
@@ -396,7 +396,7 @@ In entrambe le modalità (stream e datagram) abbiamo dei parametri comuni.
     La libreria MOD-RPC ha avuto l'incarico di produrle serializzando un oggetto e sarà in grado, dall'altro
     lato della comunicazione, di deserializzarle nella giusta forma.
 
-### <a name="Interazioni"></a>Interazioni tra la libreria ZCD e il suo utilizzatore
+### Interazioni tra la libreria ZCD e il suo utilizzatore
 
 L'utilizzatore di ZCD inizializza come detto prima la libreria di basso livello indicando dove ascoltare.
 
@@ -503,7 +503,7 @@ all'interfaccia che ha ricevuto il messaggio.
 Dall'altra parte, il nodo che riceve questo ACK deve essere in grado di associarlo
 all'intero set di *identità* di questo nodo che erano interessate.</sub>
 
-## <a name="Interfacce_tra_livelli"></a>Interfacce tra i livelli
+## Interfacce tra i livelli
 
 L'interfaccia della libreria ZCD nei confronti della libreria di livello intermedio MOD-RPC prevede
 il passaggio di alcune strutture dati che la libreria ZCD non conosce. Tali dati vengono passati come
@@ -541,7 +541,7 @@ Comunque, la separazione dei due livelli è consigliabile per alcuni motivi:
     MOD-RPC versione 1.0. Qualsiasi versione di APP che si appoggia su questa libreria sarà quindi teoricamente
     in grado di comunicare con versioni differenti di APP che si appoggiano però sulla stessa libreria.
 
-### <a name="Interfaccia_modrpc_app_con_rpcdesgin"></a>Interfaccia tra MOD-RPC e APP come realizzata con "rpcdesign"
+### Interfaccia tra MOD-RPC e APP come realizzata con "rpcdesign"
 
 Abbiamo detto che il tool "rpcdesign" aiuta nella produzione di una libreria MOD-RPC che adotta un
 approccio di tipo stub-skeleton come interfaccia verso la APP.
@@ -600,7 +600,7 @@ consapevole che le strutture dati complesse che transitano nei messaggi devono p
 serializzate e deserializzate con il meccanismo fornito da `Json.gobject_serialize`. Rimandiamo
 alla documentazione di JsonGlib per maggiori dettagli.
 
-## <a name="Dettagli_tecnici"></a>Dettagli tecnici
+## Dettagli tecnici
 
 I dettagli tecnici sono illustrati in questo [documento](ZcdDettagliTecnici.md).
 
