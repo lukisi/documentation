@@ -1,7 +1,7 @@
 # Zero Configuration Dispatchers - Analisi Funzionale
 
-1.  [Obiettivo](#Obiettivo)
-1.  [Divisione della logica in 3 livelli](#Divisione_logica_3_livelli)
+1.  [Obiettivo](#obiettivo)
+1.  [Divisione della logica in 3 livelli](#divisione-della-logica-in-3-livelli)
 1.  [Deploy e dipendenze dei 3 livelli](#Deploy_e_dipendenze)
 1.  [Tipi di trasmissione](#Trasmissioni)
 1.  [Tipi di medium](#Medium)
@@ -14,7 +14,7 @@
     1.  [Interfaccia tra MOD-RPC e APP come realizzata con "rpcdesign"](#Interfaccia_modrpc_app_con_rpcdesgin)
 1.  [Dettagli tecnici](#Dettagli_tecnici)
 
-## <a id="Obiettivo"></a>Obiettivo
+## Obiettivo
 
 I nodi di una rete Netsukuku per eseguire l'algoritmo distribuito di esplorazione della rete si devono
 passare dei messaggi.
@@ -47,7 +47,7 @@ documento tratteremo concetti generali. Per una panoramica su come il demone Net
 rimandiamo al documento [ntkd-RPC](../DemoneNTKD/RPC.md). Nel presente documento faremo anche dei rimandi puntuali a
 sezioni del documento ntkd-RPC.
 
-## <a id="Divisione_logica_3_livelli"></a>Divisione della logica in 3 livelli
+## Divisione della logica in 3 livelli
 
 Il framework ZCD suddivide la logica delle operazioni in 3 livelli.
 
@@ -242,7 +242,7 @@ ricevuti su un socket unix-domain.
 Inoltre parleremo di *nodo* anche nel caso di socket unix-domain, indicando così in questo caso il processo
 che usa la libreria ZCD e si mette in ascolto dei messaggi.
 
-Nel documento ntkd-RPC nella sezione [Tipi di medium](../DemoneNTKD/RPC.md#Medium) descriveremo anche un
+Nel documento ntkd-RPC nella sezione [Tipi di medium](../DemoneNTKD/RPC.md#tipi-di-medium) descriveremo anche un
 meccanismo che consente, nel caso di modalità "datagram", di emulare un dominio broadcast
 usando questi socket.
 

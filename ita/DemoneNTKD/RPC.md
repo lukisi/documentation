@@ -3,7 +3,7 @@
 1.  [StubFactory](#StubFactory)
 1.  [SkeletonFactory](#SkeletonFactory)
 1.  [Tipi di trasmissione](#Trasmissioni)
-1.  [Tipi di medium](#Medium)
+1.  [Tipi di medium](#tipi-di-medium)
 1.  [Tasklet in ascolto](#Tasklet_listen)
 1.  [Chiamate a metodi remoti](#Get_stub)
 1.  [Identità multiple in un sistema](#Identita_multiple_in_un_sistema)
@@ -49,7 +49,7 @@ broadcast quando ci si accorge che questo non è stato recepito, con `wait_reply
 
 *   TODO
 
-## <a name="Medium"></a>Tipi di medium
+## Tipi di medium
 
 Abbiamo analizzato nel documento [ZCD](../Librerie/ZCD.md#Medium) che il framework ZCD prevede due tipi
 di medium per la trasmissione:
