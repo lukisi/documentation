@@ -414,7 +414,9 @@ Se si tratta di un messaggio di *richiesta*:
     Se la risposta è True significa che il messaggio è partito dal mio nodo, quindi la tasklet lo ignora e termina.
 *   Se il messaggio dichiarava di voler ricevere un acknowledge, cioè `send_ack`:
     *   Prepara l'albero JSON contenente il messaggio di *ACK* con il `packet_id` del messaggio ricevuto e
-        il `ack_mac` che trova nel `listener` che ha ricevuto come argomento.
+        il `ack_mac` che trova nel `listener` che ha ricevuto come argomento.  
+        Come illustrato prima, il nodo radice di questo albero è un *OBJECT* con il membro "ack".
+        Esso a sua volta è un *OBJECT* con i membri **packet-id** e **ack-mac**.
     *   In una nuova tasklet, per 3 volte a brevi intervalli casuali tra 10 e 200 msec, trasmette il messaggio
         di *ACK* in un datagram sulla stessa interfaccia su cui ha ricevuto il messaggio. Questo lo fa chiamando
         una sua funzione interna `send_ack_net(my_dev, udp_port, ...)` o `send_ack_system(send_pathname, ...)`
@@ -456,7 +458,8 @@ trasmettere e fare in modo di farlo conoscere all'istanza di `IDatagramDelegate`
 funzione `datagram_net_listen` relativa a `my_dev`. Tale istanza infatti sarà invocata alla
 ricezione dei messaggi di *ACK* relativi.
 
-La funzione costruisce un albero JSON il cui nodo radice è un *OBJECT* con i membri:
+La funzione costruisce un albero JSON il cui nodo radice è un *OBJECT* con il membro "request".
+Esso a sua volta è un *OBJECT* con i membri:
 
 *   Membro **packet-id** da `int packet_id`.
 *   Membro **method-name** da `string m_name`.
