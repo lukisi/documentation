@@ -653,13 +653,13 @@ prende questo prefisso e sceglie il metodo di `IDelegate` da chiamare.
 La libreria MOD-RPC fornisce inoltre alcune chiamate di inizializzazione:
 
 *   `void SampleRpc.init_tasklet_system(ITasklet _tasklet)`
-*   `void SampleRpc.stream_net_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
+*   `SampleRpc.IListenerHandle SampleRpc.stream_net_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
     `string my_ip, uint16 tcp_port)`
-*   `void SampleRpc.stream_system_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
+*   `SampleRpc.IListenerHandle SampleRpc.stream_system_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
     `string listen_pathname)`
-*   `void SampleRpc.datagram_net_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
+*   `SampleRpc.IListenerHandle SampleRpc.datagram_net_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
     `string my_dev, uint16 udp_port, string ack_mac)`
-*   `void SampleRpc.datagram_system_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
+*   `SampleRpc.IListenerHandle SampleRpc.datagram_system_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
     `string listen_pathname, string send_pathname, string ack_mac)`
 
 La funzione `init_tasklet_system` deve essere chiamata da APP come inizializzazione della libreria. Essa serve
@@ -669,7 +669,8 @@ Per ogni indirizzo IP proprio del nodo in cui è eseguita, la APP chiama una vol
 Per ogni interfaccia di rete propria del nodo in cui è eseguita, la APP chiama una volta la funzione `datagram_net_listen`.  
 Con modalità analoghe, nei processi che all'interno di un sistema (in una testsuite) simulano ciascuno un nodo, sono
 usate le funzioni `stream_system_listen` e `datagram_system_listen`.  
-Ognuna di queste funzioni avvia una nuova tasklet perché stia in ascolto di messaggi.
+Ognuna di queste funzioni avvia una nuova tasklet perché stia in ascolto di messaggi. Tramite l'istanza di oggetto restituita
+(di cui la libreria MOD-RPC espone l'interfaccia IListenerHandle) sarà possibile richiederne la terminazione.
 
 In realtà ognuna di queste funzioni chiama semplicemente la funzione omonima nella libreria di basso livello.
 È la libreria di basso livello che avvia una tasklet in ascolto di messaggi. Quello che fa la libreria MOD-RPC in queste
