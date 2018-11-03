@@ -653,13 +653,17 @@ prende questo prefisso e sceglie il metodo di `IDelegate` da chiamare.
 La libreria MOD-RPC fornisce inoltre alcune chiamate di inizializzazione:
 
 *   `void SampleRpc.init_tasklet_system(ITasklet _tasklet)`
-*   `SampleRpc.IListenerHandle SampleRpc.stream_net_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
+*   `SampleRpc.IListenerHandle`  
+    `SampleRpc.stream_net_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
     `string my_ip, uint16 tcp_port)`
-*   `SampleRpc.IListenerHandle SampleRpc.stream_system_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
+*   `SampleRpc.IListenerHandle`  
+    `SampleRpc.stream_system_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
     `string listen_pathname)`
-*   `SampleRpc.IListenerHandle SampleRpc.datagram_net_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
+*   `SampleRpc.IListenerHandle`  
+    `SampleRpc.datagram_net_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
     `string my_dev, uint16 udp_port, string ack_mac)`
-*   `SampleRpc.IListenerHandle SampleRpc.datagram_system_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
+*   `SampleRpc.IListenerHandle`  
+    `SampleRpc.datagram_system_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
     `string listen_pathname, string send_pathname, string ack_mac)`
 
 La funzione `init_tasklet_system` deve essere chiamata da APP come inizializzazione della libreria. Essa serve
