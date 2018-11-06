@@ -274,18 +274,18 @@ che la libreria di basso livello può mettersi in ascolto di messaggi nei seguen
     questa modalità di fatto si ascoltano i pacchetti broadcast che transitano
     sul [broadcast domain](https://en.wikipedia.org/wiki/Broadcast_domain)
     al quale è collegata quella interfaccia di rete.  
-    La libreria espone la funzione `datagram_net_listen(my_dev, udp_port, string ack_mac)` che avvia una tasklet che si mette
+    La libreria espone la funzione `datagram_net_listen(my_dev, udp_port, string src_nic)` che avvia una tasklet che si mette
     in ascolto in questo modo.  
     L'utilizzatore specifica il dev-name della propria interfaccia di rete e la porta UDP.  
-    Le tasklet che ascoltano trasmissioni di tipo "datagram" ricevono un parametro `string ack_mac`. Esso è da utilizzare nella
+    Le tasklet che ascoltano trasmissioni di tipo "datagram" ricevono un parametro `string src_nic`. Esso è da utilizzare nella
     successiva trasmissione dei messaggi di *ACK* relativi ai messaggi di *richiesta* ricevuti.
 1.  Attendere messaggi su un socket unix-domain legato ad uno specifico pathname.  
-    La libreria espone la funzione `datagram_system_listen(listen_pathname, send_pathname, string ack_mac)` che avvia una tasklet
+    La libreria espone la funzione `datagram_system_listen(listen_pathname, send_pathname, string src_nic)` che avvia una tasklet
     che si mette in ascolto in questo modo.  
     L'utilizzatore specifica un pathname di ascolto che deve essere univoco all'interno del set di processi
     che compongono la testsuite e deve riflettere la modalità di comunicazione con messaggi broadcast. Inoltre
     specifica un pathname di trasmissione per la trasmissione dei pacchetti ACK.  
-    Le tasklet che ascoltano trasmissioni di tipo "datagram" ricevono un parametro `string ack_mac`. Esso è da utilizzare nella
+    Le tasklet che ascoltano trasmissioni di tipo "datagram" ricevono un parametro `string src_nic`. Esso è da utilizzare nella
     successiva trasmissione dei messaggi di *ACK* relativi ai messaggi di *richiesta* ricevuti.  
     Indicheremo nel documento ntkd-RPC nella sezione [Tipi di medium](../DemoneNTKD/RPC.md#Medium)
     le scelte fatte nell'applicazione *ntkd* per mappare in un pathname le situazioni di comunicazione con messaggi
@@ -368,7 +368,7 @@ sono:
     di un pacchetto di ACK.  
     Se è così, ogni nodo che rileva il messaggio da una sua interfaccia di rete trasmette subito sulla stessa
     interfaccia (quindi sullo stesso dominio broadcast su cui il mittente ha trasmesso) un pacchetto ACK in
-    cui sono specificati lo stesso `int packet_id` del messaggio di richiesta e un `string ack_mac` che è
+    cui sono specificati lo stesso `int packet_id` del messaggio di richiesta e un `string src_nic` che è
     l'identificativo dell'interfaccia di rete (reale se il medium è net, finta se il medium è system)
     che ha ricevuto il messaggio.  
     In ogni caso la funzione termina appena il messaggio è stato trasmesso, senza avere certezza che
@@ -447,8 +447,8 @@ La classe Listener è vuota. Viene ereditata dalle seguenti classi esposte dalla
 
 *   StreamNetListener. Prodotta da `stream_net_listen`. Contiene i suoi parametri `my_ip, tcp_port`.
 *   StreamSystemListener. Prodotta da `stream_system_listen`. Contiene i suoi parametri `listen_pathname`.
-*   DatagramNetListener. Prodotta da `datagram_net_listen`. Contiene i suoi parametri `my_dev, udp_port, ack_mac`.
-*   DatagramSystemListener. Prodotta da `datagram_system_listen`. Contiene i suoi parametri `listen_pathname, send_pathname, ack_mac`.
+*   DatagramNetListener. Prodotta da `datagram_net_listen`. Contiene i suoi parametri `my_dev, udp_port, src_nic`.
+*   DatagramSystemListener. Prodotta da `datagram_system_listen`. Contiene i suoi parametri `listen_pathname, send_pathname, src_nic`.
 
 Quindi la libreria ZCD passa questo oggetto CallerInfo ai delegati forniti dal suo utilizzatore.
 
@@ -474,7 +474,7 @@ esso stesso ha trasmesso. In questo caso la tasklet termina.
 Il prossimo passaggio sarà di trasmettere, se la richiesta conteneva `send_ack`, il messaggio *ack*.
 Il messaggio *ack* viene trasmesso dalla libreria ZCD chiamando una sua funzione interna
 (`send_ack_net(my_dev, udp_port, ...)` o `send_ack_system(send_pathname, ...)` a seconda della tasklet
-in ascolto che ha ricevuto la *request*) dove si specifica il `int packet_id` e lo `string ack_mac`
+in ascolto che ha ricevuto la *request*) dove si specifica il `int packet_id` e lo `string src_nic`
 dell'interfaccia di rete che ha ricevuto la *request*.  
 In seguito, dopo aver costruito un DatagramCallerInfo, viene chiamato il suo metodo
 `IDatagramDispatcher? get_dispatcher(DatagramCallerInfo caller_info)`.  
@@ -483,7 +483,7 @@ Se il risultato non è nullo, su questo `IDatagramDispatcher` viene chiamato il 
 `void execute(string m_name, List<string> args, DatagramCallerInfo caller_info)`. In questo caso non
 è previsto comunicare il risultato. La tasklet termina.
 
-Invece sulla ricezione di un *ack* viene chiamato il suo metodo `void got_ack(int packet_id, string ack_mac)`.
+Invece sulla ricezione di un *ack* viene chiamato il suo metodo `void got_ack(int packet_id, string src_nic)`.
 Esso non restituisce nulla. La tasklet termina.
 
 In ogni caso il `CallerInfo caller_info` viene passato al metodo remoto eseguito nello skeleton.
@@ -498,7 +498,7 @@ dispatcher `IDatagramDispatcher` ottenuto dal delegato si prende cura di notific
 diverse *identità* di questo nodo che sono interessate; di fatto avvia una nuova tasklet per ogni identità
 interessata e chiama in essa il metodo sul relativo skeleton.  
 Inoltre, in questo caso, se il messaggio prevede una comunicazione di ACK da ogni destinatario che lo riceve,
-la libreria ZCD trasmette un unico ACK con un identificativo `string ack_mac` dal quale si possa risalire
+la libreria ZCD trasmette un unico ACK con un identificativo `string src_nic` dal quale si possa risalire
 all'interfaccia che ha ricevuto il messaggio.  
 Dall'altra parte, il nodo che riceve questo ACK deve essere in grado di associarlo
 all'intero set di *identità* di questo nodo che erano interessate.</sub>

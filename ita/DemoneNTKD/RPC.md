@@ -535,30 +535,3 @@ Le istanze di `IIdentityAwareMissingArcHandler` usate nel codice sono:
 
 
 ***
-
-
-**TODO** spostare altrove.
-
-L'oggetto CallerInfo viene prodotto sul server, in particolare dalla libreria *ntkdrpc*, a seguito di una
-richiesta da remoto contenuta in una connessione o un messaggio. La richiesta viene letta da una delle
-tasklet che sono state avviate per l'ascolto.
-
-A seconda della tasklet che riceve viene prodotta una istanza di:
-
-*   `StreamCallerInfo` dalla tasklet `stream_net_listen` o dalla tasklet `stream_system_listen`. Era la `TcpclientCallerInfo`.  
-    Questa contiene:
-    *   `ISourceID sourceid`
-    *   `IUnicastID unicastid`
-    *   `ISrcNic src_nic`
-    *   `bool wait_reply`
-    *   `string listening_to_my_ip`
-*   `DatagramCallerInfo` dalla tasklet `datagram_net_listen` o dalla tasklet `datagram_system_listen`. Era la `BroadcastCallerInfo`.  
-    Questa contiene:
-    *   `ISourceID sourceid`
-    *   `IBroadcastID broadcastid`
-    *   `ISrcNic src_nic`
-    *   `bool send_ack`
-    *   `string listening_to_my_dev`
-
-**FINE-TODO**
-

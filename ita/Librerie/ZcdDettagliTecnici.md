@@ -317,8 +317,8 @@ sarà una funzione interna che farà questo lavoro in entrambi i casi.
 
 La funzione `IListenerHandle datagram_net_listen(...)` riceve questi argomenti:
 
-*   `string my_dev, uint16 udp_port, string ack_mac`. Indicano dove ascoltare con il protocollo UDP
-    e l'identificativo (MAC addess) dell'interfaccia di rete propria del nodo.
+*   `string my_dev, uint16 udp_port, string src_nic`. Indicano dove ascoltare con il protocollo UDP
+    e l'identificativo univoco (JSON passato dall'utilizzatore) dell'interfaccia di rete propria del nodo.
 *   `IDatagramDelegate datagram_dlg`.
 *   `IErrorHandler error_handler`.
 
@@ -327,7 +327,7 @@ Essa ha il metodo `bool is_my_own_message(int packet_id)`.
 Inoltre ha il metodo `IDatagramDispatcher? get_dispatcher(DatagramCallerInfo caller_info)`.
 Il suo valore di ritorno, se non nullo, è un oggetto che ha un metodo
 `void execute(string m_name, List<string> args, DatagramCallerInfo caller_info)`.  
-Infine ha il metodo `void got_ack(int packet_id, string ack_mac)`.
+Infine ha il metodo `void got_ack(int packet_id, string src_nic)`.
 
 Sul delegato `IErrorHandler error_handler`, in caso di errore, la tasklet prima di terminare potrà
 chiamare il metodo `void error_handler(Error e)`.
@@ -385,7 +385,7 @@ radice. Sotto ogni tipologia sono poi elencati i vari membri dell'oggetto.
 
     *   Membro **packet-id** in `int packet_id`. Un intero che identifica il messaggio di *richiesta* per il quale
         questo messaggio è il relativo *ACK*.
-    *   Membro **ack-mac** in `string ack_mac`. L'identificativo (MAC addess) dell'interfaccia di rete
+    *   Membro **src-nic** in `string src_nic`. L'identificativo univoco (JSON passato dall'utilizzatore) dell'interfaccia di rete
         che ha ricevuto il messaggio di *richiesta*.
 
 #### cosa fa la tasklet che gestisce un datagram
@@ -396,7 +396,7 @@ La tasklet che gestisce un datagram riceve questi parametri iniziali:
 *   `IDatagramDelegate datagram_dlg` - Il delegato per le richieste.
 *   `Listener listener` - Un oggetto che rappresenta la modalità con cui era in ascolto la tasklet
     che ha ricevuto il messaggio.  
-    Nel caso in esame (cioè `datagram_net_listen`) esso è una `DatagramNetListener listener(my_dev, udp_port, ack_mac)`.
+    Nel caso in esame (cioè `datagram_net_listen`) esso è una `DatagramNetListener listener(my_dev, udp_port, src_nic)`.
     Ma vedremo in seguito (quando analizzeremo `datagram_system_listen`) che la tasklet che gestisce
     un messaggio nel medium "system" è del tutto analoga a questa. Quindi questa tasklet riceve
     una generica istanza di `Listener`.
@@ -414,9 +414,9 @@ Se si tratta di un messaggio di *richiesta*:
     Se la risposta è True significa che il messaggio è partito dal mio nodo, quindi la tasklet lo ignora e termina.
 *   Se il messaggio dichiarava di voler ricevere un acknowledge, cioè `send_ack`:
     *   Prepara l'albero JSON contenente il messaggio di *ACK* con il `packet_id` del messaggio ricevuto e
-        il `ack_mac` che trova nel `listener` che ha ricevuto come argomento.  
+        il `src_nic` che trova nel `listener` che ha ricevuto come argomento.  
         Come illustrato prima, il nodo radice di questo albero è un *OBJECT* con il membro "ack".
-        Esso a sua volta è un *OBJECT* con i membri **packet-id** e **ack-mac**.
+        Esso a sua volta è un *OBJECT* con i membri **packet-id** e **src-nic**.
     *   In una nuova tasklet, per 3 volte a brevi intervalli casuali tra 10 e 200 msec, trasmette il messaggio
         di *ACK* in un datagram sulla stessa interfaccia su cui ha ricevuto il messaggio. Questo lo fa chiamando
         una sua funzione interna `send_ack_net(my_dev, udp_port, ...)` o `send_ack_system(send_pathname, ...)`
@@ -437,8 +437,8 @@ Se si tratta di un messaggio di *richiesta*:
 Se si tratta di un messaggio di *ACK*:
 
 *   La tasklet verifica di poter estrapolare dall'albero JSON le informazioni sopra illustrate, pena la sua terminazione.
-*   La tasklet chiama il metodo `datagram_dlg.got_ack(packet_id, ack_mac)` con il `packet_id` e
-    il `ack_mac` del messaggio ricevuto.
+*   La tasklet chiama il metodo `datagram_dlg.got_ack(packet_id, src_nic)` con il `packet_id`
+    del messaggio ricevuto e il `src_nic` che identifica l'interfaccia di rete che lo ha ricevuto.
 
 ### <a name="ZCD_send_datagram_net"></a>send_datagram_net
 
@@ -483,9 +483,9 @@ Se nelle operazioni di creazione socket e trasmissione si verifica un errore vie
 
 La funzione `IListenerHandle datagram_system_listen(...)` riceve questi argomenti:
 
-*   `string listen_pathname, string send_pathname, string ack_mac`. Indicano il pathname dove ascoltare
+*   `string listen_pathname, string send_pathname, string src_nic`. Indicano il pathname dove ascoltare
     i datagram (trasmessi dai nodi vicini) e il pathname dove trasmettere i datagram di *ACK*
-    e l'identificativo (MAC addess) dell'interfaccia di rete propria del nodo.
+    e l'identificativo univoco (JSON passato dall'utilizzatore) dell'interfaccia di rete propria del nodo.
 *   `IDatagramDelegate datagram_dlg`.
 *   `IErrorHandler error_handler`.
 
@@ -535,7 +535,7 @@ La tasklet che gestisce un datagram riceve questi parametri iniziali:
 *   `IDatagramDelegate datagram_dlg` - Il delegato per le richieste.
 *   `Listener listener` - Un oggetto che rappresenta la modalità con cui era in ascolto la tasklet
     che ha ricevuto il messaggio.  
-    Questa volta sarà un `DatagramSystemListener listener(listen_pathname, send_pathname, ack_mac)`.
+    Questa volta sarà un `DatagramSystemListener listener(listen_pathname, send_pathname, src_nic)`.
 
 Il codice eseguito dalla tasklet è lo stesso che esegue la tasklet che gestisce i datagram nel medium "net".
 
@@ -661,10 +661,10 @@ La libreria MOD-RPC fornisce inoltre alcune chiamate di inizializzazione:
     `string listen_pathname)`
 *   `SampleRpc.IListenerHandle`  
     `SampleRpc.datagram_net_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
-    `string my_dev, uint16 udp_port, string ack_mac)`
+    `string my_dev, uint16 udp_port, string src_nic)`
 *   `SampleRpc.IListenerHandle`  
     `SampleRpc.datagram_system_listen(SampleRpc.IDelegate dlg, SampleRpc.IErrorHandler err,`  
-    `string listen_pathname, string send_pathname, string ack_mac)`
+    `string listen_pathname, string send_pathname, string src_nic)`
 
 La funzione `init_tasklet_system` deve essere chiamata da APP come inizializzazione della libreria. Essa serve
 a passare l'implementazione del sistema di tasklet, richiesto dalla libreria ZCD.
@@ -728,8 +728,8 @@ La classe Listener è vuota. Viene ereditata dalle seguenti classi:
 
 *   StreamNetListener. Prodotta da `stream_net_listen`. Contiene i suoi parametri `my_ip, tcp_port`.
 *   StreamSystemListener. Prodotta da `stream_system_listen`. Contiene i suoi parametri `listen_pathname`.
-*   DatagramNetListener. Prodotta da `datagram_net_listen`. Contiene i suoi parametri `my_dev, udp_port, ack_mac`.
-*   DatagramSystemListener. Prodotta da `datagram_system_listen`. Contiene i suoi parametri `listen_pathname, send_pathname, ack_mac`.
+*   DatagramNetListener. Prodotta da `datagram_net_listen`. Contiene i suoi parametri `my_dev, udp_port, src_nic`.
+*   DatagramSystemListener. Prodotta da `datagram_system_listen`. Contiene i suoi parametri `listen_pathname, send_pathname, src_nic`.
 
 Il delegato interrogato dalle tasklet alla ricezione di un messaggio, diversamente da quanto avveniva
 nella libreria di basso livello, è una istanza di una medesima interfaccia. Sia i messaggi ricevuti con
@@ -823,8 +823,9 @@ nodi che ricevono il messaggio. Poi avvierà una nuova tasklet prima di terminar
 l'eccezione `StubError.DID_NOT_WAIT_REPLY`). Nella nuova tasklet attenderà il tempo massimo e infine chiamerà il seguente
 metodo dell'interfaccia SampleRpc.IAckCommunicator:
 
-*   `void process_macs_list(Gee.List<string> macs_list)`  
-    A parametro riceve l'elenco dei MAC address dei vicini che hanno ricevuto il messaggio.
+*   `void process_src_nics_list(Gee.List<string> src_nics_list)`  
+    A parametro riceve l'elenco delle stringhe JSON che identificano le interfacce di rete dei vicini che hanno
+    ricevuto il messaggio.
 
 ### <a name="MODRPC_argomenti"></a>Serializzazione e deserializzazione di argomenti, valori di ritorno e eccezioni
 
