@@ -130,7 +130,7 @@ Ad esempio si voglia simulare un nodo "alfa" (a cui assegneremo il pid 1234) e u
 stesso dominio, che chiameremo dominio "tau". Vogliamo lanciare il comando "qspntester" su entrambi i nodi (simulati)
 indicando l'interfaccia "eth0".
 
-Per emulare il dominio "tau", si lancia `domain -i 1234_eth0 -i 6543_eth0`.  
+Per emulare il dominio "tau", si lancia `eth_domain -i 1234_eth0 -i 6543_eth0`.  
 Questo processo avvia una tasklet associata a `1234_eth0`. Questa **crea** il pathname `send_1234_eth0`. Poi si mette in
 ascolto con un socket unix-domain su quel pathname. Quando questa tasklet riceve un pacchetto fa da proxy:
 avviando una nuova tasklet per ogni pathname (anche lo stesso NIC che trasmette un pacchetto
@@ -147,7 +147,7 @@ pathname `recv_1234_eth0` e si mette in ascolto con un socket unix-domain su que
 Per il momento nessuno scrive su `recv_1234_eth0`.  
 Quando questo processo vuole trasmettere un pacchetto tramite questo pseudonic, in realtà lo scrive con
 un socket unix-domain sul pathname `send_1234_eth0`, **ma solo** se questo pathname esiste già.  
-Abbiamo visto pocanzi che il processo `domain` ascolta su `send_1234_eth0`.
+Abbiamo visto pocanzi che il processo `eth_domain` ascolta su `send_1234_eth0`.
 
 Per "beta", si lancia `qspntester -p 6543 -I eth0`. Tale processo computa un pathname `6543_eth0` per
 rappresentare il suo pseudonic `eth0`.  
@@ -156,10 +156,10 @@ pathname `recv_6543_eth0` e si mette in ascolto con un socket unix-domain su que
 Per il momento nessuno scrive su `recv_6543_eth0`.  
 Quando questo processo vuole trasmettere un pacchetto tramite questo pseudonic, in realtà lo scrive con
 un socket unix-domain sul pathname `send_6543_eth0`, **ma solo** se questo pathname esiste già.  
-Abbiamo visto pocanzi che il processo `domain` ascolta su `send_6543_eth0`.
+Abbiamo visto pocanzi che il processo `eth_domain` ascolta su `send_6543_eth0`.
 
 Adesso supponiamo che il nodo "beta" vuole scrivere un pacchetto sul suo pseudonic "eth0". Lo
-scrive con un socket unix-domain sul pathname `send_6543_eth0`. Quindi il processo "domain"
+scrive con un socket unix-domain sul pathname `send_6543_eth0`. Quindi il processo `eth_domain`
 lo riceve tramite la sua tasklet associata a `6543_eth0` e lo copia sul pathname `recv_1234_eth0`.
 Quindi il nodo "alfa" lo riceve.  
 Anche il nodo "beta" stesso lo riceve: deve saper riconoscere che è stato trasmesso da lui stesso
@@ -182,24 +182,28 @@ possono ricevere i pacchetti trasmessi dalla prima.
 Ad esempio, assumiamo che i nodi alfa beta e gamma di cui sopra abbiano i pid rispettivamente 1234,
 6543 e 6789. Lanciamo:
 
-*   `radio-domain -i 1234_wlan0 -o 6543_wlan0`.  
+*   `radio_domain -i 1234_wlan0 -o 6543_wlan0`.  
     Crea `send_1234_wlan0` e si mette in ascolto su esso.  
     Quando riceve:
     *   prova a scrivere su `recv_1234_wlan0` ma soltanto se già esiste.
     *   prova a scrivere su `recv_6543_wlan0` ma soltanto se già esiste.
 
-*   `radio-domain -i 6543_wlan0 -o 1234_wlan0 -o 6789_wlan0`.  
+*   `radio_domain -i 6543_wlan0 -o 1234_wlan0 -o 6789_wlan0`.  
     Crea `send_6543_wlan0` e si mette in ascolto su esso.  
     Quando riceve:
     *   prova a scrivere su `recv_6543_wlan0` ma soltanto se già esiste.
     *   prova a scrivere su `recv_1234_wlan0` ma soltanto se già esiste.
     *   prova a scrivere su `recv_6789_wlan0` ma soltanto se già esiste.
 
-*   `radio-domain -i 6789_wlan0 -o 6543_wlan0`.  
+*   `radio_domain -i 6789_wlan0 -o 6543_wlan0`.  
     Crea `send_6789_wlan0` e si mette in ascolto su esso.  
     Quando riceve:
     *   prova a scrivere su `recv_6789_wlan0` ma soltanto se già esiste.
     *   prova a scrivere su `recv_6543_wlan0` ma soltanto se già esiste.
+
+Il framework ZCD fornisce di default anche questi due tool (`radio_domain` e `eth_domain`).
+Essi sono usati in alcune testsuite di ZCD, ma potranno essere utili allo sviluppatore anche nella produzione
+di testsuite per altri moduli di Netsukuku.
 
 ## <a name="Tasklet_listen"></a>Tasklet in ascolto
 

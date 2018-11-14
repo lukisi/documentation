@@ -242,9 +242,12 @@ ricevuti su un socket unix-domain.
 Inoltre parleremo di *nodo* anche nel caso di socket unix-domain, indicando così in questo caso il processo
 che usa la libreria ZCD e si mette in ascolto dei messaggi.
 
-Nel documento ntkd-RPC nella sezione [Tipi di medium](../DemoneNTKD/RPC.md#tipi-di-medium) descriveremo anche un
-meccanismo che consente, nel caso di modalità "datagram", di emulare un dominio broadcast
-usando questi socket.
+Il framework ZCD mette a disposizione anche dei tool che facilitano la realizzazione di una testsuite
+per i messaggi in modalità "datagram".  
+Le peculiarità di questi messaggi quando usati nel medium "system", e di conseguenza i requisiti di
+una testsuite che li validi, saranno descritte nel documento ntkd-RPC nella
+sezione [Tipi di medium](../DemoneNTKD/RPC.md#tipi-di-medium): descriveremo il meccanismo che ci consente
+di emulare un dominio broadcast e i tool appositi `radio_domain` e `eth_domain`.
 
 ## Libreria ZCD di basso livello
 
