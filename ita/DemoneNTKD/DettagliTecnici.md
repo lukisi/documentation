@@ -1,9 +1,9 @@
 # Demone NTKD - Dettagli Tecnici
 
-1.  [Interazioni con la libreria RPC](#RPC_Library)
-1.  [Indirizzi IP](#Indirizzi_IP)
+1.  [Interazioni con la libreria RPC](#interazioni-con-la-libreria-rpc)
+1.  [Indirizzi IP](#indirizzi-ip)
 
-## <a name="RPC_Library"></a>Interazioni con la libreria RPC
+## Interazioni con la libreria RPC
 
 Il demone *ntkd* ha una dipendenza sulla libreria *ntkdrpc*.
 
@@ -117,7 +117,7 @@ stesso.
 Per questo il programma *ntkd* fornisce per ogni modulo una classe stub proxy. Ad esempio
 la classe `IdentityManagerStubHolder`.
 
-## <a name="Indirizzi_IP"></a>Indirizzi IP
+## Indirizzi IP
 
 Esaminiamo quali indirizzi IP relativi ad un dato indirizzo Netsukuku in una data topologia
 di rete debbano essere computati dal programma e usati in qualche modo nel network stack *default* e

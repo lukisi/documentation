@@ -1,13 +1,13 @@
 # Tasklet System
 
-1.  [Obiettivi](#Obiettivi)
-1.  [Interfacce](#Interfacce)
-1.  [Inizializzazione](#Inizializzazione)
-1.  [Avvio nuove tasklet](#Avvio)
-1.  [Comunicazioni sulla rete](#Rete)
-1.  [Tasklet sequenziali](#sequenziali)
+1.  [Obiettivi](#obiettivi)
+1.  [Interfacce](#interfacce)
+1.  [Inizializzazione](#inizializzazione)
+1.  [Avvio nuove tasklet](#avvio-nuove-tasklet)
+1.  [Comunicazioni sulla rete](#comunicazioni-sulla-rete)
+1.  [Tasklet sequenziali](#tasklet-sequenziali)
 
-## <a name="Obiettivi"></a>Obiettivi
+## Obiettivi
 
 Quasi tutti i moduli che compongono il demone *ntkd* fanno uso di *tasklet* per svolgere i loro compiti. Si
 tratta di thread cooperativi, cioè che permettono allo schedulatore di passare l'esecuzione ad un altro thread
@@ -62,7 +62,7 @@ Si cerca così di rendere i vari moduli del demone *ntkd* indipendenti dalla imp
 prima implementazione che useremo nel demone sarà la libreria PthTasklet basata su GNU/Pth, ma dovrebbe essere
 possibile usare altre implementazioni.
 
-## <a name="Interfacce"></a>Interfacce
+## Interfacce
 
 L'interfaccia ITasklet prevede questi metodi:
 
@@ -277,7 +277,7 @@ il metodo `get_client_stream_network_socket` e specificando l'indirizzo IP e la 
 castare l'istanza ricevuta all'interfaccia `IConnectedStreamSocket` e usarla in parti di codice che possono
 funzionare sia per le comunicazioni in rete che per le comunicazioni tra processi nello stesso sistema.
 
-## <a name="Inizializzazione"></a>Inizializzazione
+## Inizializzazione
 
 Il demone *ntkd* inizializza una libreria di implementazione (ad esempio PthTasklet) e ottiene una istanza di una
 classe che implementa l'interfaccia ITasklet.
@@ -286,7 +286,7 @@ I moduli del demone *ntkd* che fanno uso delle tasklet vengono inizializzati con
 il modulo principale fornisce una istanza di ITasklet. In pratica in questo modo dichiara di poter fornire
 le implementazioni di tutte le interfacce viste sopra per le comunicazioni allo schedulatore.
 
-## <a name="Avvio"></a>Avvio nuove tasklet
+## Avvio nuove tasklet
 
 Quando si desidera avviare una tasklet occorre creare appositamente una istanza di una classe che implementa
 l'interfaccia ITaskletSpawnable. Tale classe ha come membri tutti i dati che andrebbero passati alla funzione che
@@ -314,7 +314,7 @@ Nella nuova tasklet, la funzione `real_func` riceve il dato come (void *) e ne f
 richiama il suo metodo `func` e memorizza il suo valore di ritorno. Infine rimuove il riferimento all'istanza di
 ITaskletSpawnable e poi termina restituendo il valore di ritorno di `func`.
 
-## <a name="Rete"></a>Comunicazioni sulla rete
+## Comunicazioni sulla rete
 
 Abbiamo visto che le operazioni che prevedono una comunicazione tra processi sono bloccanti per la tasklet
 corrente. Sia quando si attende un messaggio (da un altro nodo della rete o da un altro processo nel nostro
@@ -354,7 +354,7 @@ ntkd-RPC nella sezione [Tipi di medium](../DemoneNTKD/RPC.md#Medium).
 
 
 
-## <a name="sequenziali"></a>Tasklet sequenziali
+## Tasklet sequenziali
 
 La libreria *tasklet-system* fornisce anche un metodo per assicurare che alcune tasklet vengano eseguite in sequenza.
 Usiamo un esempio per illustrare cosa si intende con questa espressione.

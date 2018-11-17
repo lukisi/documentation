@@ -1,21 +1,21 @@
 # Demone NTKD - Analisi Funzionale
 
-1.  [Ruolo del demone ntkd](#Ruolo_ntkd)
-    1.  [Definizione di rete Netsukuku](#Definizione_di_rete_netsukuku)
-    1.  [Funzionamento di una rete Netsukuku](#Funzionamento_di_rete_netsukuku)
-        1.  [Esplorazione della rete](#Esplorazione_della_rete)
-        1.  [Assegnazione delle rotte nel kernel](#Assegnazione_rotte)
-        1.  [Associazione nomi - indirizzi](#Associazione_nomi_indirizzi)
-1.  [Architettura modulare di ntkd](#Architettura_modulare_ntkd)
-    1.  [Modulo RPC](#Modulo_RPC)
-    1.  [Modulo Neighborhood](#Modulo_Neighborhood)
-    1.  [Modulo Identities](#Modulo_Identities)
-    1.  [Modulo Qspn](#Modulo_Qspn)
-    1.  [Modulo PeerServices](#Modulo_PeerServices)
-    1.  [Modulo Coordinator](#Modulo_Coordinator)
-    1.  [Modulo Hooking](#Modulo_Hooking)
+1.  [Ruolo del demone ntkd](#ruolo-del-demone-ntkd)
+    1.  [Definizione di rete Netsukuku](#definizione-di-rete-netsukuku)
+    1.  [Funzionamento di una rete Netsukuku](#funzionamento-di-una-rete-netsukuku)
+        1.  [Esplorazione della rete](#esplorazione-della-rete)
+        1.  [Assegnazione delle rotte nel kernel](#assegnazione-delle-rotte-nel-kernel)
+        1.  [Associazione nomi - indirizzi](#associazione-nomi---indirizzi)
+1.  [Architettura modulare di ntkd](#architettura-modulare-di-ntkd)
+    1.  [Modulo RPC](#modulo-rpc)
+    1.  [Modulo Neighborhood](#modulo-neighborhood)
+    1.  [Modulo Identities](#modulo-identities)
+    1.  [Modulo Qspn](#modulo-qspn)
+    1.  [Modulo PeerServices](#modulo-peerservices)
+    1.  [Modulo Coordinator](#modulo-coordinator)
+    1.  [Modulo Hooking](#modulo-hooking)
 
-## <a name="Ruolo_ntkd"></a>Ruolo del demone ntkd
+## Ruolo del demone ntkd
 
 Il demone *ntkd* deve essere sempre in esecuzione su ogni singolo nodo che compone una rete Netsukuku. Gli obiettivi
 che si prefigge sono:
@@ -25,7 +25,7 @@ che si prefigge sono:
 *   Fornire i servizi di base per il funzionamento dei Servizi Distribuiti, opzionali o obbligatori (aka Peer-to-peer Services).
 *   Fornire ai client un servizio di interrogazione del database distribuito dei nomi (ANDNA).
 
-### <a name="Definizione_di_rete_netsukuku"></a>Definizione di rete Netsukuku
+### Definizione di rete Netsukuku
 
 Una rete Netsukuku si forma automaticamente quando alcuni nodi, su cui è in esecuzione il demone *ntkd*, risultano
 fra loro *collegati* attraverso un qualsiasi mezzo, come dei cavi collegati ad uno switch, o delle radio Wi-Fi a
@@ -47,7 +47,7 @@ Nel resto del documento, quando parliamo di "la rete Netsukuku" di cui fa parte 
 rete connessa a cui il nodo *n* "appartiene"; cioè il nodo *n* è direttamente collegato ad almeno un altro nodo
 di quella rete.
 
-### <a name="Funzionamento_di_rete_netsukuku"></a>Funzionamento di una rete Netsukuku
+### Funzionamento di una rete Netsukuku
 
 Un nodo della rete Netsukuku deve essere configurato inizialmente con queste informazioni:
 
@@ -62,7 +62,7 @@ contattare o di essere contattato da qualsiasi altro nodo nella rete Netsukuku. 
 rete Netsukuku, fornisce le informazioni rilevanti allo stack TCP/IP del S.O. e usa il sistema di nomi ANDNA
 per registrare i suoi nomi e risolvere i nomi degli altri nodi.
 
-#### <a name="Esplorazione_della_rete"></a>Esplorazione della rete
+#### Esplorazione della rete
 
 Il demone *ntkd* in esecuzione nei vari nodi della rete implementa un algoritmo distribuito di esplorazione
 della rete. Attraverso di esso ogni nodo della rete Netsukuku raccoglie (e mantiene aggiornate) informazioni
@@ -91,7 +91,7 @@ il costo del percorso, il quale può essere espresso in diverse metriche, come l
 
 In questo [documento](EsplorazioneRete.md) ci sono altre note riguardo l'esplorazione della rete.
 
-#### <a name="Assegnazione_rotte"></a>Assegnazione delle rotte nel kernel
+#### Assegnazione delle rotte nel kernel
 
 Il software nella suite Netsukuku non intende sostituire lo stack TCP/IP implementato nel S.O. del nodo. Nemmeno
 intende interagire con le librerie TCP/IP del S.O. attraverso sistemi di hook. Vuole invece semplicemente
@@ -106,7 +106,7 @@ alcun nodo sia riportato come "irraggiungibile".
 In questo [documento](RotteKernel.md) ci sono altre note riguardo le rotte che il demone *ntkd* imposta nelle
 tabelle del kernel e ne viene spiegata la logica.
 
-#### <a name="Associazione_nomi_indirizzi"></a>Associazione nomi - indirizzi
+#### Associazione nomi - indirizzi
 
 La suite di software Netsukuku offre un meccanismo di risoluzione dei nomi degli host chiamato ANDNA (A Netsukuku
 Domain Name Architecture).
@@ -124,16 +124,16 @@ agli aggiornamenti delle associazioni nome-indirizzo nel database distribuito.
 In questo [documento](RisoluzioneNomi.md) sono maggiormente dettagliate le differenze tra ANDNA e DNS e i
 meccanismi di registrazione e risoluzione dei nomi.
 
-## <a name="Architettura_modulare_ntkd"></a>Architettura modulare di ntkd
+## Architettura modulare di ntkd
 
 Il codice implementato nel programma *ntkd* si avvale dei moduli indipendenti che ora illustreremo
 e li coordina.
 
-### <a name="Modulo_RPC"></a>Modulo RPC
+### Modulo RPC
 
 **TODO**
 
-### <a name="Modulo_Neighborhood"></a>Modulo Neighborhood
+### Modulo Neighborhood
 
 Il modulo Neighborhood rileva i possibili collegamenti tra il sistema corrente e altri sistemi diretti vicini.
 Li realizza e li mantiene memorizzati. Nel tempo ne monitora il costo e/o ne rileva la scomparsa.
@@ -143,7 +143,7 @@ per tutta la durata del programma.
 
 **TODO**
 
-### <a name="Modulo_Identities"></a>Modulo Identities
+### Modulo Identities
 
 Il sistema su cui è in esecuzione il demone *ntkd* è un elemento di una rete.
 
@@ -325,7 +325,7 @@ eventualmente esistono nel sistema con il metodo `remove_identity` del modulo Id
 
 **TODO**
 
-### <a name="Modulo_Qspn"></a>Modulo Qspn
+### Modulo Qspn
 
 Il modulo QSPN viene portato a conoscenza dell' *indirizzo Netsukuku* del nodo del grafo nel
 quale sta operando. Poi il modulo si occupa di raccogliere e diffondere le conoscenze necessarie
@@ -370,7 +370,7 @@ nel [documento di dettaglio](DettagliTecnici.md#Indirizzi_IP).
 
 **TODO**
 
-### <a name="Modulo_PeerServices"></a>Modulo PeerServices
+### Modulo PeerServices
 
 Il modulo PeerServices ha il ruolo di registrare i servizi peer-to-peer ai quali un nodo partecipa attivamente
 e di propagare le informazioni necessarie all'instradamento dei pacchetti delle comunicazioni peer-to-peer.  
@@ -406,7 +406,7 @@ cioè nella prima identità e quando si duplica la corrente identità principale
 
 **TODO**
 
-### <a name="Modulo_Coordinator"></a>Modulo Coordinator
+### Modulo Coordinator
 
 Il modulo Coordinator ha il ruolo di fare sì che un g-nodo di livello *l* agisca e possa essere trattato
 come una singola entità.  
@@ -434,7 +434,7 @@ L'istanza di CoordinatorManager resta in vita finché resta in vita l'identità.
 
 **TODO**
 
-### <a name="Modulo_Hooking"></a>Modulo Hooking
+### Modulo Hooking
 
 **TODO**
 

@@ -1,27 +1,27 @@
 # ntkd - RPC
 
-1.  [StubFactory](#StubFactory)
-1.  [SkeletonFactory](#SkeletonFactory)
-1.  [Tipi di trasmissione](#Trasmissioni)
+1.  [StubFactory](#stubfactory)
+1.  [SkeletonFactory](#skeletonfactory)
+1.  [Tipi di trasmissione](#tipi-di-trasmissione)
 1.  [Tipi di medium](#tipi-di-medium)
-1.  [Tasklet in ascolto](#Tasklet_listen)
-1.  [Chiamate a metodi remoti](#Get_stub)
-1.  [Identità multiple in un sistema](#Identita_multiple_in_un_sistema)
+1.  [Tasklet in ascolto](#tasklet-in-ascolto)
+1.  [Chiamate a metodi remoti](#chiamate-a-metodi-remoti)
+1.  [Identità multiple in un sistema](#identità-multiple-in-un-sistema)
 
 Il progetto *ntkd* usa il framework ZCD per realizzare le comunicazioni tra nodi.
 
-## <a name="StubFactory"></a>StubFactory
+## StubFactory
 
 Una classe **StubFactory** è usata per produrre gli stub che i vari moduli dell'applicazione usano per
 comunicare con altri nodi (diretti vicini o specifici nodi all'interno di un comune g-nodo).
 
-## <a name="SkeletonFactory"></a>SkeletonFactory
+## SkeletonFactory
 
 Una classe **SkeletonFactory** è usata quando si rileva una richiesta tramite una interfaccia di rete.
 Interrogando questa classe si decide se bisogna passare la richiesta a uno
 (o piu d'uno) skeleton nel nodo corrente, il quale potrà richiamare metodi remoti definiti nei vari moduli.
 
-## <a name="Trasmissioni"></a>Tipi di trasmissione
+## Tipi di trasmissione
 
 Abbiamo analizzato nel documento [ZCD](../Librerie/ZCD.md#Trasmissioni) che il framework ZCD prevede due tipi
 di trasmissione:
@@ -205,15 +205,15 @@ Il framework ZCD fornisce di default anche questi due tool (`radio_domain` e `et
 Essi sono usati in alcune testsuite di ZCD, ma potranno essere utili allo sviluppatore anche nella produzione
 di testsuite per altri moduli di Netsukuku.
 
-## <a name="Tasklet_listen"></a>Tasklet in ascolto
+## Tasklet in ascolto
 
 **TODO**
 
-## <a name="Get_stub"></a>Chiamate a metodi remoti
+## Chiamate a metodi remoti
 
 **TODO**
 
-## <a name="Identita_multiple_in_un_sistema"></a>Identità multiple in un sistema
+## Identità multiple in un sistema
 
 ### ZCD
 

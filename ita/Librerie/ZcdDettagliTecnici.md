@@ -1,23 +1,23 @@
 # ZCD - Dettagli Tecnici
 
-1.  [ZCD](#ZCD)
-    1.  [Inizializzazione](#ZCD_Inizializzazione)
-    1.  [stream_net_listen](#ZCD_stream_net_listen)
-    1.  [send_stream_net](#ZCD_send_stream_net)
-    1.  [stream_system_listen](#ZCD_stream_system_listen)
-    1.  [send_stream_system](#ZCD_send_stream_system)
-    1.  [datagram_net_listen](#ZCD_datagram_net_listen)
-    1.  [send_datagram_net](#ZCD_send_datagram_net)
-    1.  [datagram_system_listen](#ZCD_datagram_system_listen)
-    1.  [send_datagram_system](#ZCD_send_datagram_system)
-1.  [MOD-RPC](#MODRPC)
-    1.  [Oggetti serializzabili](#MODRPC_serializzabili)
-    1.  [Lato server](#MODRPC_server)
-    1.  [Lato client](#MODRPC_client)
-    1.  [Serializzazione e deserializzazione di argomenti, valori di ritorno e eccezioni](#MODRPC_argomenti)
-1.  [APP](#APP)
+1.  [ZCD](#zcd)
+    1.  [Inizializzazione](#inizializzazione)
+    1.  [stream_net_listen](#stream_net_listen)
+    1.  [send_stream_net](#send_stream_net)
+    1.  [stream_system_listen](#stream_system_listen)
+    1.  [send_stream_system](#send_stream_system)
+    1.  [datagram_net_listen](#datagram_net_listen)
+    1.  [send_datagram_net](#send_datagram_net)
+    1.  [datagram_system_listen](#datagram_system_listen)
+    1.  [send_datagram_system](#send_datagram_system)
+1.  [MOD-RPC](#mod-rpc)
+    1.  [Oggetti serializzabili](#oggetti-serializzabili)
+    1.  [Lato server](#lato-server)
+    1.  [Lato client](#lato-client)
+    1.  [Serializzazioni](#serializzazioni)
+1.  [APP](#app)
 
-## <a name="ZCD"></a>ZCD
+## ZCD
 
 La libreria di basso livello.
 
@@ -35,7 +35,7 @@ dipendenza diretta verso ZCD, sarà in grado di fornire l'implementazione.
 
 La libreria ZCD usa JsonGlib. All'utilizzatore di ZCD non viene imposto di avere una dipendenza diretta da JsonGlib.
 
-### <a name="ZCD_Inizializzazione"></a>Inizializzazione
+### Inizializzazione
 
 ZCD viene "inizializzata" con la chiamata della funzione `init_tasklet_system`. Questa
 fornisce l'implementazione delle interfacce usate per le comunicazioni allo schedulatore delle tasklet.
@@ -58,7 +58,7 @@ In seguito si può richiedere a ZCD di effettuare una chiamata a metodo remoto i
 *   `send_datagram_net`.
 *   `send_datagram_system`.
 
-### <a name="ZCD_stream_net_listen"></a>stream_net_listen
+### stream_net_listen
 
 La funzione `IListenerHandle stream_net_listen(...)` riceve questi argomenti:
 
@@ -171,7 +171,7 @@ Di seguito la tasklet:
         *   Esegue `disp.execute(m_name, args, caller_info)`.
 *   Ascolta altre richieste.
 
-### <a name="ZCD_send_stream_net"></a>send_stream_net
+### send_stream_net
 
 La funzione `string send_stream_net(...) throws ZCDError` riceve questi argomenti:
 
@@ -239,7 +239,7 @@ lanciata una eccezione `ZCDError`.
 La funzione costruisce un nuovo albero con tale nodo e genera una stringa da esso. Restituisce la stringa.  
 Come abbiamo detto, prima di terminare con successo (restituendo la stringa) il socket che stava usando viene messo nel pool.
 
-### <a name="ZCD_stream_system_listen"></a>stream_system_listen
+### stream_system_listen
 
 La funzione `IListenerHandle stream_system_listen(...)` riceve questi argomenti:
 
@@ -290,7 +290,7 @@ La tasklet che gestisce una connessione riceve questi parametri iniziali:
 
 Il codice eseguito dalla tasklet è lo stesso che esegue la tasklet che gestisce le connessioni nel medium "net".
 
-### <a name="ZCD_send_stream_system"></a>send_stream_system
+### send_stream_system
 
 La funzione `string send_stream_system(...) throws ZCDError` riceve questi argomenti:
 
@@ -313,7 +313,7 @@ Non è necessario tenere conto dell'overhead di una connessione e gestire un poo
 Il comportamento è del tutto similare a quello visto nella funzione `send_stream_net`. Probabilmente ci
 sarà una funzione interna che farà questo lavoro in entrambi i casi.
 
-### <a name="ZCD_datagram_net_listen"></a>datagram_net_listen
+### datagram_net_listen
 
 La funzione `IListenerHandle datagram_net_listen(...)` riceve questi argomenti:
 
@@ -440,7 +440,7 @@ Se si tratta di un messaggio di *ACK*:
 *   La tasklet chiama il metodo `datagram_dlg.got_ack(packet_id, src_nic)` con il `packet_id`
     del messaggio ricevuto e il `src_nic` che identifica l'interfaccia di rete che lo ha ricevuto.
 
-### <a name="ZCD_send_datagram_net"></a>send_datagram_net
+### send_datagram_net
 
 La funzione `void send_datagram_net(...) throws ZCDError` riceve questi argomenti:
 
@@ -479,7 +479,7 @@ di rete indicata. Vi trasmette la stringa *msg*. Poi termina.
 
 Se nelle operazioni di creazione socket e trasmissione si verifica un errore viene lanciata una eccezione `ZCDError`.
 
-### <a name="ZCD_datagram_system_listen"></a>datagram_system_listen
+### datagram_system_listen
 
 La funzione `IListenerHandle datagram_system_listen(...)` riceve questi argomenti:
 
@@ -539,7 +539,7 @@ La tasklet che gestisce un datagram riceve questi parametri iniziali:
 
 Il codice eseguito dalla tasklet è lo stesso che esegue la tasklet che gestisce i datagram nel medium "net".
 
-### <a name="ZCD_send_datagram_system"></a>send_datagram_system
+### send_datagram_system
 
 La funzione `void send_datagram_system(...) throws ZCDError` riceve questi argomenti:
 
@@ -566,7 +566,7 @@ verso il pathname specificato.
 Il comportamento è del tutto similare a quello visto nella funzione `send_datagram_net`. Probabilmente ci
 sarà una funzione interna che farà questo lavoro in entrambi i casi.
 
-## <a name="MODRPC"></a>MOD-RPC
+## MOD-RPC
 
 La libreria di livello intermedio può essere realizzata con il tool "rpcdesign" partendo da una descrizione
 delle interfacce degli oggetti remoti. In questa sezione descriveremo le caratteristiche della libreria che
@@ -582,7 +582,7 @@ ognuna di esse si possono indicare un numero di metodi remoti con la loro signat
 I sorgenti prodotti incapsulano tutto nel namespace "SampleRpc", che lo sviluppatore se vuole può facilmente
 modificare agendo solo sulle prime righe dei file.
 
-### <a name="MODRPC_serializzabili"></a>Oggetti serializzabili
+### Oggetti serializzabili
 
 Nella descrizione dei metodi remoti possono essere indicati i nomi di classi e interfacce le cui istanze sono
 oggetti serializzabili da passare come argomenti o da ricevere come risultati. A tali oggetti vanno aggiunti
@@ -601,7 +601,7 @@ tool "rpcdesign", e fornire la classe che la implementa direttamente nell'applic
 livello intermedio. Anche in questo caso, in tale applicazione, dovrà accertarsi che possa essere serializzata
 e deserializzata con `Json.gobject_serialize` e `Json.gobject_deserialize` di JsonGlib.
 
-### <a name="MODRPC_server"></a>Lato server
+### Lato server
 
 La libreria fornisce una interfaccia skeleton per la classe radice e una per ogni modulo membro.
 
@@ -773,7 +773,7 @@ quindi solo il compito di implementare la business logic dei singoli metodi remo
 Riceveranno i parametri previsti dalla signature, potranno elaborarli e restituire un valore di ritorno del tipo
 previsto dalla signature oppure lanciare una delle eccezioni previste dalla signature.
 
-### <a name="MODRPC_client"></a>Lato client
+### Lato client
 
 La libreria fornisce una
 interfaccia stub per la classe radice e una per ogni modulo membro. La libreria fornisce alcune funzioni all'applicazione
@@ -827,7 +827,7 @@ metodo dell'interfaccia SampleRpc.IAckCommunicator:
     A parametro riceve l'elenco delle stringhe JSON che identificano le interfacce di rete dei vicini che hanno
     ricevuto il messaggio.
 
-### <a name="MODRPC_argomenti"></a>Serializzazione e deserializzazione di argomenti, valori di ritorno e eccezioni
+### Serializzazioni
 
 Come detto nell'analisi funzionale, la libreria MOD-RPC ha il compito di:
 
@@ -1024,7 +1024,7 @@ Se è "error...", la classe stub:
 *   Verifica che esista il codice "error-code". Altrimenti verrà lanciato un DeserializeError.
 *   Crea e solleva l'eccezione indicata da "error-domain", "error-code" e "error-message".
 
-## <a name="APP"></a>APP
+## APP
 
 Per farsi una idea di come si realizza una applicazione che fa uso della libreria di
 livello intermedio come viene prodotta dal tool "rpcdesign", consigliamo la lettura del

@@ -1,18 +1,18 @@
 # Requisiti del Sistema Operativo
 
-1.  [Requisiti](#Requisiti)
-    1.  [Return Path](#Requisiti_return_path)
-    1.  [Forwarding](#Requisiti_forwarding)
-    1.  [Risposte alle richieste ARP](#Requisiti_risposte_arp)
-    1.  [Incompatibilità con Zeroconf?](#Requisiti_zeroconf)
-1.  [Linux](#Linux)
-    1.  [Return Path](#Linux_return_path)
-    1.  [Forwarding](#Linux_forwarding)
-    1.  [Risposte alle richieste ARP](#Linux_risposte_arp)
+1.  [Requisiti](#requisiti)
+    1.  [Return Path](#return-path)
+    1.  [Forwarding](#forwarding)
+    1.  [Risposte alle richieste ARP](#risposte-alle-richieste-arp)
+    1.  [Incompatibilità con Zeroconf?](#incompatibilità-con-zeroconf)
+1.  [Linux](#linux)
+    1.  [Return Path](#return-path-1)
+    1.  [Forwarding](#forwarding-1)
+    1.  [Risposte alle richieste ARP](#risposte-alle-richieste-arp-1)
 
-## <a name="Requisiti"></a>Requisiti
+## Requisiti
 
-### <a name="Requisiti_return_path"></a>Return Path
+### Return Path
 
 Il processo *ntkd* gestisce un certo numero di interfacce di rete, come l'utente lo configura. Per tali interfacce
 il processo deve essere abilitato a vedere tutti i pacchetti che vi transitano, in particolare quelli IPv4 UDP con
@@ -34,7 +34,7 @@ Questa idea non è valida in una rete Netsukuku, poiché ogni nodo può sceglier
 possono esserci percorsi che al ritorno sono diversi da quelli scelti all'andata. Quindi un requisito da soddisfare è che
 tale filtro **non** sia attivato sulle interfacce di rete gestite da *ntkd*.
 
-### <a name="Requisiti_forwarding"></a>Forwarding
+### Forwarding
 
 Il sistema operativo deve essere configurato per abilitare l'inoltro (forwarding) di pacchetti, come minimo per tutti i
 pacchetti i cui indirizzi IPv4 di provenienza e destinazione rientrano nel range di indirizzi riservati alla rete Netsukuku
@@ -44,7 +44,7 @@ Questo requisito è vitale per un nodo che ha (o può avere) più di un vicino e
 Infatti tale demone annuncia ai suoi vicini tutti i percorsi che conosce, quindi se il nodo ha più di un vicino è possibile
 che uno dei suoi vicini lo scelga come gateway per alcune destinazioni.
 
-### <a name="Requisiti_risposte_arp"></a>Risposte alle richieste ARP
+### Risposte alle richieste ARP
 
 In alcune situazioni, le regole di routing per i pacchetti da inoltrare si basano sull'interfaccia di rete da cui il
 pacchetto viene ricevuto.
@@ -63,7 +63,7 @@ In conclusione, il sistema operativo deve essere configurato per rispondere alle
 [ARP](https://en.wikipedia.org/wiki/Address_Resolution_Protocol) **esclusivamente** con l'indirizzo MAC della sua
 interfaccia a cui è stato associato l'indirizzo IP richiesto.
 
-### <a name="Requisiti_zeroconf"></a>Incompatibilità con Zeroconf?
+### Incompatibilità con Zeroconf?
 
 [Zeroconf](https://en.wikipedia.org/wiki/Zero-configuration_networking) è un insieme di tecnologie per la configurazione
 automatica dei nodi di una rete locale con il protocollo TCP/IP. Queste tecnologie servono i seguenti scopi:
@@ -92,13 +92,13 @@ comportamenti differenti se il demone cercasse di comunicare. In teoria queste c
 messa per default su ogni sistema (Linux) sia sicura e mai problematica. Per il momento non so dire con certezza se
 alcuni scenari potrebbero influire negativamente sulle comunicazioni del demone *ntkd* con i nodi diretti vicini.
 
-## <a name="Linux"></a>Linux
+## Linux
 
 Nei sistemi Linux, molte delle impostazioni che riguardano i servizi di base del sistema si regolano con il tool
 *sysctl*. Le impostazioni che vengono modificate con questo tool permangono valide fino al riavvio del sistema. In
 fase di boot il sistema regola alcune impostazioni sulla base di alcuni file di configurazione che si trovano in /etc/sysctl.d/.
 
-### <a name="Linux_return_path"></a>Return Path
+### Return Path
 
 I sistemi Linux hanno alcune impostazioni che dicono se il sistema deve attivare il filtro Return-Path. Data una
 interfaccia di rete **NICX** il filtro risulta attivo se almeno una di queste due impostazioni:
@@ -111,7 +111,7 @@ risulta uguale a 1. Risulta inattivo se entrambe sono uguali a 0.
 Vi è una terza impostazione, `net.ipv4.conf.default.rp_filter`, la quale viene presa in esame quando il sistema crea
 una interfaccia di rete (di solito in fase di boot) per valorizzare inizialmente l'impostazione specifica di quella interfaccia.
 
-### <a name="Linux_forwarding"></a>Forwarding
+### Forwarding
 
 I sistemi Linux hanno una impostazione che dice se il forward dei pacchetti va abilitato; il suo nome è
 `net.ipv4.ip_forward`. Di default questo è messo a 0 (disabilitato) nei sistemi che si usano come normali computer,
@@ -119,7 +119,7 @@ cioè che non sono dei router.
 
 Per il corretto funzionamento di un nodo nella rete Netsukuku questa impostazione va messa a 1.
 
-### <a name="Linux_risposte_arp"></a>Risposte alle richieste ARP
+### Risposte alle richieste ARP
 
 I sistemi Linux hanno alcune impostazioni per ogni interfaccia di rete che influenzano il comportamento del sistema
 quando riceve una richiesta ARP attraverso quella interfaccia.

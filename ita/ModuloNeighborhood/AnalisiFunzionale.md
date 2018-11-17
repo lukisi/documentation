@@ -1,14 +1,14 @@
 # Modulo Neighborhood - Analisi Funzionale
 
-1.  [Ruolo del modulo](#Ruolo_del_modulo)
-1.  [Operazioni di base](#Operazioni_di_base)
-1.  [Caratteristiche degli archi](#Caratteristiche_degli_archi)
-1.  [Identità multiple in un sistema](#Identita_multiple_in_un_sistema)
-1.  [Requisiti](#Requisiti)
-1.  [Deliverable](#Deliverable)
-1.  [Classi e interfacce](#Classi_e_interfacce)
+1.  [Ruolo del modulo](#ruolo-del-modulo)
+1.  [Operazioni di base](#operazioni-di-base)
+1.  [Caratteristiche degli archi](#caratteristiche-degli-archi)
+1.  [Identità multiple in un sistema](#identità-multiple-in-un-sistema)
+1.  [Requisiti](#requisiti)
+1.  [Deliverable](#deliverable)
+1.  [Classi e interfacce](#classi-e-interfacce)
 
-## <a name="Ruolo_del_modulo"></a>Ruolo del modulo
+## Ruolo del modulo
 
 Il ruolo fondamentale del modulo Neighborhood è il rilevamento dei collegamenti (detti *archi*) che si possono
 realizzare con altri nodi diretti vicini, la loro realizzazione e la misurazione del costo associato a tali archi.
@@ -31,7 +31,7 @@ Inoltre, quando segnala un arco al suo utilizzatore gli rende nota l'istanza di 
 Riassumendo, ogni arco associa una interfaccia di rete del nodo corrente ad una coppia composta
 dal NeigborhoodNodeID del vicino e dal MAC address della sua interfaccia.
 
-## <a name="Operazioni_di_base"></a>Operazioni di base
+## Operazioni di base
 
 Il modulo fa uso delle [tasklet](../Librerie/TaskletSystem.md), un sistema di multithreading
 cooperativo. Attraverso di esso esegue il monitoraggio delle schede di rete lasciando libero il chiamante
@@ -97,7 +97,7 @@ del costo ha avuto luogo.
 Nel tempo, il modulo gestisce la costituzione di nuovi archi, la rimozione di archi, i cambiamenti del costo
 degli archi.
 
-## <a name="Caratteristiche_degli_archi"></a>Caratteristiche degli archi
+## Caratteristiche degli archi
 
 Quando si crea un arco esso esiste per entrambi i nodi. Quando il modulo espone l'arco, anche nel nodo
 collegato il modulo espone l'arco.
@@ -159,7 +159,7 @@ Quando un nodo rimuove un arco tenta di comunicarlo al vertice collegato perché
 
 **TODO: Identità multiple in un sistema** rimuovere spostandolo in DemoneNTKD/RPC
 
-## <a name="Identita_multiple_in_un_sistema"></a>Identità multiple in un sistema
+## Identità multiple in un sistema
 
 **spostato** in "ZCD" o in "ntkd".  
 Introduciamo il concetto di *identità*. In un singolo nodo possono in dati momenti sussistere diverse
@@ -374,7 +374,7 @@ messaggio è pervenuto. Per realizzare questa associazione il modulo Neighborhoo
     essere affatto invocato) è stato rimosso pochi istanti prima. In questo caso l'esecuzione del metodo
     andrebbe "probabilmente" interrotta, ma questo è di pertinenza del codice che implementa il metodo remoto.
 
-## <a name="Requisiti"></a>Requisiti
+## Requisiti
 
 *   Implementazione del sistema di tasklet.
 *   Delegati per la gestione delle chiamate ricevute:
@@ -388,7 +388,7 @@ messaggio è pervenuto. Per realizzare questa associazione il modulo Neighborhoo
 *   Manager di indirizzi e rotte.
 *   Delegato per generare un indirizzo IP link-local.
 
-## <a name="Deliverable"></a>Deliverable
+## Deliverable
 
 *   Emette un segnale per:
     *   Avvenuta assegnazione dell'*indirizzo di scheda* ad una interfaccia di rete gestita.
@@ -448,7 +448,7 @@ messaggio è pervenuto. Per realizzare questa associazione il modulo Neighborhoo
         diversi *archi-identità*.
     *   *remove_my_arc* - Forzare la rimozione di un arco.
 
-## <a name="Classi_e_interfacce"></a>Classi e interfacce
+## Classi e interfacce
 
 L'implementazione del sistema di tasklet è passata al modulo dal suo utilizzatore. Si tratta di una istanza dell'interfaccia
 ITasklet che è descritta nel relativo [documento](../Librerie/TaskletSystem.md#Interfacce).

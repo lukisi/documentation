@@ -1,15 +1,15 @@
 # Demone NTKD - Indirizzi IP
 
-1.  [Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IP](#Mappatura)
-    1.  [Calcolo degli indirizzi IP](#Calcolo)
-    1.  [Esempio](#Esempio)
-1.  [Indirizzi di interesse per una identità](#Identita)
-    1.  [Calcolo indirizzi IP locali e destinazioni](#Computo)
-    1.  [Utilizzo indirizzi IP locali](#Utilizzo_locali)
-    1.  [Utilizzo indirizzi IP destinazioni](#Utilizzo_destinazioni)
-1.  [Requisiti iniziali e pulizia](#Cleanup)
+1.  [Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IP](#mappatura-dello-spazio-di-indirizzi-netsukuku-nello-spazio-di-indirizzi-ip)
+    1.  [Calcolo degli indirizzi IP](#calcolo-degli-indirizzi-ip)
+    1.  [Esempio](#esempio)
+1.  [Indirizzi di interesse](#indirizzi-di-interesse)
+    1.  [Calcolo indirizzi IP locali e destinazioni](#calcolo-indirizzi-ip-locali-e-destinazioni)
+    1.  [Utilizzo indirizzi IP locali](#utilizzo-indirizzi-ip-locali)
+    1.  [Utilizzo indirizzi IP destinazioni](#utilizzo-indirizzi-ip-destinazioni)
+1.  [Requisiti iniziali e pulizia](#requisiti-iniziali-e-pulizia)
 
-## <a name="Mappatura"></a> Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IP
+## Mappatura dello spazio di indirizzi Netsukuku nello spazio di indirizzi IP
 
 Lo spazio di indirizzi Netsukuku (quello costituito dagli indirizzi *reali* che sono assegnati alle
 identità *principali*) va mappato in un range di indirizzi IP che si
@@ -61,7 +61,7 @@ associa ad un indirizzo Netsukuku *reale* un numero di indirizzi IP:
     Anche per il livello 0 si calcola un tale indirizzo IP. Questo indirizzo ha un significato
     simile a `localhost` nel senso che identifica come destinazione lo stesso sistema mittente.
 
-### <a name="Calcolo"></a> Calcolo degli indirizzi IP
+### Calcolo degli indirizzi IP
 
 Illustriamo come si calcolano gli indirizzi IP locali di un nodo del grafo, cioè quelli che l'identità *principale*
 di un sistema vuole assegnarsi nel network namespace default.
@@ -161,7 +161,7 @@ I due bit più alti li impostiamo a `|1|0|`.
 Nel caso di un g-nodo, per produrre un indirizzo anonimizzante in notazione CIDR si procede in modo
 analogo, aggiungendo il suffisso come visto prima.
 
-### <a name="Esempio"></a> Esempio
+### Esempio
 
 Prendiamo ad esempio una rete con 4 livelli. In essa abbiamo
 2 bit al livello 3, 4 bit al livello 2, 8 bit ai livelli 1 e 0.
@@ -371,7 +371,7 @@ a 16 livelli. Per sfruttarli tutti facciamo i livelli da 14 a 3 da 1 bit e i liv
 Il numero di indirizzi Netsukuku che ogni nodo dovrà al massimo memorizzare come destinazioni nella
 sua mappa di percorsi è di 1×15 + 12×1 + 3×3 = 36. Resta invariato che il numero massimo di nodi nella rete è 2<sup>22</sup>.
 
-## <a name="Identita"></a> Indirizzi di interesse per una identità
+## Indirizzi di interesse
 
 Come abbiamo ricordato [qui](DettagliTecnici.md#Indirizzi_IP), l'identità principale del sistema ha un indirizzo
 Netsukuku *reale*. Essa assegna degli indirizzi IPv4 locali nel network stack default. Inoltre assegna
@@ -386,7 +386,7 @@ delle rotte nelle tabelle solo per pacchetti IP da inoltrare. Queste
 rotte hanno come possibile destinazione g-nodi di livello maggiore o uguale a *i* che possono essere espressi in
 coordinate gerarchiche relative al suo indirizzo Netsukuku.
 
-### <a name="Computo"></a> Calcolo indirizzi IP locali e destinazioni
+### Calcolo indirizzi IP locali e destinazioni
 
 Il computo degli indirizzi IP locali e delle possibili destinazioni associate ad una identità si fa quando
 nasce l'identità stessa. Queste informazioni restano valide finché l'identità vive, oppure fino a quando
@@ -486,7 +486,7 @@ e la originale diventa di connettività per un dato livello.
     se `hc.lvl < prev_lvl`:
     *   Rimuovi *hc* dalle possibili destinazioni, cioè esegui `dest_ip_set.unset(hc)`.
 
-### <a name="Utilizzo_locali"></a> Utilizzo indirizzi IP locali
+### Utilizzo indirizzi IP locali
 
 Questo si fa solo con l'identità *principale*.
 
@@ -524,7 +524,7 @@ Queste operazioni sono fatte dal programma *ntkd* in determinate circostanze:
 *   Al termine del programma. In questo momento si rimuove la corrente identità principale del sistema.
     Sulla base del suo indirizzo Netsukuku si eseguono tutti i comandi `ip address del` come detto prima.
 
-#### <a name="Source_natting"></a> Regole di Source NATting
+#### Regole di Source NATting
 
 Il sistema può (opzionalmente) fare da anonimizzatore. Cioè: quando viene usato per instradare un
 pacchetto IP verso un indirizzo IP di tipo anonimizzante, maschera l'indirizzo IP del mittente
@@ -654,7 +654,7 @@ Queste operazioni sono fatte dal programma *ntkd* in determinate circostanze:
 *   Al termine del programma. In questo momento si rimuove la corrente identità principale del sistema.
     Sulla base del suo indirizzo Netsukuku il programma *ntkd* produce i comandi `iptables -t nat -D` necessari.
 
-### <a name="Utilizzo_destinazioni"></a> Utilizzo indirizzi IP destinazioni
+### Utilizzo indirizzi IP destinazioni
 
 Questo si fa con ogni identità.
 
@@ -968,7 +968,7 @@ namespace. [Operazioni](#Operazioni_c_stop)
 Prima di terminare, il programma *ntkd* deve ripulire il default network namespace che era gestito dall'ultima identità
 principale. [Operazioni](#Operazioni_p_stop)
 
-#### <a name="Operazioni_p_start"></a> Operazioni della prima identità principale all'avvio
+#### Operazioni della prima identità principale all'avvio
 
 All'avvio del demone *ntkd* viene creata la prima identità principale. Essa forma una nuova rete e
 non ha alcun arco-qspn.
@@ -1001,7 +1001,7 @@ non ha alcun arco-qspn.
     *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
         *   Esegue `ip route add unreachable $dest.internal[k] table ntk`.
 
-#### <a name="Operazioni_p_dup"></a> Operazioni di una nuova identità principale alla sua nascita per duplicazione
+#### Operazioni di una nuova identità principale alla sua nascita per duplicazione
 
 Una nuova identità principale nasce quando la precedente identità principale si duplica. La nuova identità
 principale eredita il default network namespace dalla precedente identità principale.
@@ -1112,7 +1112,7 @@ principale eredita il default network namespace dalla precedente identità princ
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
             *   Esegue `ip route add unreachable $dest.internal[k] table $table`.
 
-#### <a name="Operazioni_new_c"></a> Operazioni di una identità che diventa di connettività e ottiene un nuovo network namespace (vuoto)
+#### Operazioni di una identità che diventa di connettività e ottiene un nuovo network namespace (vuoto)
 
 Quando una identità (che era principale o di connettività) diventa di connettività per via di una duplicazione
 essa ottiene un nuovo network namespace "vuoto".
@@ -1153,7 +1153,7 @@ network namespace `$ns` gestito adesso dall'identità. Cioè va premesso `ip net
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
             *   Esegue `ip route add unreachable $dest.internal[k] table $table`.
 
-#### <a name="Operazioni_c_dup"></a> Operazioni di una nuova identità di connettività alla sua nascita per duplicazione
+#### Operazioni di una nuova identità di connettività alla sua nascita per duplicazione
 
 Una nuova identità di connettività nasce quando una precedente identità di connettività si duplica. La nuova identità
 di connettività eredita un network namespace (non default) dalla precedente identità di connettività.
@@ -1219,7 +1219,7 @@ network namespace `$ns` ereditato dall'identità. Cioè va premesso `ip netns ex
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
             *   Esegue `ip route add unreachable $dest.internal[k] table $table`.
 
-#### <a name="Operazioni_new_arc"></a> Operazioni quando il modulo Hooking segnala che occorre associare un arco-qspn a un arco-identità
+#### Operazioni quando il modulo Hooking segnala che occorre associare un arco-qspn a un arco-identità
 
 Il programma *ntkd* può trovarsi a gestire il segnale `add_qspn_arc` dal modulo Hooking associato
 all'identità principale o ad una identità di connettività.
@@ -1243,7 +1243,7 @@ gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al co
     *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
         *   Esegue `ip route add unreachable $dest.internal[k] table $table`.
 
-#### <a name="Operazioni_map_update"></a> Operazioni quando il modulo QSPN segnala variazioni nella mappa di una identità
+#### Operazioni quando il modulo QSPN segnala variazioni nella mappa di una identità
 
 Quando il modulo QSPN segnala delle variazioni relative ad un percorso, cioè quando
 una istanza `qspn_mgr` di QspnManager emette uno dei
@@ -1328,7 +1328,7 @@ gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al co
         *   Per *k* che scende da *l* - 1 a *hc.lvl* + 1:
             *   Esegue `ip route change $dest.internal[k] via $gw_ip dev $gw_dev table $table`.
 
-#### <a name="Operazioni_changed_arc"></a> Operazioni quando il modulo Identities segnala che un arco-identità esistente è stato modificato
+#### Operazioni quando il modulo Identities segnala che un arco-identità esistente è stato modificato
 
 Il programma *ntkd* può trovarsi a gestire il segnale `identity_arc_changed` dal modulo Identities associato
 all'identità principale o ad una identità di connettività.  
@@ -1426,7 +1426,7 @@ gestisce un namespace diverso dal sefault, va premesso `ip netns exec $ns` al co
 *   Esegue `iptables -t mangle -D PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
 *   Decrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
 
-#### <a name="Operazioni_removed_arc"></a> Operazioni quando viene richiesto al modulo Identities di rimuovere un arco-identità
+#### Operazioni quando viene richiesto al modulo Identities di rimuovere un arco-identità
 
 Il programma *ntkd* può trovarsi a richiedere al modulo Identities di rimuovere un arco-identità `removed_arc`.  
 Se associato a questo arco-identità il programma aveva creato un arco-qspn `removed_arc_qspn`, allora il programma *ntkd*
@@ -1457,7 +1457,7 @@ usavano questo gateway.
 *   Esegue `iptables -t mangle -D PREROUTING -m mac --mac-source $m -j MARK --set-mark $tid`.
 *   Decrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
 
-#### <a name="Operazioni_c_stop"></a> Operazioni quando una identità di connettività viene rimossa
+#### Operazioni quando una identità di connettività viene rimossa
 
 Una identità di connettività viene rimossa. Aveva in gestione un network namespace diverso dal default.
 Il modulo Identities si occupa di rimuovere il namespace e le pseudo-interfacce.
@@ -1466,7 +1466,7 @@ Il modulo Identities si occupa di rimuovere il namespace e le pseudo-interfacce.
 *   Per ogni *m* in `peermacs`:
     *   Decrementa i riferimenti attivi all'associazione tra la tabella `ntk_from_$m` e il relativo table-id `$tid`.
 
-#### <a name="Operazioni_p_stop"></a> Operazioni della corrente identità principale all'uscita del programma
+#### Operazioni della corrente identità principale all'uscita del programma
 
 Prima di terminare, quando ormai esiste nel sistema la sola identità principale che gestisce il
 network namespace default, il programma deve ripulirlo.
@@ -1500,7 +1500,7 @@ network namespace default, il programma deve ripulirlo.
     *   Esegue (opzionalmente) `ip address del ${local_ip_set.anonymizing}/32 dev $dev`.
 *   Esegue (per il livello 0) `ip address del ${local_ip_set.internal[0]}/32 dev lo`.
 
-## <a name="Cleanup"></a> Requisiti iniziali e pulizia
+## Requisiti iniziali e pulizia
 
 Sulla base di quanto detto finora, delineiamo quali sono i requisiti iniziali, cioè in quale situazione il programma
 *ntkd* si aspetta che si trovi il sistema al suo avvio.

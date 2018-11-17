@@ -1,14 +1,14 @@
 # Modulo Neighborhood - Dettagli Tecnici
 
-1.  [Requisiti](#Requisiti)
-1.  [Deliverable](#Deliverable)
-1.  [Rilevamento dei vicini, costituzione degli archi, misurazione dei costi](#Rilevamento_dei_vicini_costituzione_degli_archi_misurazione_dei_costi)
-1.  [Produzione di uno stub per inviare un messaggio in broadcast](#Produzione_di_uno_stub_per_inviare_un_messaggio_in_broadcast)
+1.  [Requisiti](#requisiti)
+1.  [Deliverable](#deliverable)
+1.  [Rilevamento dei vicini, costituzione degli archi, misurazione dei costi](#rilevamento-dei-vicini-costituzione-degli-archi-misurazione-dei-costi)
+1.  [Produzione di uno stub per inviare un messaggio in broadcast](#produzione-di-uno-stub-per-inviare-un-messaggio-in-broadcast)
 1.  [Produzione di uno stub per inviare un messaggio UDP in unicast](#Produzione_di_uno_stub_per_inviare_un_messaggio_UDP_in_unicast)
 1.  [Produzione di uno stub per inviare un messaggio reliable ad un vicino tramite un arco](#Produzione_di_uno_stub_per_inviare_un_messaggio_reliable_ad_un_vicino_tramite_un_arco)
 1.  [Indirizzo IPv4 di scheda](#Indirizzo_IPv4_di_scheda)
 
-## <a name="Requisiti"></a>Requisiti
+## Requisiti
 
 L'utilizzatore del modulo Neighborhood per prima cosa inizializza il modulo richiamando il metodo statico
 *init* di NeighborhoodManager. In tale metodo viene anche passata l'istanza di ITasklet per fornire
@@ -37,7 +37,7 @@ gestire, come `nic_address_unset`. Tali segnali non sarebbero ricevuti dall'util
 durante l'esecuzione del distruttore della classe. Per questo si preferisce non implementare la chiamata
 a *stop_monitor_all* nel distruttore della classe, ma piuttosto demandarla all'utilizzatore.
 
-## <a name="Deliverable"></a>Deliverable
+## Deliverable
 
 Il modulo segnala l'avvenuta assegnazione dell'indirizzo di scheda ad una interfaccia di rete gestita
 attraverso il segnale `nic_address_set` di NeighborhoodManager.
@@ -137,7 +137,7 @@ In questo metodo l'utilizzatore del modulo (o anche il modulo stesso che ne fa u
 rileva che l'arco non è più funzionante) può specificare che si possa o meno tentare una ulteriore comunicazione
 sull'arco prima di rimuoverlo. Lo si specifica con l'argomento booleano `do_tell`.
 
-## <a name="Rilevamento_dei_vicini_costituzione_degli_archi_misurazione_dei_costi"></a>Rilevamento dei vicini, costituzione degli archi, misurazione dei costi
+## Rilevamento dei vicini, costituzione degli archi, misurazione dei costi
 
 Quando viene istanziato il NeighborhoodManager il modulo genera il suo NeighborhoodNodeID.
 
@@ -213,7 +213,7 @@ conto della seguente osservazione: se ci sono misurazioni ravvicinate della late
 maggiormente influenzata dal carico del nodo o dal bufferbloat. Nonostante questa osservazione l'algoritmo pian piano
 si adegua se le misurazioni si mantengono su un valore elevato.
 
-<a name="INeighborhoodIPRouteManager"></a>**INeighborhoodIPRouteManager**
+**INeighborhoodIPRouteManager**
 
 Tramite l'oggetto che implementa questa interfaccia dovrà essere possibile apportare delle modifiche al sistema. In un
 sistema Linux ad esempio, dotato del software `iproute`, si associano ai metodi dell'interfaccia questi comandi:
@@ -227,7 +227,7 @@ sistema Linux ad esempio, dotato del software `iproute`, si associano ai metodi 
 *   metodo `remove_address`:  
     `ip address del 169.254.1.1/32 dev wlan0`
 
-<a name="INeighborhoodNetworkInterface"></a>**INeighborhoodNetworkInterface**
+**INeighborhoodNetworkInterface**
 
 Una istanza di tale interfaccia viene passata al modulo quando l'utilizzatore gli chiede di monitorare
 una interfaccia di rete (metodo `start_monitor`). L'istanza di questo oggetto passato al modulo è legata
@@ -268,7 +268,7 @@ nel metodo `measure_rtt` sono passate queste informazioni relative all'arco:
 *   `string my_dev` - il nome della interfaccia del nodo.
 *   `string my_addr` - l'indirizzo di scheda della interfaccia del nodo.
 
-## <a name="Produzione_di_uno_stub_per_inviare_un_messaggio_in_broadcast"></a>Produzione di uno stub per inviare un messaggio in broadcast
+## Produzione di uno stub per inviare un messaggio in broadcast
 
 Il modulo Neighborhood riceve dal suo utilizzatore (nel costruttore di NeighborhoodManager) un'istanza di un oggetto di
 cui conosce l'interfaccia INeighborhoodStubFactory. Questa ha il metodo get_broadcast che restituisce un oggetto stub di
@@ -349,7 +349,7 @@ indicare quali *identità* vanno raggiunte. Deve cioè fornire un set di NodeID 
 IdentityAwareBroadcastID. Può inoltre fornire un INeighborhoodMissingArcHandler. Il metodo pubblico di NeighborhoodManager
 a questo scopo è *get_stub_identity_aware_broadcast*.
 
-## <a name="Produzione_di_uno_stub_per_inviare_un_messaggio_UDP_in_unicast"></a>Produzione di uno stub per inviare un messaggio UDP in unicast
+## Produzione di uno stub per inviare un messaggio UDP in unicast
 
 L'interfaccia INeighborhoodStubFactory permette permette con il metodo get_unnicast al modulo di ottenere uno stub per inviare
 un messaggio UDP (non reliable) ad un particolare vicino tramite una sua particolare interfaccia di rete, dati questi parametri:
@@ -373,7 +373,7 @@ istanza della classe WholeNodeSourceID.
 In seguito, quando vi è un arco tra due nodi vicini, il modulo userà solo comunicazioni con protocollo reliable per
 inviare messaggi ad uno specifico vicino. Questa modalità non reliable non viene fornita all'esterno dal modulo.
 
-## <a name="Produzione_di_uno_stub_per_inviare_un_messaggio_reliable_ad_un_vicino_tramite_un_arco"></a>Produzione di uno stub per inviare un messaggio reliable ad un vicino tramite un arco
+## Produzione di uno stub per inviare un messaggio reliable ad un vicino tramite un arco
 
 L'interfaccia INeighborhoodStubFactory permette con il metodo get_tcp al modulo anche di ottenere uno stub per inviare
 un messaggio reliable ad un particolare vicino tramite un particolare arco, dati questi parametri:
@@ -399,7 +399,7 @@ attendere l'esecuzione del metodo nel nodo vicino oppure no.
 Il modulo può aver bisogno internamente di comunicare con un suo vicino passando per un arco; in questo caso produce
 questo tipo di stub. Oppure lo stub gli può essere richiesto dall'esterno.
 
-## <a name="Indirizzo_IPv4_di_scheda"></a>Indirizzo IPv4 di scheda
+## Indirizzo IPv4 di scheda
 
 La comunicazione tra due nodi collegati da un arco deve poter avvenire in modo reliable. Infatti se la comunicazione
 risulta impossibile si deve procedere alla rimozione dell'arco stesso. Per implementare la comunicazione reliable si
