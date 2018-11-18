@@ -1,25 +1,12 @@
 # ntkd - RPC
 
-1.  [StubFactory](#stubfactory)
-1.  [SkeletonFactory](#skeletonfactory)
 1.  [Tipi di trasmissione](#tipi-di-trasmissione)
 1.  [Tipi di medium](#tipi-di-medium)
-1.  [Tasklet in ascolto](#tasklet-in-ascolto)
-1.  [Chiamate a metodi remoti](#chiamate-a-metodi-remoti)
 1.  [Identità multiple in un sistema](#identità-multiple-in-un-sistema)
+1.  [Lato server](#lato-server)
+1.  [Lato client](#lato-client)
 
 Il progetto *ntkd* usa il framework ZCD per realizzare le comunicazioni tra nodi.
-
-## StubFactory
-
-Una classe **StubFactory** è usata per produrre gli stub che i vari moduli dell'applicazione usano per
-comunicare con altri nodi (diretti vicini o specifici nodi all'interno di un comune g-nodo).
-
-## SkeletonFactory
-
-Una classe **SkeletonFactory** è usata quando si rileva una richiesta tramite una interfaccia di rete.
-Interrogando questa classe si decide se bisogna passare la richiesta a uno
-(o piu d'uno) skeleton nel nodo corrente, il quale potrà richiamare metodi remoti definiti nei vari moduli.
 
 ## Tipi di trasmissione
 
@@ -204,14 +191,6 @@ Ad esempio, assumiamo che i nodi alfa beta e gamma di cui sopra abbiano i pid ri
 Il framework ZCD fornisce di default anche questi due tool (`radio_domain` e `eth_domain`).
 Essi sono usati in alcune testsuite di ZCD, ma potranno essere utili allo sviluppatore anche nella produzione
 di testsuite per altri moduli di Netsukuku.
-
-## Tasklet in ascolto
-
-**TODO**
-
-## Chiamate a metodi remoti
-
-**TODO**
 
 ## Identità multiple in un sistema
 
@@ -494,20 +473,40 @@ Al termine dell'esecuzione del metodo remoto, se lo stub che aveva trasmesso il 
 indicato nel protocollo ZCD di restare in attesa del risultato, il framework ZCD trasmette
 il risultato nella stessa connessione in cui aveva ricevuto il messaggio.
 
+**TODO proseguire**
 
+## Lato server
 
-***
+Una classe **SkeletonFactory** è usata per avviare le tasklet in ascolto.
 
+Quando viene creata l'istanza di `SkeletonFactory` questa crea una istanza di `ServerDelegate` che
+implementa `IDelegate`. Quando poi l'istanza di `SkeletonFactory` viene usata per chiamare i metodi
+`??_??_listen`, a questi viene passata l'istanza di `ServerDelegate`.
 
-**TODO** spostare altrove.
+Quando si rileva una richiesta tramite una interfaccia di rete,
+la classe `ServerDelegate` in `get_addr_set` usa a sua volta la stessa `SkeletonFactory` per
+individuare (`get_dispatcher` e `get_dispatcher_set`) gli skeleton da invocare.
 
-Quando si chiama il metodo che produce uno stub per l'invio di messaggi in broadcast, può essere passato un
+## Lato client
+
+### StubFactory
+
+Una classe **StubFactory** è usata per produrre gli stub che i vari moduli dell'applicazione usano per
+comunicare con altri nodi (diretti vicini o specifici nodi all'interno di un comune g-nodo).
+
+### Chiamate a metodi remoti
+
+**TODO**
+
+#### IAckCommunicator
+
+Quando si chiama il metodo che produce uno stub per l'invio di messaggi in broadcast (`get_addr_broadcast`), può essere passato un
 oggetto che implementa l'interfaccia `IAckCommunicator` fornita dal `ntkdrpc`. Ogni volta che verrà usato lo
 stub per trasmettere un messaggio in broadcast, dopo un certo timeout dal momento della trasmissione,
-questo oggetto riceverà (nel metodo `process_macs_list`) un elenco dei MAC (lista di stringhe, o in futuro
-istanze di ISrcNic) dai quali abbiamo ricevuto un pacchetto di "ACKnowledgement" di ricezione del nostro messaggio.  
-La logica è che questo oggetto ha le informazioni necessarie a gestire il fatto che un certo MAC (in generale
-una certa interfaccia di rete di un vicino che conosciamo) non ha trasmesso l'ACK nel tempo previsto.
+questo oggetto riceverà (nel metodo `process_macs_list`) un elenco dei NIC (interfacce di rete rappresentate
+da istanze di ISrcNic) che ci hanno notificato (con un pacchetto di "ACKnowledgement") la ricezione del nostro messaggio.  
+La logica è che questo oggetto ha le informazioni necessarie a gestire il fatto che una certa interfaccia di rete
+(di un vicino che conosciamo) non ha trasmesso l'ACK nel tempo previsto.
 
 Attualmente, l'unico caso di questo tipo nel demone *ntkd* è `get_stub_identity_aware_broadcast`. Infatti l'altro
 metodo `get_stub_whole_node_broadcast_for_radar` gli passa *null*.  
@@ -521,9 +520,8 @@ stati "mancati" dalla trasmissione broadcast.
 
 L'oggetto `AcknowledgementsCommunicator` può accedere (sia al momento della produzione dello stub sia
 al momento dell'esecuzione del metodo `process_macs_list`) alla lista di archi-nodo che il demone *ntkd*
-conosce. Ogni arco-nodo ha un identificativo dell'interfaccia di rete del vicino che è confrontabile
-con l'identificativo (`string mac` o `ISrcNic src_nic`) che sono state passate nel metodo `process_macs_list`
-dal framework ZCD.  
+conosce. Ogni arco-nodo ha un identificativo `ISrcNic` dell'interfaccia di rete del vicino che è confrontabile
+con gli identificativi che sono passati al metodo `process_macs_list` dal framework ZCD.  
 Tutto ciò permette di chiamare una serie di volte (ognuna in una tasklet indipendente) il metodo
 `missing(IdentityData identity_data, IdentityArc identity_arc)` della `IIdentityAwareMissingArcHandler`
 quando non si riceve nel tempo previsto un ACK da una certa interfaccia.
@@ -534,8 +532,3 @@ Le istanze di `IIdentityAwareMissingArcHandler` usate nel codice sono:
     che il modulo usa per chiamare i metodi remoti `set_participant` e `give_participant_maps`.
 *   `MissingArcHandlerForQspn` nel file `qspn_helpers.vala`. Usata nel `QspnStubFactory.i_qspn_get_broadcast`
     che il modulo usa per chiamare i metodi remoti `send_etp`, `got_prepare_destroy` e `got_destroy`.
-
-**FINE-TODO**
-
-
-***
