@@ -2,9 +2,9 @@
 
 1.  [Tipi di trasmissione](#tipi-di-trasmissione)
 1.  [Tipi di medium](#tipi-di-medium)
-1.  [Identità multiple in un sistema](#identità-multiple-in-un-sistema)
 1.  [Lato server](#lato-server)
 1.  [Lato client](#lato-client)
+1.  [Identità multiple in un sistema](#identità-multiple-in-un-sistema)
 
 Il progetto *ntkd* usa il framework ZCD per realizzare le comunicazioni tra nodi.
 
@@ -192,6 +192,65 @@ Il framework ZCD fornisce di default anche questi due tool (`radio_domain` e `et
 Essi sono usati in alcune testsuite di ZCD, ma potranno essere utili allo sviluppatore anche nella produzione
 di testsuite per altri moduli di Netsukuku.
 
+## Lato server
+
+Una classe **SkeletonFactory** è usata per avviare le tasklet in ascolto.
+
+Quando viene creata l'istanza di `SkeletonFactory` questa crea una istanza di `ServerDelegate` che
+implementa `IDelegate`. Quando poi l'istanza di `SkeletonFactory` viene usata per chiamare i metodi
+`??_??_listen`, a questi viene passata l'istanza di `ServerDelegate`.
+
+Quando si rileva una richiesta tramite una interfaccia di rete,
+la classe `ServerDelegate` in `get_addr_set` usa a sua volta la stessa `SkeletonFactory` per
+individuare (`get_dispatcher` se in modalità stream, `get_dispatcher_set` se in datagram)
+gli skeleton da invocare.
+
+## Lato client
+
+### StubFactory
+
+Una classe **StubFactory** è usata per produrre gli stub che i vari moduli dell'applicazione usano per
+comunicare con altri nodi (diretti vicini o specifici nodi all'interno di un comune g-nodo).
+
+### Chiamate a metodi remoti
+
+**TODO**
+
+#### IAckCommunicator
+
+Quando si chiama il metodo che produce uno stub per l'invio di messaggi in broadcast (`get_addr_broadcast`), può essere passato un
+oggetto che implementa l'interfaccia `IAckCommunicator` fornita dal `ntkdrpc`. Ogni volta che verrà usato lo
+stub per trasmettere un messaggio in broadcast, dopo un certo timeout dal momento della trasmissione,
+questo oggetto riceverà (nel metodo `process_macs_list`) un elenco dei NIC (interfacce di rete rappresentate
+da istanze di ISrcNic) che ci hanno notificato (con un pacchetto di "ACKnowledgement") la ricezione del nostro messaggio.  
+La logica è che questo oggetto ha le informazioni necessarie a gestire il fatto che una certa interfaccia di rete
+(di un vicino che conosciamo) non ha trasmesso l'ACK nel tempo previsto.
+
+Attualmente, l'unico caso di questo tipo nel demone *ntkd* è `get_stub_identity_aware_broadcast`. Infatti l'altro
+metodo `get_stub_whole_node_broadcast_for_radar` gli passa *null*.  
+Quindi più specificamente la logica è che questo oggetto gestisce i singoli archi-identità collegati agli
+archi dai quali non abbiamo ricevuto conferma di ricezione.  
+L'oggetto passato è un `AcknowledgementsCommunicator`, una classe privata dello StubFactory. Al suo interno
+ha un `NodeMissingArcHandlerForIdentityAware` cioè un gestore degli archi-nodo che sono stati "mancati"
+dalla trasmissione broadcast che sa che deve operare sugli archi-identità. Questo a sua volta al suo interno ha
+una istanza dell'interfaccia `IIdentityAwareMissingArcHandler` cioè un gestore degli archi-identità che sono
+stati "mancati" dalla trasmissione broadcast.
+
+L'oggetto `AcknowledgementsCommunicator` può accedere (sia al momento della produzione dello stub sia
+al momento dell'esecuzione del metodo `process_macs_list`) alla lista di archi-nodo che il demone *ntkd*
+conosce. Ogni arco-nodo ha un identificativo `ISrcNic` dell'interfaccia di rete del vicino che è confrontabile
+con gli identificativi che sono passati al metodo `process_macs_list` dal framework ZCD.  
+Tutto ciò permette di chiamare una serie di volte (ognuna in una tasklet indipendente) il metodo
+`missing(IdentityData identity_data, IdentityArc identity_arc)` della `IIdentityAwareMissingArcHandler`
+quando non si riceve nel tempo previsto un ACK da una certa interfaccia.
+
+Le istanze di `IIdentityAwareMissingArcHandler` usate nel codice sono:
+
+*   `MissingArcHandlerForPeers` nel file `peers_helpers.vala`. Usata nel `PeersNeighborsFactory.i_peers_get_broadcast`
+    che il modulo usa per chiamare i metodi remoti `set_participant` e `give_participant_maps`.
+*   `MissingArcHandlerForQspn` nel file `qspn_helpers.vala`. Usata nel `QspnStubFactory.i_qspn_get_broadcast`
+    che il modulo usa per chiamare i metodi remoti `send_etp`, `got_prepare_destroy` e `got_destroy`.
+
 ## Identità multiple in un sistema
 
 ### ZCD
@@ -210,13 +269,14 @@ rappresentata con l'interfaccia ISrcNic per il mittente e attraverso la specific
 il messaggio nel destinatario (identificata nell'oggetto Listener del CallerInfo).  
 Lato client permette di costruire degli stub che trasmettono messaggi (cioè chiamano procedure remote)
 permettendo al suo utilizzatore di specificare un ISourceID, un ISrcNic, un IUnicastID, un IBroadcastID,
-oltre che indicare un `peer_ip` o un `my_dev`.  
+oltre che indicare una connessione (`peer_ip` o `send_pathname`) o una propria interfaccia di
+rete (`my_dev` o `send_pathname`).  
 Lato server alla recezione di un messaggio costruisce un CallerInfo, indicando in esso la tasklet in
 ascolto (Listener) e gli oggetti indicati nel messaggio (ISourceID, ISrcNic, IUnicastID, IBroadcastID).
 Sulla base del CallerInfo il suo utilizzatore potrà individuare zero/uno/molti skeleton
 a cui far eseguire una procedura.
 
-I delegati passati al framework ZCD sono in grado di riconoscere gli oggetti ISourceID, IUnicastID/IBroadcastID
+I delegati passati al framework ZCD sono in grado di riconoscere gli oggetti ISourceID, ISrcNic, IUnicastID/IBroadcastID
 ricevuti e quindi sanno se il messaggio è pertinente ad un nodo nella sua interezza o ad una identità
 all'interno di un nodo.  
 Se il messaggio è per nodi, allora ogni nodo che lo recepisce può individuare zero o uno skeleton da
@@ -252,15 +312,15 @@ moduli di nodo: *Neighborhood*, *Identities*.
 moduli di identità: *QSPN*, *PeerServices*, *Coordinator*, *Hooking*, *Andna*.
 
 Il progetto *ntkd*, lato client, deve saper produrre su richiesta dei moduli uno stub per ogni esigenza,
-costruendo gli appositi oggetti ISourceID, IUnicastID/IBroadcastID e chiamando i metodi del framework ZCD.
+costruendo gli appositi oggetti ISourceID, ISrcNic, IUnicastID/IBroadcastID e chiamando i metodi del framework ZCD.
 
-Inoltre lato server, attraverso i delegati passati al framework ZCD, partendo dagli oggetti ISourceID,
+Inoltre lato server, attraverso i delegati passati al framework ZCD, partendo dagli oggetti ISourceID, ISrcNic,
 IUnicastID/IBroadcastID ricevuti deve saper individuare zero/uno/molti skeleton da attivare. Se il messaggio
 era per identità, allora ognuno di questi skeleton è una precisa istanza del modulo interessato.
 
 Ricordiamo che i delegati passati al framework ZCD ricevono una istanza della classe CallerInfo,
 fornita dalla libreria di livello intermedio del framework ZCD prodotta con "rpcdesign". Essa contiene fra l'altro
-un ISourceID e un IUnicastID/IBroadcastID.
+un ISourceID, un ISrcNic e un IUnicastID/IBroadcastID.
 
 Nei casi in cui il modulo che vuole comunicare è *di nodo*, il NeighborhoodNodeID (che identifica univocamente
 un nodo nella rete Netsukuku) è una parte essenziale delle classi che si usano come ISourceID, IUnicastID e IBroadcastID.  
@@ -284,29 +344,31 @@ Infine specifica se si vuole attendere una risposta al messaggio.
 Lo stub prodotto in questo modo trasmetterà il messaggio su una sola interfaccia di rete, univocamente individuata
 dall'arco *x*.
 
-L'oggetto che identifica l'arco *x* contiene le due interfacce di rete dell'arco. Cioè il device-name della
-propria interfaccia di rete del nodo *a* e il MAC address dell'interfaccia di rete di *b*. Inoltre contiene
-anche l'indirizzo IP linklocal che il nodo *b* ha associato a quella interfaccia di rete. Sicché una connessione
-TCP realizzata dal nodo *a* verso quell'indirizzo IP si appoggia esattamente sull'arco *x*. Infatti al momento
+L'oggetto che identifica l'arco *x* contiene:
+
+*   il `NeighborhoodNodeID neighbour_id` del vicino (passato come argomento del metodo remoto `here_i_am`).
+*   il MAC e l'indirizzo IP linklocal del `neighbour_nic` del vicino (passati come argomenti del metodo remoto `here_i_am`).
+*   il mio `INeighborhoodNetworkInterface my_nic`.
+
+Il demone ntkd conosce la classe che implementa `INeighborhoodNetworkInterface my_nic` e
+da esso sa identificare un dev o pseudodev del nodo *a*.
+
+Quindi il metodo `get_stub_identity_aware_unicast` può individuare i parametri che servono a
+realizzare una connessione con `get_addr_stream_net` o `get_addr_stream_system`. In particolare nel caso `_net`
+avremo una connessione TCP che si appoggia esattamente sull'arco *x*. Infatti al momento
 della realizzazione dell'arco il modulo Neighborhood nei due nodi avrà impostato una apposita rotta con scope *link*
 nelle tabelle del kernel del *network namespace default*.
-
-Dal NodeID di *a<sub>0</sub>* verrà prodotto un IdentityAwareSourceID.
-Dal NodeID di *b<sub>0</sub>* verrà prodotto un IdentityAwareUnicastID.
 
 Di seguito elenchiamo le informazioni che verranno convogliate al nodo *b* attraverso il protocollo del framework ZCD
 (oltre naturalmente al messaggio vero e proprio che verrà indicato in seguito allo stub) e che quindi devono
 venire specificate dal demone ntkd alla creazione dello stub.
 
 *   `ISourceID source_id`. Identifica il mittente.  
-    In questo caso si tratta di un IdentityAwareSourceID, quindi identifica una *identità* nel nodo
-    mittente. Ma questo ZCD non è tenuto a saperlo.
+    Dal NodeID di *a<sub>0</sub>* verrà prodotto un IdentityAwareSourceID.
 *   `IUnicastID unicast_id`. Identifica il destinatario.  
-    In questo caso si tratta di un IdentityAwareUnicastID, quindi identifica una *identità* nel nodo
-    destinatario. Ma questo ZCD non è tenuto a saperlo.
+    Dal NodeID di *b<sub>0</sub>* verrà prodotto un IdentityAwareUnicastID.
 *   `ISrcNic src_nic`. Identifica il NIC usato dal nodo mittente.  
-    In questo caso si tratta di un StreamSrcNic, quindi rappresenta un indirizzo linklocal che il nodo
-    mittente ha assegnato a una delle sue interfacce di rete. Ma questo ZCD non è tenuto a saperlo.
+    Dal `INeighborhoodNetworkInterface my_nic` verrà prodotto un NeighbourSrcNic.
 *   Se lo stub resta in attesa della risposta. Booleano `wait_reply`.
 
 ##### ricezione lato server
@@ -353,7 +415,7 @@ interfaccia) di identificare l'arco-identità tramite il quale il messaggio è s
 Prendiamo ad esempio il metodo `i_qspn_comes_from(CallerInfo rpc_caller)` dell'interfaccia `IQspnArc`
 come viene usato dallo skeleton del modulo Qspn nel metodo remoto `get_full_etp`.  
 Il metodo remoto `get_full_etp` in realtà può essere invocato dai diretti vicini sia con un messaggio
-unicast, sia con un messaggio broadcast. Le operazioni il metodo `i_qspn_comes_from` sono comunque
+unicast, sia con un messaggio broadcast. Le operazioni del metodo `i_qspn_comes_from` sono comunque
 le stesse in entrambi i casi.
 
 Durante l'esecuzione del metodo remoto `get_full_etp` invocato dal framework ZCD, il QspnManager conosce
@@ -418,23 +480,24 @@ Di seguito elenchiamo le informazioni che verranno convogliate al nodo *b* attra
 venire specificate dal demone ntkd alla creazione dello stub.
 
 *   `ISourceID source_id`. Identifica il mittente.  
-    In questo caso si tratta di un MainIdentitySourceID. Ma questo ZCD non è tenuto a saperlo.
+    Verrà prodotto un MainIdentitySourceID.
 *   `IUnicastID unicast_id`. Identifica il destinatario.  
-    In questo caso si tratta di un MainIdentityUnicastID. Ma questo ZCD non è tenuto a saperlo.
+    Verrà prodotto un MainIdentityUnicastID.
 *   `ISrcNic src_nic`. Identifica il NIC usato dal nodo mittente.  
-    In questo caso si tratta di un StreamSrcNic, quindi rappresenta un indirizzo routabile che identifica
-    il nodo mittente all'interno del g-nodo comune. Ma questo ZCD non è tenuto a saperlo.
+    Verrà prodotto un RoutableSrcNic che rappresenta un indirizzo routabile che identifica
+    il nodo mittente all'interno del g-nodo comune.
 *   Se lo stub resta in attesa della risposta. Booleano `wait_reply`.
 
 ##### ricezione lato server
 
-Quando nel nodo *b* il framework ZCD riceve il messaggio esso riconosce dalla
-modalità di trasmissione (di tipo STREAM, che prevede l'argomento IUnicastID) che si tratta di un
-messaggio unicast, quindi prepara una istanza di CallerInfo specifica per i messaggi unicast.  
+Nel nodo *b*, a ricevere il messaggio è una tasklet avviata dal framework ZCD con la funzione `stream_net_listen`
+o `stream_system_listen`. Questa prepara una istanza di CallerInfo specifica per i messaggi unicast.  
 Nell'oggetto CallerInfo il framework ZCD include le informazioni convogliate nel protocollo del
-framework ZCD e anche la conoscenza della modalità `ListenMode listen_mode` con cui era in ascolto
-la tasklet che ha recepito il messaggio. In questo caso un ascolto di connessioni su uno specifico
-indirizzo IP routabile oppure su uno specifico unix-domain socket.
+framework ZCD e anche la conoscenza della modalità con cui era in ascolto la tasklet che ha recepito
+il messaggio. In questo caso un ascolto di connessioni su uno specifico indirizzo IP routabile
+oppure su uno specifico pathname.
+Questa informazione è nel campo `Listener listener` dell'oggetto CallerInfo: può essere un
+StreamNetListener (con i campi `my_ip` e `tcp_port`) o un StreamSystemListener (con il campo `listen_pathname`).
 
 Poi passa il CallerInfo al delegato `Netsukuku.IDelegate`.
 Il delegato riconosce dal CallerInfo che si tratta di un
@@ -473,62 +536,16 @@ Al termine dell'esecuzione del metodo remoto, se lo stub che aveva trasmesso il 
 indicato nel protocollo ZCD di restare in attesa del risultato, il framework ZCD trasmette
 il risultato nella stessa connessione in cui aveva ricevuto il messaggio.
 
-**TODO proseguire**
-
-## Lato server
-
-Una classe **SkeletonFactory** è usata per avviare le tasklet in ascolto.
-
-Quando viene creata l'istanza di `SkeletonFactory` questa crea una istanza di `ServerDelegate` che
-implementa `IDelegate`. Quando poi l'istanza di `SkeletonFactory` viene usata per chiamare i metodi
-`??_??_listen`, a questi viene passata l'istanza di `ServerDelegate`.
-
-Quando si rileva una richiesta tramite una interfaccia di rete,
-la classe `ServerDelegate` in `get_addr_set` usa a sua volta la stessa `SkeletonFactory` per
-individuare (`get_dispatcher` e `get_dispatcher_set`) gli skeleton da invocare.
-
-## Lato client
-
-### StubFactory
-
-Una classe **StubFactory** è usata per produrre gli stub che i vari moduli dell'applicazione usano per
-comunicare con altri nodi (diretti vicini o specifici nodi all'interno di un comune g-nodo).
-
-### Chiamate a metodi remoti
+#### Broadcast - diretto vicino
 
 **TODO**
 
-#### IAckCommunicator
+### Moduli di nodo
 
-Quando si chiama il metodo che produce uno stub per l'invio di messaggi in broadcast (`get_addr_broadcast`), può essere passato un
-oggetto che implementa l'interfaccia `IAckCommunicator` fornita dal `ntkdrpc`. Ogni volta che verrà usato lo
-stub per trasmettere un messaggio in broadcast, dopo un certo timeout dal momento della trasmissione,
-questo oggetto riceverà (nel metodo `process_macs_list`) un elenco dei NIC (interfacce di rete rappresentate
-da istanze di ISrcNic) che ci hanno notificato (con un pacchetto di "ACKnowledgement") la ricezione del nostro messaggio.  
-La logica è che questo oggetto ha le informazioni necessarie a gestire il fatto che una certa interfaccia di rete
-(di un vicino che conosciamo) non ha trasmesso l'ACK nel tempo previsto.
+#### Unicast - diretto vicino
 
-Attualmente, l'unico caso di questo tipo nel demone *ntkd* è `get_stub_identity_aware_broadcast`. Infatti l'altro
-metodo `get_stub_whole_node_broadcast_for_radar` gli passa *null*.  
-Quindi più specificamente la logica è che questo oggetto gestisce i singoli archi-identità collegati agli
-archi dai quali non abbiamo ricevuto conferma di ricezione.  
-L'oggetto passato è un `AcknowledgementsCommunicator`, una classe privata dello StubFactory. Al suo interno
-ha un `NodeMissingArcHandlerForIdentityAware` cioè un gestore degli archi-nodo che sono stati "mancati"
-dalla trasmissione broadcast che sa che deve operare sugli archi-identità. Questo a sua volta al suo interno ha
-una istanza dell'interfaccia `IIdentityAwareMissingArcHandler` cioè un gestore degli archi-identità che sono
-stati "mancati" dalla trasmissione broadcast.
+**TODO**
 
-L'oggetto `AcknowledgementsCommunicator` può accedere (sia al momento della produzione dello stub sia
-al momento dell'esecuzione del metodo `process_macs_list`) alla lista di archi-nodo che il demone *ntkd*
-conosce. Ogni arco-nodo ha un identificativo `ISrcNic` dell'interfaccia di rete del vicino che è confrontabile
-con gli identificativi che sono passati al metodo `process_macs_list` dal framework ZCD.  
-Tutto ciò permette di chiamare una serie di volte (ognuna in una tasklet indipendente) il metodo
-`missing(IdentityData identity_data, IdentityArc identity_arc)` della `IIdentityAwareMissingArcHandler`
-quando non si riceve nel tempo previsto un ACK da una certa interfaccia.
+#### Broadcast - radar scan
 
-Le istanze di `IIdentityAwareMissingArcHandler` usate nel codice sono:
-
-*   `MissingArcHandlerForPeers` nel file `peers_helpers.vala`. Usata nel `PeersNeighborsFactory.i_peers_get_broadcast`
-    che il modulo usa per chiamare i metodi remoti `set_participant` e `give_participant_maps`.
-*   `MissingArcHandlerForQspn` nel file `qspn_helpers.vala`. Usata nel `QspnStubFactory.i_qspn_get_broadcast`
-    che il modulo usa per chiamare i metodi remoti `send_etp`, `got_prepare_destroy` e `got_destroy`.
+**TODO**

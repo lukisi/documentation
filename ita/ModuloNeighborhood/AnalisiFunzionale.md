@@ -161,57 +161,6 @@ Quando un nodo rimuove un arco tenta di comunicarlo al vertice collegato perché
 
 ## Identità multiple in un sistema
 
-**spostato** in "ZCD" o in "ntkd".  
-Introduciamo il concetto di *identità*. In un singolo nodo possono in dati momenti sussistere diverse
-*identità*. La ragion d'essere di queste identità sarà discussa in dettaglio nella trattazione del modulo
-QSPN, quando si parla di nodi virtuali. La gestione di queste identità è demandata al modulo Identities.
-
-Ogni *identità* di un nodo ha un suo identificativo univoco, chiamato NodeID. Il modulo Neighborhood
-non conosce i dettagli di questo identificativo, sa solo che il NodeID può essere usato come identificativo
-univoco per riferirsi ad una precisa *identità* all'interno di un preciso nodo.
-
-Il modulo Neighborhood non ha conoscenza diretta di quali siano le *identità* che vivono nel suo nodo in un
-dato momento. Sa solo che in ogni nodo esiste sempre una e una sola *identità principale*.
-L'identità principale del nodo non è sempre la stessa: il nodo può in un certo momento creare una nuova
-identità e farla diventare la sua principale. L'identità principale è
-quella che gestisce le interfacce di rete *reali* del nodo nel *network namespace default*, ognuna con il
-suo indirizzo di scheda.
-
-Abbiamo visto che la presenza di identità multiple in un nodo è supportata dal framework ZCD. Con questo
-intendiamo evidenziare che è possibile realizzare uno stub che possa essere usato da una precisa identità
-del nodo *a*, indichiamola con *a<sub>0</sub>*, per chiamare un metodo remoto su una precisa identità del
-nodo *b*, indichiamola con *b<sub>0</sub>*.
-
-Abbiamo detto inoltre che fra i ruoli del modulo Neighborhood c'è quello di permettere agli altri moduli
-dell'applicazione la comunicazione con altri nodi. Ora aggiungiamo che un particolare modulo può essere
-interessato a questo tipo di identificazione precisa della identità all'interno di un nodo. Un altro modulo,
-invece, potrebbe essere agnostico rispetto a queste identità, e voler semplicemente chiamare un metodo
-remoto su un particolare nodo. Chiamiamo il primo tipo un *modulo consapevole di identità* o *modulo di identità*
-o *identity-aware*. Il secondo tipo è un *modulo di nodo* o *whole-node*. Di norma in un modulo
-*di identità* c'è una classe di cui viene creata una specifica istanza per ogni *identità* che il nodo assume.
-
-Il modulo Neighborhood, lato client, deve saper produrre uno stub per ogni esigenza. Inoltre, lato server,
-deve saper individuare un elenco (con zero, uno o più elementi) di root-dispatcher a partire dal discriminatore
-contenuto in un messaggio ricevuto (cioè dall'oggetto CallerInfo); questi dispatcher, se il modulo da chiamare
-è un *modulo di identità*, devono saper indirizzare ognuno una precisa istanza del modulo da chiamare.
-Ricordiamo che l'oggetto CallerInfo è fornito dalla libreria di livello intermedio del framework ZCD prodotta
-con "rpcdesign" e che contiene queste informazioni:
-
-*   Un ISourceID.
-*   Un IUnicastID o un IBroadcastID.
-*   L'indirizzo IP che ha trasmesso il pacchetto. Il modulo Neighborhood lato client farà in modo che nei
-    messaggi trasmessi ai diretti vicini (quindi sempre per i messaggi trasmessi in UDP), questo indirizzo
-    identifichi univocamente una interfaccia di rete del nodo che trasmette. Il nodo che riceve riconosce
-    questo indirizzo se ha già realizzato un arco con quella interfaccia.
-*   Nel caso di pacchetti TCP, l'indirizzo IP usato come destinazione. Il modulo Neighborhood lato client
-    farà in modo che nei messaggi trasmessi ai diretti vicini, questo indirizzo identifichi univocamente una
-    interfaccia di rete del nodo destinatario.
-*   Nel caso di pacchetti UDP, la propria interfaccia di rete da cui è stato ricevuto il messaggio.
-
-Nei casi in cui il modulo che vuole comunicare è *di identità*, il NodeID che identifica una *identità* di
-un nodo è una parte essenziale delle classi che si usano come ISourceID, IUnicastID e IBroadcastID nella
-produzione di stub per chiamare metodi remoti.
-
 **fatto** in "Moduli di identità - Unicast - diretto vicino".  
 Facciamo un esempio di un modulo *di identità* (ad esempio QSPN) in cui una precisa identità del nodo *a*,
 indichiamola con *a<sub>0</sub>*, vuole chiamare un metodo remoto su una precisa identità del nodo diretto
@@ -386,6 +335,7 @@ messaggio è pervenuto. Per realizzare questa associazione il modulo Neighborhoo
 *   Numero massimo di archi da realizzare.
 *   Factory per creare uno "stub" per invocare metodi remoti nei nodi vicini.
 *   Manager di indirizzi e rotte.
+*   Delegato per identificare un CallerInfo.
 *   Delegato per generare un indirizzo IP link-local.
 
 ## Deliverable
