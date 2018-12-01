@@ -4,7 +4,7 @@
 1.  [Tipi di medium](#tipi-di-medium)
 1.  [Lato server](#lato-server)
 1.  [Lato client](#lato-client)
-1.  [Identità multiple in un sistema](#identità-multiple-in-un-sistema)
+1.  [Diversi casi di messaggi](#diversi-casi-di-messaggi)
 
 Il progetto *ntkd* usa il framework ZCD per realizzare le comunicazioni tra nodi.
 
@@ -16,23 +16,39 @@ di trasmissione:
 *   "stream", per i messaggi unicast.
 *   "datagram", per i messaggi broadcast.
 
-Nel demone *ntkd* la modalità unicast-stream è usata per invocare un metodo remoto (cioè inviare
-un messaggio) e ottenere una risposta precisa in queste circostanze:
+Vediamo tutti i possibili casi usati nel demone *ntkd*.
+
+La modalità unicast-stream è usata per invocare un metodo remoto (cioè inviare
+un messaggio) su un diretto vicino e ottenere una risposta precisa in queste circostanze:
+
+*   Neighborhood: `can_you_export` - parte della fase radar scan.
+*   Neighborhood: `nop` - periodico controllo su un arco.
+*   TODO
+
+La modalità unicast-stream è usata per invocare un metodo remoto (cioè inviare
+un messaggio) su un diretto vicino e solo accertarsi della ricezione (`wait_reply=false`) in queste circostanze:
 
 *   TODO
 
-Nel demone *ntkd* la modalità unicast-stream è usata per invocare un metodo remoto (cioè inviare
-un messaggio) e solo accertarsi della ricezione (`wait_reply=false`) in queste circostanze:
+La modalità broadcast-datagram è usata per inviare un messaggio sui diretti vicini
+senza richiedere un ACK in queste circostanze:
+
+*   Neighborhood: `here_i_am` - parte della fase radar scan.
+*   Neighborhood: `request_arc` - parte della fase radar scan.
+*   Neighborhood: `remove_arc` - rimozione di un arco (richiesta dall'altro capo).
+*   TODO
+
+La modalità broadcast-datagram è usata per inviare un messaggio sui diretti vicini
+richiedendo da loro un ACK in queste circostanze:
 
 *   TODO
 
-Nel demone *ntkd* la modalità broadcast-datagram è usata per inviare
-un messaggio senza pretendere un puntuale risultato in queste circostanze:
-
-*   TODO
-
-Nel demone *ntkd* la modalità unicast-stream è usata come "rafforzativo" (cioè per ribadire un messaggio
-broadcast quando ci si accorge che questo non è stato recepito, con `wait_reply=false`) in queste circostanze:
+Quando si inviano messaggi trasmessi in broadcast che richiedono un ACK, lo scopo è reagire al caso
+in cui da un arco noto al presente nodo (o più di uno) non si riceve il messaggio di ACK relativo.  
+La reazione in teoria potrebbe essere di vario tipo. Nella maggior parte dei casi (**TODO** in tutti?)
+il demone *ntkd* reagisce ritrasmettendo lo stesso messaggio all'arco in difetto con la
+modalità unicast-stream, con `wait_reply=false`. Questa modalità (su un diretto vicino) è
+usata in queste circostanze:
 
 *   TODO
 
@@ -251,7 +267,17 @@ Le istanze di `IIdentityAwareMissingArcHandler` usate nel codice sono:
 *   `MissingArcHandlerForQspn` nel file `qspn_helpers.vala`. Usata nel `QspnStubFactory.i_qspn_get_broadcast`
     che il modulo usa per chiamare i metodi remoti `send_etp`, `got_prepare_destroy` e `got_destroy`.
 
-## Identità multiple in un sistema
+## Diversi casi di messaggi
+
+Ci sono diversi casi di messaggi usati nel demone *ntkd*. In alcuni casi si ricorre al concetto
+di *identità* all'interno di un nodo, in altri casi no. In alcuni casi i messaggi sono diretti
+ad un particolare vicino, in altri a tutti i vicini, in altri ad un nodo non diretto vicino ma dentro
+lo stesso g-nodo. Nei vari casi cambiano le classi usate come ISourceID, ISrcNic, IUnicastID e IBroadcastID.
+
+Qui esaminiamo, nei diversi possibili casi, il percorso del messaggio nella sua interezza: chiamata, ricezione,
+esecuzione, risposta.
+
+Per prima cosa parliamo delle *identità* all'interno di un nodo.
 
 ### ZCD
 

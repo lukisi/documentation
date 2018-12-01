@@ -3,7 +3,7 @@
 1.  [Requisiti](#requisiti)
 1.  [Deliverable](#deliverable)
 1.  [Rilevamento dei vicini, costituzione degli archi, misurazione dei costi](#rilevamento-dei-vicini-costituzione-degli-archi-misurazione-dei-costi)
-1.  [Indirizzo IPv4 di scheda](#Indirizzo_IPv4_di_scheda)
+1.  [Indirizzo IPv4 di scheda](#indirizzo-ipv4-di-scheda)
 
 ## Requisiti
 
@@ -106,9 +106,13 @@ Il modulo permette di ottenere l'elenco degli archi ora presenti con il metodo `
 
 Il modulo permette di forzare la rimozione di un arco con il metodo `remove_my_arc` di NeighborhoodManager.
 
-In questo metodo l'utilizzatore del modulo (o anche il modulo stesso che ne fa uso internamente quando
-rileva che l'arco non è più funzionante) può specificare che si possa o meno tentare una ulteriore comunicazione
-sull'arco prima di rimuoverlo. Lo si specifica con l'argomento booleano `do_tell`.
+Questo metodo è pubblico perché può essere l'utilizzatore del modulo che vuole per qualche motivo forzare la rimozione
+di un arco. Ma anche il modulo stesso può usarlo internamente in alcune occasioni.
+
+In entrambi i casi, il chiamante del metodo può specificare che si possa o meno tentare una ulteriore comunicazione
+all'altro capo dell'arco. Lo si specifica con l'argomento booleano `do_tell`. In questa ultima comunicazione,
+se richiesta, si trasmette in broadcast sull'interfaccia di rete dell'arco il messaggio `remove_arc` affinché anche
+l'altro capo rimuove l'arco dalla sua lista.
 
 ## Rilevamento dei vicini, costituzione degli archi, misurazione dei costi
 
