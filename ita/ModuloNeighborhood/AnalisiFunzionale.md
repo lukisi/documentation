@@ -3,7 +3,6 @@
 1.  [Ruolo del modulo](#ruolo-del-modulo)
 1.  [Operazioni di base](#operazioni-di-base)
 1.  [Caratteristiche degli archi](#caratteristiche-degli-archi)
-1.  [Identità multiple in un sistema](#identità-multiple-in-un-sistema)
 1.  [Requisiti](#requisiti)
 1.  [Deliverable](#deliverable)
 1.  [Classi e interfacce](#classi-e-interfacce)
@@ -29,7 +28,7 @@ Il modulo costruisce l'istanza di NeighborhoodNodeID che rappresenta il nodo cor
 Inoltre, quando segnala un arco al suo utilizzatore gli rende nota l'istanza di NeighborhoodNodeID del peer.
 
 Riassumendo, ogni arco associa una interfaccia di rete del nodo corrente ad una coppia composta
-dal NeigborhoodNodeID del vicino e dal MAC address della sua interfaccia.
+dal NeigborhoodNodeID del vicino e dal MAC address di una sua interfaccia di rete.
 
 ## Operazioni di base
 
@@ -157,38 +156,7 @@ la larghezza di banda in uscita.
 
 Quando un nodo rimuove un arco tenta di comunicarlo al vertice collegato perché faccia altrettanto.
 
-**TODO: Identità multiple in un sistema** rimuovere spostandolo in DemoneNTKD/RPC
-
-## Identità multiple in un sistema
-
-**fatto** in "Moduli di identità - Unicast - diretto vicino".  
-Facciamo un esempio di un modulo *di identità* (ad esempio QSPN) in cui una precisa identità del nodo *a*,
-indichiamola con *a<sub>0</sub>*, vuole chiamare un metodo remoto su una precisa identità del nodo diretto
-vicino *b*, indichiamola con *b<sub>0</sub>*, passando attraverso l'arco *x*. Il nodo *a* chiama un metodo
-di Neighborhood per produrre uno stub di tipo *identity_aware_unicast*. In questo metodo il nodo passa un
-INeighborhoodArc che identifica l'arco *x* (questo è l'oggetto fornito dal modulo Neighborhood al suo
-esterno per rappresentare uno specifico arco formato con un diretto vicino). In questo oggetto è identificata
-l'interfaccia di rete di *a* e il MAC address dell'interfaccia di rete di *b*. Inoltre in questo metodo il nodo
-passa il NodeID di *a<sub>0</sub>* e questo sarà usato dal modulo Neighborhood per produrre un
-IdentityAwareSourceID. Infine in questo metodo il nodo passa il NodeID di *b<sub>0</sub>* e questo sarà usato
-dal modulo Neighborhood per produrre un IdentityAwareUnicastID. Lo stub prodotto in questo modo trasmetterà
-su una sola interfaccia di rete, univocamente individuata dal INeighborhoodArc passato al metodo. Per il lato
-server vedremo sotto come il nodo *b* aveva istruito il suo modulo Neighborhood perché potesse gestire questo
-tipo di IUnicastID.
-
-**fatto** in "Moduli di identità - Unicast - diretto vicino".  
-**fatto anche** in "Moduli di identità - Unicast - nodo nel g-nodo".  
-Nelle trasmissioni *unicast* è sempre individuato un solo arco tra *a* e *b*. Per le trasmissioni in TCP questo
-è scontato, nel senso che il nodo *b* riceve il messaggio una sola volta attraverso l'interfaccia di rete
-specifica di quell'arco. E le trasmissioni unicast fatte dai moduli *di identità* sono sempre in TCP, come
-vedremo in seguito.
-
-**fatto** in "Moduli di identità - Unicast - diretto vicino".  
-In particolare, nelle trasmissioni *identity_aware_unicast* abbiamo aggiunto come informazioni le identità
-*a<sub>0</sub>* e *b<sub>0</sub>*; grazie a queste il nodo ricevente *b* (non il modulo Neighborhood, bensì
-il suo utilizzatore) è in grado di identificare la specifica istanza del *modulo di identità* da coinvolgere
-e anche di sapere (grazie a delle associazioni che vedremo meglio sotto) se esiste quello specifico
-*arco-identità* così individuato.
+**TODO: da spostare** in DemoneNTKD/RPC
 
 Facciamo un altro esempio di un modulo *di identità* in cui una precisa identità del nodo *a*, indichiamola
 con *a<sub>0</sub>*, vuole chiamare un metodo remoto su un set di precise identità dei nodi diretti vicini,
@@ -257,165 +225,57 @@ gli archi esistenti.
 Ovviamente anche lo stesso modulo Neighborhood, il quale è di per se un modulo *di nodo*, può usare in
 completa autonomia le modalità sopra esposte per effettuare chiamate Unicast e Broadcast.
 
-**fatto** in "Moduli di identità - Unicast - nodo nel g-nodo".  
-Alcuni moduli (ad esempio PeerServices) prevedono la possibilità di chiamare un
-metodo remoto su un nodo che non è un diretto vicino ma si può raggiungere con un TcpClient ad un certo
-indirizzo IP. In questi casi il messaggio viene ricevuto dal solo nodo destinatario. Inoltre,
-nel caso si tratti di un *modulo di identità* (ne è un esempio il PeerServices) la sola *identità*
-destinataria sarà la *identità principale* del nodo.
-
-Esaminiamo cosa avviene lato server. Una descrizione passo passo è presente in questo
-[documento](ChiamateLatoServer.md).
-
-**rimosso fino alla fine** queste icombenze dal Neighborhood.  
-Abbiamo anticipato che, per gestire le comunicazioni lato server, all'inizio della sua attività il modulo
-Neighborhood deve essere istruito su come gestire le chiamate che riceve. L'utilizzatore del modulo dovrà
-dire al Neighborhood:
-
-*   se ricevi un IUnicastID di tipo IdentityAwareUnicastID:
-    *   usa questa callback
-
-        `IAddressManagerSkeleton? get_identity_skeleton(NodeID source_id, NodeID unicast_id, string peer_address)`
-
-        la quale restituirà <​null> oppure un root-dispatcher che potrà accedere solo i moduli *di identità*, e
-        in particolare la istanza indicata nell'IdentityAwareUnicastID. Si noti che in questo caso non abbiamo
-        previsto il parametro *dev*; infatti una chiamata unicast ad un modulo *di identità* è sempre fatta in
-        protocollo TCP; solo il modulo Neighborhood fa in alcuni casi chiamate unicast in UDP al suo omologo, ma
-        il modulo Neighborhood è un modulo *di nodo*.
-
-*   se ricevi un IBroadcastID di tipo IdentityAwareBroadcastID:
-    *   usa questa callback
-
-        `Gee.List<IAddressManagerSkeleton> get_identity_skeleton_set(NodeID source_id, Gee.List<NodeID> broadcast_set, string peer_address, string dev)`
-
-        la quale restituirà una lista (che può essere vuota) di root-dispatcher ognuno dei quali potrà accedere
-        solo i moduli *di identità*, e in particolare una precisa istanza. Nell'insieme questi dispatcher
-        copriranno tutte le *identità* che sono presenti nel IdentityAwareBroadcastID e vivono in questo nodo.
-
-*   se ricevi un IUnicastID di tipo WholeNodeUnicastID e ti riconosci come destinatario:
-    *   usa questa istanza
-
-        `IAddressManagerSkeleton node_skeleton`
-
-        la quale è un root-dispatcher che potrà accedere solo i moduli *di nodo*.
-
-*   se ricevi un IBroadcastID di tipo WholeNodeBroadcastID e ti riconosci fra i destinatari:
-    *   usa ancora l'istanza *node_skeleton*.
-
-Il modulo viene subito inizializzato con le callback da chiamare per gestire le chiamate *IdentityAware* e lo
-skeleton da usare per le chiamate *WholeNode*. Di modo che è pronto a gestire le chiamate che il nodo potrà ricevere.
-
-Grazie al framework ZCD, quando un metodo remoto viene invocato, l'implementazione del metodo riceve un oggetto
-chiamato *CallerInfo*. Con tale oggetto esso può identificare attraverso quale *arco-nodo* o *arco-identità* tale
-messaggio è pervenuto. Per realizzare questa associazione il modulo Neighborhood deve fornire essenzialmente due metodi:
-
-*   *NodeID get_identity(ISourceID source_id)* - Solo per i messaggi destinati a moduli *di identità*, dato
-    l'identificativo del mittente di un messaggio ricevuto restituisce il NodeID dell'*identità* del mittente.
-    Tale dato è contenuto nella classe IdentityAwareSourceID, che è interna al modulo Neighborhood.
-
-*   *INeighborhoodArc get_node_arc(ISourceID source_id, string dev)* - Solo per i messaggi destinati a moduli
-    *di nodo*, dato l'identificativo del mittente di un messaggio ricevuto e il nome dell'interfaccia di rete
-    su cui il messaggio è stato ricevuto, restituisce l'istanza di arco (INeighborhoodArc). Nella classe
-    WholeNodeSourceID, che è interna al modulo Neighborhood, è contenuto il NeighborhoodNodeID.
-
-    Se non è possibile associare questi dati ad un arco, il modulo Neighborhood restituisce null. In teoria
-    questo caso si può verificare solo se un *arco-nodo* prima valido (altrimenti il metodo remoto non doveva
-    essere affatto invocato) è stato rimosso pochi istanti prima. In questo caso l'esecuzione del metodo
-    andrebbe "probabilmente" interrotta, ma questo è di pertinenza del codice che implementa il metodo remoto.
-
 ## Requisiti
 
 *   Implementazione del sistema di tasklet.
-*   Delegati per la gestione delle chiamate ricevute:
-    *   **Rimosso** *get_identity_skeleton* - Una callback per gestire gli IdentityAwareUnicastID.
-    *   **Rimosso** *get_identity_skeleton_set* - Una callback per gestire gli IdentityAwareBroadcastID.
-    *   **Rimosso** *node_skeleton* - Uno skeleton del root-dispatcher per gestire gli WholeNodeUnicastID e gli WholeNodeBroadcastID.
 *   La (o le) interfaccia di rete da monitorare.  
     Durante le operazioni del modulo è possibile aggiungere o rimuovere una interfaccia di rete da monitorare.
 *   Numero massimo di archi da realizzare.
 *   Factory per creare uno "stub" per invocare metodi remoti nei nodi vicini.
+*   Delegato per identificare il chiamante (un nodo vicino) di un metodo remoto invocato su questo nodo.
 *   Manager di indirizzi e rotte.
-*   Delegato per identificare un CallerInfo.
-*   Delegato per generare un indirizzo IP link-local.
+*   Funzione per generare un indirizzo IP link-local.
 
 ## Deliverable
 
 *   Emette un segnale per:
-    *   Avvenuta assegnazione dell'*indirizzo di scheda* ad una interfaccia di rete gestita.
-    *   Avvenuta costituzione di un arco. Significa anche avvenuto inserimento della rotta nelle tabelle.
-    *   Il modulo sta per rimuovere un arco. Significa anche che sta per rimuovere la rotta nelle tabelle.  
+    *   `nic_address_set` - Avvenuta assegnazione dell'*indirizzo di scheda* ad una interfaccia di rete gestita.
+    *   `arc_added` - Avvenuta costituzione di un arco. Significa anche avvenuto inserimento della rotta nelle tabelle.
+    *   `arc_removing` - Il modulo sta per rimuovere un arco. Significa anche che sta per rimuovere la rotta nelle tabelle.  
         Il modulo quando emette questo segnale aspetta che esso sia gestito. Cioè il gestore del segnale
         non dovrebbe avviare una nuova tasklet. Questi infatti deve usare questa opportunità per rimuovere
         tutte le dipendenze di questa rotta diretta.
-    *   Avvenuta rimozione di un arco. Significa anche avvenuta rimozione della rotta nelle tabelle.
-    *   Variazione del costo di un arco.
-    *   Avvenuta rimozione dell'*indirizzo di scheda* ad una interfaccia di rete che non si gestisce più.
+    *   `arc_removed` - Avvenuta rimozione di un arco. Significa anche avvenuta rimozione della rotta nelle tabelle.
+    *   `arc_changed` - Variazione del costo di un arco.
+    *   `nic_address_unset` - Avvenuta rimozione dell'*indirizzo di scheda* ad una interfaccia di rete che non si gestisce più.
 
 *   Fornisce metodi per:
-    *   *current_arcs* - Ottenere l'elenco degli archi ora presenti.
-    *   **Rimosso** *get_dispatcher* - Dati alcuni parametri relativi ad un messaggio in unicast ricevuto (IUnicastID,
-        ISourceID, peer_address, dev), eventualmente servendosi dei delegati passati per associare i NodeID
-        ad uno skeleton, dopo aver verificato di processare il messaggio solo una volta (in caso di protocollo
-        UDP in presenza di molteplici interfacce di rete nel nodo corrente collegate su un solo broadcast domain),
-        restituisce una istanza di skeleton del root-dispatcher se il messaggio è da processare, oppure null.
-    *   **Rimosso** *get_dispatcher_set* - Dati alcuni parametri relativi ad un messaggio in broadcast ricevuto (IBroadcastID,
-        ISourceID, peer_address, dev), eventualmente servendosi dei delegati passati per associare i NodeID ad uno
-        skeleton, restituisce una lista (che può essere vuota) di istanze di skeleton del root-dispatcher: il messaggio
-        è da processare su ognuna di queste istanze.
-    *   **Rimosso** *get_identity* - Solo per i messaggi destinati a moduli *di identità*, dato l'identificativo del mittente di
-        un messaggio ricevuto, cioè una istanza di ISourceID, ottenere il NodeID dell'*identità* del mittente. Se
-        non è possibile ottenerlo, restituisce null.
-    *   **Rimosso** *get_node_arc* - Solo per i messaggi destinati a moduli *di nodo*, dato l'identificativo del mittente di un
-        messaggio ricevuto, cioè una istanza di ISourceID, e il nome dell'interfaccia di rete su cui il messaggio è
-        stato ricevuto, ottenere l'istanza di arco (INeighborhoodArc). Se non è possibile ottenerlo, restituisce null.
-    *   **Rimosso** *get_stub_identity_aware_unicast* - Dato un arco che collega questo nodo, chiamiamolo *a*, ad un altro nodo
-        vicino, chiamiamolo *b*, dato l'identificativo di una *identità* che risiede in *a*, chiamiamola
-        *a<sub>k</sub>*, dato l'identificativo di una *identità* che risiede in *b*, chiamiamola *b<sub>j</sub>*,
-        ottenere un oggetto stub utilizzabile per chiamare un metodo remoto su un modulo *di identità* da *a<sub>k</sub>*
-        a *b<sub>j</sub>*. Questo stub dialoga con il nodo remoto con protocollo reliable.
-    *   **Rimosso** *get_stub_whole_node_unicast* - Dato un arco che collega questo nodo, chiamiamolo *a*, ad un altro nodo vicino,
-        chiamiamolo *b*, ottenere un oggetto stub utilizzabile per chiamare un metodo remoto su un modulo *di nodo* da
-        *a* a *b*. Questo stub dialoga con il nodo remoto con protocollo reliable.
-    *   **Rimosso** *get_stub_identity_aware_broadcast* - Dato l'identificativo di una *identità* che risiede in *a*, chiamiamola
-        *a<sub>k</sub>*, dato un set di identificativi di *identità* che risiedono in alcuni nodi vicini, ottenere
-        un oggetto stub utilizzabile per inviare un messaggio in broadcast destinato a un modulo *di identità* di queste *identità*.  
-        Il modulo produrrà uno stub che si occuperà di inviare il messaggio in broadcast su tutte le interfacce di rete gestite.  
-        Quando si invia un messaggio tramite questo oggetto l'invio del messaggio è asincrono: procederà in una nuova
-        tasklet, mentre il metodo non fornirà alcuna risposta al chiamante. E' possibile fornire un oggetto in cui un
-        determinato metodo (callback) verrà richiamato dopo un certo tempo se per qualcuno degli archi noti al modulo
-        non si avrà ricevuto un messaggio di ACK dal vicino collegato. Questo controllo viene fatto sugli archi che sono
-        esistenti al momento dell'invio **e** sono ancora presenti alla scadenza del timeout. Il metodo callback viene chiamato
-        una volta per ogni arco che fallisce e avrà quell'arco come argomento, così che il chiamante possa prendere un
-        provvedimento, ad esempio riprovando con diverse chiamate unicast reliable. Si noti che in questo caso ad un arco
-        passato alla callback possono corrispondere diversi *archi-identità*.
-    *   **Rimosso** *get_stub_whole_node_broadcast* - Dato un set di archi che collegano ad alcuni nodi vicini, ottenere un oggetto
-        stub utilizzabile per inviare un messaggio in broadcast destinato a un modulo *di nodo* di questi nodi vicini.  
-        Il modulo produrrà una istanza di IBroadcastID che indicherà come destinatari i nodi che sono identificati
-        dagli archi che sono stati passati a questo metodo.  
-        Il modulo poi produrrà uno stub che si occuperà di inviare il messaggio in broadcast su tutte le interfacce di rete gestite.  
-        Quando si invia un messaggio tramite questo oggetto l'invio del messaggio è asincrono e non reliable: si veda la
-        spiegazione del metodo precedente. Tuttavia in questo caso ad un arco passato alla callback non corrispondono
-        diversi *archi-identità*.
-    *   *remove_my_arc* - Forzare la rimozione di un arco.
+    *   `start_monitor` - Aggiunge una interfaccia di rete da monitorare.
+    *   `stop_monitor` - Rimuove una interfaccia di rete da monitorare.
+    *   `get_my_neighborhood_id` - Restituisce l'identificativo assegnato a questo nodo.
+    *   `current_arcs` - Ottenere l'elenco degli archi ora presenti.
+    *   `remove_my_arc` - Forzare la rimozione di un arco.
 
 ## Classi e interfacce
 
 L'implementazione del sistema di tasklet è passata al modulo dal suo utilizzatore. Si tratta di una istanza dell'interfaccia
-ITasklet che è descritta nel relativo [documento](../Librerie/TaskletSystem.md#Interfacce).
+ITasklet che è descritta nel relativo [documento](../Librerie/TaskletSystem.md#interfacce).
 
 * * *
 
 Una interfaccia di rete passata al modulo è un oggetto istanza di una classe di cui il modulo conosce l'interfaccia
 INeighborhoodNetworkInterface. Tramite questa interfaccia il modulo può:
 
-*   Leggere il nome dell'interfaccia di rete, es: wlan0 (proprietà *dev*).
-*   Leggere il MAC address dell'interfaccia di rete, es: CC:AF:78:2E:C8:B6 (proprietà *mac*).
-*   Misurare il round-trip time (la latenza) con un vicino (metodo *measure_rtt*).
+*   Leggere il nome dell'interfaccia di rete, es: wlan0 (proprietà `dev`).
+*   Leggere il MAC address dell'interfaccia di rete, es: CC:AF:78:2E:C8:B6 (proprietà `mac`).
+*   Misurare il round-trip time (la latenza) con un vicino (metodo `measure_rtt`).
 
 * * *
 
 La classe usata per l'identificativo di un nodo, cioè NeighborhoodNodeID, è definita nel modulo Neighborhood
-e viene resa pubblica. Essa è serializzabile secondo la modalità usata in JsonGlib.
+e viene resa pubblica. **TODO** Ma solo il modulo ne può creare una nuova istanza (costruttore interno).
+
+Essa è serializzabile secondo la modalità usata in JsonGlib.
 
 * * *
 
@@ -437,7 +297,7 @@ Questa consente solo la lettura di un sottoinsieme delle informazioni in esso co
     che si può misurare, quindi quello che il modulo memorizza come costo, è il round-trip time (RTT).
 
 Non tutti gli archi creati vengono comunicati all'esterno del modulo come utilizzabili per l'instradamento
-di pacchetti nella rete. Questo avviene con il segnale di avvenuta costituzione di un arco.
+di pacchetti nella rete. Questo avviene con il segnale di avvenuta costituzione di un arco `arc_added`.
 
 Alcuni archi, sebbene non segnalati come detto sopra, sono usati dal modulo che li passa alla
 stub factory (che vedremo sotto) per realizzare una comunicazione con il diretto vicino.
@@ -451,10 +311,26 @@ La stub factory è un oggetto di cui il modulo conosce l'interfaccia INeighborho
     desidera che lo stub invii il messaggio.  
     Il messaggio è trasmesso senza alcuna affidabilità. Non è previsto alcun modo per verificare la mancata ricezione
     da parte di qualche vicino collegato ad un arco noto che parte da questa interfaccia.
-*   Creare uno stub per chiamare un metodo via connessione TCP attraverso uno specifico arco (metodo `get_tcp`).  
+*   Creare uno stub per chiamare un metodo via connessione TCP attraverso uno specifico arco (metodo `get_unicast`).  
     Il modulo specifica l'arco come istanza di INeighborhoodArc.  
     Infine il modulo può specificare se si vuole attendere l'esecuzione del metodo da parte del vicino o no, ma
     comunque se il metodo ritorna senza l'eccezione StubError la ricezione da parte del vicino è garantita.
+
+* * *
+
+Quando su questo nodo viene invocato un metodo remoto, esso è stato chiamato da un diretto vicino. Il delegato
+usato per identificare il chiamante è un oggetto di cui il modulo conosce l'interfaccia INeighborhoodQueryCallerInfo.
+Infatti essa a partire da un CallerInfo (che viene passato ad ogni invocazione di un metodo remoto) può essere usata
+per individuare il chiamante in questi modi:
+
+*   Si vuole sapere se è stata una invocazione unicast (metodo `is_from_unicast`).  
+    Se la risposta è positiva il metodo restituisce l'arco (istanza di INeighborhoodArc) tramite il quale la richiesta
+    è arrivata.  
+    Altrimenti il metodo restituisce *null*.
+*   Si vuole sapere se è stata una invocazione broadcast (metodo `is_from_broadcast`).  
+    Se la risposta è positiva il metodo restituisce l'interfaccia di rete (istanza di INeighborhoodNetworkInterface) sulla
+    quale la richiesta è arrivata.  
+    Altrimenti il metodo restituisce *null*.
 
 * * *
 
@@ -478,7 +354,7 @@ realizza, il modulo aggiunge la rotta con scope link verso l'indirizzo di scheda
 collegata all'arco. Quando rimuove l'arco rimuove anche la rotta. Quando il modulo cessa di gestire un'interfaccia
 rimuove il relativo indirizzo.
 
-Quando vuole generare un indirizzo IP link-local il modulo usa un delegato, come detto nei requisiti.
+Quando vuole generare un indirizzo IP link-local il modulo usa una funzione (delegato) come detto nei requisiti.
 
 Il modulo Neighborhood gestisce solo gli indirizzi di scheda dell'*identità principale* del nodo e dei suoi
 diretti vicini. (Cioè non si occupa degli indirizzi IP link-local che il nodo vorrà assegnare alle altre *identità*
