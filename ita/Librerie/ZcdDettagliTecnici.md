@@ -814,8 +814,8 @@ Le funzioni fornite dalla libreria per ottenere una istanza dello stub radice so
 
 *   `INodeManagerStub get_node_manager_stream_net(string peer_ip, uint16 tcp_port, ISourceID source_id, IUnicastID unicast_id, ISrcNic src_nic, bool wait_reply)`
 *   `INodeManagerStub get_node_manager_stream_system(string send_pathname, ISourceID source_id, IUnicastID unicast_id, ISrcNic src_nic, bool wait_reply)`
-*   `INodeManagerStub get_node_manager_datagram_net(string my_dev, uint16 udp_port, int packet_id, ISourceID source_id, IBroadcastID broadcast_id, ISrcNic src_nic, SampleRpc.IAckCommunicator? notify_ack=null)`
-*   `INodeManagerStub get_node_manager_datagram_system(string send_pathname, int packet_id, ISourceID source_id, IBroadcastID broadcast_id, ISrcNic src_nic, SampleRpc.IAckCommunicator? notify_ack=null)`
+*   `INodeManagerStub get_node_manager_datagram_net(string my_dev, uint16 udp_port, ISourceID source_id, IBroadcastID broadcast_id, ISrcNic src_nic, SampleRpc.IAckCommunicator? notify_ack=null)`
+*   `INodeManagerStub get_node_manager_datagram_system(string send_pathname, ISourceID source_id, IBroadcastID broadcast_id, ISrcNic src_nic, SampleRpc.IAckCommunicator? notify_ack=null)`
 
 Le funzioni `*_datagram_*` accettano una istanza di SampleRpc.IAckCommunicator. Se non è *null* allora
 lo stub prodotto, quando dovrà chiamare un metodo remoto, richiederà l'invio di un messaggio di ACK da parte dei
