@@ -378,7 +378,7 @@ L'oggetto che identifica l'arco *x* contiene:
 *   il MAC `neighbour_mac` e l'indirizzo IP linklocal `neighbour_nic_addr` del vicino.
 *   il mio INeighborhoodNetworkInterface `my_nic`.
 
-Il demone ntkd conosce la classe che implementa `INeighborhoodNetworkInterface my_nic` e
+Il demone *ntkd* conosce la classe che implementa `INeighborhoodNetworkInterface my_nic` e
 da esso sa identificare un dev o pseudodev del nodo *a*.
 
 Quindi il metodo `get_stub_identity_aware_unicast` può individuare i parametri che servono a
@@ -389,7 +389,7 @@ nelle tabelle del kernel del *network namespace default*.
 
 Di seguito elenchiamo le informazioni che verranno convogliate al nodo *b* attraverso il protocollo del framework ZCD
 (oltre naturalmente al messaggio vero e proprio che verrà indicato in seguito allo stub) e che quindi devono
-venire specificate dal demone ntkd alla creazione dello stub.
+venire specificate dal demone *ntkd* alla creazione dello stub.
 
 *   `ISourceID source_id`. Identifica il mittente.  
     Dal NodeID di *a<sub>0</sub>* verrà prodotto un IdentityAwareSourceID.
@@ -410,7 +410,7 @@ il messaggio. In questo caso un ascolto di connessioni su uno specifico indirizz
 Questa informazione è nel campo `Listener listener` dell'oggetto CallerInfo: può essere un
 StreamNetListener (con i campi `my_ip` e `tcp_port`) o un StreamSystemListener (con il campo `listen_pathname`).
 
-Poi passa il CallerInfo ad un delegato fornito dal demone ntkd (un `Netsukuku.IDelegate`) il cui compito
+Poi passa il CallerInfo ad un delegato fornito dal demone *ntkd* (un `Netsukuku.IDelegate`) il cui compito
 è di reperire un set di istanze skeleton su cui il messaggio va processato.  
 Le operazioni complete che si svolgono lato server quando viene recepito un messaggio
 sono illustrate nel documento [RPCLatoServer](../DemoneNTKD/RPCLatoServer.md).
@@ -437,7 +437,7 @@ istanza del modulo di identità interessato dal messaggio.
 
 Quando viene chiamato il metodo specificato dal messaggio sull'istanza dello skeleton del modulo
 interessato, agli argomenti specifici del messaggio viene aggiunto il CallerInfo.  
-Il modulo potrà usarlo per chiedere al demone ntkd (ad esempio attraverso un delegato o una
+Il modulo potrà usarlo per chiedere al demone *ntkd* (ad esempio attraverso un delegato o una
 interfaccia) di identificare l'arco-identità tramite il quale il messaggio è stato consegnato.
 
 Prendiamo ad esempio il metodo `i_qspn_comes_from(CallerInfo rpc_caller)` dell'interfaccia `IQspnArc`
@@ -448,10 +448,10 @@ le stesse in entrambi i casi.
 
 Durante l'esecuzione del metodo remoto `get_full_etp` invocato dal framework ZCD, il QspnManager conosce
 gli archi-identità di *b<sub>0</sub>* che gli sono stati passati come oggetti che implementano l'interfaccia IQspnArc.
-Prende uno di essi e vuole chiedere al demone ntkd se il CallerInfo indica che il messaggio
+Prende uno di essi e vuole chiedere al demone *ntkd* se il CallerInfo indica che il messaggio
 è stato consegnato proprio attraverso di esso. Quindi ne chiama il metodo `i_qspn_comes_from(rpc_caller)`.
 
-In questo metodo il demone ntkd sa che il mittente del messaggio è una identità di un nodo
+In questo metodo il demone *ntkd* sa che il mittente del messaggio è una identità di un nodo
 diretto vicino. Chiama sullo SkeletonFactory il metodo `from_caller_get_identityarc` e gli passa
 il CallerInfo e l'istanza di IdentityData che rappresenta l'identità associata alla
 istanza di QspnManager che ha fatto richiesta.  
@@ -514,7 +514,7 @@ della ricezione del messaggio.
 
 Di seguito elenchiamo le informazioni che verranno convogliate al nodo *b* attraverso il protocollo del framework ZCD
 (oltre naturalmente al messaggio vero e proprio che verrà indicato in seguito allo stub) e che quindi devono
-venire specificate dal demone ntkd alla creazione dello stub.
+venire specificate dal demone *ntkd* alla creazione dello stub.
 
 *   `ISourceID source_id`. Identifica il mittente.  
     Verrà prodotto un MainIdentitySourceID.
@@ -539,7 +539,7 @@ StreamNetListener (con i campi `my_ip` e `tcp_port`) o un StreamSystemListener (
 Poi passa il CallerInfo al delegato `Netsukuku.IDelegate`.
 Il delegato riconosce dal CallerInfo che si tratta di un
 messaggio unicast, quindi chiama il metodo `get_dispatcher` dello *SkeletonFactory*
-passandogli il CallerInfo.  
+passandogli le informazioni presenti nel CallerInfo.  
 In questo metodo lo SkeletonFactory, che conosce le classi MainIdentitySourceID e MainIdentityUnicastID
 sa che deve coinvolgere l'identità principale di *b*. Quindi
 restituirà il `identity_skeleton` specifico per tale identità.
@@ -604,7 +604,7 @@ realizzare una connessione con `get_addr_stream_net` o `get_addr_stream_system`.
 
 Di seguito elenchiamo le informazioni che verranno convogliate al nodo *b* attraverso il protocollo del framework ZCD
 (oltre naturalmente al messaggio vero e proprio che verrà indicato in seguito allo stub) e che quindi devono
-venire specificate dal demone ntkd alla creazione dello stub.
+venire specificate dal demone *ntkd* alla creazione dello stub.
 
 *   `ISourceID source_id`. Identifica il mittente.  
     Dal NeighborhoodNodeID del nodo locale (che il metodo conosce) verrà prodotto un WholeNodeSourceID.
@@ -620,7 +620,7 @@ Nel nodo *b* una tasklet *listener* (`stream_net_listen` o `stream_system_listen
 prepara un CallerInfo e lo passa al delegato `Netsukuku.IDelegate`.  
 Il delegato riconosce dal CallerInfo che si tratta di un
 messaggio unicast, quindi chiama il metodo `get_dispatcher` dello *SkeletonFactory*
-passandogli il CallerInfo.  
+passandogli le informazioni presenti nel CallerInfo.  
 In questo metodo lo SkeletonFactory, che conosce le classi WholeNodeSourceID e WholeNodeUnicastID,
 sa recuperarne il NeigborhoodNodeID di *a* e quello di *b*;  
 verifica (opzionalmente) che il suo NeigborhoodNodeID corrisponda a quello di *b*;  
@@ -633,17 +633,17 @@ l'interfaccia di rete nel nodo vicino corrisponda a quella che ha trasmesso
 Quindi restituirà il `node_skeleton` del nodo locale.
 
 Il delegato restituisce lo skeleton (sarà di sicuro uno solo in questo caso, ma generalmente un set)
-al framework ZCD, il quale potrà chiamarne i metodi che referenziano la giusta
-istanza del modulo di identità interessato dal messaggio.
+al framework ZCD, il quale potrà chiamarne i metodi che referenziano l'istanza
+del modulo di nodo interessato dal messaggio.
 
 ##### esecuzione lato server
 
 Quando viene chiamato il metodo specificato dal messaggio sull'istanza dello skeleton del modulo
 interessato, agli argomenti specifici del messaggio viene aggiunto il CallerInfo.  
-Il modulo potrà usarlo per chiedere al demone ntkd (ad esempio attraverso un delegato o una
+Il modulo potrà usarlo per chiedere al demone *ntkd* (ad esempio attraverso un delegato o una
 interfaccia) di identificare l'arco tramite il quale il messaggio è stato consegnato.
 
-In questo metodo il demone ntkd sa che il mittente del messaggio è un nodo
+In questo metodo il demone *ntkd* sa che il mittente del messaggio è un nodo
 diretto vicino. Chiama sullo SkeletonFactory il metodo `from_caller_get_nodearc` e gli passa
 il CallerInfo.  
 In questo metodo lo SkeletonFactory presume che il chiamante sia un diretto vicino, ma ammette
@@ -666,4 +666,76 @@ il risultato nella stessa connessione in cui aveva ricevuto il messaggio.
 
 #### Broadcast - radar scan
 
-**TODO**
+Facciamo un esempio di un modulo *di nodo* in cui il nodo *a* vuole chiamare in broadcast un metodo remoto
+sui nodi diretti vicini che raggiunge attraverso una sua interfaccia *nic*.  
+L'unico caso nel demone *ntkd* è l'operazione di radar-scan. I metodi remoti di questa operazione
+non fanno richiesta di un ACK.
+
+##### chiamata lato client
+
+Il nodo *a* chiama il metodo `get_stub_whole_node_broadcast_for_radar` dello *StubFactory*. Gli passa un
+INeighborhoodNetworkInterface che identifica l'interfaccia di rete *nic*.  
+Lo stub prodotto in questo modo trasmetterà il messaggio in modalità non-reliable attraverso l'interfaccia
+di rete *nic*.  
+La trasmissione avrà caratteristiche analoghe anche qualora si trattasse di una trasmissione sul medium "system"
+con un socket unix-domain. In questo caso il fatto che il messaggio giunga ai nodi destinatari dipende dal
+"corretto" funzionamento del proxy (e.g. `eth_domain` o `radio_domain` forniti da ZCD).
+
+La classe che implementa INeighborhoodNetworkInterface contiene le informazioni necessarie affinché
+il metodo `get_stub_whole_node_broadcast_for_radar` possa individuare i parametri che servono a
+trasmettere un messaggio con `get_addr_datagram_net` o `get_addr_datagram_system`.
+
+Di seguito elenchiamo le informazioni che verranno convogliate ai nodi
+che rilevano il messaggio attraverso il protocollo del framework ZCD
+(oltre naturalmente al messaggio vero e proprio che verrà indicato in seguito allo stub) e che quindi devono
+venire specificate dal demone *ntkd* alla creazione dello stub.
+
+*   `ISourceID source_id`. Identifica il mittente.  
+    Dal NeighborhoodNodeID del nodo locale (che il metodo conosce) verrà prodotto un WholeNodeSourceID.
+*   `IBroadcastID broadcast_id`. Identifica i destinatari.  
+    Verrà prodotto un EveryWholeNodeBroadcastID, che non contiene altra informazione: tutti devono ricevere.
+*   `ISrcNic src_nic`. Identifica il NIC usato dal nodo mittente.  
+    Dal INeighborhoodNetworkInterface `nic` verrà prodotto un NeighbourSrcNic.
+*   Come IAckCommunicator `notify_ack` viene passato *null*: non è richiesto alcun messaggio di ACK dai riceventi.
+
+##### ricezione lato server
+
+Nel nodo *b*, a ricevere il messaggio è una tasklet avviata dal framework ZCD con la funzione `datagram_net_listen`
+o `datagram_system_listen`. Questa prepara una istanza di CallerInfo specifica per i messaggi broadcast.  
+Nell'oggetto CallerInfo il framework ZCD include le informazioni convogliate nel protocollo del
+framework ZCD e anche la conoscenza della modalità con cui era in ascolto la tasklet che ha recepito
+il messaggio. In questo caso un ascolto di pacchetti su una specifica nostra interfaccia di rete
+oppure su uno specifico pathname.
+Questa informazione è nel campo `Listener listener` dell'oggetto CallerInfo: può essere un
+DatagramNetListener (con i campi `my_dev, udp_port, src_nic`) o un DatagramSystemListener
+(con i campi `listen_pathname, send_pathname, src_nic`).
+
+Poi passa il CallerInfo ad un delegato fornito dal demone *ntkd* (un `Netsukuku.IDelegate`) il cui compito
+è di reperire un set di istanze skeleton su cui il messaggio va processato.
+
+Il delegato riconosce dal CallerInfo che si tratta di un
+messaggio broadcast, quindi chiama il metodo `get_dispatcher_set` dello *SkeletonFactory*. Gli passa
+le informazioni presenti nel CallerInfo, cioè quelle convogliate nel protocollo del framework ZCD.  
+In questo metodo lo SkeletonFactory, che conosce le classi WholeNodeSourceID e EveryWholeNodeBroadcastID
+sa recuperare il NeigborhoodNodeID di *a* e sa che deve coinvolgere il `node_skeleton` del nodo locale.
+
+Il delegato restituisce lo skeleton (sarà di sicuro uno solo in questo caso, ma generalmente un set)
+al framework ZCD, il quale potrà chiamarne i metodi che referenziano l'istanza
+del modulo di nodo interessato dal messaggio.
+
+##### esecuzione lato server
+
+Quando viene chiamato il metodo specificato dal messaggio sull'istanza dello skeleton del modulo
+interessato, agli argomenti specifici del messaggio viene aggiunto il CallerInfo.  
+Il modulo potrà usarlo per chiedere al demone *ntkd* di identificare l'interfaccia di rete tramite cui il
+messaggio è stato rilevato.
+
+Ad esempio il modulo di nodo Neighborhood prevede a questo scopo il metodo `is_from_broadcast`
+dell'interfaccia INeighborhoodQueryCallerInfo.  
+In questo metodo il demone *ntkd* sa che il mittente del messaggio è un nodo
+diretto vicino. Chiama sullo SkeletonFactory il metodo `from_caller_get_mydev` e gli passa
+il CallerInfo.  
+In questo metodo lo SkeletonFactory sa riconoscere il tipo di CallerInfo e estrapolarne
+il nome della propria interfaccia di rete (o pseudo se il medium è "system").  
+Da questo nome il metodo `is_from_broadcast` recupera l'istanza di INeighborhoodNetworkInterface
+che la rappresenta nel modulo di nodo Neighborhood.
