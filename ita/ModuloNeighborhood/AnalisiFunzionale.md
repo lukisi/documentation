@@ -323,11 +323,20 @@ usato per identificare il chiamante è un oggetto di cui il modulo conosce l'int
 Infatti essa a partire da un CallerInfo (che viene passato ad ogni invocazione di un metodo remoto) può essere usata
 per individuare il chiamante in questi modi:
 
-*   Si vuole sapere se è stata una invocazione unicast (metodo `is_from_unicast`).  
-    Se la risposta è positiva il metodo restituisce l'arco (istanza di INeighborhoodArc) tramite il quale la richiesta
+*   Il metodo remoto `can_you_export` accetta di essere chiamato solo da un diretto vicino con un
+    messaggio unicast, e vuole sapere specificamente quale arco è stato usato.  
+    In particolare occorre considerare che l'arco in questione non è stato ancora esposto dal
+    modulo Neighborhood. Quindi quando viene interrogato a questo scopo il delegato INeighborhoodQueryCallerInfo
+    viene fornito, oltre al CallerInfo, anche tutto l'elenco degli archi (istanze di INeighborhoodArc) noti
+    al modulo (compresi quelli non ancora esposti).  
+    Questa richiesta si fa invocando il metodo `is_from_unicast` di INeighborhoodQueryCallerInfo.
+    Se la risposta è positiva il metodo restituisce l'arco tramite il quale la richiesta
     è arrivata.  
     Altrimenti il metodo restituisce *null*.
-*   Si vuole sapere se è stata una invocazione broadcast (metodo `is_from_broadcast`).  
+*   Alcuni metodi remoti (`here_i_am`, `request_arc`, `remove_arc`) accettano di essere chiamati solo da un
+    diretto vicino con un messaggio broadcast, e vogliono sapere specificamente su quale delle proprie
+    interfacce di rete arco la richiesta è arrivata.  
+    Questa richiesta si fa invocando il metodo `is_from_broadcast` di INeighborhoodQueryCallerInfo.
     Se la risposta è positiva il metodo restituisce l'interfaccia di rete (istanza di INeighborhoodNetworkInterface) sulla
     quale la richiesta è arrivata.  
     Altrimenti il metodo restituisce *null*.

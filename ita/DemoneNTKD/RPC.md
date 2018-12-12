@@ -622,15 +622,16 @@ Il delegato riconosce dal CallerInfo che si tratta di un
 messaggio unicast, quindi chiama il metodo `get_dispatcher` dello *SkeletonFactory*
 passandogli le informazioni presenti nel CallerInfo.  
 In questo metodo lo SkeletonFactory, che conosce le classi WholeNodeSourceID e WholeNodeUnicastID,
-sa recuperarne il NeigborhoodNodeID di *a* e quello di *b*;  
-verifica (opzionalmente) che il suo NeigborhoodNodeID corrisponda a quello di *b*;  
-verifica se c'è nei suoi archi uno in cui il NeigborhoodNodeID del vicino corrisponda
-a quello di *a*,
-l'interfaccia di rete nel nodo locale corrisponda a quella che ha ricevuto il
-messaggio (informazione nel campo `listener` del CallerInfo) e
-l'interfaccia di rete nel nodo vicino corrisponda a quella che ha trasmesso
-(informazione nel NeighbourSrcNic del CallerInfo).  
-Quindi restituirà il `node_skeleton` del nodo locale.
+sa recuperarne il NeigborhoodNodeID di *a* e quello di *b*.  
+Verifica che il suo NeigborhoodNodeID corrisponda a quello di *b*. Altrimenti termina la tasklet.  
+Ci si aspetta che questo messaggio provenga da una connessione reliable stabilita tra due nodi
+diretti vicini per i quali il modulo Neighborhood ha realizzato l'arco che li collega.
+Ci sono due possibilità: l'arco è stato esposto dal modulo al suo utilizzatore (quindi il metodo
+dello SkeletonFactory lo conosce) oppure non è stato ancora esposto: ad esempio quando il modulo
+Neighborhood stesso intende usare l'arco per decidere di comune accordo col vicino se esporlo
+(quindi il metodo dello SkeletonFactory non conosce l'arco). In questa fase non fa differenza:
+il metodo `get_dispatcher` dello *SkeletonFactory* non cerca di individuare l'arco.  
+Quindi il metodo `get_dispatcher` restituirà il `node_skeleton` del nodo locale.
 
 Il delegato restituisce lo skeleton (sarà di sicuro uno solo in questo caso, ma generalmente un set)
 al framework ZCD, il quale potrà chiamarne i metodi che referenziano l'istanza
@@ -643,9 +644,12 @@ interessato, agli argomenti specifici del messaggio viene aggiunto il CallerInfo
 Il modulo potrà usarlo per chiedere al demone *ntkd* (ad esempio attraverso un delegato o una
 interfaccia) di identificare l'arco tramite il quale il messaggio è stato consegnato.
 
-In questo metodo il demone *ntkd* sa che il mittente del messaggio è un nodo
-diretto vicino. Chiama sullo SkeletonFactory il metodo `from_caller_get_nodearc` e gli passa
-il CallerInfo.  
+Questo sarà possibile solo per i messaggi che vengono trasmessi su un arco *x* che è stato
+esposto dal modulo Neighborhood al suo utilizzatore.
+
+Il codice nel demone *ntkd* incaricato di cercare l'arco partendo da un CallerInfo, sa che il
+mittente del messaggio è un nodo diretto vicino. Chiama sullo SkeletonFactory il
+metodo `from_caller_get_nodearc` e gli passa il CallerInfo.  
 In questo metodo lo SkeletonFactory presume che il chiamante sia un diretto vicino, ma ammette
 che possa aver fatto una trasmissione unicast o broadcast. In ogni caso, sa riconoscere il
 tipo di CallerInfo e estrapolarne il ISourceID.  
