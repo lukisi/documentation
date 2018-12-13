@@ -273,7 +273,7 @@ INeighborhoodNetworkInterface. Tramite questa interfaccia il modulo può:
 * * *
 
 La classe usata per l'identificativo di un nodo, cioè NeighborhoodNodeID, è definita nel modulo Neighborhood
-e viene resa pubblica. **TODO** Ma solo il modulo ne può creare una nuova istanza (costruttore interno).
+e viene resa pubblica. Ma solo il modulo ne può creare una nuova istanza (costruttore interno).
 
 Essa è serializzabile secondo la modalità usata in JsonGlib.
 
@@ -309,8 +309,8 @@ La stub factory è un oggetto di cui il modulo conosce l'interfaccia INeighborho
 *   Creare uno stub per chiamare un metodo via UDP in broadcast sui nodi vicini (metodo `get_broadcast_for_radar`).  
     Il modulo specifica una interfaccia di rete come istanza di INeighborhoodNetworkInterface, sulla quale
     desidera che lo stub invii il messaggio.  
-    Il messaggio è trasmesso senza alcuna affidabilità. Non è previsto alcun modo per verificare la mancata ricezione
-    da parte di qualche vicino collegato ad un arco noto che parte da questa interfaccia.
+    Il messaggio è trasmesso senza alcuna affidabilità. Non è previsto alcun modo per verificare la ricezione
+    da parte dei vicini.
 *   Creare uno stub per chiamare un metodo via connessione TCP attraverso uno specifico arco (metodo `get_unicast`).  
     Il modulo specifica l'arco come istanza di INeighborhoodArc.  
     Infine il modulo può specificare se si vuole attendere l'esecuzione del metodo da parte del vicino o no, ma

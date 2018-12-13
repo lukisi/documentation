@@ -43,12 +43,14 @@ In tale segnale viene riportato:
 
 *   L'arco costituito. Un INeighborhoodArc `arc`.
 
-Il segnale significa anche che è stata aggiunta nelle tabelle (nel network namespace default) la rotta verso
-quell'indirizzo di scheda che è riportato nell'istanza di INeighborhoodArc.
+In realtà, prima l'arco viene costituito e viene aggiunta nelle tabelle (nel network namespace default) la
+rotta verso l'indirizzo di scheda del vicino. Poi, soltanto se entrambi i nodi sono disponibili, viene deciso
+di esporre l'arco all'utilizzatore del modulo. Solo a questo punto il segnale viene emesso.
 
 * * *
 
-Il modulo segnala che sta per rimuovere un arco attraverso il segnale `arc_removing` di NeighborhoodManager.
+Il modulo segnala che sta per rimuovere un arco (che era stato precedentemente esposto) attraverso il
+segnale `arc_removing` di NeighborhoodManager.
 
 In tale segnale viene riportato:
 
@@ -58,15 +60,26 @@ In tale segnale viene riportato:
 Il segnale comunica all'utilizzatore che il modulo sta per rimuovere dalle tabelle (nel network namespace default) la rotta verso
 quell'indirizzo di scheda che è riportato nell'istanza di INeighborhoodArc.
 
-Questa notifica avviene in due tipi di situazione. Nel primo caso è perché il modulo si è avveduto da solo
-(oppure il suo utilizzatore glielo ha notificato) che l'arco è effettivamente non funzionante. Nel secondo
-caso è perché l'utilizzatore ha richiesto al modulo di rimuovere l'arco che ancora si presume essere
-funzionante. Il modulo notificando questo segnale `arc_removing` include questa informazione nel booleano
-`is_still_usable`.
+La rimozione di un arco avviene con il metodo `remove_my_arc` che (come illustreremo sotto) è pubblico. Quando
+si chiama questo metodo si specifica anche (argomento booleano `is_still_usable`) se si ritiene che l'arco sia
+ancora funzionante. Se si ritiene (a torto o a ragione) che sia funzionante, verrà tentata una ultima comunicazione
+(comunque in broadcast senza alcuna verifica di ricezione) affinché anche l'altro capo rimuova l'arco dalla sua lista.
+
+La chiamata al metodo `remove_my_arc` avviene in due tipi di situazione. Nel primo caso è perché, il modulo 
+Neigborhood stesso oppure un altro, si è avveduto che l'arco è effettivamente non funzionante. Nel secondo
+caso è perché l'utilizzatore, per altri motivi, ha richiesto al modulo di rimuovere l'arco che ancora si presume essere
+funzionante.
+
+Nella esecuzione del metodo `remove_my_arc`, solo se l'arco era stato esposto dal modulo Neighborhood,
+prima della rimozione viene emesso il segnale `arc_removing`.  
+Poi viene rimosso l'arco; viene tentata, se richiesto, l'ultima comunicazione affinché anche l'altro
+capo rimuova l'arco dalla sua lista.  
+Infine, solo se l'arco era stato esposto, verrà emesso il segnale `arc_removed` (che vedremo sotto).
 
 * * *
 
-Il modulo segnala l'avvenuta rimozione di un arco attraverso il segnale `arc_removed` di NeighborhoodManager.
+Il modulo segnala l'avvenuta rimozione di un arco (che era stato precedentemente esposto) attraverso il
+segnale `arc_removed` di NeighborhoodManager.
 
 In tale segnale viene riportato:
 
@@ -77,7 +90,8 @@ quell'indirizzo di scheda che è riportato nell'istanza di INeighborhoodArc.
 
 * * *
 
-Il modulo segnala la variazione del costo di un arco attraverso il segnale `arc_changed` di NeighborhoodManager.
+Il modulo segnala la variazione del costo di un arco (che era stato precedentemente esposto) attraverso il
+segnale `arc_changed` di NeighborhoodManager.
 
 In tale segnale viene riportato:
 
@@ -110,7 +124,7 @@ Questo metodo è pubblico perché può essere l'utilizzatore del modulo che vuol
 di un arco. Ma anche il modulo stesso può usarlo internamente in alcune occasioni.
 
 In entrambi i casi, il chiamante del metodo può specificare che si possa o meno tentare una ulteriore comunicazione
-all'altro capo dell'arco. Lo si specifica con l'argomento booleano `do_tell`. In questa ultima comunicazione,
+all'altro capo dell'arco. Lo si specifica con l'argomento booleano `is_still_usable`. In questa ultima comunicazione,
 se richiesta, si trasmette in broadcast sull'interfaccia di rete dell'arco il messaggio `remove_arc` affinché anche
 l'altro capo rimuove l'arco dalla sua lista.
 
@@ -134,16 +148,22 @@ Poi ripete lo stesso messaggio con bassa frequenza, ogni minuto.
 I nodi che sono nel dominio broadcast vedono questo messaggio e possono fin da subito accordarsi per un arco. Quelli che hanno
 già costituito un arco verso quel MAC address ignorano il nuovo messaggio.
 
-Un nodo che vuole accordarsi per un arco con un vicino di cui ha notato la presenza invia un messaggio "facciamo un arco" (`request_arc`)
+Un nodo che vuole accordarsi per un arco con un vicino di cui ha notato la presenza,
+prima usa l'oggetto INeighborhoodIPRouteManager per impostare la rotta verso l'indirizzo di scheda del nuovo vicino,
+poi invia un messaggio "facciamo un arco" (`request_arc`)
 sempre in broadcast solo sull'interfaccia dove ha ricevuto il messaggio "ci sono io", indicando sia i dati ricevuti
 nel precedente messaggio "ci sono io" (NeighborhoodNodeID, MAC e linklocal del nodo vicino) sia i rispettivi dati
-del proprio nodo. Dopo entrambi i nodi avranno un arco che ancora non è esposto dal modulo e il cui costo è ancora non misurato.
+del proprio nodo.
 
-Dopo, entrambi i nodi usano l'oggetto INeighborhoodIPRouteManager
-per impostare la rotta verso l'indirizzo di scheda del nuovo vicino. Quindi da subito è possibile realizzare connessioni
-reliable (con protocollo TCP) tra i due nodi passanti per questo nuovo arco.
+Alla ricezione del messaggio "facciamo un arco" anche il vicino appena rilevato da parte sua
+usa l'oggetto INeighborhoodIPRouteManager per impostare la rotta verso l'indirizzo di scheda del nuovo vicino.
+Inoltre, questi sa che il vicino (quello che ha trasmesso "facciamo un arco") aveva già
+impostato la rotta verso il suo indirizzo di scheda. Quindi da subito può realizzare una connessione
+reliable (con protocollo TCP) con esso.
 
-Il nodo che ha inviato il messaggio "facciamo un arco" realizza ora una connessione TCP
+A questo punto entrambi i nodi avranno un arco che ancora non è esposto dal modulo e il cui costo è ancora non misurato.
+
+Il nodo che ha ricevuto il messaggio "facciamo un arco" realizza ora una connessione TCP
 (usando `get_unicast` della stub factory) per chiamare sul nuovo vicino il metodo
 remoto "esponi l'arco". In questo metodo, con la firma `bool can_you_export(bool i_can_export)`, entrambi i nodi dichiarano
 la loro disponibilità ad esporre l'arco dal modulo. Come detto in precedenza, se uno rifiuta anche l'altro deve
