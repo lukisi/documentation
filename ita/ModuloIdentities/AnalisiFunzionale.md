@@ -26,7 +26,7 @@ Il modulo Identities consente la creazione di una prima *identità* all'avvio de
 
 In seguito il modulo, data una identità *j*, consente di creare partendo da essa una nuova identità *i*.
 Da questo momento l'identità *j* sussiste, ma diventa una identità *di connettività*, la
-quale sussiste temporaneamente. Si veda la trattazione del modulo [QSPN](../ModuloQSPN/AnalisiFunzionale.md#Nodi_virtuali)
+quale sussiste temporaneamente. Si veda la trattazione del modulo [QSPN](../ModuloQspn/AnalisiFunzionale.md#nodi-virtuali)
 per comprendere la funzione di una identità *di connettività* e per quale motivo essa sia temporanea.
 
 In contrapposizione al significato di una identità *di connettività* introduciamo il concetto di
@@ -141,9 +141,10 @@ Le operazioni del modulo sono implementate per la maggior parte in metodi di una
 Di essa viene creata una sola istanza dall'applicazione in esecuzione su un sistema. Di seguito ci possiamo
 riferire a tale istanza semplicemente con il termine *manager*.
 
-Poiché il manager è uno solo nel sistema, diciamo che il modulo Identities è un modulo *di sistema*. Si veda
-nella trattazione del modulo [Neighborhood](../ModuloNeighborhood/AnalisiFunzionale.md#Identita_multiple_in_un_sistema)
-la differenza tra moduli *di sistema* e moduli *di identità*.
+Poiché il manager è uno solo nel sistema, diciamo che il modulo Identities è un modulo *di sistema*.  
+Nella sezione "[casi di messaggi](../DemoneNTKD/RPC.md#diversi-casi-di-messaggi)" del documento che tratta
+le comunicazioni RPC del demone *ntkd* è illustrata la differenza tra moduli *di sistema* e moduli *di identità*.
+Fare attenzione che in quel documento si usa una diversa nomenclatura e si chiamano i primi moduli *di nodo*.
 
 Nel costruire l'istanza del manager, l'utilizzatore del modulo specifica quali sono i nomi delle interfacce di
 rete reali gestite dal sistema, i relativi MAC e gli indirizzi link-local (che gli sono stati definitivamente
@@ -395,6 +396,8 @@ una stringa che la identifica univocamente.
 Nella classe Identity vengono memorizzate le istanze delle classi dei moduli *di identità*. Cioè i *membri* dell'identità.
 
 * * *
+
+**TODO** Spostare la classe da ntkd-common a dentro questo modulo.
 
 La classe usata per l'identificativo di una identità, cioè NodeID, è una classe serializzabile definita nella
 libreria [Common](../Librerie/Common.md). Il modulo Identities ha una dipendenza su questa libreria, quindi conosce tale classe.

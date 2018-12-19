@@ -11,7 +11,7 @@
     1.  [Elementi memorizzati nella mappa](#Elementi_memorizzati_mappa)
     1.  [Indirizzo Netsukuku](#Indirizzo_Netsukuku)
     1.  [Migrazioni e indirizzi IP interni](#Migrazioni_e_indirizzi_interni)
-    1.  [Nodi virtuali](#Nodi_virtuali)
+    1.  [Nodi virtuali](#nodi-virtuali)
         1.  [Al livello 0](#Nodi_virtuali_livello_0)
         1.  [Ai livelli superiori](#Nodi_virtuali_altri_livelli)
     1.  [Rimozione dell'indirizzo di connettività di un g-nodo dopo la sua migrazione](#Rimozione_indirizzo_connettivita)
@@ -398,7 +398,7 @@ Questo accorgimento mitiga molto il disagio dovuto al cambio di indirizzo di un 
 Un esempio dell'uso di indirizzi IP *interni* è illustrato in questo [documento](RoutingIndirizziInterni.md) (insieme ad
 alcune considerazioni sul routing che saranno chiare dopo aver esaminato il prossimo paragrafo sui *nodi virtuali*).
 
-### <a name="Nodi_virtuali"></a>Nodi virtuali
+### Nodi virtuali
 
 Abbiamo detto in precedenza che ogni g-nodo di livello *i* ha un identificativo che lo individua univocamente all'interno
 del suo g-nodo di livello *i* + 1 e che tale identificativo è un numero intero da 0 a *gsize(i)* - 1.
