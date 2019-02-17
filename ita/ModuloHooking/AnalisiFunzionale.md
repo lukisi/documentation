@@ -2338,7 +2338,8 @@ se ne accorge il modulo Qspn di *n*, il quale emette un determinato segnale.
 
 Il demone *ntkd* in risposta a questo segnale chiama il metodo `signal_split` del modulo Hooking
 indicando l'arco-identità su cui comunicare. Il modulo Hooking in esso chiama il metodo remoto
-`you_have_splitted` su quell'arco-identità indicando il livello *l* dello split.
+`you_have_splitted` su quell'arco-identità indicando il livello *l* dello split, l'indirizzo
+del g-nodo *g* e il fingerprint di *g'*.
 
 Il nodo *v* in questo metodo si avvale del modulo Coordinator per la *propagazione senza ritorno* del
 metodo `we_have_splitted`. In questo metodo ogni singolo nodo del g-nodo *g'* emette il segnale `exit_network` con

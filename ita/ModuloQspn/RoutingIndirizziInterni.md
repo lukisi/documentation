@@ -75,8 +75,8 @@ rimarranno valide e funzionanti poiché l'indirizzo di *f* in *g2* è rimasto 10
 
 * * *
 
-**Nota 1**: Per una strategia efficiente di individuazione dei range di indirizzi IP *interni* ai g-nodi si veda
-il documento [Indirizzi IP](../Proof/IndirizziIP.md) nella documentazione del 'proof of concept'.
+**Nota 1**: Per una strategia efficiente di individuazione dei range di indirizzi IP *interni* ai g-nodi si veda il documento
+[Indirizzi IP](../DemoneNTKD/IndirizziIP.md#mappatura-dello-spazio-di-indirizzi-netsukuku-nello-spazio-di-indirizzi-ip).
 
 ## Problema dei nodi virtuali
 
