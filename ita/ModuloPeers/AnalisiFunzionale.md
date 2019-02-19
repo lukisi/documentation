@@ -556,6 +556,6 @@ conoscenza di gsizes.
 Se  invece la classe derivata ridefinisce il metodo `perfect_tuple` è  libera di calcolare direttamente la tupla *x̄* a
 partire dalla chiave e  dalle sue conoscenze. In questo caso, inoltre, può decidere di restituire una tupla con un
 numero di elementi inferiore al numero di livelli della rete. In questo caso la tupla
-*x̄ *= *x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>j</sub>* quando viene passata alla funzione *H<sub>t</sub>* circoscrive la
+*x̄* = *x̄<sub>0</sub>·x̄<sub>1</sub>·...·x̄<sub>j</sub>* quando viene passata alla funzione *H<sub>t</sub>* circoscrive la
 sua ricerca dell'hash-node al g-nodo *n<sub>j+1</sub>* del nodo *n* che fa la richiesta.
 
