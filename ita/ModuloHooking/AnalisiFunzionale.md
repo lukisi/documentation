@@ -244,7 +244,9 @@ Per prima cosa il modulo Hooking emette il segnale `another_network` indicando i
 
 Le due reti sicuramente vogliono fondersi in una. Si preferisce che sia la più piccola, come numero di singoli nodi in tutta la rete,
 ad entrare nella più grande. Solo in caso di parità assoluta si ricorra all'identificativo della rete (che è un numero
-casuale) come discriminatore. Però ricordiamo che il numero di singoli nodi in tutta la rete è un dato che ogni singolo
+casuale) come discriminatore: la rete con identificativo più piccolo entra nella
+rete  con identificativo più grande.  
+Però ricordiamo che il numero di singoli nodi in tutta la rete è un dato che ogni singolo
 nodo ha in modo approssimativo.  
 Questo significa che quando si incontrano le reti *G* e *J* attraverso molteplici archi è possibile che
 in uno di questi archi (ad esempio quello dei nodi *n* e *v*) si decida che *G* deve entrare in *J*, mentre
