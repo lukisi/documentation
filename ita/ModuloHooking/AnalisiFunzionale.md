@@ -1,20 +1,20 @@
 # Modulo Hooking - Analisi Funzionale
 
-1.  [Terminologia e notazioni](#Notazioni)
-1.  [Il ruolo del modulo Hooking](#Ruolo_Hooking)
-    1.  [Migration-path](#Migration_path)
-    1.  [Collaborazione con il modulo Coordinator](#Collaborazione_coordinator)
-1.  [Incontro di due nodi nella stessa rete](#Nuovo_arco)
-1.  [Incontro e fusione di due reti distinte](#Fusione_reti)
-    1.  [Prima fase - valutazione del singolo nodo](#Fusione_reti_fase1)
-    1.  [Seconda fase - valutazione della rete](#Fusione_reti_fase2)
+1.  [Terminologia e notazioni](#terminologia-e-notazioni)
+1.  [Il ruolo del modulo Hooking](#il-ruolo-del-modulo-hooking)
+    1.  [Migration-path](#migration-path)
+    1.  [Collaborazione con il modulo Coordinator](#collaborazione-con-il-modulo-coordinator)
+1.  [Incontro di due nodi nella stessa rete](#incontro-di-due-nodi-nella-stessa-rete)
+1.  [Incontro e fusione di due reti distinte](#incontro-e-fusione-di-due-reti-distinte)
+    1.  [Prima fase - valutazione da parte del singolo nodo](#prima-fase---valutazione-da-parte-del-singolo-nodo)
+    1.  [Seconda fase - valutazione da parte della rete](#seconda-fase---valutazione-da-parte-della-rete)
     1.  [Terza fase - elezione dell'ingresso](#Fusione_reti_fase3)
     1.  [Quarta fase - comunicazione della elezione](#Fusione_reti_fase4)
     1.  [Quinta fase - comunicazione con il g-nodo entrante](#Fusione_reti_fase5)
     1.  [Sesta fase - richiesta della prenotazione di un posto](#Fusione_reti_fase6)
     1.  [Prenotazione riuscita: Settima fase - ingresso](#Fusione_reti_fase7a)
     1.  [Prenotazione fallita: Settima fase - annullamento al g-nodo entrante](#Fusione_reti_fase7b)
-    1.  [Classe HookingMemory](#Class_HookingMemory)
+    1.  [Classe HookingMemory](#classe-hookingmemory)
 1.  [Strategia di ingresso](#Strategia_ingresso)
     1.  [Definizione della migration-path](#Strategia_ingresso_Definizione_migration_path)
     1.  [Uso della migration-path](#Strategia_ingresso_Uso_migration_path)
@@ -25,7 +25,7 @@
     1.  [Algoritmo di esecuzione](#Strategia_ingresso_Algoritmo_esecuzione)
 1.  [Risoluzione di uno split di g-nodo](#Split_gnodo)
 
-## <a name="Notazioni"></a>Terminologia e notazioni
+## Terminologia e notazioni
 
 ### La rete con i suoi vertici
 
@@ -98,7 +98,7 @@ Se invece abbiamo *size<sub>0</sub>(g) = gsizes(0) \* gsizes(1) \* ... \*
 cioè non ci sono più dentro *g* indirizzi liberi. Va notato che un singolo nodo *x* appartenente a *g* non è in grado
 autonomamente di calcolare tale valore, se non nel caso in cui *l* = 1.
 
-## <a name="Ruolo_Hooking"></a>Il ruolo del modulo Hooking
+## Il ruolo del modulo Hooking
 
 Il ruolo del modulo Hooking è la gestione degli archi-identità *principali*, cioè quelli che collegano
 l'identità principale nel sistema corrente ad una identità principale in un diverso sistema.  
@@ -118,7 +118,7 @@ Hooking è decidere quale g-nodo deve fare ingresso in una diversa rete e in qua
 In questo caso può rendersi necessario che il modulo Hooking trovi una migration-path e coordini
 la sua esecuzione.
 
-### <a name="Migration_path"></a>Migration-path
+### Migration-path
 
 La ricerca di una migration-path ha come obiettivo la liberazione (se necessario) di una posizione
 *reale* in un g-nodo. La migration-path più corta può essere di lunghezza zero, se in effetti una
@@ -134,7 +134,7 @@ una rete a cui non apparteneva. Questo può rendersi necessario a fronte di due 
     ogni isola che non contiene il nodo più anziano deve considerarsi come una distinta
     rete *J* (composta da un solo g-nodo di livello *l* o minore) che incontra *G*.
 
-### <a name="Collaborazione_coordinator"></a>Collaborazione con il modulo Coordinator
+### Collaborazione con il modulo Coordinator
 
 Nelle varie fasi delle sue operazioni, il modulo Hooking si avvale della collaborazione del
 modulo Coordinator, pur non avendo una diretta dipendenza sul modulo Coordinator. Questo è reso
@@ -157,7 +157,7 @@ In altri suoi algoritmi in esecuzione in un singolo nodo *n*  ∈ *g*, il modulo
 di provocare l'esecuzione di altri suoi algoritmi in tutti i singoli nodi di *g*.  
 In questo caso il modulo Coordinator coordinerà l'esecuzione su tutti i singoli nodi.
 
-## <a name="Nuovo_arco"></a>Incontro di due nodi nella stessa rete
+## Incontro di due nodi nella stessa rete
 
 Si consideri un nodo *n* che appartiene alla rete *G*. Il modulo Hooking del nodo *n* si avvede del
 nodo vicino *v* nella stessa rete. Entrambi sono *identità principali*.
@@ -186,9 +186,9 @@ Il contenuto della classe `NetworkData` verrà dettagliato a breve nella trattaz
 di due reti distinte.
 
 Il dettaglio delle operazioni per far sì che queste comunicazioni avvengano nei tempi e casi desiderati
-è illustrato [qui](DettagliTecnici.md#Operazioni_arco_identita).
+è illustrato [qui](DettagliTecnici.md#operazioni-su-un-proprio-arco-id).
 
-## <a name="Fusione_reti"></a>Incontro e fusione di due reti distinte
+## Incontro e fusione di due reti distinte
 
 Si consideri un nodo *n* che appartiene alla rete *G*. Questa è una generalizzazione,
 che comprende ad esempio il caso di un singolo nodo che compone una intera rete.
@@ -209,7 +209,7 @@ Inoltre, quando si verifica un contatto fra due distinte reti, è desiderabile a
 tempo prima di procedere, per cercare di verificare la possibilità di fare ingresso
 sfruttando il punto di contatto migliore.
 
-### <a name="Fusione_reti_fase1"></a>Prima fase - valutazione del singolo nodo
+### Prima fase - valutazione da parte del singolo nodo
 
 Come detto prima, il modulo Hooking è un modulo *di identità* che conosce ogni arco-identità
 che collega la sua identità nel sistema ad un altro nodo.  
@@ -275,7 +275,7 @@ A questo punto, anche se la differenza fosse piccola, il nodo *n* sa se prosegui
 Per analizzare il resto delle operazioni in questo documento, assumiamo per ipotesi che il nodo *n*
 decide che *G* deve entrare in *J*.
 
-### <a name="Fusione_reti_fase2"></a>Seconda fase - valutazione della rete
+### Seconda fase - valutazione da parte della rete
 
 Allora il modulo Hooking aggiunge un'altra informazione a quelle della struttura dati di cui sopra:
 
@@ -362,9 +362,9 @@ la *valutazione* come elemento di una lista nel membro `evaluation_list`; il liv
 inizialmente nel membro `first_ask_lvl`; la scadenza nel membro `timeout`; lo stato nel membro `status`.
 
 La memoria condivisa della rete (o più genericamente di un g-nodo) di pertinenza del modulo Hooking
-è una istanza della classe `HookingMemory`. L'elenco dei suoi campi è riportato in seguito [qui](#Class_HookingMemory).
+è una istanza della classe `HookingMemory`. L'elenco dei suoi campi è riportato in seguito [qui](#classe-hookingmemory).
 
-#### <a name="Accesso_memoria_condivisa"></a>Accesso alla memoria condivisa
+#### Accesso alla memoria condivisa
 
 Abbiamo già detto che il modulo Hooking può fare in modo che venga richiamato un metodo nel modulo Coordinator, pur non
 avendo una dipendenza diretta sul modulo Coordinator. In particolare avremo una coppia di metodi
@@ -784,7 +784,7 @@ dalla quinta fase (comunicazione con il g-nodo entrante) con il nuovo valore di 
 considerando se stesso ancora come "eletto" a tentare l'ingresso in *J* per conto della rete *G*,
 riparte dalla chiamata di `begin_enter` con il nuovo valore di *lvl*.
 
-### <a name="Class_HookingMemory"></a>Classe HookingMemory
+### Classe HookingMemory
 
 La classe `HookingMemory` è serializzabile. È usata una sua istanza per rappresentare la
 memoria condivisa di un g-nodo di pertinenza del modulo Hooking.
@@ -793,7 +793,7 @@ I suoi membri sono:
 
 *   `List<EvaluateEnterEvaluation> evaluate_enter_evaluation_list` - Lista di valutazioni.
     Può essere vuota, se non si sta valutando alcun ingresso.
-*   `int? evaluate_enter_first_ask_lvl`
+*   `int evaluate_enter_first_ask_lvl`
 *   `Timer? evaluate_enter_timeout`
 *   `EvaluationStatus? evaluate_enter_status`
 *   `EvaluateEnterEvaluation? evaluate_enter_elected`

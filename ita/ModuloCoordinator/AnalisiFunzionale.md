@@ -183,7 +183,7 @@ Le informazioni di pertinenza del modulo Hooking sono memorizzate nel seguente m
 
 Vediamo come avviene la scrittura e la rilettura della memoria condivisa di tutta la rete (o di un g-nodo) ad opera
 del modulo Hooking. Nella trattazione del modulo Hooking abbiamo detto
-(vedi [qui](../ModuloHooking/AnalisiFunzionale.md#Accesso_memoria_condivisa))
+(vedi [qui](../ModuloHooking/AnalisiFunzionale.md#accesso-alla-memoria-condivisa))
 che solo lo stesso nodo Coordinator (di tutta la rete o di un g-nodo)
 può essere nella posizione di scrivere/leggere in questa memoria.  
 Quando viene chiamato nel modulo Coordinator il metodo `set_hooking_memory` o il metodo

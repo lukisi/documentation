@@ -1,7 +1,7 @@
 # Modulo Hooking - Dettagli Tecnici
 
-1.  [Associazione del modulo ad una identità](#Associazione_identita)
-    1.  [Operazioni su un proprio arco-identità](#Operazioni_arco_identita)
+1.  [Associazione del modulo ad una id](#associazione-del-modulo-ad-una-id)
+    1.  [Operazioni su un proprio arco-id](#operazioni-su-un-proprio-arco-id)
     1.  [Operazioni su richieste da altri nodi](#Operazioni_su_propagazione)
 1.  [Requisiti](#Requisiti)
     1.  [Interfaccia IHookingMapPaths](#Requisiti_IHookingMapPaths)
@@ -10,10 +10,10 @@
     1.  [Segnali](#Requisiti_Segnali)
     1.  [Metodi remoti](#Requisiti_Metodiremoti)
 
-## <a name="Associazione_identita"></a>Associazione del modulo ad una identità
+## Associazione del modulo ad una id
 
-Una istanza di `HookingManager` viene costruita quando si crea una identità nel
-sistema e a questa viene associata.
+Una istanza di `HookingManager` viene costruita ogni volta che si crea una identità nel
+sistema. L'istanza di `HookingManager` viene associata a questa identità.
 
 L'utilizzatore del modulo Hooking comunica poi a questa istanza di `HookingManager` la
 nascita e la rimozione di ogni arco-identità associato a quella identità nel sistema. Questo
@@ -31,7 +31,7 @@ un certo g-nodo. Quindi tali operazioni sono svolte non in questa tasklet ma dir
 all'arrivo del messaggio. Anche da queste operazioni deriva l'emissione di alcuni segnali
 che informano l'utilizzatore del modulo su operazioni da intraprendere.
 
-### <a name="Operazioni_arco_identita"></a>Operazioni su un proprio arco-identità
+### Operazioni su un proprio arco-id
 
 Il modulo Hooking quando viene aggiunto un arco-identità, sul metodo `add_arc`, avvia una nuova tasklet.
 In essa eseguirà tutte le operazioni relative a quell'arco-identità. Quando viene rimosso un arco-identità,
