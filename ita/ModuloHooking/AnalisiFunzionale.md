@@ -1065,8 +1065,8 @@ Mentre Q is not empty:
   // La risposta sarà una tupla composta di: `min_host_lvl`,
   //  `final_host_lvl`, `real_new_pos`, `real_new_eldership`,
   //  `set_adjacent`, `new_conn_vir_pos`, `new_eldership`.
-  int min_host_lvl, int? final_host_lvl, int? real_new_pos, int? real_new_eldership.
-  Set<Pair<TupleGNode,int>>? set_adjacent, int? new_conn_vir_pos, int? new_eldership.
+  int min_host_lvl, int final_host_lvl, int real_new_pos, int real_new_eldership.
+  Set<Pair<TupleGNode,int>>? set_adjacent, int new_conn_vir_pos, int new_eldership.
   (min_host_lvl, final_host_lvl, real_new_pos, real_new_eldership,
         set_adjacent, new_conn_vir_pos, new_eldership) =
         send_search_request(current, max_host_lvl, reserve_request_id)
@@ -1076,12 +1076,12 @@ Mentre Q is not empty:
     Assert visiting_gnode sono io, mio indirizzo è del tutto reale.
     Prepara risultato:
       .min_host_lvl = level(visiting_gnode)
-      .final_host_lvl = null
-      .real_new_pos = null
-      .real_new_eldership = null
+      .final_host_lvl = -1
+      .real_new_pos = -1
+      .real_new_eldership = -1
       .set_adjacent = null
-      .new_conn_vir_pos = null
-      .new_eldership = null
+      .new_conn_vir_pos = -1
+      .new_eldership = -1
     int pos, int eldership.
     bool ok = False.
     Mentre risultato.min_host_lvl ≤ max_host_lvl:
@@ -1399,12 +1399,12 @@ SearchMigrationPathResponse:
   int pkt_id
   TupleGNode origin
   int min_host_lvl
-  int? final_host_lvl
-  int? real_new_pos
-  int? real_new_eldership
+  int final_host_lvl
+  int real_new_pos
+  int real_new_eldership
   Set<Pair<TupleGNode,int>>? set_adjacent
-  int? new_conn_vir_pos
-  int? new_eldership
+  int new_conn_vir_pos
+  int new_eldership
 ```
 
 Per l'instradamento di questi pacchetti si usano questi algoritmi:
@@ -1413,8 +1413,8 @@ Per l'instradamento di questi pacchetti si usano questi algoritmi:
 void send_search_request
      (SolutionStep current,
       int max_host_lvl, int reserve_request_id,
-      out int min_host_lvl, out int? final_host_lvl, out int? real_new_pos, out int? real_new_eldership,
-      out Set<Pair<TupleGNode,int>>? set_adjacent, out int? new_conn_vir_pos, out int? new_eldership
+      out int min_host_lvl, out int final_host_lvl, out int real_new_pos, out int real_new_eldership,
+      out Set<Pair<TupleGNode,int>>? set_adjacent, out int new_conn_vir_pos, out int new_eldership
       ) throws SearchMigrationPathError:
   var path_hops = get_path_hops(current)
   Se path_hops.size = 1:
@@ -1524,8 +1524,8 @@ void send_search_request
 void execute_search
      (TupleGNode visiting_gnode,
       int max_host_lvl, int reserve_request_id,
-      out int min_host_lvl, out int? final_host_lvl, out int? real_new_pos, out int? real_new_eldership,
-      out Set<Pair<TupleGNode,int>>? set_adjacent, out int? new_conn_vir_pos, out int? new_eldership):
+      out int min_host_lvl, out int final_host_lvl, out int real_new_pos, out int real_new_eldership,
+      out Set<Pair<TupleGNode,int>>? set_adjacent, out int new_conn_vir_pos, out int new_eldership):
   vedi algoritmo illustrato sopra.
 
 
