@@ -144,6 +144,24 @@ all'interno di un g-nodo sono:
 *   `finish_migration`
 *   `we_have_splitted`
 
+Prendiamo ad esempio il comando `prepare_enter`. Abbiamo detto sopra che la tasklet che gestisce un arco e che
+decide l'ingresso di un g-nodo in un'altra rete, dopo aver inventato un identificativo `enter_id`, fa
+uso della *propagazione con ritorno* provvista dal modulo Coordinator, cioè chiama il
+metodo `prepare_enter` nella classe `internal class Netsukuku.Hooking.PropagationCoord.PropagationCoord`.
+
+Questo provoca la chiamata nel modulo Coordinator (grazie ad una classe helper fornita dall'utilizzatore del modulo
+Hooking che implementa l'interfaccia `Hooking.ICoordinator`) del metodo `prepare_enter`.  
+Questo fa in modo che tutti i nodi del g-nodo (il presente compreso) eseguano una volta il metodo
+`prepare_enter` del modulo Hooking (grazie ad una classe helper fornita dall'utilizzatore del modulo
+Coordinator che implementa l'interfaccia `Coordinator.IPropagationHandler`).  
+Il metodo `prepare_enter` del modulo Hooking chiama il metodo `execute_propagate_prepare_enter`
+della classe `PropagationCoord`, il quale fa emettere il segnale `do_prepare_enter`.
+
+Questo avviene in modo analogo anche per i comandi `finish_enter`, `prepare_migration` e
+`finish_migration`.
+
+Per quanto riguarda il comando `we_have_splitted`, **TODO**
+
 ## <a name="Requisiti"></a>Requisiti
 
 ### <a name="Requisiti_IHookingMapPaths"></a>Interfaccia IHookingMapPaths
@@ -261,3 +279,37 @@ Tra diretti vicini i dialoghi sono espletati con questi metodi remoti:
 *   ``
 *   ``
 
+## Annotazioni varie
+
+**proxy**
+
+La funzione `lock_hooking_memory` è nella `internal class Netsukuku.Hooking.ProxyCoord.ProxyCoord`.  
+La classe ProxyCoord viene istanziata nel costruttore di HookingManager, che ricordiamo è un modulo di identità.  
+Un membro di ProxyCoord `_lock_hooking_memory` è un intero nullable che rappresenta un lock.  
+Il metodo `lock_hooking_memory` acquisisce un lock, eventualmente attendendo che si liberi il precedente (notare che l'attesa
+potrebbe risultare infinita, quindi andrebbe chiamato da una tasklet).  
+Il metodo `unlock_hooking_memory` rilascia il lock. Deve essere chiamato dal possessore attuale, altrimenti va in errore.  
+Il metodo `get_hooking_memory` (deve essere chiamato dal possessore attuale del lock, altrimenti va in errore) ottiene
+l'istanza di HookingMemory. Si presume che sia chiamato sul nodo Coordinator. Il record potrebbe comunque essere recuperato
+da un altro nodo, se il presente era ancora `NotExaustive`.  
+Il metodo `set_hooking_memory` (deve essere chiamato dal possessore attuale del lock, altrimenti va in errore) aggiorna
+l'istanza di HookingMemory.
+
+Ci si assicura che la chiamata (ad esempio) `set_hooking_memory` è eseguita sul nodo Coordinator perché viene fatta (ad esempio)
+nel metodo interno `ProxyCoord.execute_evaluate_enter` chiamato dal metodo interno `ProxyCoord.execute_proxy_evaluate_enter`
+chiamato dal metodo pubblico `HookingManager.evaluate_enter`. Questo è destinato ad essere chiamato per il tramite
+del modulo Coordinator con la sua interfaccia `IEvaluateEnterHandler`. Che a sua volta avviene per ricezione della
+richiesta p2p EvaluateEnterRequest.  
+La classe EvaluateEnterRequest non è di tipo `insert`, non è di tipo `read_only`, non è di tipo `update`,
+non è di tipo `replica_value`, non è di tipo `replica_delete`, non prevede un `timeout`, non prevede una risposta `not_found`,
+non prevede una risposta `not_free`. Per queste caratteristiche non prevede rifiuti di tipo `NotExaustive`.  
+Quindi la richiesta è sempre soddisfatta dall'attuale nodo Coordinator, anche nel caso fosse appena entrato nella rete
+e quindi fosse ancora nella fase di recupero dei record (`NotExaustive`).
+
+A sua volta il modulo Coordinator viene provocato a avviare la richiesta (ad esempio) EvaluateEnterRequest dal modulo
+Hooking attraverso l'interfaccia ICoordinator che ha il metodo `evaluate_enter` che potrebbe anche rilanciare
+un CoordProxyError. Questo viene fatto nel metodo interno `ProxyCoord.evaluate_enter`. Questo a sua volta è
+chiamato nell'ambito della tasklet (avviata con il metodo pubblico `HookingManager.add_arc`) che gestisce un arco
+passato al modulo Hooking, la quale tasklet gestisce tutti i casi, incluso il CoordProxyError.
+
+**propagation**
