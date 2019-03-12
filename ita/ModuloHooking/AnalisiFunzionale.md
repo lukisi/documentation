@@ -110,13 +110,20 @@ questo caso occorre costruire un IQspnArc da passare al modulo Qspn. Oppure le d
 appartenere a distinte reti. In questo caso occorre valutare se si possono fondere in una sola
 e in che modo.
 
-Quando si incontrano due *nodi* che già appartengono alla stessa rete il compito del modulo
-Hooking è piuttosto semplice.
-
-Quando si incontrano due *nodi* che appartengono a distinte reti il compito del modulo
-Hooking è decidere quale g-nodo deve fare ingresso in una diversa rete e in quale g-nodo ospite.  
+Su questo arco-identità appena costruito vengono realizzate delle comunicazioni ad opera del
+modulo Hooking. Attraverso di esse il modulo capisce se i due *nodi* già appartengono alla stessa rete:
+in questo caso lo segnala al suo utilizzatore e il suo compito è terminato.  
+In caso contrario il compito del modulo Hooking è decidere quale g-nodo deve fare ingresso in una
+diversa rete e in quale g-nodo ospite.  
 In questo caso può rendersi necessario che il modulo Hooking trovi una migration-path e coordini
 la sua esecuzione.
+
+Come per ogni altro modulo che opera delle comunicazioni su un arco tra due nodi diretti vicini,
+anche il modulo Hooking se rileva un errore in una comunicazione lo segnala al suo utilizzatore
+affinché l'arco (fisico) malfunzionante venga rimosso.
+
+Il dettaglio delle operazioni per far sì che queste comunicazioni avvengano nei tempi e casi desiderati
+è illustrato [qui](DettagliTecnici.md#operazioni-su-un-proprio-arco-id).
 
 ### Migration-path
 
