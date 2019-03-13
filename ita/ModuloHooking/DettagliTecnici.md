@@ -2,7 +2,7 @@
 
 1.  [Associazione del modulo ad una id](#associazione-del-modulo-ad-una-id)
     1.  [Operazioni su un proprio arco-id](#operazioni-su-un-proprio-arco-id)
-    1.  [Operazioni su richieste da altri nodi](#Operazioni_su_propagazione)
+    1.  [Operazioni su richieste da altri nodi](#operazioni-su-richieste-da-altri-nodi)
 1.  [Requisiti](#Requisiti)
     1.  [Interfaccia IHookingMapPaths](#Requisiti_IHookingMapPaths)
     1.  [Interfaccia ICoordinator](#Requisiti_ICoordinator)
@@ -133,7 +133,19 @@ Dopo aver dato il via alla *propagazione senza ritorno* la tasklet fa in modo ch
 identità venga operato questo ingresso. Lo fa emettendo il segnale `do_finish_enter`. Poi,
 essendo la sua identità destinata a venire dismessa, termina.
 
-### <a name="Operazioni_su_propagazione"></a>Operazioni su richieste da altri nodi
+### Operazioni su richieste da altri nodi
+
+#### Per richiesta di un servizio peer-to-peer
+
+I comandi che arrivano al modulo Hooking della nostra identità principale (la quale si trova ad essere
+il Coordinator di un g-nodo) attraverso i meccanismi del modulo PeerServices sono:
+
+*   `evaluate_enter`
+*   `begin_enter`
+*   `completed_enter`
+*   `abort_enter`
+
+#### Per propagazione
 
 I comandi che arrivano al modulo Hooking di una nostra identità attraverso i meccanismi di propagazione
 all'interno di un g-nodo sono:
@@ -143,24 +155,6 @@ all'interno di un g-nodo sono:
 *   `prepare_migration`
 *   `finish_migration`
 *   `we_have_splitted`
-
-Prendiamo ad esempio il comando `prepare_enter`. Abbiamo detto sopra che la tasklet che gestisce un arco e che
-decide l'ingresso di un g-nodo in un'altra rete, dopo aver inventato un identificativo `enter_id`, fa
-uso della *propagazione con ritorno* provvista dal modulo Coordinator, cioè chiama il
-metodo `prepare_enter` nella classe `internal class Netsukuku.Hooking.PropagationCoord.PropagationCoord`.
-
-Questo provoca la chiamata nel modulo Coordinator (grazie ad una classe helper fornita dall'utilizzatore del modulo
-Hooking che implementa l'interfaccia `Hooking.ICoordinator`) del metodo `prepare_enter`.  
-Questo fa in modo che tutti i nodi del g-nodo (il presente compreso) eseguano una volta il metodo
-`prepare_enter` del modulo Hooking (grazie ad una classe helper fornita dall'utilizzatore del modulo
-Coordinator che implementa l'interfaccia `Coordinator.IPropagationHandler`).  
-Il metodo `prepare_enter` del modulo Hooking chiama il metodo `execute_propagate_prepare_enter`
-della classe `PropagationCoord`, il quale fa emettere il segnale `do_prepare_enter`.
-
-Questo avviene in modo analogo anche per i comandi `finish_enter`, `prepare_migration` e
-`finish_migration`.
-
-Per quanto riguarda il comando `we_have_splitted`, **TODO**
 
 ## <a name="Requisiti"></a>Requisiti
 
@@ -308,12 +302,58 @@ venga comunque recuperato dal precedente detentore.
 * * *
 
 In altri casi con questa collaborazione si ottiene che venga eseguito un metodo del modulo Hooking stesso
-su tutti i nodi del proprio g-nodo di un dato livello.  
-Per ognuno di questi casi avremo quindi un metodo nell'interfaccia `ICoordinator` e un metodo nel modulo
-Hooking che avranno la stessa (o analoga) firma.  
+su tutti i nodi del proprio g-nodo di un dato livello.
+
 Con questa modalità abbiamo questi metodi:
 
-*   ... `prepare_migration`, `finish_migration`, `prepare_enter`, `finish_enter`, `we_have_splitted`
+*   Metodo `prepare_enter`.  
+    Quando il modulo Hooking (ad esempio nel nodo *n* che ha deciso di entrare in un'altra rete) vuole far
+    eseguire questo metodo con una *propagazione con ritorno* su tutti i nodi del
+    suo g-nodo di livello *l* chiama un metodo della classe interna `PropagationCoord` che ha questa signature:  
+    `void prepare_enter(int lvl, PrepareEnterData prepare_enter_data)`  
+    Questo metodo si avvale di un metodo nell'interfaccia `ICoordinator` che ha questa signature:  
+    `void prepare_enter(int lvl, Object prepare_enter_data)`  
+    Questo permette la cooperazione con il modulo Coordinator il quale fa in modo che tutti i nodi del g-nodo
+    (compreso il nodo presente) eseguano una volta il metodo `prepare_enter` del modulo `Hooking`, che ha questa signature:  
+    `void prepare_enter(int lvl, Object prepare_enter_data)`  
+    Un metodo con la medesima signature è nella classe interna `PropagationCoord`:  
+    `execute_propagate_prepare_enter(int lvl, Object prepare_enter_data)`  
+    Questa interpreta le classi serializzabili usate per le comunicazioni e poi chiama un altro metodo
+    nella classe interna `PropagationCoord` che invece ha la signature che serve alla logica:  
+    `void execute_prepare_enter(int lvl, PrepareEnterData prepare_enter_data)`  
+    Questa fa emettere il segnale `do_prepare_enter`.
+*   Metodo `finish_enter`.  
+    Quando il modulo Hooking (ad esempio nel nodo *n* che ha deciso di entrare in un'altra rete) vuole far
+    eseguire questo metodo con una *propagazione senza ritorno* su tutti i nodi del
+    suo g-nodo di livello *l* chiama un metodo della classe interna `PropagationCoord` che ha questa signature:  
+    `void finish_enter(int lvl, FinishEnterData finish_enter_data)`  
+    Il metodo nell'interfaccia `ICoordinator` ha questa signature:  
+    `void finish_enter(int lvl, Object finish_enter_data)`  
+    Il metodo che implementa la logica è ancora nella classe interna `PropagationCoord` e ha questa signature:  
+    `void execute_finish_enter(int lvl, FinishEnterData finish_enter_data)`  
+    Questa fa emettere il segnale `do_finish_enter`.
+*   Metodo `prepare_migration`.  
+    Quando il modulo Hooking (in un nodo che avvia una migrazione parte di una migration_path) vuole far
+    eseguire questo metodo con una *propagazione con ritorno* su tutti i nodi del
+    suo g-nodo di livello *l* chiama un metodo della classe interna `PropagationCoord` che ha questa signature:  
+    `void prepare_migration(int lvl, PrepareMigrationData prepare_migration_data)`  
+    Il metodo nell'interfaccia `ICoordinator` ha questa signature:  
+    `void prepare_migration(int lvl, Object prepare_migration_data)`  
+    Il metodo che implementa la logica è ancora nella classe interna `PropagationCoord` e ha questa signature:  
+    `void execute_prepare_migration(int lvl, PrepareMigrationData prepare_migration_data)`  
+    Questa fa emettere il segnale `do_prepare_migration`.
+*   Metodo `finish_migration`.  
+    Quando il modulo Hooking (in un nodo che avvia una migrazione parte di una migration_path) vuole far
+    eseguire questo metodo con una *propagazione senza ritorno* su tutti i nodi del
+    suo g-nodo di livello *l* chiama un metodo della classe interna `PropagationCoord` che ha questa signature:  
+    `void finish_migration(int lvl, FinishMigrationData finish_migration_data)`  
+    Il metodo nell'interfaccia `ICoordinator` ha questa signature:  
+    `void finish_migration(int lvl, Object finish_migration_data)`  
+    Il metodo che implementa la logica è ancora nella classe interna `PropagationCoord` e ha questa signature:  
+    `void execute_finish_migration(int lvl, FinishMigrationData finish_migration_data)`  
+    Questa fa emettere il segnale `do_finish_migration`.
+*   Metodo `we_have_splitted`.  
+    ... **TODO**
 
 * * *
 
