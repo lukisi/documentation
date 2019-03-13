@@ -217,18 +217,93 @@ Per ognuno di questi casi avremo quindi un metodo nell'interfaccia `ICoordinator
 Hooking che avranno la stessa (o analoga) firma.  
 Con questa modalità abbiamo questi metodi:
 
-*   Metodo `int evaluate_enter(Object evaluate_enter_data) throws AskAgainError, IgnoreNetworkError`.
-*   ... `begin_enter`, `completed_enter`, `abort_enter`
+*   Metodo `evaluate_enter`.  
+    Quando il modulo Hooking (ad esempio nel nodo *n* che incontra un'altra rete) vuole chiamare questo
+    metodo sul Coordinator di un suo g-nodo di livello *l* (nel caso di `evaluate_enter` si interroga sempre il Coordinator
+    di tutta la rete) chiama un metodo della classe interna `ProxyCoord` che ha questa signature:  
+    `int evaluate_enter(EvaluateEnterData evaluate_enter_data) throws AskAgainError, IgnoreNetworkError, CoordProxyError, UnknownResultError`  
+    Questo metodo si avvale di un metodo nell'interfaccia `ICoordinator` che ha questa signature:  
+    `Object evaluate_enter(Object evaluate_enter_data) throws CoordProxyError`  
+    Il metodo nel modulo `Hooking` ha questa signature:  
+    `Object evaluate_enter(Object evaluate_enter_data, Gee.List<int> client_address)`  
+    Un metodo con la medesima signature è nella classe interna `ProxyCoord`:  
+    `Object execute_proxy_evaluate_enter(Object evaluate_enter_data, Gee.List<int> client_address)`  
+    Questa gestisce il lock della funzione (nel caso evaluate serve un lock che garantisca che ci sia una sola
+    valutazione alla volta). Inoltre gestisce il lock della memoria condivisa del g-nodo relativa al modulo Hooking.
+    Inoltre interpreta le classi serializzabili usate per le comunicazioni e poi chiama un altro metodo
+    nella classe interna `ProxyCoord` che invece ha la signature che serve alla logica:  
+    `int execute_evaluate_enter(int lock_id, EvaluateEnterData evaluate_enter_data, Gee.List<int> client_address) throws AskAgainError, IgnoreNetworkError`
+*   Metodo `begin_enter`.  
+    Analogo a sopra. Il metodo per avviare la chiamata è nella classe interna `ProxyCoord` e ha questa signature:  
+    `void begin_enter(int lvl, BeginEnterData begin_enter_data) throws AlreadyEnteringError, CoordProxyError, UnknownResultError`  
+    Il metodo nell'interfaccia `ICoordinator` ha questa signature:  
+    `Object begin_enter(int lvl, Object begin_enter_data) throws CoordProxyError`  
+    Il metodo che implementa la logica è ancora nella classe interna `ProxyCoord` e ha questa signature:  
+    `void execute_begin_enter(int lock_id, int lvl, BeginEnterData begin_enter_data, Gee.List<int> client_address) throws AlreadyEnteringError`
+*   Metodo `completed_enter`.  
+    Analogo a sopra. Il metodo per avviare la chiamata è nella classe interna `ProxyCoord` e ha questa signature:  
+    `void completed_enter(int lvl, CompletedEnterData completed_enter_data) throws CoordProxyError, UnknownResultError`  
+    Il metodo nell'interfaccia `ICoordinator` ha questa signature:  
+    `Object completed_enter(int lvl, Object completed_enter_data) throws CoordProxyError`  
+    Il metodo che implementa la logica è ancora nella classe interna `ProxyCoord` e ha questa signature:  
+    `void execute_completed_enter(int lock_id, int lvl, CompletedEnterData completed_enter_data, Gee.List<int> client_address)`
+*   Metodo `abort_enter`.  
+    Analogo a sopra. Il metodo per avviare la chiamata è nella classe interna `ProxyCoord` e ha questa signature:  
+    `void abort_enter(int lvl, AbortEnterData abort_enter_data) throws CoordProxyError, UnknownResultError`  
+    Il metodo nell'interfaccia `ICoordinator` ha questa signature:  
+    `Object abort_enter(int lvl, Object abort_enter_data) throws CoordProxyError`  
+    Il metodo che implementa la logica è ancora nella classe interna `ProxyCoord` e ha questa signature:  
+    `void execute_abort_enter(int lock_id, int lvl, AbortEnterData abort_enter_data, Gee.List<int> client_address)`
 
 * * *
 
 In altri casi, se il nodo in cui ci troviamo è esso stesso il nodo Coordinator del proprio g-nodo di un dato livello,
 con questa collaborazione si può accedere in lettura/scrittura alla memoria condivisa del g-nodo. Essa è memorizzata
 dal servizio peer-to-peer (vedi modulo PeerServices) implementato nel modulo Coordinator. In tale memoria condivisa
-alcune informazioni sono di pertinenza del modulo Hooking.  
-Con questa modalità abbiamo questi metodi:
+alcune informazioni sono di pertinenza del modulo Hooking.
 
-*   ... `get_hooking_memory`, `set_hooking_memory`
+Si possono garantire operazioni atomiche di lettura e successiva scrittura (aggiornamenti) di questa memoria
+condivisa per il fatto che le operazioni sono eseguite esclusivamente nell'attuale nodo Coordinator.  
+Infatti, prendiamo ad esempio il metodo `evaluate_enter` visto poco sopra. La sua implementazione
+nel metodo interno `ProxyCoord.execute_evaluate_enter` è destinata ad essere chiamata per il tramite
+del modulo Coordinator per la ricezione della richiesta p2p EvaluateEnterRequest.  
+Il servizio p2p Coordinator (si veda anche la documentazione del modulo PeerServices) gestisce un database
+distribuito del tipo a chiavi fisse. In questo tipo non sono previsti rifiuti di tipo `OutOfMemory`.  
+In particolare in questo servizio la classe EvaluateEnterRequest non è di tipo `insert`, né `read_only`, né `update`,
+né `replica_value`, né `replica_delete`. Per queste caratteristiche non prevede rifiuti di tipo `NotExaustive`.  
+Quindi la richiesta è sempre soddisfatta dall'attuale nodo Coordinator, anche nel caso fosse appena entrato nella rete
+e quindi fosse ancora nella fase di recupero dei record (`NotExaustive`).  
+In conclusione per garantire atomicità nelle operazioni eseguite all'interno dell'implementazione del
+metodo `evaluate_enter`, basta garantire atomicità nel singolo nodo.
+
+Quindi le operazioni di aggiornamento degli aspetti di pertinenza del modulo Hooking nella memoria condivisa di un certo
+g-nodo vengono fatte esclusivamente nelle implementazioni dei metodi `evaluate_enter`, `begin_enter`,
+`completed_enter` e `abort_enter`: prima viene chiamato il metodo `lock_hooking_memory` della classe interna `ProxyCoord`;
+poi all'abbisogna i suoi metodi `get_hooking_memory` e `set_hooking_memory`; infine il suo metodo `unlock_hooking_memory`.  
+La classe interna `ProxyCoord` viene istanziata nel costruttore di HookingManager. Essa ha il membro `_lock_hooking_memory`
+che è un intero nullable che rappresenta un lock.  
+Il metodo `lock_hooking_memory` acquisisce un lock, eventualmente attendendo che si liberi il precedente.  
+I metodi `get_hooking_memory`, `set_hooking_memory` e `unlock_hooking_memory` devono risultare chiamati dal possessore
+attuale del lock, altrimenti vanno in errore.  
+Il metodo `unlock_hooking_memory` rilascia il lock.
+
+*   Metodo `get_hooking_memory`.  
+    Quando il modulo Hooking nel nodo Coordinator di un g-nodo vuole leggere la memoria condivisa di sua
+    pertinenza chiama un metodo della classe interna `ProxyCoord` che ha questa signature:  
+    `HookingMemory get_hooking_memory(int lock_id, int lvl)`  
+    Questo metodo si avvale di un metodo nell'interfaccia `ICoordinator` che ha questa signature:  
+    `Object get_hooking_memory(int lvl) throws CoordProxyError`
+*   Metodo `set_hooking_memory`.  
+    Quando il modulo Hooking nel nodo Coordinator di un g-nodo vuole scrivere la memoria condivisa di sua
+    pertinenza chiama un metodo della classe interna `ProxyCoord` che ha questa signature:  
+    `void set_hooking_memory(int lock_id, int lvl, HookingMemory memory)`  
+    Questo metodo si avvale di un metodo nell'interfaccia `ICoordinator` che ha questa signature:  
+    `void set_hooking_memory(int lvl, Object memory) throws CoordProxyError`
+
+Abbiamo detto che queste operazioni sono sempre svolte nell'attuale nodo Coordinator del g-nodo in questione.
+Se però il presente nodo è ancora `NotExaustive` le funzioni fornite dal modulo PeerServices per la
+gestione di un database distribuito del tipo a chiavi fisse fanno in modo che in lettura il record
+venga comunque recuperato dal precedente detentore.  
 
 * * *
 
@@ -281,35 +356,4 @@ Tra diretti vicini i dialoghi sono espletati con questi metodi remoti:
 
 ## Annotazioni varie
 
-**proxy**
-
-La funzione `lock_hooking_memory` è nella `internal class Netsukuku.Hooking.ProxyCoord.ProxyCoord`.  
-La classe ProxyCoord viene istanziata nel costruttore di HookingManager, che ricordiamo è un modulo di identità.  
-Un membro di ProxyCoord `_lock_hooking_memory` è un intero nullable che rappresenta un lock.  
-Il metodo `lock_hooking_memory` acquisisce un lock, eventualmente attendendo che si liberi il precedente (notare che l'attesa
-potrebbe risultare infinita, quindi andrebbe chiamato da una tasklet).  
-Il metodo `unlock_hooking_memory` rilascia il lock. Deve essere chiamato dal possessore attuale, altrimenti va in errore.  
-Il metodo `get_hooking_memory` (deve essere chiamato dal possessore attuale del lock, altrimenti va in errore) ottiene
-l'istanza di HookingMemory. Si presume che sia chiamato sul nodo Coordinator. Il record potrebbe comunque essere recuperato
-da un altro nodo, se il presente era ancora `NotExaustive`.  
-Il metodo `set_hooking_memory` (deve essere chiamato dal possessore attuale del lock, altrimenti va in errore) aggiorna
-l'istanza di HookingMemory.
-
-Ci si assicura che la chiamata (ad esempio) `set_hooking_memory` è eseguita sul nodo Coordinator perché viene fatta (ad esempio)
-nel metodo interno `ProxyCoord.execute_evaluate_enter` chiamato dal metodo interno `ProxyCoord.execute_proxy_evaluate_enter`
-chiamato dal metodo pubblico `HookingManager.evaluate_enter`. Questo è destinato ad essere chiamato per il tramite
-del modulo Coordinator con la sua interfaccia `IEvaluateEnterHandler`. Che a sua volta avviene per ricezione della
-richiesta p2p EvaluateEnterRequest.  
-La classe EvaluateEnterRequest non è di tipo `insert`, non è di tipo `read_only`, non è di tipo `update`,
-non è di tipo `replica_value`, non è di tipo `replica_delete`, non prevede un `timeout`, non prevede una risposta `not_found`,
-non prevede una risposta `not_free`. Per queste caratteristiche non prevede rifiuti di tipo `NotExaustive`.  
-Quindi la richiesta è sempre soddisfatta dall'attuale nodo Coordinator, anche nel caso fosse appena entrato nella rete
-e quindi fosse ancora nella fase di recupero dei record (`NotExaustive`).
-
-A sua volta il modulo Coordinator viene provocato a avviare la richiesta (ad esempio) EvaluateEnterRequest dal modulo
-Hooking attraverso l'interfaccia ICoordinator che ha il metodo `evaluate_enter` che potrebbe anche rilanciare
-un CoordProxyError. Questo viene fatto nel metodo interno `ProxyCoord.evaluate_enter`. Questo a sua volta è
-chiamato nell'ambito della tasklet (avviata con il metodo pubblico `HookingManager.add_arc`) che gestisce un arco
-passato al modulo Hooking, la quale tasklet gestisce tutti i casi, incluso il CoordProxyError.
-
-**propagation**
+...
