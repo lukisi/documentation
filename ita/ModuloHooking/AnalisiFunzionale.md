@@ -15,15 +15,15 @@
     1.  [Prenotazione riuscita: Settima fase - ingresso](#Fusione_reti_fase7a)
     1.  [Prenotazione fallita: Settima fase - annullamento al g-nodo entrante](#Fusione_reti_fase7b)
     1.  [Classe HookingMemory](#classe-hookingmemory)
-1.  [Strategia di ingresso](#Strategia_ingresso)
-    1.  [Definizione della migration-path](#Strategia_ingresso_Definizione_migration_path)
-    1.  [Uso della migration-path](#Strategia_ingresso_Uso_migration_path)
-    1.  [Caratteristiche della migration-path](#Strategia_ingresso_Caratteristiche_migration_path)
-    1.  [Algoritmo di ricerca](#Strategia_ingresso_Algoritmo_ricerca)
-    1.  [Cancellazione delle prenotazioni](#Strategia_ingresso_Cancellazione_prenotazioni)
-    1.  [Esecuzione della migration-path](#Strategia_ingresso_Esecuzione_migration_path)
-    1.  [Algoritmo di esecuzione](#Strategia_ingresso_Algoritmo_esecuzione)
-1.  [Risoluzione di uno split di g-nodo](#Split_gnodo)
+1.  [Strategia di ingresso](#strategia-di-ingresso)
+    1.  [Definizione della migration-path](#definizione-della-migration-path)
+    1.  [Uso della migration-path](#uso-della-migration-path)
+    1.  [Caratteristiche della migration-path](#caratteristiche-della-migration-path)
+    1.  [Algoritmo di ricerca](#algoritmo-di-ricerca)
+    1.  [Cancellazione delle prenotazioni](#cancellazione-delle-prenotazioni)
+    1.  [Esecuzione della migration-path](#esecuzione-della-migration-path)
+    1.  [Algoritmo di esecuzione](#algoritmo-di-esecuzione)
+1.  [Risoluzione di uno split di g-nodo](#risoluzione-di-uno-split-di-g-nodo)
 
 ## Terminologia e notazioni
 
@@ -613,7 +613,7 @@ di *v* di livello *lvl+1* o superiore.
 Questo lo fa con il metodo remoto `search_migration_path` la cui firma è:  
 `EntryData search_migration_path(int lvl) throws NoMigrationPathFoundError, MigrationPathExecuteFailureError`  
 
-Il modulo Hooking nel nodo *v* cerca la shortest migration-path come descritto [qui](#Strategia_ingresso).
+Il modulo Hooking nel nodo *v* cerca la shortest migration-path come descritto [qui](#strategia-di-ingresso).
 
 Se il nodo *v* trova che non esiste una migration-path a livello *lvl* lo comunica a *n*
 con l'eccezione `NoMigrationPathFoundError`.  
@@ -639,7 +639,7 @@ in uno dei g-nodi di *v* di livello maggiore di *lvl* ci sarà un posto riservat
 
 Sia `host_gnode_level` il livello del g-nodo di *v* in cui adesso è stato riservato un posto.  
 Questo livello può essere maggiore o uguale a *lvl* + 1. Infatti, come
-descritto [qui](#Strategia_ingresso), la migration-path giudicata ottimale potrebbe essere
+descritto [qui](#strategia-di-ingresso), la migration-path giudicata ottimale potrebbe essere
 una di lunghezza zero che comporta la creazione di un nuovo g-nodo di grandezza maggiore.
 
 Ora il nodo *v*, riguardo al suo g-nodo in cui adesso è stato riservato un posto, ha queste informazioni:
@@ -807,7 +807,7 @@ I suoi membri sono:
 *   `Timer? begin_enter_timeout` - Scadenza per un tentativo in corso di fare ingresso in
     blocco in un'altra rete. È *null* se nessun tentativo di questo tipo è in corso.
 
-## <a name="Strategia_ingresso"></a>Strategia di ingresso
+## Strategia di ingresso
 
 Assumiamo che il nodo *n* di *G* vuole usare il nodo diretto vicino *v* di *J* per far entrare il suo g-nodo *g* di livello *l*
 in blocco dentro *J*. In questa richiesta possiamo avere 0 ≤ *l* ﹤ *levels*.
@@ -852,7 +852,7 @@ uno dei g-nodi di *v* di livello maggiore di *l*. La chiamiamo *migration-path a
 
 Specifichiamo rigorosamente cosa si intende per *migration-path*.
 
-### <a name="Strategia_ingresso_Definizione_migration_path"></a>Definizione della migration-path
+### Definizione della migration-path
 
 Abbiamo detto che *l*, cioè il livello del g-nodo *g* che vuole entrare nella rete *J*, può avere un valore
 da 0 a *levels* - 2. Indichiamo con *P* = (*p<sub>1</sub>*, *p<sub>2</sub>*, ... *p<sub>m</sub>*)
@@ -903,7 +903,7 @@ un g-nodo *g* di livello *l* se *P* è una lista di g-nodi che soddisfa questi r
 
 Usiamo una definizione che include anche una sorta di migration-path impropria, quella di lunghezza 0.
 
-### <a name="Strategia_ingresso_Uso_migration_path"></a>Uso della migration-path
+### Uso della migration-path
 
 Detto in altri termini, il nodo *v* deve cercare la shortest migration-path per fornire un posto ad un g-nodo
 di livello *l*. Cioè:
@@ -917,7 +917,7 @@ della lista *P* nel successivo *p<sub>i+1</sub>* un border g-nodo di livello sub
 che è di livello maggiore di *l*. Come *costo* abbiamo che viene occupato un ulteriore posto nell'ultimo g-nodo
 della lista *P*, il quale non era saturo.
 
-### <a name="Strategia_ingresso_Caratteristiche_migration_path"></a>Caratteristiche della migration-path
+### Caratteristiche della migration-path
 
 Una migration-path a livello *l* ha 2 caratteristiche importanti:
 
@@ -981,7 +981,7 @@ se *d<sub>i+1</sub>* `<` *d<sub>i</sub>* x 1.3.
 
 Vediamo in dettaglio l'algoritmo di questa ricerca.
 
-### <a name="Strategia_ingresso_Algoritmo_ricerca"></a>Algoritmo di ricerca
+### Algoritmo di ricerca
 
 Come premessa per descrivere più agevolmente l'algoritmo di ricerca della migration-path
 definiamo alcune strutture dati.
@@ -1871,7 +1871,7 @@ Se invece nessuna soluzione è stata trovata, il nodo *v* immediatamente comunic
 (che aveva fatto la richiesta di ingresso) questo risultato con l'eccezione `NoMigrationPathFoundError`.
 Il nodo *n* potrà tentare di degradare.
 
-### <a name="Strategia_ingresso_Cancellazione_prenotazioni"></a>Cancellazione delle prenotazioni
+### Cancellazione delle prenotazioni
 
 Per ogni soluzione `Solution s` che decide di non perseguire, il nodo *v* ha i dati necessari a
 contattare il g-nodo che aveva fatta una prenotazione con posizione *reale* e a chiederne la
@@ -1937,7 +1937,7 @@ void execute_delete_reserve
 Non c'è bisogno di attendere una risposta. Il primo singolo nodo in esso chiama il metodo `delete_reserve` del
 modulo Coordinator per cancellare la prenotazione.
 
-### <a name="Strategia_ingresso_Esecuzione_migration_path"></a>Esecuzione della migration-path
+### Esecuzione della migration-path
 
 Dopo aver scelto la soluzione migliore, il nodo *v* deve coordinare la sua esecuzione.
 
@@ -2085,7 +2085,7 @@ con tutti i suoi archi per un certo tempo, come già detto prima.
 Dopo aver dato il via alla *propagazione senza ritorno* il nodo *𝛽0<sub>i</sub>* lo comunica al nodo *v* che
 prosegue con il prossimo valore di *i*.
 
-### <a name="Strategia_ingresso_Algoritmo_esecuzione"></a>Algoritmo di esecuzione
+### Algoritmo di esecuzione
 
 Abbiamo già detto che il nodo *v* ha tutte le informazioni necessarie ai *m* - 1 passi della migration-path
 codificate in una istanza di Solution, la quale contiene in modo ricorsivo *m* istanze di SolutionStep.  
@@ -2335,7 +2335,7 @@ del modulo Hooking, bensì del suo utilizzatore. Quindi compito dei metodi `prep
 `finish_migration` del modulo Hooking è quello di emettere i relativi segnali `do_prepare_migration`
 e `do_finish_migration`.
 
-## <a name="Split_gnodo"></a>Risoluzione di uno split di g-nodo
+## Risoluzione di uno split di g-nodo
 
 Quando nella rete *G* un g-nodo *g* di livello *l* si "splitta" si formano diverse isole. Quelle che non hanno
 dentro di sé il nodo che in precedenza era il più anziano, cioè il nodo che ha dato il suo fingerprint

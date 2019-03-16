@@ -396,4 +396,83 @@ Tra diretti vicini i dialoghi sono espletati con questi metodi remoti:
 
 ## Annotazioni varie
 
+### strategia di ingresso
+
+Il nodo *n* di *G* vuole chiedere a *v* di *J* il permesso di entrare nella rete *J* in un g-nodo di *v* insieme al
+suo g-nodo di livello *l*, con *l* tra 0 e levels-1.  
+I nodi *n* e *v* sono identità principali.
+
+Questa richiesta il nodo *n* la fa nel modulo Hooking nella tasklet di gestione di un arco: questa tasklet
+viene avviata sull'aggiunta di un arco-identità (il metodo `add_arc` avvia la tasklet `add_arc_tasklet`, vedi
+file `arc_handler.vala`).  
+La richiesta è fatta con `IEntryData resp2 = st.search_migration_path(ask_lvl);` e può rilanciare
+eccezione NoMigrationPathFoundError (la tasklet prova a degradare) o MigrationPathExecuteFailureError (la
+tasklet riprova subito) oppure restituirà i dati per l'ingresso.
+
+Il nodo *v* cerca, se esiste, *P* la *shortest migration-path* di livello *l*.
+
+Le caratteristiche di *P* sono la lunghezza *d* (che può essere 0=impropria o maggiore) e il delta tra *hl* e *l*
+che può essere 1 o maggiore.
+
+Una migrazione con *d* maggiore di 0 è possibile solo se *l* è minore di levels-1.
+
+Per ogni livello della topologia della rete è definito un delta *𝜀* accettabile. Quindi una volta trovata
+la più breve (*d* minore) soluzione, se il suo delta è superiore a *𝜀*, la ricerca si addentra tra
+le possibili alternative, ammettendo che la distanza della successiva non si incrementi più di 5 passi
+o di 1.3 volte i passi precedenti, fintanto che non trovi una soluzione con delta accettabile.
+
+Questa ricerca viene avviata nel nodo *v* nel modulo Hooking nel metodo remoto `search_migration_path`
+(nel file `hooking.vala`): si guarda il *𝜀* e si calcola il `ok_host_lvl` e si chiama il metodo
+`find_shortest_mig` (nel file `hooking.vala`)
+
+La logica del tentativo di trovare una soluzione con delta accettabile è nella funzione `find_shortest_mig`:
+infatti questa restituisce una lista di soluzioni: prima di restituirla continua a
+cercare fintanto che:
+
+*   ha terminato l'esplorazione:  
+    esce dal ciclo `while (! Q.is_empty)`, *oppure*
+*   ha trovato una soluzione con delta soddisfacente:  
+    `if (final_host_lvl <= ok_host_lvl) ... return solutions;`, *oppure*
+*   la successiva soluzione è troppo lontana: 
+    `if (prev_sol_distance + 5 ... && prev_sol_distance * 1.3 ...) break;`
+
+La struttura `TupleGNode` è serializzabile si trova nel file `serializable.vala`.
+
+Le strutture `Solution` e `SolutionStep` sono nel file `structs.vala`. La `SolutionStep` ha il metodo `get_distance`.
+
+Le funzioni di utilità `make_tuple_from_level`, `make_tuple_from_hc`, `make_tuple_up_to_level`,
+`level`, `positions_equal`, `tuple_contains`, ...
+sono nel file `structs.vala`.
+
+Per contattare un nodo in `current.visiting_gnode` il metodo `find_shortest_mig` instrada un pacchetto:
+chiama `message_routing.send_search_request` (nel file `message_routing.vala`).
+Questo metodo in base ai parametri ricevuti costruisce un pacchetto SearchMigrationPathRequest
+che instrada chiamando il metodo remoto `stub.route_search_request` e poi aspetta la risposta su un *channel*.  
+Il metodo remoto `route_search_request` (gestito con `message_routing.route_search_request` nel file `message_routing.vala`)
+se non capita un problema nel tragitto, finisce che chiama su un nodo in `current.visiting_gnode`
+il metodo `execute_search` (nel file `hooking.vala`). Ottiene un risultato e ci costruisce un pacchetto SearchMigrationPathResponse
+che instrada chiamando il metodo remoto `stub.route_search_response`. Il metodo
+remoto `route_search_response` (gestito con `message_routing.route_search_response` nel file `message_routing.vala`)
+finisce con lo scrivere il pacchetto risposta sul *channel* nel nodo originante la richiesta.  
+Se invece capita nel tragitto un problema, il metodo remoto `route_search_request` costruisce un pacchetto SearchMigrationPathErrorPkt
+e lo instrada chiamando il metodo remoto `stub.route_search_error`. Il metodo
+remoto `route_search_error` (gestito con `message_routing.route_search_error` nel file `message_routing.vala`)
+finisce con lo scrivere il pacchetto errore sul *channel* nel nodo originante la richiesta.  
+Ricevendo così la risposta oppure l'errore, il metodo `message_routing.send_search_request` lo
+interpreta e lo restituisce al chiamante, cioè al metodo `find_shortest_mig`.
+
+Nel `message_routing.send_search_request` la `SolutionStep current` viene tradotta con `get_path_hops`
+in una lista di `PathHop`.
+
+La struttura `PathHop` è serializzabile si trova nel file `serializable.vala`.
+
+La funzione di utilità `get_path_hops` si trova nel file `structs.vala`.
+
+La logica illustrata nell'analisi che segue il nodo interrogato in `current.visiting_gnode` è
+implementata nel metodo `execute_search`. In particolare l'individuazione dei g-nodi adiacenti
+che nell'analisi è rappresentata con la funzione `adj_to_me` viene demandata all'utilizzatore
+del modulo per mezzo dell'interfaccia `map_paths.adjacent_to_my_gnode`.
+
+
+
 ...
