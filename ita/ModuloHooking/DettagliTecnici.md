@@ -405,7 +405,7 @@ I nodi *n* e *v* sono identità principali.
 Questa richiesta il nodo *n* la fa nel modulo Hooking nella tasklet di gestione di un arco: questa tasklet
 viene avviata sull'aggiunta di un arco-identità (il metodo `add_arc` avvia la tasklet `add_arc_tasklet`, vedi
 file `arc_handler.vala`).  
-La richiesta è fatta con `IEntryData resp2 = st.search_migration_path(ask_lvl);` e può rilanciare
+La richiesta è fatta con `IEntryData resp2 = stub.search_migration_path(ask_lvl);` e può rilanciare
 eccezione NoMigrationPathFoundError (la tasklet prova a degradare) o MigrationPathExecuteFailureError (la
 tasklet riprova subito) oppure restituirà i dati per l'ingresso.
 
@@ -473,6 +473,13 @@ implementata nel metodo `execute_search`. In particolare l'individuazione dei g-
 che nell'analisi è rappresentata con la funzione `adj_to_me` viene demandata all'utilizzatore
 del modulo per mezzo dell'interfaccia `map_paths.adjacent_to_my_gnode`.
 
+Dopo che le possibili soluzioni sono state trovate da `find_shortest_mig`, il metodo remoto `search_migration_path`
+per le soluzioni scartate avvia in delle tasklet la richiesta di rimuovere la prenotazione
+tramite `message_routing.send_delete_reserve_request`. Inoltre esegue (se necessario) la
+migration-path con il metodo `execute_shortest_mig`.  
+Di seguito restituisce al chiamante (il nodo *n*) i dati per l'ingresso nella rete.
 
+Il metodo `execute_shortest_mig` instrada i pacchetti che servono all'esecuzione della migration-path
+per il tramite di `message_routing.send_mig_request`.
 
 ...
