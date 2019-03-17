@@ -24,6 +24,9 @@
     1.  [Esecuzione della migration-path](#esecuzione-della-migration-path)
     1.  [Algoritmo di esecuzione](#algoritmo-di-esecuzione)
 1.  [Risoluzione di uno split di g-nodo](#risoluzione-di-uno-split-di-g-nodo)
+1.  [Requisiti](#requisiti)
+1.  [Deliverable](#deliverable)
+1.  [Classi e interfacce](#classi-e-interfacce)
 
 ## Terminologia e notazioni
 
@@ -2363,3 +2366,51 @@ e il demone *ntkd*, accorgendosene, comunicherà al modulo Hooking la nascita di
 Con i meccanismi descritti in precedenza questo provoca le operazioni di ingresso di *g'* nella rete originale con un
 nuovo indirizzo come un nuovo distinto g-nodo internamente connesso.
 
+## Requisiti
+
+`void static HookingManager.init(...)`
+
+Il metodo statico `init` permette di passare l'implementazione delle tasklet.
+
+`HookingManager(IHookingMapPaths map_paths, ICoordinator coord)`
+
+Il costruttore di HookingManager viene chiamato al momento della creazione della nuova identità. Quindi
+l'istanza di HookingManager esiste da subito, anche se l'identità non è ancora *bootstrapped*.  
+Questo permette che un vicino chiami un metodo remoto del modulo Hooking senza correre rischi. Il metodo
+potrebbe rilanciare l'eccezione `NotBoostrappedError` e in quel caso si sa che bisogna riprovare in seguito.
+
+D'altro canto il nodo che ha creato una nuova identità e di conseguenza una nuova istanza di HookingManager
+non avvierà subito operazioni. Infatti queste sono legate agli archi e al momento nessun arco-identità è
+stato comunicato all'istanza di HookingManager. I primi archi saranno comunicati dopo che siamo *bootstrapped*.
+
+`void HookingManager.bootstrapped(List<IIdentityArc> initial_arcs)`
+
+Nel momento in cui l'identità diventa *bootstrapped*, la lista degli archi-identità iniziali
+viene passata al modulo Hooking in un solo colpo.
+
+Per la prima identità abbiamo che subito dopo la creazione essa diventa *bootstrapped* e viene chiamato sulla
+istanza di HookingManager il metodo `bootstrapped` con una lista vuota.
+
+Per una identità che viene duplicata (per fare ingresso in una nuova rete o per migrazione)
+abbiamo che solo dopo un po' di tempo essa diventa *bootstrapped* e solo allora viene chiamato sulla
+istanza di HookingManager il metodo `bootstrapped`. In esso viene passata la lista degli archi-identità
+iniziali, cioè quelli scaturiti dalla duplicazione dell'identità e che vengono forniti anche al
+costruttore `enter_net` o `migration` di QspnManager.  
+Il modulo Hooking si comporta come se avesse ricevuto una serie di `add_arc`, avviando per ognuno di
+essi la tasklet di gestione dell'arco-identità.
+
+## Deliverable
+
+`void HookingManager.add_arc(IIdentityArc ia)`
+
+Con questo metodo possiamo dire al modulo Hooking che abbiamo un nuovo arco-identità. Il modulo avvia
+una tasklet per gestirlo.
+
+`void HookingManager.remove_arc(IIdentityArc ia)`
+
+Con questo metodo possiamo dire al modulo Hooking che abbiamo rimosso un arco-identità. Il modulo termina
+la tasklet che lo stava gestendo.
+
+## Classi e interfacce
+
+**TODO**

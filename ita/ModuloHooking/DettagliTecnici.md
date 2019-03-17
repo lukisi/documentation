@@ -15,7 +15,15 @@
 Una istanza di `HookingManager` viene costruita ogni volta che si crea una identità nel
 sistema. L'istanza di `HookingManager` viene associata a questa identità.
 
-L'utilizzatore del modulo Hooking comunica poi a questa istanza di `HookingManager` la
+Soltanto dopo che l'identità diventa *bootstrapped* questo evento viene comunicato al
+modulo (tramite il metodo `bootstrapped` di `HookingManager`) e esso diventa operativo.  
+Nel caso della prima identità questo avviene immediatamente e senza che esistano ancora
+archi-identità.  
+Nel caso di una identità duplicata questo avviene dopo un po' di tempo; di norma esistono
+degli archi-identità che vengono subito comunicati tramite il metodo `bootstrapped` a
+questa istanza di `HookingManager`.
+
+L'utilizzatore del modulo Hooking comunica in seguito a questa istanza di `HookingManager` la
 nascita e la rimozione di ogni arco-identità associato a quella identità nel sistema. Questo
 chiamando i metodi pubblici `add_arc` e `remove_arc` dell'istanza di `HookingManager`.
 
@@ -24,6 +32,12 @@ una tasklet che ha il compito di dialogare con il diretto vicino su questo arco-
 Da questo dialogo scaturiscono alcune operazioni di pertinenza del modulo Hooking che sono
 svolte nella stessa tasklet. E da queste operazioni deriva l'emissione di alcuni segnali
 che informano l'utilizzatore del modulo su operazioni da intraprendere.
+
+Alcune operazioni di pertinenza del modulo Hooking possono essere richieste al modulo
+associato ad una identità attraverso la ricezione di chiamate di metodi remoti da parte
+dei diretti vicini. Queste di solito consistono nella richiesta di informazioni
+(come il metodo `retrieve_network_data` e il metodo `search_migration_path`) e il modulo
+può servirle solo se la sua identità è *bootstrapped*. Altrimenti rilancia l'eccezione `NotBoostrappedError`.
 
 Altre operazioni di pertinenza del modulo Hooking possono essere richieste al modulo
 associato ad una identità attraverso meccanismi di propagazione di messaggi all'interno di
@@ -45,10 +59,12 @@ con indirizzo *reale*) allora prosegue. Questa verifica viene fatta all'inizio
 e in seguito ogni volta che la tasklet intende chiamare il metodo remoto `retrieve_network_data`.
 
 La tasklet chiama il metodo remoto `retrieve_network_data` sul suo arco-identità. La risposta può essere
-l'eccezione `NotPrincipalError` oppure informazioni sulla rete
+l'eccezione `NotPrincipalError`, l'eccezione `NotBoostrappedError`, oppure informazioni sulla rete
 di appartenenza del vicino.
 
 Se rileva che l'identità vicina è *di connettività*, allora la tasklet termina.
+
+Se rileva che l'identità vicina non è ancora *bootstrapped*, allora aspetta un po' e riprova.
 
 Se l'identità vicina appartiene alla nostra stessa rete, allora la tasklet emette un segnale `same_network` indicando
 questo arco-identità. L'utilizzatore gestirà questo segnale memorizzando che quel dato arco-identità congiunge
@@ -94,6 +110,10 @@ Se riceve l'eccezione `AlreadyEnteringError` allora attende un tempo molto lungo
 di esame dell'identità.
 
 Altrimenti la tasklet chiama sul suo arco-identità il metodo remoto `search_migration_path(ask_lvl)`.
+
+In teoria a questo punto siamo sicuri che l'identità del vicino è *bootstrapped*. Comunque il metodo
+remoto prevede la possibilità di rilanciare l'eccezione `NotBoostrappedError`. Se dovesse ricevere
+questa eccezione la tasklet segnala che l'arco-identità va rimosso e poi termina.
 
 Se riceve l'eccezione `MigrationPathExecuteFailureError` allora subito riprova con la stessa chiamata
 del metodo remoto `search_migration_path` con lo stesso livello.
