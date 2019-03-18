@@ -60,7 +60,9 @@ e in seguito ogni volta che la tasklet intende chiamare il metodo remoto `retrie
 
 La tasklet chiama il metodo remoto `retrieve_network_data` sul suo arco-identità. La risposta può essere
 l'eccezione `NotPrincipalError`, l'eccezione `NotBoostrappedError`, oppure informazioni sulla rete
-di appartenenza del vicino.
+di appartenenza del vicino.  
+L'esito di questa chiamata può anche essere un errore `StubError` o simile. In questo caso (vale anche su
+altre chiamate) la tasklet segnala che l'arco ha fallito (segnale `failing_arc`) e lo rimuove e termina.
 
 Se rileva che l'identità vicina è *di connettività*, allora la tasklet termina.
 

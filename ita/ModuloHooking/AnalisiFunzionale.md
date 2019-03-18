@@ -2411,6 +2411,10 @@ una tasklet per gestirlo.
 Con questo metodo possiamo dire al modulo Hooking che abbiamo rimosso un arco-identità. Il modulo termina
 la tasklet che lo stava gestendo.
 
+`signal void failing_arc(IIdentityArc arc)`
+
+Con questo segnale viene comunicato all'utilizzatore che questo arco-identità non funziona a dovere e va rimosso.
+
 ## Classi e interfacce
 
 **TODO**
