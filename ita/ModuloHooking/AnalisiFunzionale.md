@@ -8,9 +8,9 @@
 1.  [Incontro e fusione di due reti distinte](#incontro-e-fusione-di-due-reti-distinte)
     1.  [Prima fase - valutazione da parte del singolo nodo](#prima-fase---valutazione-da-parte-del-singolo-nodo)
     1.  [Seconda fase - valutazione da parte della rete](#seconda-fase---valutazione-da-parte-della-rete)
-    1.  [Terza fase - elezione dell'ingresso](#Fusione_reti_fase3)
-    1.  [Quarta fase - comunicazione della elezione](#Fusione_reti_fase4)
-    1.  [Quinta fase - comunicazione con il g-nodo entrante](#Fusione_reti_fase5)
+    1.  [Terza fase - elezione dell'ingresso](#terza-fase---elezione-dellingresso)
+    1.  [Quarta fase - comunicazione della elezione](#quarta-fase---comunicazione-della-elezione)
+    1.  [Quinta fase - comunicazione con il g-nodo entrante](#quinta-fase---comunicazione-con-il-g-nodo-entrante)
     1.  [Sesta fase - richiesta della prenotazione di un posto](#Fusione_reti_fase6)
     1.  [Prenotazione riuscita: Settima fase - ingresso](#Fusione_reti_fase7a)
     1.  [Prenotazione fallita: Settima fase - annullamento al g-nodo entrante](#Fusione_reti_fase7b)
@@ -428,7 +428,7 @@ una eccezione AskAgainError.
 
 Se invece `timeout` è scaduto si passa alla terza fase.
 
-### <a name="Fusione_reti_fase3"></a>Terza fase - elezione dell'ingresso
+### Terza fase - elezione dell'ingresso
 
 Consideriamo che ogni volta che arriva una richiesta `r` di ingresso in *J* il modulo Hooking nel
 nodo Coordinator di *G* prima di valutarla accede alla memoria condivisa di tutta la rete per
@@ -483,7 +483,7 @@ Altrimenti il modulo Hooking fa queste operazioni:
 
 Le successive richieste saranno gestite nella quarta fase.
 
-### <a name="Fusione_reti_fase4"></a>Quarta fase - comunicazione della elezione
+### Quarta fase - comunicazione della elezione
 
 Quando arriva una richiesta `req` di ingresso in *J* il modulo Hooking nel nodo Coordinator di *G* si avvede che si trova
 nella quarta fase perché nella memoria condivisa di tutta la rete lo `status` è `TO_BE_NOTIFIED` o `NOTIFIED`.
@@ -531,7 +531,7 @@ che come abbiamo detto può essere calcolata dal modulo Hooking esclusivamente s
 volta. Ciò significa che l'implementazione del metodo `evaluate_enter` del modulo Hooking deve acquisire
 un *lock* (nel nodo corrente) prima di iniziare e rilasciarlo prima di rispondere.
 
-### <a name="Fusione_reti_fase5"></a>Quinta fase - comunicazione con il g-nodo entrante
+### Quinta fase - comunicazione con il g-nodo entrante
 
 La quinta fase inizia quando un singolo nodo di *G*, assumiamo sia il nodo *n*, riceve l'autorizzazione
 dal Coordinator di *G* di tentare l'ingresso in *J* tramite il suo vicino *v* con il suo g-nodo *g* di livello
@@ -541,6 +541,12 @@ del metodo `evaluate_enter` sul modulo Coordinator.
 
 Ora il modulo Hooking nel nodo *n* vuole chiamare il metodo `begin_enter` del modulo Hooking nel nodo Coordinator del
 g-nodo *g*.
+
+Dobbiamo notare che il nodo *n* potrebbe voler entrare come singolo nodo, cioè *lvl* = 0. In questo caso il g-nodo *g*
+è in effetti il singolo nodo *n* e non esiste un Coordinator del g-nodo di livello 0.  
+In questo caso (si può verificare nei metodi `begin_enter`, `completed_enter`, `abort_enter`) stabiliamo che
+sarà il delegato fornito al modulo Hooking (cioè l'interfaccia [ICoordinator](DettagliTecnici.md#interfaccia-icoordinator))
+a evitare di chiamare il modulo Coordinator e invece invocare direttamente il metodo `begin_enter` del modulo Hooking.
 
 Prima il modulo Hooking del nodo *n* prepara una nuova struttura dati con le informazioni che servono
 a questo metodo istanziando un `BeginEnterData begin_enter_data`.  
