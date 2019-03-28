@@ -193,8 +193,8 @@ Tramite questa interfaccia il modulo può:
     *   Metodo `int get_levels()`. Numero di livelli nella rete.
     *   Metodo `int get_gsize(int level)`. Numero di posizioni *reali* per un dato livello.
     *   Metodo `int get_epsilon(int level)`. Se si avvia la ricerca di una migration-path per liberare
-        una posizione *reale* al livello `level` questo metodo ci dice di quanti livelli ulteriori
-        possiamo salire al massimo per avere una soluzione che ci soddisfa.
+        una posizione *reale* per un g-nodo guest di livello `level` questo metodo ci restituisce il valore di `𝜀` tale che
+        una posizione libera in un g-nodo host di livello `level + 𝜀` ci soddisfa. Sicuramente `𝜀 ≥ 1`.
 *   Leggere informazioni sulla posizione del nodo.
     *   Metodo `int get_my_pos(int level)`. Posizione al livello `level`.  
         Questo dato può cambiare nel tempo. Infatti una identità può diventare di connettività al
