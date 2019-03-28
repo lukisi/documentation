@@ -544,9 +544,9 @@ g-nodo *g*.
 
 Dobbiamo notare che il nodo *n* potrebbe voler entrare come singolo nodo, cioè *lvl* = 0. In questo caso il g-nodo *g*
 è in effetti il singolo nodo *n* e non esiste un Coordinator del g-nodo di livello 0.  
-In questo caso (si può verificare nei metodi `begin_enter`, `completed_enter`, `abort_enter`) stabiliamo che
-sarà il delegato fornito al modulo Hooking (cioè l'interfaccia [ICoordinator](DettagliTecnici.md#interfaccia-icoordinator))
-a evitare di chiamare il modulo Coordinator e invece invocare direttamente il metodo `begin_enter` del modulo Hooking.
+In questo caso (si può verificare nei metodi `begin_enter`, `completed_enter`, `abort_enter`) invece di chiamare
+l'interfaccia [ICoordinator](DettagliTecnici.md#interfaccia-icoordinator) (cioè il delegato fornitogli dal suo utilizzatore)
+il modulo Hooking invoca direttamente il suo metodo `begin_enter`.
 
 Prima il modulo Hooking del nodo *n* prepara una nuova struttura dati con le informazioni che servono
 a questo metodo istanziando un `BeginEnterData begin_enter_data`.  
