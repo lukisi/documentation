@@ -1652,16 +1652,16 @@ Vediamo ora come fa il nodo *w* a dire quali g-nodi di livello `min_host_lvl` so
 suo g-nodo di livello `min_host_lvl`.
 
 Il nodo *w* sa quali sono i g-nodi di livello `min_host_lvl` interni al suo g-nodo di livello `min_host_lvl + 1`,
-cioè quali HCoord di livello `min_host_lvl` sono presenti nella sua mappa dei percorsi.
-Tra questi sa dire quali (se ce ne sono) siano anche adiacenti al suo g-nodo di livello `min_host_lvl`: infatti il suo
-miglior percorso verso essi non contiene passi intermedi di livello `min_host_lvl`. È anche necessario
+cioè quali HCoord di livello `min_host_lvl` sono presenti nella sua mappa dei percorsi. Di ognuno di essi, sa
+stabilire se sia adiacente al suo g-nodo di livello `min_host_lvl`: infatti il suo
+miglior percorso verso esso non contiene passi intermedi di livello `min_host_lvl`. È anche necessario
 che l'ultimo passo intermedio di livello `min_host_lvl - 1` sia un HCoord con posizione *reale* a quel livello. Se non
 esiste un passo intermedio di livello `min_host_lvl - 1`, allora è necessario che lo stesso nodo *w* abbia
 una posizione *reale* a quel livello.
 
 Generalizzando, il nodo *w* sa quali HCoord di livello `i` (con `i` da `min_host_lvl` fino a `levels - 1`)
-sono adiacenti al suo g-nodo di livello `min_host_lvl`: infatti esiste
-un percorso verso essi che non contiene passi intermedi di livello tra `min_host_lvl` e `i`
+sono adiacenti al suo g-nodo di livello `min_host_lvl`: infatti il suo
+miglior percorso verso essi non contiene passi intermedi di livello tra `min_host_lvl` e `i`
 e nel quale l'ultimo passo intermedio di livello `min_host_lvl - 1` (o lo stesso nodo *w*) abbia
 una posizione *reale* a quel livello.
 
