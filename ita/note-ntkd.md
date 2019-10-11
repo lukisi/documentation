@@ -78,23 +78,44 @@ compilare non solo `if_list_dev` ma anche `if_list_mac` e `if_list_linklocal`.
 
 * * *
 
+Bisogna poter dare i comandi uno alla volta. E avere la possibilità di dare una serie di comandi
+senza che si possano introdurre in mezzo altri comandi.  
+Vedere il file `commander.vala` e `fake_command_dispatcher.vala`.
 
-			public QspnManager.create_net (Netsukuku.Qspn.IQspnMyNaddr my_naddr, Netsukuku.Qspn.IQspnFingerprint my_fingerprint, Netsukuku.Qspn.IQspnStubFactory stub_factory);
+* * *
 
+Bisogna potersi mettere in ascolto e inviare comunicazioni agli altri nodi:
 
+*   Su una interfaccia di rete in broadcast.  
+    Per mettersi in ascolto serve il nome dell'interfaccia di rete. Questo viene passato all'avvio del programma.
+*   Su un indirizzo linklocal in unicast.  
+    Per mettersi in ascolto serve l'indirizzo IP linklocal assegnato all'interfaccia di rete. Questo
+    viene scelto dal `NeighborhoodManager` che lo notifica con un segnale.
+*   Su un indirizzo routabile in unicast.  
+    Per mettersi in ascolto serve l'indirizzo IP routabile assegnato al nodo. Questo è calcolato sulla base
+    dell'indirizzo Netsukuku del nodo, il quale viene gestito dal modulo `qspn`.
 
-        IQspnStubFactory:
-			public abstract Netsukuku.IQspnManagerStub i_qspn_get_broadcast (Gee.List<Netsukuku.Qspn.IQspnArc> arcs, Netsukuku.Qspn.IQspnMissingArcHandler? missing_handler = null);
-			public abstract Netsukuku.IQspnManagerStub i_qspn_get_tcp (Netsukuku.Qspn.IQspnArc arc, bool wait_reply = true);
+...
 
+* * *
 
+In una classe memoriziamo le informazioni relative ad una interfaccia di rete che il programma deve gestire.  
+Vedere la classe `PseudoNetworkInterface` nel file `system_ntkd.vala`.
 
+In una hashmap memoriziamo le istanze di `PseudoNetworkInterface` di ogni interfaccia di rete che il
+programma deve gestire, indicizzate per il nome `dev`.  
+Vedere la variabile globale `pseudonic_map` nel file `system_ntkd.vala`.
 
-			public QspnManager.migration (Gee.List<Netsukuku.Qspn.IQspnArc> internal_arc_set, Gee.List<Netsukuku.Qspn.IQspnArc> internal_arc_prev_arc_set, Gee.List<Netsukuku.Qspn.IQspnNaddr> internal_arc_peer_naddr_set, Gee.List<Netsukuku.Qspn.IQspnArc> external_arc_set, Netsukuku.Qspn.IQspnMyNaddr my_naddr, Netsukuku.Qspn.IQspnFingerprint my_fingerprint, Netsukuku.Qspn.ChangeFingerprintDelegate update_internal_fingerprints, Netsukuku.Qspn.IQspnStubFactory stub_factory, int guest_gnode_level, int host_gnode_level, Netsukuku.Qspn.QspnManager previous_identity);
+* * *
 
+Bisogna integrare l'unica istanza di `NeighborhoodManager` che si crea all'avio del programma e muore alla sua terminazione.
 
-			public QspnManager.enter_net (Gee.List<Netsukuku.Qspn.IQspnArc> internal_arc_set, Gee.List<Netsukuku.Qspn.IQspnArc> internal_arc_prev_arc_set, Gee.List<Netsukuku.Qspn.IQspnNaddr> internal_arc_peer_naddr_set, Gee.List<Netsukuku.Qspn.IQspnArc> external_arc_set, Netsukuku.Qspn.IQspnMyNaddr my_naddr, Netsukuku.Qspn.IQspnFingerprint my_fingerprint, Netsukuku.Qspn.ChangeFingerprintDelegate update_internal_fingerprints, Netsukuku.Qspn.IQspnStubFactory stub_factory, int guest_gnode_level, int host_gnode_level, Netsukuku.Qspn.QspnManager previous_identity);
+* * *
 
+La fase di inizio ascolto su una interfaccia (in broadcast e in unicast sul linklocal) va svolta in correlazione con
+la fase di aggiunta dell'interfaccia alla gestione del `NeighborhoodManager`.  
+Analogamente la fase di fine ascolto va svolta in correlazione con
+la fase di rimozione dell'interfaccia dalla gestione del `NeighborhoodManager`.
 
-
+Vedere la funzione `void stop_monitor(string dev)` nel file `system_ntkd.vala`.
 
