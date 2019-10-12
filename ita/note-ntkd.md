@@ -67,6 +67,21 @@ di un g-nodo, dati i due percorsi dai quali arrivano informazioni discordanti su
 
 ### Annotazioni
 
+Per indicare i namespaces usiamo in seguito le abbreviazioni:
+
+`G.` per `Gee`;  
+`N.` per `Netsukuku`;  
+`N.N.` per `Netsukuku.Neighborhood`;  
+`N.I.` per `Netsukuku.Identities`;  
+`N.Q.` per `Netsukuku.Qspn`;  
+`N.P.` per `Netsukuku.PeerServices`;  
+`N.C.` per `Netsukuku.Coordinator`;  
+`N.H.` per `Netsukuku.Hooking`;  
+`N.A.` per `Netsukuku.Andna`;  
+`T.` per `TaskletSystem`;  
+
+* * *
+
 Dopo la creazione della sola istanza di NeighborhoodManager, viene chiamato il suo metodo `start_monitor` per
 iniziare a gestire una scheda di rete. Di conseguenza quasi immediatamente viene emesso il suo segnale `neighborhood_nic_address_set` e
 il programma viene a conoscenza dell'indirizzo IP linklocal associato a quella scheda di rete.
@@ -90,32 +105,47 @@ Bisogna potersi mettere in ascolto e inviare comunicazioni agli altri nodi:
     Per mettersi in ascolto serve il nome dell'interfaccia di rete. Questo viene passato all'avvio del programma.
 *   Su un indirizzo linklocal in unicast.  
     Per mettersi in ascolto serve l'indirizzo IP linklocal assegnato all'interfaccia di rete. Questo
-    viene scelto dal `NeighborhoodManager` che lo notifica con un segnale.
+    viene scelto dal `N.N.NeighborhoodManager` che lo notifica con un segnale.
 *   Su un indirizzo routabile in unicast.  
     Per mettersi in ascolto serve l'indirizzo IP routabile assegnato al nodo. Questo è calcolato sulla base
-    dell'indirizzo Netsukuku del nodo, il quale viene gestito dal modulo `qspn`.
+    dell'indirizzo Netsukuku del nodo, il quale viene gestito dal modulo `Qspn`.
 
 ...
 
 * * *
 
 In una classe memoriziamo le informazioni relative ad una interfaccia di rete che il programma deve gestire.  
-Vedere la classe `PseudoNetworkInterface` nel file `system_ntkd.vala`.
+Vedere la classe `N.PseudoNetworkInterface` nel file `system_ntkd.vala`.
 
-In una hashmap memoriziamo le istanze di `PseudoNetworkInterface` di ogni interfaccia di rete che il
+In una hashmap memoriziamo le istanze di `N.PseudoNetworkInterface` di ogni interfaccia di rete che il
 programma deve gestire, indicizzate per il nome `dev`.  
 Vedere la variabile globale `pseudonic_map` nel file `system_ntkd.vala`.
 
 * * *
 
-Bisogna integrare l'unica istanza di `NeighborhoodManager` che si crea all'avio del programma e muore alla sua terminazione.
+Bisogna integrare l'unica istanza di `N.N.NeighborhoodManager` che si crea all'avio del programma e muore alla sua terminazione.
 
 * * *
 
 La fase di inizio ascolto su una interfaccia (in broadcast e in unicast sul linklocal) va svolta in correlazione con
-la fase di aggiunta dell'interfaccia alla gestione del `NeighborhoodManager`.  
+la fase di aggiunta dell'interfaccia alla gestione del `N.N.NeighborhoodManager`.  
 Analogamente la fase di fine ascolto va svolta in correlazione con
-la fase di rimozione dell'interfaccia dalla gestione del `NeighborhoodManager`.
+la fase di rimozione dell'interfaccia dalla gestione del `N.N.NeighborhoodManager`.
 
 Vedere la funzione `void stop_monitor(string dev)` nel file `system_ntkd.vala`.
 
+* * *
+
+Per integrare il modulo `Neighborhood` occorre implementare con una classe l'interfaccia `N.N.INeighborhoodIPRouteManager`.  
+Vedere la classe `N.NeighborhoodIPRouteManager` nel file ` neighborhood_helpers.vala`.
+
+
+* * *
+
+* * *
+
+* * *
+
+* * *
+
+* * *
