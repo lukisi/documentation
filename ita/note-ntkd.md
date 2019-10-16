@@ -137,12 +137,115 @@ Vedere la funzione `void stop_monitor(string dev)` nel file `system_ntkd.vala`.
 * * *
 
 Per integrare il modulo `Neighborhood` occorre implementare con una classe l'interfaccia `N.N.INeighborhoodIPRouteManager`.  
-Vedere la classe `N.NeighborhoodIPRouteManager` nel file ` neighborhood_helpers.vala`.
+Vedere la classe `N.NeighborhoodIPRouteManager` nel file `neighborhood_helpers.vala`.
 
+Quando il modulo `Neighborhood` chiama `add_address` di `N.N.INeighborhoodIPRouteManager` la classe
+suddetta deve aggiungere l'indirizzo IP passato (si tratterà di un linklocal) alla interfaccia di
+rete (reale) passata.  
+Lo fa chiedendo al `commander.vala` di eseguire un singolo comando "`ip address add ...`".
+
+Quando il modulo `Neighborhood` chiama `add_neighbor` di `N.N.INeighborhoodIPRouteManager` la classe
+suddetta deve aggiungere una route diretta all'indirizzo IP passato (si tratterà di un linklocal) tramite
+l'interfaccia di rete (reale) passata.  
+Lo fa chiedendo al `commander.vala` di eseguire un singolo comando "`ip route add ...`".
+
+Quando il modulo `Neighborhood` chiama `remove_neighbor` di `N.N.INeighborhoodIPRouteManager` la classe
+suddetta deve rimuovere una route diretta all'indirizzo IP passato (si tratterà di un linklocal) tramite
+l'interfaccia di rete (reale) passata.  
+Lo fa chiedendo al `commander.vala` di eseguire un singolo comando "`ip route del ...`".
+
+Quando il modulo `Neighborhood` chiama `remove_address` di `N.N.INeighborhoodIPRouteManager` la classe
+suddetta deve rimuovere l'indirizzo IP passato (si tratterà di un linklocal) alla interfaccia di
+rete (reale) passata.  
+Lo fa chiedendo al `commander.vala` di eseguire un singolo comando "`ip address del ...`".
 
 * * *
 
+Per integrare il modulo `Neighborhood` occorre implementare con una classe l'interfaccia `N.N.INeighborhoodStubFactory`.  
+Vedere la classe `N.NeighborhoodStubFactory` nel file `neighborhood_helpers.vala`.
+
+Quando il modulo `Neighborhood` chiama `get_broadcast_for_radar` di `N.N.INeighborhoodStubFactory` la classe
+suddetta deve restituire uno stub per mandare messaggi broadcast allo stesso modulo `Neighborhood` nei
+nodi diretti vicini attraverso una specifica interfaccia di rete.  
+Lo fa chiamando sulla classe `N.StubFactory` il metodo `get_stub_whole_node_broadcast_for_radar` che gli
+ottiene una istanza di stub per messaggi broadcast di nodo. Lo stub ottenuto è radice (si veda `AddressManager addr`
+nel file `interfaces.rpcidl` del pacchetto `ntkdrpc`). Per ottenere uno stub dedicato al modulo `Neighborhood`
+la classe istanzia un `NeighborhoodManagerStubHolder`.
+
+Quando il modulo `Neighborhood` chiama `get_unicast` di `N.N.INeighborhoodStubFactory` la classe
+suddetta deve restituire uno stub per mandare messaggi unicast allo stesso modulo `Neighborhood` in uno
+specifico nodo diretto vicino attraverso uno specifico arco `N.N.INeighborhoodArc`.  
+Lo fa chiamando sulla classe `N.StubFactory` il metodo `get_stub_whole_node_unicast` che gli
+ottiene una istanza di stub per messaggi unicast di nodo. Lo stub ottenuto è radice (si veda `AddressManager addr`
+nel file `interfaces.rpcidl` del pacchetto `ntkdrpc`). Per ottenere uno stub dedicato al modulo `Neighborhood`
+la classe istanzia un `NeighborhoodManagerStubHolder`.
+
 * * *
+
+Per integrare il modulo `Neighborhood` occorre implementare con una classe l'interfaccia `N.N.INeighborhoodQueryCallerInfo`.  
+Vedere la classe `N.NeighborhoodQueryCallerInfo` nel file `neighborhood_helpers.vala`.
+
+Quando il modulo `Neighborhood` chiama `is_from_broadcast` di `N.N.INeighborhoodQueryCallerInfo` la classe
+suddetta deve esaminare una istanza di `CallerInfo` (la classe che la libreria `ntkdrpc` basata su ZCD
+passa ai metodi remoti quando riceve una chiamata da un altro nodo) e stabilire se il metodo
+remoto è stato chiamato da un diretto vicino in modalità broadcast; e in quel caso deve restituire
+l'istanza di `N.N.INeighborhoodNetworkInterface` associata all'interfaccia di rete da cui il messaggio è
+stato ricevuto.  
+Lo fa chiamando sulla classe `N.SkeletonFactory` il metodo `from_caller_get_mydev` che gli restituisce la
+stringa con il nome dell'interfaccia da cui è stato ricevuto il messaggio. Tramite questo nome e
+l'hashmap `pseudonic_map` risale all'istanza di `N.PseudoNetworkInterface` e in essa trova l'istanza
+di `N.N.INeighborhoodNetworkInterface` che deve restituire.
+
+Quando il modulo `Neighborhood` chiama `is_from_unicast` di `N.N.INeighborhoodQueryCallerInfo` la classe
+suddetta deve esaminare una istanza di `CallerInfo` e una lista di archi `N.N.INeighborhoodArc`
+che gli sono passati e stabilire se il metodo remoto è stato chiamato da un diretto vicino in modalità unicast;
+e in quel caso deve restituire l'arco `N.N.INeighborhoodArc` da cui il messaggio è
+stato ricevuto.  
+Lo fa individuando dal `CallerInfo` l'interfaccia di rete che ha ricevuto e il MAC address dell'interfaccia
+di rete del vicino che ha trasmesso (contenuta secondo il protocollo ZCD nella classe `NeighbourSrcNic`
+nella classe `CallerInfo`). Poi cicla negli archi e cerca quello che corrisponde.
+
+* * *
+
+Per integrare il modulo `Neighborhood` occorre implementare con una classe l'interfaccia `N.N.INeighborhoodNetworkInterface`.  
+Vedere la classe `N.NeighborhoodNetworkInterface` nel file `neighborhood_helpers.vala`.
+
+Le istanze di questa classe sono da passare al modulo `Neighborhood` a rappresentazione di una interfaccia di rete
+da gestire. Una istanza è creata passando una istanza di `N.PseudoNetworkInterface`. A sua volta una istanza di
+di `N.PseudoNetworkInterface` contiene un riferimento (**TODO** mettere weak) alla relativa istanza di `N.N.INeighborhoodNetworkInterface`.
+
+Quando il modulo `Neighborhood` chiama `measure_rtt` di `N.N.INeighborhoodNetworkInterface` la classe
+suddetta deve misurare il Round Trip Time delle comunicazioni tramite questa interfaccia di rete con un
+indirizzo IP linklocal che identifica una precisa interfaccia di rete di un nodo diretto vicino.  
+Questo avverrà eseguendo il comando `ping` e interpretandone l'output. Per il momento invece, questo
+programma di test chiede al `commander.vala` di eseguire un singolo comando "`ping`" e restituisce
+una misurazione fake di 1000 msec.
+
+* * *
+
+In una unica classe viene implementato il codice per ottenere degli stub radice di vario tipo (broadcast, unicast,
+di nodo o di identità).  
+Vedere la classe `N.StubFactory` nel file `rpc/stub_factory.vala`.
+
+**TODO** il metodo `get_stub_whole_node_broadcast_for_radar`
+
+**TODO** il metodo `get_stub_whole_node_unicast`
+
+* * *
+
+Diverse classi (una o più per ogni modulo) realizzano gli stub dedicati.  
+Vedere le classi nel file `rpc/module_stubs.vala`.
+
+La classe `N.NeighborhoodManagerStubHolder` implementa l'interfaccia `N.INeighborhoodManagerStub`
+a partire da uno stub radice.
+
+* * *
+
+In una unica classe viene implementato il codice per avviare le tasklet in ascolto nelle varie modalità
+(stream, datagram, di rete, di sistema, ...).  
+Vedere la classe `N.SkeletonFactory` nel file `rpc/skeleton_factory.vala`.
+
+**TODO** ...
 
 * * *
 
