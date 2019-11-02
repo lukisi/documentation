@@ -219,7 +219,7 @@ suddetta deve misurare il Round Trip Time delle comunicazioni tramite questa int
 indirizzo IP linklocal che identifica una precisa interfaccia di rete di un nodo diretto vicino.  
 Questo avverrà eseguendo il comando `ping` e interpretandone l'output. Per il momento invece, questo
 programma di test chiede al `commander.vala` di eseguire un singolo comando "`ping`" e restituisce
-una misurazione fake di 1000 msec.
+una misurazione fake di 1000 usec.
 
 * * *
 
@@ -227,9 +227,46 @@ In una unica classe viene implementato il codice per ottenere degli stub radice 
 di nodo o di identità).  
 Vedere la classe `N.StubFactory` nel file `rpc/stub_factory.vala`.
 
-**TODO** il metodo `get_stub_whole_node_broadcast_for_radar`
+La classe è pensata per avere una sola istanza in una variabile globale `stub_factory`
+nel file `system_ntkd.vala`, ad uso comune di tutto il codice.
 
-**TODO** il metodo `get_stub_whole_node_unicast`
+Per avere uno stub radice di tipo unicast verso un modulo di nodo si chiama il metodo `get_stub_whole_node_unicast`
+passando un arco `N.N.INeighborhoodArc` e indicando se si vuole attendere la risposta con `wait_reply`.  
+La classe prepara i dati serializzabili che sono previsti dal protocollo ZCD, cioè:
+
+*   Un `WholeNodeSourceID` che rappresenta il mittente.  
+    Il `NeighborhoodNodeID` che serve viene preso dalla variabile globale `skeleton_factory`.
+*   Un `WholeNodeUnicastID` che rappresenta il destinatario.  
+    Il `NeighborhoodNodeID` che serve viene preso dal membro `neighbour_id` dell'arco passato al metodo.
+*   Un `NeighbourSrcNic` che identifica l'interfaccia di rete (del mittente) usata per la trasmissione.  
+    Il MAC address che serve (della propria scheda di rete) viene preso dal membro `mac` dell'istanza di
+    `N.N.INeighborhoodNetworkInterface` che è presa dal membro `nic` dell'arco passato al metodo.
+
+Poi la classe chiama il metodo di `ntkdrpc` che restituisce lo stub radice di tipo stream.  
+In particolare in questo programma di test si chiama il metodo che usa il medium system. Per questo serve
+la stringa `send_pathname` che la classe costruisce a partire dall'indirizzo IP linklocal dell'interfaccia
+di rete del destinatario, il quale è memorizzato in `neighbour_nic_addr`
+nell'arco passato al metodo.  
+Quindi con tutti questi dati la classe chiama il metodo `get_addr_stream_system`.
+
+Per avere uno stub radice di tipo broadcast verso un modulo di nodo, poiché l'unico caso d'uso è quello
+della funzione di radar del modulo `Neighborhood`, si chiama il metodo `get_stub_whole_node_broadcast_for_radar`
+passando l'interfaccia di rete gestita, cioè l'istanza di `N.N.INeighborhoodNetworkInterface`.  
+La classe prepara i dati serializzabili che sono previsti dal protocollo ZCD, cioè:
+
+*   Un `WholeNodeSourceID` che rappresenta il mittente.  
+    Il `NeighborhoodNodeID` che serve viene preso dalla variabile globale `skeleton_factory`.
+*   Un `EveryWholeNodeBroadcastID` che rappresenta il destinatario, che è chiunque in questo caso.
+*   Un `NeighbourSrcNic` che identifica l'interfaccia di rete (del mittente) usata per la trasmissione.  
+    Il MAC address che serve (della propria scheda di rete) viene preso dal membro `mac` dell'istanza di
+    `N.N.INeighborhoodNetworkInterface` passata al metodo.
+
+Poi la classe chiama il metodo di `ntkdrpc` che restituisce lo stub radice di tipo datagram.  
+In particolare in questo programma di test si chiama il metodo che usa il medium system. Per questo serve
+la stringa `send_pathname` che la classe costruisce a partire dall'identificativo univoco del processo
+(che è memorizzato nella variabile globale `pid` nel file `system_ntkd.vala`) e dal nome della pseudo interfaccia
+di rete, che viene preso dal membro `dev` dell'istanza di `N.N.INeighborhoodNetworkInterface` passata al metodo.  
+Quindi con tutti questi dati la classe chiama il metodo `get_addr_datagram_system`.
 
 * * *
 
@@ -245,9 +282,30 @@ In una unica classe viene implementato il codice per avviare le tasklet in ascol
 (stream, datagram, di rete, di sistema, ...).  
 Vedere la classe `N.SkeletonFactory` nel file `rpc/skeleton_factory.vala`.
 
+La classe è pensata per avere una sola istanza in una variabile globale `skeleton_factory`
+nel file `system_ntkd.vala`, ad uso comune di tutto il codice.
+
+Al momento della sua costruzione viene valorizzato la sua proprietà `NeighborhoodNodeID whole_node_id`
+con l'identificativo fornito dal modulo `Neighborhood` **TODO** da finire con un successivo commit.
+
 **TODO** ...
 
 * * *
+
+Nel file `serializables.vala` sono implementate le classi serializzabili che servono per comunicare
+con il protocollo ZCD e i metodi definiti nel pacchetto `ntkdrpc`.
+
+La classe `N.WholeNodeSourceID` implementa l'interfaccia `N.ISourceID` fornita da `ntkdrpc`. Contiene una
+istanza di `NeighborhoodNodeID id` che rappresenta il mittente.
+
+La classe `N.WholeNodeUnicastID` implementa l'interfaccia `N.IUnicastID` fornita da `ntkdrpc`. Contiene una
+istanza di `NeighborhoodNodeID neighbour_id` che rappresenta il vicino destinatario.
+
+La classe `N.EveryWholeNodeBroadcastID` implementa l'interfaccia `N.IBroadcastID` fornita da `ntkdrpc`. Essa
+non contiene dati; rappresenta infatti chiunque riceva il messaggio.
+
+La classe `N.NeighbourSrcNic` implementa l'interfaccia `N.ISrcNic` fornita da `ntkdrpc`. Contiene una
+istanza di `string mac` che identifica la specifica interfaccia di rete del mittente.
 
 * * *
 
