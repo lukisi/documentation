@@ -285,10 +285,64 @@ Vedere la classe `N.SkeletonFactory` nel file `rpc/skeleton_factory.vala`.
 La classe è pensata per avere una sola istanza in una variabile globale `skeleton_factory`
 nel file `system_ntkd.vala`, ad uso comune di tutto il codice.
 
-Al momento della sua costruzione viene valorizzato la sua proprietà `NeighborhoodNodeID whole_node_id`
-con l'identificativo fornito dal modulo `Neighborhood` **TODO** da finire con un successivo commit.
+Nella fase di avvio del nodo, dopo averne costruito l'istanza, viene valorizzata la sua
+proprietà `NeighborhoodNodeID whole_node_id` con l'identificativo fornito dal modulo `Neighborhood`
+(**TODO** da finire con un successivo commit).
 
-**TODO** ...
+Il costruttore valorizza la proprietà privata `ServerDelegate dlg`. Servirà alle tasklet che ricevono i
+messaggi, come illustreremo a breve.  
+Inoltre valorizza la proprietà privata `NodeSkeleton node_skeleton`. Questa classe privata implementa
+l'interfaccia `N.IAddressManagerSkeleton` con il compito di restituire i vari manager dei moduli
+di nodo: `N.INeighborhoodManagerSkeleton` e `N.IIdentityManagerSkeleton`.
+
+Il metodo `start_stream_system_listen` avvia una tasklet per gestire i messaggi di tipo stream trasmessi
+in unicast a uno specifico indirizzo IP. Si può usare sia per i messaggi ricevuti da un diretto vicino
+(cioè con un IP linklocal) sia per i messaggi ricevuti da un nodo qualsiasi (instradati) all'interno di
+un g-nodo di qualsiasi livello in cui si trova anche il nodo corrente (cioè con un IP pubblico).  
+A questo metodo viene passata la stringa `listen_pathname`, come prescrive la funzione `stream_system_listen`
+fornita dalla libreria `ntkdrpc` basata su ZCD. Inoltre il metodo si costruisce un `N.IErrorHandler`
+apposito per questo listener (la classe `ServerErrorHandler` è una privata inner-classe di `N.SkeletonFactory`)
+e usa una istanza di `N.IDelegate` in comune con tutti i listener (la classe `ServerDelegate` è una
+privata inner-classe di `N.SkeletonFactory`); entrambe le classi sono prescritte da `ntkdrpc`.  
+Infine il metodo `start_stream_system_listen` memorizza in un HashMap l'handle della tasklet avviata
+associandolo alla stringa `listen_pathname`, di modo che la stessa classe `N.SkeletonFactory` con il
+metodo `stop_stream_system_listen` possa gestirne la terminazione.
+
+Il metodo `start_datagram_system_listen` avvia una tasklet per gestire i messaggi di tipo datagram trasmessi
+in broadcast su un segmento di rete (broadcast domain) e recepiti da una certa interfaccia di rete
+del nodo corrente.  
+A questo metodo viene passata la stringa `listen_pathname`, la stringa `send_pathname` e una istanza di
+`ISrcNic src_nic`, come prescrive la funzione `datagram_system_listen`
+fornita dalla libreria `ntkdrpc` basata su ZCD.
+Inoltre il metodo si costruisce un `N.IErrorHandler` apposito per questo listener
+e usa l'istanza comune di `N.IDelegate`, prescritte da `ntkdrpc`.  
+Infine il metodo `start_datagram_system_listen` memorizza in un HashMap l'handle della tasklet avviata
+associandolo alla stringa `listen_pathname`, di modo che la stessa classe `N.SkeletonFactory` con il
+metodo `stop_datagram_system_listen` possa gestirne la terminazione.
+
+La classe ServerDelegate (nel metodo `get_addr_set` prescritto da `ntkdrpc`) fa il suo lavoro
+usando i metodi `get_dispatcher` e `get_dispatcher_set` passando il CallerInfo.
+
+Il metodo `get_dispatcher` è usato per gestire i messaggi in stream:
+
+*   Se il caller ha un `WholeNodeSourceID` e un `WholeNodeUnicastID` che referenzia il nodo corrente
+    allora restituisce il proprio `node_skeleton`.
+*   ... **TODO** in futuri commit.
+
+Il metodo `get_dispatcher_set` è usato per gestire i messaggi in datagram:
+
+*   Se il caller ha un `WholeNodeSourceID` e un `EveryWholeNodeBroadcastID`
+    allora restituisce in un set il proprio `node_skeleton`.
+*   ... **TODO** in futuri commit.
+
+Il metodo `from_caller_get_mydev`, se il caller è un `StreamCallerInfo`, ... **TODO** in futuri commit.
+
+Il metodo `from_caller_get_mydev`, se il caller è un `DatagramCallerInfo`, ciclando le istanze
+di `N.PseudoNetworkInterface` nel set `pseudonic_map` trova quella i cui `listen_pathname` e `send_pathname`
+corrispondono al `listener` del caller e se lo trova restituisce il nome dell'interfaccia
+di rete da cui il messaggio è stato ricevuto.
+
+Il metodo `from_caller_get_nodearc`, ... **TODO** in futuri commit.
 
 * * *
 
