@@ -99,18 +99,10 @@ Vedere il file `commander.vala` e `fake_command_dispatcher.vala`.
 
 * * *
 
-Bisogna potersi mettere in ascolto e inviare comunicazioni agli altri nodi:
-
-*   Su una interfaccia di rete in broadcast.  
-    Per mettersi in ascolto serve il nome dell'interfaccia di rete. Questo viene passato all'avvio del programma.
-*   Su un indirizzo linklocal in unicast.  
-    Per mettersi in ascolto serve l'indirizzo IP linklocal assegnato all'interfaccia di rete. Questo
-    viene scelto dal `N.N.NeighborhoodManager` che lo notifica con un segnale.
-*   Su un indirizzo routabile in unicast.  
-    Per mettersi in ascolto serve l'indirizzo IP routabile assegnato al nodo. Questo è calcolato sulla base
-    dell'indirizzo Netsukuku del nodo, il quale viene gestito dal modulo `Qspn`.
-
-...
+La classe `N.PRNGen` nel file `rngen.vala` con i suoi metodi statici `init_rngen` e `int_range` viene usata nel codice
+per generare numeri pseudo-casuali. Può essere inizializzato questo generatore con un valore costante per ottenere
+risultati deterministici, ad esempio per riprodurre nei test gli stessi risultati. Oppure si possono ottenere
+valori più casuali.
 
 * * *
 
@@ -220,6 +212,46 @@ indirizzo IP linklocal che identifica una precisa interfaccia di rete di un nodo
 Questo avverrà eseguendo il comando `ping` e interpretandone l'output. Per il momento invece, questo
 programma di test chiede al `commander.vala` di eseguire un singolo comando "`ping`" e restituisce
 una misurazione fake di 1000 usec.
+
+* * *
+
+Per reagire ai segnali emessi dal modulo `Neighborhood` sono implementate delle funzioni
+nel file `neighborhood_signals.vala`.
+
+Il segnale `nic_address_set` è gestito nella funzione `neighborhood_nic_address_set`.  
+La funzione recupera l'istanza di `N.PseudoNetworkInterface` dal set `pseudonic_map`
+e valorizza i suoi membri `linklocal` e `st_listen_pathname`.  
+Inoltre avvia in questo momento la tasklet in ascolto per i messaggi stream unicast verso
+questa interfaccia di rete (con `skeleton_factory.start_stream_system_listen`).
+
+
+Il segnale `arc_added` è gestito nella funzione `neighborhood_arc_added`.  
+**TODO** in futuri commit.
+
+Il segnale `arc_changed` è gestito nella funzione `neighborhood_arc_changed`.  
+**TODO** in futuri commit.
+
+Il segnale `arc_removing` è gestito nella funzione `neighborhood_arc_removing`.  
+**TODO** in futuri commit.
+
+Il segnale `arc_removed` è gestito nella funzione `neighborhood_arc_removed`.  
+**TODO** in futuri commit.
+
+Il segnale `nic_address_unset` è gestito nella funzione `neighborhood_nic_address_unset`.  
+**TODO** in futuri commit.
+
+* * *
+
+Bisogna potersi mettere in ascolto e inviare comunicazioni agli altri nodi:
+
+*   Su una interfaccia di rete in broadcast.  
+    Per mettersi in ascolto serve il nome dell'interfaccia di rete. Questo viene passato all'avvio del programma.
+*   Su un indirizzo linklocal in unicast.  
+    Per mettersi in ascolto serve l'indirizzo IP linklocal assegnato all'interfaccia di rete. Questo
+    viene scelto dal `N.N.NeighborhoodManager` che lo notifica con un segnale.
+*   Su un indirizzo routabile in unicast.  
+    Per mettersi in ascolto serve l'indirizzo IP routabile assegnato al nodo. Questo è calcolato sulla base
+    dell'indirizzo Netsukuku del nodo, il quale viene gestito dal modulo `Qspn`.
 
 * * *
 
@@ -362,5 +394,53 @@ La classe `N.NeighbourSrcNic` implementa l'interfaccia `N.ISrcNic` fornita da `n
 istanza di `string mac` che identifica la specifica interfaccia di rete del mittente.
 
 * * *
+
+All'**avvio del programma** nella funzione `main` del file `system_ntkd.vala`, per prima cosa si parserizzano
+le opzioni date sulla linea di comando.  
+Si deve passare un PID per identificare un processo che simula un nodo in un testsuite.  
+Si deve passare una lista di pseudo-interfacce di rete da gestire.  
+
+Il PID finisce nella variabile globale `int pid` nel file `system_ntkd.vala`.  
+La lista di interfacce finisce in `ArrayList<string> devs` che è locale nella funzione `main`.  
+
+Dopo si inizializza lo scheduler delle tasklet. Va nella variabile globale `ITasklet tasklet`.
+
+Dopo si inizializza un FakeCommandDispatcher. Va nella variabile globale `FakeCommandDispatcher fake_cm`.
+
+Dopo si inizializzano i singoli moduli (principalmente perché hanno delle classi serializzabili) e si
+registrano le classi serializzabili che servono.  
+Sono `WholeNodeSourceID`, `WholeNodeUnicastID`, `EveryWholeNodeBroadcastID`, `NeighbourSrcNic`, ...
+
+Dopo si inizializza il generatore di numeri pseudo-casuali. Si usa come seed il PID.
+
+Dopo si passa lo scheduler delle tasklet alla libreria `ntkdrpc`, chiamandone la funzione statica `init_tasklet_system`.
+
+Dopo si istanzia lo `skeleton_factory`.
+
+Dopo si istanzia lo `stub_factory`.
+
+Dopo si istanzia il NeighborhoodManager.
+
+Dopo si connettono i segnali del NeighborhoodManager.
+
+Per ogni pseudo-interfaccia di rete da gestire si eseguono questi compiti:
+
+*   Si genera uno pseudo MAC.
+*   Si memorizza una nuova istanza di `N.PseudoNetworkInterface` in `pseudonic_map`.
+*   Si eseguono dei comandi di inizializzazione della scheda di rete.
+*   Si avvia una tasklet di ascolto per i messaggi datagram broadcast ricevuti da
+    questa interfaccia di rete (con `skeleton_factory.start_datagram_system_listen`).
+*   Si avvia `neighborhood_mgr.start_monitor` con l'istanza di `N.PseudoNetworkInterface`; questo
+    imposterà il IP linklocal sulla scheda, e emetterà il segnale `nic_address_set` gestito come già
+    detto sopra.
+
+Dopo si entra nel main loop degli eventi fino alla terminazione del programma (con il segnale Posix
+di terminazione).
+
+Alla terminazione del programma, si chiama `stop_monitor` su tutte le pseudo-interfacce di rete gestite.
+
+Dopo si rimuove il NeighborhoodManager (dalla variabile globale).
+
+Dopo si termina lo scheduler delle tasklet.
 
 * * *
