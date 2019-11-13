@@ -124,7 +124,7 @@ la fase di aggiunta dell'interfaccia alla gestione del `N.N.NeighborhoodManager`
 Analogamente la fase di fine ascolto va svolta in correlazione con
 la fase di rimozione dell'interfaccia dalla gestione del `N.N.NeighborhoodManager`.
 
-Vedere la funzione `void stop_monitor(string dev)` nel file `system_ntkd.vala`.
+Vedere la funzione `void stop_rpc(string dev)` nel file `system_ntkd.vala`.
 
 * * *
 
@@ -239,6 +239,18 @@ Il segnale `arc_removed` è gestito nella funzione `neighborhood_arc_removed`.
 
 Il segnale `nic_address_unset` è gestito nella funzione `neighborhood_nic_address_unset`.  
 **TODO** in futuri commit.
+
+* * *
+
+Per integrare il modulo `Identities` ... **TODO**  
+Vedere ... nel file `identities_helpers.vala`.
+
+* * *
+
+Per reagire ai segnali emessi dal modulo `Identities` sono implementate delle funzioni
+nel file `identities_signals.vala`.
+
+... **TODO**  
 
 * * *
 
@@ -399,9 +411,11 @@ All'**avvio del programma** nella funzione `main` del file `system_ntkd.vala`, p
 le opzioni date sulla linea di comando.  
 Si deve passare un PID per identificare un processo che simula un nodo in un testsuite.  
 Si deve passare una lista di pseudo-interfacce di rete da gestire.  
+Si può passare una lista di compiti (tasks) da fare in un dato momento.  
 
 Il PID finisce nella variabile globale `int pid` nel file `system_ntkd.vala`.  
 La lista di interfacce finisce in `ArrayList<string> devs` che è locale nella funzione `main`.  
+La lista di interfacce finisce in `ArrayList<string> tasks` che è locale nella funzione `main`.  
 
 Dopo si inizializza lo scheduler delle tasklet. Va nella variabile globale `ITasklet tasklet`.
 
@@ -409,9 +423,14 @@ Dopo si inizializza un FakeCommandDispatcher. Va nella variabile globale `FakeCo
 
 Dopo si inizializzano i singoli moduli (principalmente perché hanno delle classi serializzabili) e si
 registrano le classi serializzabili che servono.  
-Sono `WholeNodeSourceID`, `WholeNodeUnicastID`, `EveryWholeNodeBroadcastID`, `NeighbourSrcNic`, ...
+I moduli si inizializzano con il metodo statico `init` delle classi  `NeighborhoodManager`,
+`IdentityManager`, ...  
+Le classi serializzabili da registrare direttamente in `main` sono `WholeNodeSourceID`, `WholeNodeUnicastID`,
+`EveryWholeNodeBroadcastID`, `NeighbourSrcNic`, ...
 
-Dopo si inizializza il generatore di numeri pseudo-casuali. Si usa come seed il PID.
+Dopo si inizializza il generatore di numeri pseudo-casuali. Si usa come seed il PID.  
+Questa operazione si fa con il metodo statico `init_rngen` delle classi `PRNGen`, `NeighborhoodManager`,
+`IdentityManager`, ...  
 
 Dopo si passa lo scheduler delle tasklet alla libreria `ntkdrpc`, chiamandone la funzione statica `init_tasklet_system`.
 
@@ -419,7 +438,7 @@ Dopo si istanzia lo `skeleton_factory`.
 
 Dopo si istanzia lo `stub_factory`.
 
-Dopo si istanzia il NeighborhoodManager.
+Dopo si istanzia il NeighborhoodManager nella variabile globale `neighborhood_mgr`. Esso è unico.
 
 Dopo si connettono i segnali del NeighborhoodManager.
 
@@ -437,11 +456,15 @@ Per ogni pseudo-interfaccia di rete da gestire si eseguono questi compiti:
 Dopo si entra nel main loop degli eventi fino alla terminazione del programma (con il segnale Posix
 di terminazione).
 
-Alla terminazione del programma, si chiama `stop_monitor` su tutte le pseudo-interfacce di rete gestite.
+Alla terminazione del programma, si chiama `stop_rpc` su tutte le pseudo-interfacce di rete gestite.
 
 Dopo si rimuove il NeighborhoodManager (dalla variabile globale).
 
 Dopo si termina lo scheduler delle tasklet.
+
+* * *
+
+Le funzioni `fake_random_mac` e `fake_random_linklocal` sono usate per... ? **TODO**
 
 * * *
 
