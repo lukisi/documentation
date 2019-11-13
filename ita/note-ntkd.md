@@ -444,3 +444,22 @@ Dopo si rimuove il NeighborhoodManager (dalla variabile globale).
 Dopo si termina lo scheduler delle tasklet.
 
 * * *
+
+* * *
+
+Dopo il completamento delle parti necessarie all'integrazione del modulo Neighborhood viene realizzata
+la script `test_1_neighborhood`.
+
+Sono simulati i nodi 123, 456 e 789. Ognuno con eth0 e wlan0.  
+Un solo segmento di rete ethernet collega tutte le tre eth0.  
+Invece le radio collegano 123 con 456 e 456 con 789.  
+Tutto ciò è simulato con:
+
+```
+eth_domain   -i 123_eth0  -i 456_eth0  -i 789_eth0
+radio_domain -i 123_wlan0 -o 456_wlan0
+radio_domain -o 123_wlan0 -i 456_wlan0 -o 789_wlan0
+radio_domain              -o 456_wlan0 -i 789_wlan0
+```
+
+
