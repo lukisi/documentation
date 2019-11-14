@@ -242,8 +242,64 @@ Il segnale `nic_address_unset` è gestito nella funzione `neighborhood_nic_addre
 
 * * *
 
-Per integrare il modulo `Identities` ... **TODO**  
-Vedere ... nel file `identities_helpers.vala`.
+Per integrare il modulo `Identities` occorre implementare con una classe l'interfaccia `N.I.IIdmgmtNetnsManager`.  
+Vedere la classe `N.IdmgmtNetnsManager` nel file `identities_helpers.vala`.
+
+Quando il modulo `Identities` chiama `create_namespace` di `N.I.IIdmgmtNetnsManager` la classe
+suddetta deve preparare un nuovo network namespace.  
+Lo fa chiedendo al `commander.vala` di eseguire i comandi "`ip netns add ...`",
+e alcuni comandi "`ip netns exec ... sysctl ...`".
+
+Quando il modulo `Identities` chiama `create_pseudodev` di `N.I.IIdmgmtNetnsManager` la classe
+suddetta deve creare una pseudo-interfaccia sopra una interfaccia reale e spostarla su un dato
+network namespace.  
+Lo fa chiedendo al `commander.vala` di eseguire alcuni comandi:  
+Crea la pseudo-interfaccia con "`ip link add dev ... link ...`".  
+Poi recupera (o imposta nel caso di una testsuite) il suo indirizzo MAC.  
+Poi sposta la pseudo-interfaccia nel namespace con "`ip link set dev ... netns ...`".  
+Poi esegue alcuni comandi "`ip netns exec ... sysctl ...`".  
+Poi attiva la pseudo-interfaccia con "`ip netns exec ... ip link set dev ... up`".  
+
+Quando il modulo `Identities` chiama `add_address` di `N.I.IIdmgmtNetnsManager` la classe
+suddetta deve assegnare un indirizzo IP linklocal ad una interfaccia di rete.  
+Lo fa chiedendo al `commander.vala` di eseguire il
+comando "`ip address add ... dev ...`".  
+Questa operazione può essere richiesta dal modulo `Identities` sia in un dato
+network namespace che nel default.  
+
+Quando il modulo `Identities` chiama `add_gateway` di `N.I.IIdmgmtNetnsManager` la classe
+suddetta deve assegnare una rotta diretta da una interfaccia di rete del nodo corrente ad una
+data interfaccia di un diretto vicino.  
+Lo fa chiedendo al `commander.vala` di eseguire il
+comando "`ip route add ... dev ... src ...`".  
+Questa operazione può essere richiesta dal modulo `Identities` sia in un dato
+network namespace che nel default.  
+
+Quando il modulo `Identities` chiama `remove_gateway` di `N.I.IIdmgmtNetnsManager` la classe
+suddetta deve rimuovere una rotta diretta da una interfaccia di rete del nodo corrente ad una
+data interfaccia di un diretto vicino.  
+Lo fa chiedendo al `commander.vala` di eseguire il
+comando "`ip route del ... dev ... src ...`".  
+Questa operazione può essere richiesta dal modulo `Identities` sia in un dato
+network namespace che nel default.  
+
+Le richieste che seguono vengono fatte dal modulo `Identities` di norma nella sequenza
+`flush_table`, `delete_pseudodev` e `delete_namespace`.
+
+Quando il modulo `Identities` chiama `flush_table` di `N.I.IIdmgmtNetnsManager` la classe
+suddetta deve azzerare le tabelle di routing su un dato network namespace.  
+Lo fa chiedendo al `commander.vala` di eseguire il
+comando "`ip netns exec ... ip route flush table main`".
+
+Quando il modulo `Identities` chiama `delete_pseudodev` di `N.I.IIdmgmtNetnsManager` la classe
+suddetta deve eliminare una pseudo-interfaccia di rete che era stata messa su un
+dato network namespace.  
+Lo fa chiedendo al `commander.vala` di eseguire il
+comando "`ip netns exec ... ip link delete ...`".
+
+Quando il modulo `Identities` chiama `delete_namespace` di `N.I.IIdmgmtNetnsManager` la classe
+suddetta deve eliminare un network namespace.  
+Lo fa chiedendo al `commander.vala` di eseguire il comando "`ip netns del ...`".
 
 * * *
 
