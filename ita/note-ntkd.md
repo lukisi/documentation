@@ -115,6 +115,21 @@ Vedere la variabile globale `pseudonic_map` nel file `system_ntkd.vala`.
 
 * * *
 
+In una classe memoriziamo le informazioni relative ad un arco di cui il programma viene a conoscenza.  
+Questo arco è tra una specifica interfaccia di rete di questo nodo e una specifica interfaccia di rete di un altro nodo
+diretto vicino.  
+Vedere la classe `N.NodeArc` nel file `system_ntkd.vala`.
+
+Una istanza di `N.NodeArc` viene costruita passando una istanza di `N.N.INeighborhoodArc` e una istanza
+di `N.I.IdmgmtArc`. La prima viene prodotta dal modulo `Neighborhood` quando l'arco è rilevato e viene comunicata
+tramite un segnale al programma. La seconda viene prodotta dal programma per poi comunicarla al modulo `Identities`.
+Entrambe le istanze possono essere in seguito reperite dall'istanza di `N.NodeArc`.
+
+In una lista memoriziamo le istanze di `N.NodeArc` di ogni arco di cui il programma viene a conoscenza.  
+Vedere la variabile globale `arc_list` nel file `system_ntkd.vala`.
+
+* * *
+
 Bisogna integrare l'unica istanza di `N.N.NeighborhoodManager` che si crea all'avio del programma e muore alla sua terminazione.
 
 * * *
@@ -303,6 +318,42 @@ Lo fa chiedendo al `commander.vala` di eseguire il comando "`ip netns del ...`".
 
 * * *
 
+Per integrare il modulo `Identities` occorre implementare con una classe l'interfaccia `N.I.IIdmgmtStubFactory`.  
+Vedere la classe `N.IdmgmtStubFactory` nel file `identities_helpers.vala`.
+
+Quando il modulo `Identities` chiama `get_arc` di `N.I.IIdmgmtStubFactory` passando una istanza
+di `CallerInfo`, la classe suddetta deve stabilire se il metodo remoto è stato chiamato da un diretto
+vicino in modalità unicast;
+e in quel caso deve restituire l'arco `N.I.IIdmgmtArc` da cui il messaggio è
+stato ricevuto.  
+Lo fa passando il `CallerInfo` al metodo `from_caller_get_nodearc` di `skeleton_factory`.
+
+Quando il modulo `Identities` chiama `get_stub` di `N.I.IIdmgmtStubFactory` passando una istanza
+di `N.I.IIdmgmtArc`, la classe suddetta deve deve restituire uno stub per mandare messaggi unicast
+allo stesso modulo `Identities` attraverso quell'arco.  
+Lo fa chiamando sulla classe `N.StubFactory` il metodo `get_stub_whole_node_unicast` che gli
+ottiene una istanza di stub per messaggi unicast di nodo. Lo stub ottenuto è radice. Per ottenere uno stub
+dedicato al modulo `Identities` la classe istanzia un `IdentityManagerStubHolder`.
+
+* * *
+
+Per integrare il modulo `Identities` occorre implementare con una classe l'interfaccia `N.I.IIdmgmtArc`;
+una istanza di questa classe deve rappresentare un arco tra due nodi diretti vicini.  
+Vedere la classe `N.IdmgmtArc` nel file `identities_helpers.vala`.
+
+Un'istanza di questa classe viene costruita passando l'istanza di `N.N.INeighborhoodArc`, che il
+modulo `Neighborhood` produce quando rileva l'arco. Ricordiamo che esso rappresenta un arco tra una
+spcifica interfaccia di rete di questo nodo e una specifica interfaccia di rete di un altro nodo
+diretto vicino.
+
+Il modulo `Identities` può interrogare l'interfaccia `N.I.IIdmgmtArc` con i metodi
+`get_dev`, `get_peer_linklocal` e `get_peer_mac`, che la classe `N.IdmgmtArc` può facilmente
+reperire dall'istanza di `N.N.INeighborhoodArc` ad essa associata.  
+Inoltre ad ogni istanza di `N.IdmgmtArc` il costruttore associa un identificativo intero `id`.
+**TODO** a che serve.
+
+* * *
+
 Per reagire ai segnali emessi dal modulo `Identities` sono implementate delle funzioni
 nel file `identities_signals.vala`.
 
@@ -374,6 +425,9 @@ Diverse classi (una o più per ogni modulo) realizzano gli stub dedicati.
 Vedere le classi nel file `rpc/module_stubs.vala`.
 
 La classe `N.NeighborhoodManagerStubHolder` implementa l'interfaccia `N.INeighborhoodManagerStub`
+a partire da uno stub radice.
+
+La classe `N.IdentityManagerStubHolder` implementa l'interfaccia `N.IIdentityManagerStub`
 a partire da uno stub radice.
 
 * * *
