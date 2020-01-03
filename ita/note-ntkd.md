@@ -241,16 +241,25 @@ questa interfaccia di rete (con `skeleton_factory.start_stream_system_listen`).
 
 
 Il segnale `arc_added` è gestito nella funzione `neighborhood_arc_added`.  
-**TODO** in futuri commit.
+La funzione riceve un `N.N.INeighborhoodArc` che è stato appena aggiunto
+dal modulo `Neighborhood`. Con esso crea un
+`N.IdmgmtArc` (che implementa `N.I.IIdmgmtArc`). Con entrambi crea un
+`N.NodeArc` che mette nella lista `arc_list`.  
+Inoltre comunica questo arco al modulo `Identities` usando il metodo `identity_mgr.add_arc`.
 
 Il segnale `arc_changed` è gestito nella funzione `neighborhood_arc_changed`.  
-**TODO** in futuri commit.
+**TODO** in futuri commit; il commento dice:  
+// TODO for each identity, for each id-arc, if qspn_arc is present, change cost.
 
 Il segnale `arc_removing` è gestito nella funzione `neighborhood_arc_removing`.  
-**TODO** in futuri commit.
+La funzione riceve un `N.N.INeighborhoodArc` che sta per essere rimosso
+dal modulo `Neighborhood`. Cerca la relativa istanza di `N.NodeArc` nella lista `arc_list`,
+vi recupera l'istanza di `N.I.IIdmgmtArc` e comunica la rimozione di questo
+arco al modulo `Identities` usando il metodo `identity_mgr.remove_arc`.
 
 Il segnale `arc_removed` è gestito nella funzione `neighborhood_arc_removed`.  
-**TODO** in futuri commit.
+La funzione riceve un `N.N.INeighborhoodArc` che è stato appena rimosso
+dal modulo `Neighborhood`. Rimuove la relativa istanza di `N.NodeArc` dalla lista `arc_list`.
 
 Il segnale `nic_address_unset` è gestito nella funzione `neighborhood_nic_address_unset`.  
 **TODO** in futuri commit.
@@ -475,7 +484,7 @@ associandolo alla stringa `listen_pathname`, di modo che la stessa classe `N.Ske
 metodo `stop_datagram_system_listen` possa gestirne la terminazione.
 
 La classe ServerDelegate (nel metodo `get_addr_set` prescritto da `ntkdrpc`) fa il suo lavoro
-usando i metodi `get_dispatcher` e `get_dispatcher_set` passando il CallerInfo.
+usando i metodi `get_dispatcher` e `get_dispatcher_set` di `N.SkeletonFactory` passando il CallerInfo.
 
 Il metodo `get_dispatcher` è usato per gestire i messaggi in stream:
 
@@ -496,7 +505,19 @@ di `N.PseudoNetworkInterface` nel set `pseudonic_map` trova quella i cui `listen
 corrispondono al `listener` del caller e se lo trova restituisce il nome dell'interfaccia
 di rete da cui il messaggio è stato ricevuto.
 
-Il metodo `from_caller_get_nodearc`, ... **TODO** in futuri commit.
+Il metodo `from_caller_get_nodearc` è usato (dice il commento) per richieste di nodo, per sapere da quale
+arco una tale richiesta è arrivata:
+
+*   Se il caller è un `StreamCallerInfo`, da esso reperisce il `source_id`;
+*   Se questo è un `WholeNodeSourceID`, da esso reperisce il `peer_node_id`;
+*   Dal caller reperisce il `listener` che deve essere un `StreamSystemListener`: da questo
+    reperisce il `listen_pathname`;
+*   Dal caller reperisce il `src_nic` che deve essere un `NeighbourSrcNic`: da questo
+    reperisce il `neighbour_mac`;
+*   Cerca in `arc_list` l'istanza di `N.NodeArc` associata al `neighborhood_arc` che
+    soddisfa questi 3 criteri (`listen_pathname`, `neighbour_mac`, `peer_node_id`) e
+    se la trova restituisce questo `N.NodeArc`.
+*   In tutti gli altri casi restituisce *null*.
 
 * * *
 
