@@ -239,7 +239,6 @@ e valorizza i suoi membri `linklocal` e `st_listen_pathname`.
 Inoltre avvia in questo momento la tasklet in ascolto per i messaggi stream unicast verso
 questa interfaccia di rete (con `skeleton_factory.start_stream_system_listen`).
 
-
 Il segnale `arc_added` è gestito nella funzione `neighborhood_arc_added`.  
 La funzione riceve un `N.N.INeighborhoodArc` che è stato appena aggiunto
 dal modulo `Neighborhood`. Con esso crea un
@@ -366,7 +365,36 @@ Inoltre ad ogni istanza di `N.IdmgmtArc` il costruttore associa un identificativ
 Per reagire ai segnali emessi dal modulo `Identities` sono implementate delle funzioni
 nel file `identities_signals.vala`.
 
-... **TODO**  
+Il segnale `identity_arc_added` è gestito nella funzione `identities_identity_arc_added`.  
+Il segnale indica la creazione di un arco-identità. La funzione riceve l'arco (come istanza
+di `IIdmgmtArc` che era stata creata dal programma e passata al modulo Identities), l'identità
+in questo nodo (come istanza di `NodeID` che era stata creata dal modulo Identities e resa nota
+al programma), l'arco-identità (come istanza di `IIdmgmtIdentityArc`) e eventualmente il
+precedente arco-identità (se si tratta di una duplicazione??).  
+La funzione scrive a video alcune informazioni e prende nota dell'evento per possibili test.
+
+Il segnale `identity_arc_changed` è gestito nella funzione `identities_identity_arc_changed`.  
+Il segnale indica la modifica di un arco-identità. La funzione riceve l'arco `IIdmgmtArc`,
+l'identità in questo nodo `NodeID`, l'arco-identità `IIdmgmtIdentityArc`, e un booleano che dice
+se `only_neighbour_migrated`.  
+La funzione scrive a video alcune informazioni e prende nota dell'evento per possibili test.
+
+Il segnale `identity_arc_removing` è gestito nella funzione `identities_identity_arc_removing`.  
+Il segnale indica la prossima rimozione di un arco-identità. La funzione riceve l'arco `IIdmgmtArc`,
+l'identità in questo nodo `NodeID`, e l'identità nel nodo vicino `NodeID`.  
+La funzione scrive a video alcune informazioni e prende nota dell'evento per possibili test.
+
+Il segnale `identity_arc_removed` è gestito nella funzione `identities_identity_arc_removed`.  
+Il segnale indica la avvenuta rimozione di un arco-identità. La funzione riceve l'arco `IIdmgmtArc`,
+l'identità in questo nodo `NodeID`, e l'identità nel nodo vicino `NodeID`.  
+La funzione scrive a video alcune informazioni e prende nota dell'evento per possibili test.
+
+Il segnale `arc_removed` è gestito nella funzione `identities_arc_removed`.  
+Il segnale indica la avvenuta rimozione di un arco (per malfunzionamento). La funzione riceve
+l'arco `IIdmgmtArc`.  
+La funzione scrive a video alcune informazioni e prende nota dell'evento per possibili test.  
+Inoltre l'arco viene rimosso dalla lista `arcs`.  
+Inoltre un commento dice che il programma dovrebbe rimuovere l'arco dal modulo Neighborhood.
 
 * * *
 
@@ -573,9 +601,15 @@ Dopo si istanzia il NeighborhoodManager nella variabile globale `neighborhood_mg
 
 Dopo si connettono i segnali del NeighborhoodManager.
 
+Dopo si prepara una hashmap (var globale) `pseudonic_map` per le interfacce di rete da gestire
+rappresentate da istanze di `N.PseudoNetworkInterface`. Delle stesse interfacce di rete
+si prepara anche una lista (var locale) `if_list_dev` per i nomi, una lista `if_list_mac`
+per i MAC e una lista `if_list_linklocal` per gli indirizzi link-local: queste liste
+serviranno nella costruzione del IdentityManager.
+
 Per ogni pseudo-interfaccia di rete da gestire si eseguono questi compiti:
 
-*   Si genera uno pseudo MAC.
+*   Si genera pseudo-random un finto MAC.
 *   Si memorizza una nuova istanza di `N.PseudoNetworkInterface` in `pseudonic_map`.
 *   Si eseguono dei comandi di inizializzazione della scheda di rete.
 *   Si avvia una tasklet di ascolto per i messaggi datagram broadcast ricevuti da
@@ -583,6 +617,20 @@ Per ogni pseudo-interfaccia di rete da gestire si eseguono questi compiti:
 *   Si avvia `neighborhood_mgr.start_monitor` con l'istanza di `N.PseudoNetworkInterface`; questo
     imposterà il IP linklocal sulla scheda, e emetterà il segnale `nic_address_set` gestito come già
     detto sopra.
+*   Si genera un indirizzo link-local con la funzione `fake_random_linklocal` che
+    si basa sul finto MAC di prima.
+*   Si avvia una tasklet di ascolto per i messaggi stream unicast ricevuti dall'indirizzo
+    link-local di cui sopra (con `skeleton_factory.start_stream_system_listen`).
+*   Si memorizzano i dati della pseudo-interfaccia di rete nelle liste `if_list_dev`,
+    `if_list_mac` e `if_list_linklocal`.
+
+Dopo si istanzia il IdentityManager nella variabile globale `identity_mgr`. Esso è unico.  
+Si passa ad esso una funzione callback per la generazione pseudo-random di un indirizzo link-local.
+
+Dopo si recupera dal `identity_mgr` appena creato l'identificativo della prima identità
+di questo nodo con il metodo `get_main_id` e si memorizza nella lista `my_nodeid_list`.
+
+Dopo si connettono i segnali del IdentityManager.
 
 Dopo si entra nel main loop degli eventi fino alla terminazione del programma (con il segnale Posix
 di terminazione).
@@ -616,4 +664,15 @@ radio_domain -o 123_wlan0 -i 456_wlan0 -o 789_wlan0
 radio_domain              -o 456_wlan0 -i 789_wlan0
 ```
 
+* * *
 
+Dopo il completamento delle parti necessarie all'integrazione del modulo Identities viene realizzata
+la script `test_1_n_identities`.
+
+Sono simulati i nodi 1223 e 2321. Ognuno con wl0.  
+La topologia è simulata con:
+
+```
+radio_domain -i 1223_wl0 -o 2321_wl0
+radio_domain -i 2321_wl0 -o 1223_wl0
+```
