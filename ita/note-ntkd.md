@@ -107,7 +107,20 @@ valori più casuali.
 * * *
 
 In una classe memoriziamo le informazioni relative ad una interfaccia di rete che il programma deve gestire.  
+Vedere la classe `N.HandledNic` nel file `system_ntkd.vala`.  
+I dati memorizzati includono `dev`, `mac`, `linklocal`, `INeighborhoodNetworkInterface nic`.
+
+In una hashmap memoriziamo le istanze di `N.HandledNic` di ogni interfaccia di rete che il
+programma deve gestire, indicizzate per il nome `dev`.  
+Vedere la variabile globale `handlednic_map` nel file `system_ntkd.vala`.
+
+* * *
+
+In una classe memoriziamo le informazioni relative ad una interfaccia di rete che il programma deve gestire.  
 Vedere la classe `N.PseudoNetworkInterface` nel file `system_ntkd.vala`.
+I dati memorizzati includono `dev`, `mac`, `linklocal`, `INeighborhoodNetworkInterface nic` e anche informazioni
+legate al fatto che si tratta di pseudo-interfacce di rete simulate da un socket di sistema:
+`send_pathname`, `listen_pathname`, `st_listen_pathname`.
 
 In una hashmap memoriziamo le istanze di `N.PseudoNetworkInterface` di ogni interfaccia di rete che il
 programma deve gestire, indicizzate per il nome `dev`.  
@@ -121,12 +134,13 @@ diretto vicino.
 Vedere la classe `N.NodeArc` nel file `system_ntkd.vala`.
 
 Una istanza di `N.NodeArc` viene costruita passando una istanza di `N.N.INeighborhoodArc` e una istanza
-di `N.I.IdmgmtArc`. La prima viene prodotta dal modulo `Neighborhood` quando l'arco è rilevato e viene comunicata
+di `N.IdmgmtArc`. La prima viene prodotta dal modulo `Neighborhood` quando l'arco è rilevato e viene comunicata
 tramite un segnale al programma. La seconda viene prodotta dal programma per poi comunicarla al modulo `Identities`.
 Entrambe le istanze possono essere in seguito reperite dall'istanza di `N.NodeArc`.
 
-In una lista memoriziamo le istanze di `N.NodeArc` di ogni arco di cui il programma viene a conoscenza.  
-Vedere la variabile globale `arc_list` nel file `system_ntkd.vala`.
+In una hashmap memoriziamo le istanze di `N.NodeArc` di ogni arco di cui il programma viene a conoscenza, indicizzate
+per l'identificativo numerico `id` dell'istanza di `N.IdmgmtArc`.  
+Vedere la variabile globale `arc_map` nel file `system_ntkd.vala`.
 
 * * *
 
@@ -234,16 +248,20 @@ Per reagire ai segnali emessi dal modulo `Neighborhood` sono implementate delle 
 nel file `neighborhood_signals.vala`.
 
 Il segnale `nic_address_set` è gestito nella funzione `neighborhood_nic_address_set`.  
+La funzione riceve un `N.N.INeighborhoodNetworkInterface` e l'indirizzo linklocal
+che gli è stato appena assegnato.  
 La funzione recupera l'istanza di `N.PseudoNetworkInterface` dal set `pseudonic_map`
 e valorizza i suoi membri `linklocal` e `st_listen_pathname`.  
-Inoltre avvia in questo momento la tasklet in ascolto per i messaggi stream unicast verso
-questa interfaccia di rete (con `skeleton_factory.start_stream_system_listen`).
+Inoltre crea una istanza di `N.HandledNic` valorizzando tutti i dati in essa contenuti
+e la mette in `handlednic_map`.  
+Inoltre avvia in questo momento la tasklet in ascolto per i messaggi stream unicast
+ricevuti dall'indirizzo linklocal di cui sopra (con `skeleton_factory.start_stream_system_listen`).
 
 Il segnale `arc_added` è gestito nella funzione `neighborhood_arc_added`.  
 La funzione riceve un `N.N.INeighborhoodArc` che è stato appena aggiunto
 dal modulo `Neighborhood`. Con esso crea un
 `N.IdmgmtArc` (che implementa `N.I.IIdmgmtArc`). Con entrambi crea un
-`N.NodeArc` che mette nella lista `arc_list`.  
+`N.NodeArc` che mette nella hashmap `arc_map`.  
 Inoltre comunica questo arco al modulo `Identities` usando il metodo `identity_mgr.add_arc`.
 
 Il segnale `arc_changed` è gestito nella funzione `neighborhood_arc_changed`.  
@@ -252,13 +270,13 @@ Il segnale `arc_changed` è gestito nella funzione `neighborhood_arc_changed`.
 
 Il segnale `arc_removing` è gestito nella funzione `neighborhood_arc_removing`.  
 La funzione riceve un `N.N.INeighborhoodArc` che sta per essere rimosso
-dal modulo `Neighborhood`. Cerca la relativa istanza di `N.NodeArc` nella lista `arc_list`,
+dal modulo `Neighborhood`. Cerca la relativa istanza di `N.NodeArc` nella hashmap `arc_map`,
 vi recupera l'istanza di `N.I.IIdmgmtArc` e comunica la rimozione di questo
 arco al modulo `Identities` usando il metodo `identity_mgr.remove_arc`.
 
 Il segnale `arc_removed` è gestito nella funzione `neighborhood_arc_removed`.  
 La funzione riceve un `N.N.INeighborhoodArc` che è stato appena rimosso
-dal modulo `Neighborhood`. Rimuove la relativa istanza di `N.NodeArc` dalla lista `arc_list`.
+dal modulo `Neighborhood`. Rimuove la relativa istanza di `N.NodeArc` dalla hashmap `arc_map`.
 
 Il segnale `nic_address_unset` è gestito nella funzione `neighborhood_nic_address_unset`.  
 **TODO** in futuri commit.
@@ -358,7 +376,7 @@ Il modulo `Identities` può interrogare l'interfaccia `N.I.IIdmgmtArc` con i met
 `get_dev`, `get_peer_linklocal` e `get_peer_mac`, che la classe `N.IdmgmtArc` può facilmente
 reperire dall'istanza di `N.N.INeighborhoodArc` ad essa associata.  
 Inoltre ad ogni istanza di `N.IdmgmtArc` il costruttore associa un identificativo intero `id`.
-**TODO** a che serve.
+Esso viene usato come indice nella variabile globale hashmap `arc_map`.
 
 * * *
 
@@ -393,8 +411,9 @@ Il segnale `arc_removed` è gestito nella funzione `identities_arc_removed`.
 Il segnale indica la avvenuta rimozione di un arco (per malfunzionamento). La funzione riceve
 l'arco `IIdmgmtArc`.  
 La funzione scrive a video alcune informazioni e prende nota dell'evento per possibili test.  
-Inoltre l'arco viene rimosso dalla lista `arcs`.  
-Inoltre un commento dice che il programma dovrebbe rimuovere l'arco dal modulo Neighborhood.
+Inoltre la relativa istanza di `N.N.INeighborhoodArc` (recuperata attraverso la hashmap `arc_map`)
+viene rimossa dal modulo Neighborhood con `neighborhood_mgr.remove_my_arc`.  
+Infine l'arco viene rimosso dal hashmap `arc_map`.
 
 * * *
 
@@ -542,7 +561,7 @@ arco una tale richiesta è arrivata:
     reperisce il `listen_pathname`;
 *   Dal caller reperisce il `src_nic` che deve essere un `NeighbourSrcNic`: da questo
     reperisce il `neighbour_mac`;
-*   Cerca in `arc_list` l'istanza di `N.NodeArc` associata al `neighborhood_arc` che
+*   Cerca in `arc_map` l'istanza di `N.NodeArc` associata al `neighborhood_arc` che
     soddisfa questi 3 criteri (`listen_pathname`, `neighbour_mac`, `peer_node_id`) e
     se la trova restituisce questo `N.NodeArc`.
 *   In tutti gli altri casi restituisce *null*.
@@ -602,7 +621,10 @@ Dopo si istanzia il NeighborhoodManager nella variabile globale `neighborhood_mg
 Dopo si connettono i segnali del NeighborhoodManager.
 
 Dopo si prepara una hashmap (var globale) `pseudonic_map` per le interfacce di rete da gestire
-rappresentate da istanze di `N.PseudoNetworkInterface`. Delle stesse interfacce di rete
+rappresentate da istanze di `N.PseudoNetworkInterface`. Delle stesse interfacce di rete si prepara
+anche una hashmap (var globale) `handlednic_map` rappresentate da istanze di `N.HandledNic`.
+
+Delle stesse interfacce di rete
 si prepara anche una lista (var locale) `if_list_dev` per i nomi, una lista `if_list_mac`
 per i MAC e una lista `if_list_linklocal` per gli indirizzi link-local: queste liste
 serviranno nella costruzione del IdentityManager.
@@ -615,12 +637,8 @@ Per ogni pseudo-interfaccia di rete da gestire si eseguono questi compiti:
 *   Si avvia una tasklet di ascolto per i messaggi datagram broadcast ricevuti da
     questa interfaccia di rete (con `skeleton_factory.start_datagram_system_listen`).
 *   Si avvia `neighborhood_mgr.start_monitor` con l'istanza di `N.PseudoNetworkInterface`; questo
-    imposterà il IP linklocal sulla scheda, e emetterà il segnale `nic_address_set` gestito come già
-    detto sopra.
-*   Si genera un indirizzo link-local con la funzione `fake_random_linklocal` che
-    si basa sul finto MAC di prima.
-*   Si avvia una tasklet di ascolto per i messaggi stream unicast ricevuti dall'indirizzo
-    link-local di cui sopra (con `skeleton_factory.start_stream_system_listen`).
+    imposterà il IP linklocal sulla scheda, e emetterà il segnale `nic_address_set`: questo,
+    gestito come già detto sopra, valorizzerà il campo `linklocal` di `N.HandledNic`.
 *   Si memorizzano i dati della pseudo-interfaccia di rete nelle liste `if_list_dev`,
     `if_list_mac` e `if_list_linklocal`.
 
@@ -640,10 +658,6 @@ Alla terminazione del programma, si chiama `stop_rpc` su tutte le pseudo-interfa
 Dopo si rimuove il NeighborhoodManager (dalla variabile globale).
 
 Dopo si termina lo scheduler delle tasklet.
-
-* * *
-
-Le funzioni `fake_random_mac` e `fake_random_linklocal` sono usate per... ? **TODO**
 
 * * *
 
