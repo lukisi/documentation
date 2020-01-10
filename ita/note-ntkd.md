@@ -144,6 +144,92 @@ Vedere la variabile globale `arc_map` nel file `system_ntkd.vala`.
 
 * * *
 
+In una classe memoriziamo le informazioni relative ad ogni identità assunta dal nodo corrente: una identità principale
+e zero o più identità di connettività.  
+Vedere la classe `N.IdentityData` nel file `system_ntkd.vala`.
+
+Anche il modulo `Identities` ha fra i suoi compiti il mantenimento delle info relative ad ogni identità, ma usiamo
+anche questa classe per alcuni motivi:
+*   praticità nel ciclare fra le identità presenti; e.g. **TODO**
+*   memorizzazione di alcuni dati temporanei nelle fasi di aggiornamento delle informazioni; e.g. **TODO**
+*   ...
+
+Ogni istanza di `N.IdentityData` quando viene creata riceve un `NodeID` e un identificativo locale numerico
+progressivo chiamato `local_identity_index`.
+
+Tutte le istanze che vengono create sono immediatamente messe nell hashmap `local_identities` indicizzate per
+il valore intero che costituisce il `NodeID` assegnato all'identità (dal modulo `Identities`).
+
+Il metodo helper `create_local_identity` nel file `system_ntkd.vala` è usato per creare una istanza e
+metterla nel hashmap dopo aver verificato che non era già stata creata.
+
+Il metodo helper `find_local_identity` nel file `system_ntkd.vala` è usato per cercare una istanza di cui
+si conosce il `NodeID`. Se esiste la restituisce altrimenti restituisce *null*.
+
+Il metodo helper `find_local_identity_by_index` nel file `system_ntkd.vala` è usato per cercare una istanza di cui
+si conosce il `local_identity_index`. Se esiste la restituisce altrimenti restituisce *null*.
+
+Il metodo helper `remove_local_identity` nel file `system_ntkd.vala` è usato per rimuovere una istanza dal
+hashmap dopo aver verificato che era in effetti presente.
+
+Ogni istanza di `N.IdentityData` memorizza una lista di archi-identità nel membro `identity_arcs`, rappresentati
+da istanze di `IdentityArc`.
+
+Ogni istanza di `N.IdentityData` può anche memorizzare:
+
+*   L'indirizzo Netsukuku come istanza `Naddr my_naddr`.
+*   Il fingerprint come istanza `Fingerprint my_fp`.
+*   I livelli come "identità di connettività" `int connectivity_from_level` e `int connectivity_to_level`.
+*   L'identità da cui è derivata `weak IdentityData? copy_of_identity`.
+*   L'istanza `QspnManager qspn_mgr`.
+*   Un getter `bool main_id` dice se è la principale confrontando se stessa con la
+    variabile globale `IdentityData main_identity_data` sempre nel file `system_ntkd.vala`.
+
+Alcuni metodi pubblici della classe `N.IdentityData` sono usati per registrare gli handler dei segnali
+che produce il modulo Qspn. Le implementazioni sono comunque funzioni esterne alla classe, per poterle
+raggruppare nel file `qspn_signals.vala`.  
+Essi sono:
+`per_identity_qspn_arc_removed`,
+`per_identity_qspn_changed_fp`,
+`per_identity_qspn_changed_nodes_inside`,
+`per_identity_qspn_destination_added`,
+`per_identity_qspn_destination_removed`,
+`per_identity_qspn_gnode_splitted`,
+`per_identity_qspn_path_added`,
+`per_identity_qspn_path_changed`,
+`per_identity_qspn_path_removed`,
+`per_identity_qspn_presence_notified`,
+`per_identity_qspn_qspn_bootstrap_complete`,
+`per_identity_qspn_remove_identity`.
+
+...
+
+
+
+* * *
+
+In una classe memoriziamo le informazioni relative ad ogni arco-identità appartenenti ad una identità
+assunta dal nodo corrente.  
+Vedere la classe `N.IdentityArc` nel file `system_ntkd.vala`.
+
+Ogni istanza di `N.IdentityArc` memorizza immediatamente:
+
+*   l'identità di questo nodo a cui è associata (come indice `int local_identity_index`)
+*   l'arco su cui poggia (come passato al modulo Identites, cioè `IIdmgmtArc arc`)
+*   l'arco identità stesso (come ottenuto dal modulo Identites, cioè `IIdmgmtIdentityArc id_arc`)
+
+Siccome l'identità è memorizzata in un `IdentityArc` come indice `int local_identity_index`, questa
+classe ha un getter per risalire alla istanza di `IdentityData` che se viene invocato su una identità che
+non è più nell hashmap `local_identities` ha l'effetto di terminare la tasklet corrente.
+
+Ogni istanza può anche memorizzare:
+
+*   `string peer_mac`
+*   `string peer_linklocal`
+*   `QspnArc? qspn_arc`
+
+* * *
+
 Bisogna integrare l'unica istanza di `N.N.NeighborhoodManager` che si crea all'avio del programma e muore alla sua terminazione.
 
 * * *
@@ -283,6 +369,10 @@ Il segnale `nic_address_unset` è gestito nella funzione `neighborhood_nic_addre
 
 * * *
 
+Bisogna integrare l'unica istanza di `N.I.IdentityManager` che si crea all'avio del programma e muore alla sua terminazione.
+
+* * *
+
 Per integrare il modulo `Identities` occorre implementare con una classe l'interfaccia `N.I.IIdmgmtNetnsManager`.  
 Vedere la classe `N.IdmgmtNetnsManager` nel file `identities_helpers.vala`.
 
@@ -389,13 +479,19 @@ di `IIdmgmtArc` che era stata creata dal programma e passata al modulo Identitie
 in questo nodo (come istanza di `NodeID` che era stata creata dal modulo Identities e resa nota
 al programma), l'arco-identità (come istanza di `IIdmgmtIdentityArc`) e eventualmente il
 precedente arco-identità (se si tratta di una duplicazione??).  
-La funzione scrive a video alcune informazioni e prende nota dell'evento per possibili test.
+La funzione scrive a video alcune informazioni e prende nota dell'evento per possibili test.  
+Inoltre crea l'istanza di `N.IdentityArc` e la associa all'istanza di `N.IdentityData`
+(recuperata con la funzione `find_local_identity`) aggiungendola al suo membro
+lista `identity_arcs`.
 
 Il segnale `identity_arc_changed` è gestito nella funzione `identities_identity_arc_changed`.  
 Il segnale indica la modifica di un arco-identità. La funzione riceve l'arco `IIdmgmtArc`,
 l'identità in questo nodo `NodeID`, l'arco-identità `IIdmgmtIdentityArc`, e un booleano che dice
 se `only_neighbour_migrated`.  
-La funzione scrive a video alcune informazioni e prende nota dell'evento per possibili test.
+La funzione scrive a video alcune informazioni e prende nota dell'evento per possibili test.  
+Inoltre recupera l'istanza di `N.IdentityData` con la funzione `find_local_identity`
+e con il suo metodo `identity_arcs_find` recupera l'istanza di `N.IdentityArc`. Cosa ci farà
+è ancora TODO.
 
 Il segnale `identity_arc_removing` è gestito nella funzione `identities_identity_arc_removing`.  
 Il segnale indica la prossima rimozione di un arco-identità. La funzione riceve l'arco `IIdmgmtArc`,
@@ -414,6 +510,76 @@ La funzione scrive a video alcune informazioni e prende nota dell'evento per pos
 Inoltre la relativa istanza di `N.N.INeighborhoodArc` (recuperata attraverso la hashmap `arc_map`)
 viene rimossa dal modulo Neighborhood con `neighborhood_mgr.remove_my_arc`.  
 Infine l'arco viene rimosso dal hashmap `arc_map`.
+
+* * *
+
+Bisogna integrare le istanze di `N.Q.QspnManager` che si creano al momento che nasce una nuova identità
+e muoiono alla sua terminazione.
+
+* * *
+
+Per integrare il modulo `Qspn` occorre implementare con una classe l'interfaccia `N.Q.IQspnStubFactory`.  
+Vedere la classe `N.QspnStubFactory` nel file `qspn_helpers.vala`.
+
+Una istanza di questa classe è collegata ad una identità assunta in questo nodo. Nella costruzione
+di questa istanza viene passato l'identificativo `int local_identity_index`; questa
+classe ha un getter per risalire alla istanza di `IdentityData` che se viene invocato su una identità che
+non è più nell hashmap `local_identities` ha l'effetto di terminare la tasklet corrente.
+
+Quando il modulo `Qspn` chiama `i_qspn_get_broadcast` di `N.Q.IQspnStubFactory` gli passa una lista
+di archi `IQspnArc`, `arcs`, e opzionalmente una istanza di `IQspnMissingArcHandler` per gestire gli archi che
+non comunicano l'avvenuta ricezione del messaggio broadcast.  
+La classe suddetta, se la lista di archi è vuota restituisce semplicemente una nuova istanza
+di `QspnManagerStubVoid`.  
+Altrimenti, prepara una lista di `NodeID`, `broadcast_node_id_set`, che sono gli identificativi delle
+identità nei nodi diretti vicini reperite da `arcs`.  
+Di seguito prepara una lista di `IAddressManagerStub`, `addr_list`, uno per ogni interfaccia di rete
+del nodo corrente su cui va trasmesso il messaggio broadcast. Queste sono ottenute con altrettante
+chiamate al metodo `stub_factory.get_stub_identity_aware_broadcast` che indicano tra l'altro il
+nome dell'interfaccia di rete e la lisra `broadcast_node_id_set` dei destinatari.  
+Se era richiesto un `IQspnMissingArcHandler`, anche esso viene passato ad ogni chiamata
+di `stub_factory.get_stub_identity_aware_broadcast` come nuova istanza di `MissingArcHandlerForQspn`
+costruita sulla istanza di `IQspnMissingArcHandler`. Sotto si illustra il meccanismo.  
+Dopo aver ottenuto la lista `addr_list` con essi viene costruita e restituita una nuova istanza
+di `QspnManagerStubBroadcastHolder`.
+
+Quando il modulo `Qspn` chiama `i_qspn_get_tcp` di `N.Q.IQspnStubFactory` gli passa un arco `IQspnArc arc`,
+e un booleano `wait_reply`.  
+La classe suddetta ottiene una `IAddressManagerStub addrstub`,
+chiamando il metodo `stub_factory.get_stub_identity_aware_unicast_from_ia`, dopo aver reperito
+da `arc` il relativo `IdentityArc`.  
+Con questa viene costruita e restituita una nuova istanza
+di `QspnManagerStubHolder`.
+
+* * *
+
+Per integrare il modulo `Qspn` occorre implementare con una classe l'interfaccia `N.Q.IQspnThresholdCalculator`.  
+Vedere la classe `N.ThresholdCalculator` nel file `qspn_helpers.vala`.
+
+...
+
+Quando il modulo `Qspn` chiama `i_qspn_calculate_threshold` di `N.Q.IQspnThresholdCalculator` la classe suddetta...
+
+* * *
+
+Per integrare il modulo `Qspn` occorre implementare con una classe l'interfaccia `N.Q.IQspnArc`.  
+Vedere la classe `N.QspnArc` nel file `qspn_helpers.vala`.
+
+...
+
+Quando il modulo `Qspn` chiama `i_qspn_get_cost` di `N.Q.IQspnArc` la classe suddetta...
+
+Quando il modulo `Qspn` chiama `i_qspn_equals` di `N.Q.IQspnArc` la classe suddetta...
+
+Quando il modulo `Qspn` chiama `i_qspn_comes_from` di `N.Q.IQspnArc` la classe suddetta...
+
+* * *
+
+Per integrare il modulo `Qspn` occorre implementare con delle classi serializzabili le
+interfacce `N.Q.IQspnMyNaddr`, `N.Q.IQspnCost`, `N.Q.IQspnFingerprint`.  
+Vedere le classi `N.Naddr`, `N.Cost`, `N.Fingerprint` nel file `serializables.vala`.
+
+...
 
 * * *
 
