@@ -551,35 +551,51 @@ da `arc` il relativo `IdentityArc`.
 Con questa viene costruita e restituita una nuova istanza
 di `QspnManagerStubHolder`.
 
+La classe `MissingArcHandlerForQspn` implementa `IIdentityAwareMissingArcHandler` **TODO**  
+Nel suo construttore riceve una istanza di `IQspnMissingArcHandler` che memorizza come `qspn_missing`.  
+Ha un metodo `missing` che riceve un `IdentityArc`. Esso chiama `qspn_missing.i_qspn_missing(identity_arc.qspn_arc)`. **TODO**
+
 * * *
 
 Per integrare il modulo `Qspn` occorre implementare con una classe l'interfaccia `N.Q.IQspnThresholdCalculator`.  
 Vedere la classe `N.ThresholdCalculator` nel file `qspn_helpers.vala`.
 
-...
-
-Quando il modulo `Qspn` chiama `i_qspn_calculate_threshold` di `N.Q.IQspnThresholdCalculator` la classe suddetta...
+Quando il modulo `Qspn` chiama `i_qspn_calculate_threshold` di `N.Q.IQspnThresholdCalculator` gli passa
+due istanze di `IQspnNodePath`. Questi percorsi calcolati dal modulo Qspn hanno ognuno un *costo* che
+la classe suddetta sa tradurre in microsecondi. La classe moltiplica la somma dei costi per 50 e
+la converte in millisecondi. Restituisce questo valore.
 
 * * *
 
 Per integrare il modulo `Qspn` occorre implementare con una classe l'interfaccia `N.Q.IQspnArc`.  
 Vedere la classe `N.QspnArc` nel file `qspn_helpers.vala`.
 
-...
+Una istanza di questa classe rappresenta un arco-identità. Viene costruita passando una
+istanza di `IdentityArc`.  
+Dalla istanza di `IdentityArc` si accede al costo dell'arco (**TODO** rivedere come);
+ad esso si aggiunge un (insignificante) piccolo intero randomico da 0 a 1000 per fare
+in modo che risulti difficile ottenere due path distinti con costo identico.
 
-Quando il modulo `Qspn` chiama `i_qspn_get_cost` di `N.Q.IQspnArc` la classe suddetta...
+La classe memorizza anche (prendendole dalla `IdentityArc`) gli identificativi
+dell'identità presente `sourceid` e quella del nodo vicino `destid`.
 
-Quando il modulo `Qspn` chiama `i_qspn_equals` di `N.Q.IQspnArc` la classe suddetta...
+Quando il modulo `Qspn` chiama `i_qspn_get_cost` di `N.Q.IQspnArc` la classe suddetta
+restituisce una istanza di `N.Cost` col valore ottenuto come detto prima.
 
-Quando il modulo `Qspn` chiama `i_qspn_comes_from` di `N.Q.IQspnArc` la classe suddetta...
+Quando il modulo `Qspn` chiama `i_qspn_equals` di `N.Q.IQspnArc` la classe suddetta
+restituisce *TRUE* solo se si tratta di due `N.QspnArc` costruite sulla stessa
+istanza di `IdentityArc`.
+
+Quando il modulo `Qspn` chiama `i_qspn_comes_from` di `N.Q.IQspnArc` gli passa
+una istanza di `CallerInfo`. La classe suddetta usa il metodo `from_caller_get_identityarc`
+di `skeleton_factory` per vedere se si tratta della stessa istanza di `IdentityArc`.
+
 
 * * *
 
 Per integrare il modulo `Qspn` occorre implementare con delle classi serializzabili le
 interfacce `N.Q.IQspnMyNaddr`, `N.Q.IQspnCost`, `N.Q.IQspnFingerprint`.  
 Vedere le classi `N.Naddr`, `N.Cost`, `N.Fingerprint` nel file `serializables.vala`.
-
-...
 
 * * *
 
@@ -651,6 +667,13 @@ a partire da uno stub radice.
 
 La classe `N.IdentityManagerStubHolder` implementa l'interfaccia `N.IIdentityManagerStub`
 a partire da uno stub radice.
+
+Il modulo `Qspn` usa uno stub o per messaggi unicast o per messaggi broadcast. A seconda dei casi
+il modulo chiama o `i_qspn_get_tcp` o `i_qspn_get_broadcast`. Il primo restituisce una istanza
+di `QspnManagerStubHolder`, mentre il secondo a seconda dei casi restituisce una istanza
+di `QspnManagerStubBroadcastHolder` o di `QspnManagerStubVoid`. Tutti implementano
+l'interfaccia `N.IQspnManagerStub` a partire da uno stub radice o da una lista di stub radice.
+Il `...Void` ignora i messaggi che gli sono passati perché non ci sono archi.
 
 * * *
 
@@ -748,6 +771,44 @@ non contiene dati; rappresenta infatti chiunque riceva il messaggio.
 
 La classe `N.NeighbourSrcNic` implementa l'interfaccia `N.ISrcNic` fornita da `ntkdrpc`. Contiene una
 istanza di `string mac` che identifica la specifica interfaccia di rete del mittente.
+
+Vedere le classi `N.Naddr`, `N.Cost`, `N.Fingerprint` nel file `serializables.vala`.
+
+La classe `N.Naddr` implementa l'interfaccia `N.IQspnAddress` fornita da `ntkdrpc` e le interfacce
+`N.Q.IQspnNaddr` e `N.Q.IQspnMyNaddr` fornite dal modulo Qspn. Contiene l'indirizzo nella
+forma di array di posizioni `ArrayList<int>`; contiene anche la tipologia di rete nella stessa
+forma.  
+Ha un metodo `bool is_real_from_to(int from, int to)`.
+
+Quando il modulo `Qspn` chiama i metodi `i_qspn_get_pos`, `i_qspn_get_gsize`
+o `i_qspn_get_levels` di `N.Q.IQspnNaddr` o il metodo `i_qspn_get_coord_by_address` di `N.Q.IQspnMyNaddr`
+la classe suddetta risponde come dovuto.  
+Vi è anche un metodo `equals`.
+
+La classe `N.Cost` implementa l'interfaccia `N.Q.IQspnCost` fornita dal modulo Qspn. Contiene
+il costo dell'arco in latenza in microsecondi.
+
+Implementa come dovuto i metodi richiesti dal modulo `Qspn`: `i_qspn_is_dead`, `i_qspn_is_null`,
+`i_qspn_compare_to`, `i_qspn_add_segment`, `i_qspn_important_variation`.
+
+La classe `N.Fingerprint` implementa l'interfaccia `N.Q.IQspnFingerprint` fornita dal modulo Qspn. Contiene
+il fingerprint di un nodo o g-nodo della rete, la sua anzianità nel g-nodo direttamente superiore
+e le anzianità di tutti i g-nodi superiori a cui appartiene. Inoltre, se si tratta di un g-nodo, contiene
+le anzianità dei g-nodi inferiori da cui ha preso l'identificativo. Si rimanda alla documentazione del modulo
+per approfondimenti.
+
+Implementa come dovuto i metodi richiesti dal modulo `Qspn`:
+`i_qspn_construct`, `i_qspn_elder_seed`, `i_qspn_equals`, `i_qspn_get_level`.
+
+La classe `N.IdentityAwareSourceID` implementa l'interfaccia `N.ISourceID` fornita da `ntkdrpc`. Contiene una
+istanza di `NodeID id` che rappresenta il mittente.
+
+La classe `N.IdentityAwareUnicastID` implementa l'interfaccia `N.IUnicastID` fornita da `ntkdrpc`. Contiene una
+istanza di `NodeID id` che rappresenta il vicino destinatario.
+
+La classe `N.IdentityAwareBroadcastID` implementa l'interfaccia `N.IBroadcastID` fornita da `ntkdrpc`. Contiene una
+non contiene dati; rappresenta infatti chiunque riceva il messaggio.
+lista `List<NodeID> id_set` che identifica i destinatari.
 
 * * *
 
