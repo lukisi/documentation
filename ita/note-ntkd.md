@@ -599,6 +599,13 @@ Vedere le classi `N.Naddr`, `N.Cost`, `N.Fingerprint` nel file `serializables.va
 
 * * *
 
+Per reagire ai segnali emessi dal modulo `Qspn` sono implementate delle funzioni
+nel file `qspn_signals.vala`.
+
+**TODO**
+
+* * *
+
 Bisogna potersi mettere in ascolto e inviare comunicazioni agli altri nodi:
 
 *   Su una interfaccia di rete in broadcast.  
@@ -690,9 +697,7 @@ proprietà `NeighborhoodNodeID whole_node_id` con l'identificativo fornito dal m
 
 Il costruttore valorizza la proprietà privata `ServerDelegate dlg`. Servirà alle tasklet che ricevono i
 messaggi, come illustreremo a breve.  
-Inoltre valorizza la proprietà privata `NodeSkeleton node_skeleton`. Questa classe privata implementa
-l'interfaccia `N.IAddressManagerSkeleton` con il compito di restituire i vari manager dei moduli
-di nodo: `N.INeighborhoodManagerSkeleton` e `N.IIdentityManagerSkeleton`.
+Inoltre valorizza la proprietà privata `NodeSkeleton node_skeleton`.
 
 Il metodo `start_stream_system_listen` avvia una tasklet per gestire i messaggi di tipo stream trasmessi
 in unicast a uno specifico indirizzo IP. Si può usare sia per i messaggi ricevuti da un diretto vicino
@@ -722,17 +727,50 @@ metodo `stop_datagram_system_listen` possa gestirne la terminazione.
 La classe ServerDelegate (nel metodo `get_addr_set` prescritto da `ntkdrpc`) fa il suo lavoro
 usando i metodi `get_dispatcher` e `get_dispatcher_set` di `N.SkeletonFactory` passando il CallerInfo.
 
-Il metodo `get_dispatcher` è usato per gestire i messaggi in stream:
+Il metodo `get_dispatcher` è usato per gestire i messaggi in stream; in esso il caller è una
+istanza di `StreamCallerInfo`:
 
-*   Se il caller ha un `WholeNodeSourceID` e un `WholeNodeUnicastID` che referenzia il nodo corrente
-    allora restituisce il proprio `node_skeleton`.
-*   ... **TODO** in futuri commit.
+*   Se il caller ha in `source_id` un `WholeNodeSourceID` e in `unicast_id` un `WholeNodeUnicastID`:
+    *   Recupera il `NeighborhoodNodeID` che referenzia il nodo mittente;
+    *   Recupera il `NeighborhoodNodeID` che referenzia il nodo destinatario;
+    *   Se il nodo destinatario risulta essere il nodo corrente (`node_skeleton.id`)
+        allora restituisce il proprio `node_skeleton`.
+*   Se il caller ha in `source_id` un `IdentityAwareSourceID` e in `unicast_id` un `IdentityAwareUnicastID`
+    e in `src_nic` un `NeighbourSrcNic`:
+    *   Recupera il `NodeID` che referenzia l'identità mittente;
+    *   Recupera il `NodeID` che referenzia l'identità destinatario;
+    *   Recupera il MAC della interfaccia che ha trasmesso;
+    *   Chiama `get_identity_skeleton(source_nodeid, unicast_nodeid, peer_mac)`:
+        *   Il metodo `get_identity_skeleton` cerca tra le istanze di `IdentityData` che
+            rappresentano le identità locali (in `local_identities`) una con il `NodeID`
+            idicato come destinatario e si accerta che essa abbia un arco-identità verso il
+            `NodeID` indicato come mittente, in particolare con l'interfaccia di rete con il MAC
+            indicato. Se la trova restituisce un `IdentitySkeleton` costruito su quella istanza
+            di IdentityData, altrimenti restituisce *null*.
+*   ... **TODO** altro?
 
-Il metodo `get_dispatcher_set` è usato per gestire i messaggi in datagram:
+Il metodo `get_dispatcher_set` è usato per gestire i messaggi in datagram; in esso il caller è una
+istanza di `DatagramCallerInfo`:
 
-*   Se il caller ha un `WholeNodeSourceID` e un `EveryWholeNodeBroadcastID`
-    allora restituisce in un set il proprio `node_skeleton`.
-*   ... **TODO** in futuri commit.
+*   Se il caller ha in `source_id` un `WholeNodeSourceID` e in `broadcast_id` un `EveryWholeNodeBroadcastID`:
+    *   Siccome i messaggi di questo tipo sono destinati sempre a tutti i nodi, semplicemente
+        restituisce in un set il proprio `node_skeleton`.
+*   Se il caller ha in `source_id` un `IdentityAwareSourceID` e in `broadcast_id` un `IdentityAwareBroadcastID`
+    e in `src_nic` un `NeighbourSrcNic` e in `listener` un `DatagramSystemListener`:
+    *   Recupera il `NodeID` che referenzia l'identità mittente;
+    *   Recupera il set di `NodeID` che referenziano le identità destinatarie;
+    *   Recupera il MAC della interfaccia che ha trasmesso;
+    *   Recupera (cercando in `pseudonic_map`) il nome della interfaccia di questo nodo che ha ricevuto;
+    *   Chiama `get_identity_skeleton_set(source_nodeid, broadcast_set, peer_mac, my_dev)`:
+        *   Il metodo `get_identity_skeleton` prepara una lista di `IAddressManagerSkeleton` che
+            verrà restituita. Cerca tra le istanze di `IdentityData` in `local_identities` se ce
+            ne sono alcune con il `NodeID` tra quelli idicati come destinatari. Per ognuna che trova,
+            si accerta che essa abbia un arco-identità verso il `NodeID` indicato come mittente, in particolare
+            che abbia come interfaccia di rete nel nodo corrente la stessa che ha ricevuto il
+            messaggio e come interfaccia di rete nel nodo peer una con il MAC indicato. Se è così
+            aggiunge alla lista da restituire un `IdentitySkeleton` costruito su quella istanza
+            di IdentityData.
+*   ... **TODO** altro?
 
 Il metodo `from_caller_get_mydev`, se il caller è un `StreamCallerInfo`, ... **TODO** in futuri commit.
 
@@ -744,6 +782,7 @@ di rete da cui il messaggio è stato ricevuto.
 Il metodo `from_caller_get_nodearc` è usato (dice il commento) per richieste di nodo, per sapere da quale
 arco una tale richiesta è arrivata:
 
+*   Riceve come parametro il caller.
 *   Se il caller è un `StreamCallerInfo`, da esso reperisce il `source_id`;
 *   Se questo è un `WholeNodeSourceID`, da esso reperisce il `peer_node_id`;
 *   Dal caller reperisce il `listener` che deve essere un `StreamSystemListener`: da questo
@@ -754,6 +793,46 @@ arco una tale richiesta è arrivata:
     soddisfa questi 3 criteri (`listen_pathname`, `neighbour_mac`, `peer_node_id`) e
     se la trova restituisce questo `N.NodeArc`.
 *   In tutti gli altri casi restituisce *null*.
+
+Il metodo `from_caller_get_identityarc` è usato (dice il commento) per richieste di identità, per sapere da quale
+arco-identità una tale richiesta è arrivata:
+
+*   Riceve come parametri il caller e una istanza di `IdentityData`.
+*   Se il caller è un `StreamCallerInfo`:
+    *   Dal caller reperisce il `source_id` che deve essere un `IdentityAwareSourceID`;
+        da esso reperisce il `source_nodeid`.
+    *   Dal caller reperisce il `src_nic` che deve essere un `NeighbourSrcNic`;
+        da esso reperisce il `peer_mac`.
+    *   Serca fra gli archi-identità di quella `IdentityData` quello che soddisfa
+        `source_nodeid` e `peer_mac`.
+    *   Se non lo trova restituisce *null*.
+*   Se il caller è un `DatagramCallerInfo`:
+    *   Dal caller reperisce il `source_id` che deve essere un `IdentityAwareSourceID`;
+        da esso reperisce il `source_nodeid`.
+    *   Dal caller reperisce il `src_nic` che deve essere un `NeighbourSrcNic`;
+        da esso reperisce il `peer_mac`.
+    *   Dal caller reperisce il `listener` che deve essere un `DatagramSystemListener`;
+        da esso reperisce il `my_dev`.
+    *   Serca fra gli archi-identità di quella `IdentityData` quello che soddisfa
+        `source_nodeid`, `my_dev` e `peer_mac`.
+    *   Se non lo trova restituisce *null*.
+
+La classe `NodeSkeleton` (di cui viene costruita una sola istanza) implementa
+l'interfaccia `N.IAddressManagerSkeleton` con il compito di restituire i vari manager dei moduli
+di nodo: `N.INeighborhoodManagerSkeleton` e `N.IIdentityManagerSkeleton`.
+
+La classe `IdentitySkeleton` (di cui viene costruita di volta in volta una nuova istanza passando
+al costruttore l'istanza di `IdentityData`) implementa
+l'interfaccia `N.IAddressManagerSkeleton` con il compito di restituire i vari manager dei moduli
+di identità: `N.IQspnManagerSkeleton`, `N.IPeersManagerSkeleton`, `N.ICoordinatorManagerSkeleton`,
+`N.IHookingManagerSkeleton`, `N.IAndnaManagerSkeleton`.  
+È implementato il `qspn_manager_getter` che prevede una attesa di qualche istante
+se non è stato ancora costruito.  
+Non è ancora implementato il `peers_manager_getter`.  
+Non è ancora implementato il `coordinator_manager_getter`.  
+Non è ancora implementato il `hooking_manager_getter`.  
+Va ancora fatto in `ntkdrpc` quanto serve a produrre il metodo astratto `andna_manager_getter`. Dopo
+andrà implementato il `andna_manager_getter`.
 
 * * *
 
