@@ -893,28 +893,53 @@ lista `List<NodeID> id_set` che identifica i destinatari.
 
 All'**avvio del programma** nella funzione `main` del file `system_ntkd.vala`, per prima cosa si parserizzano
 le opzioni date sulla linea di comando.  
+Si può passare la topologia della rete (il default è 1,1,1,2).  
+Si può passare il primo indirizzo Netsukuku della prima identità.  
 Si deve passare un PID per identificare un processo che simula un nodo in un testsuite.  
 Si deve passare una lista di pseudo-interfacce di rete da gestire.  
 Si può passare una lista di compiti (tasks) da fare in un dato momento.  
+Si può passare il livello (di default 0) della sottorete a gestione autonoma.  
+Si può passare un flag per far sì che il nodo accetti richieste anonime dirette a lui.  
+Si può passare un flag per far sì che il nodo rifiuti di passare richieste anonime mascherandole.  
 
+La topologia fa valorizzare
+la variabile globale `ArrayList<int> gsizes`,
+la variabile globale `ArrayList<int> g_exp`,
+la variabile globale `int levels`
+e la variabile globale `ArrayList<int> hooking_epsilon`,
+nel file `system_ntkd.vala`.  
+Se viene passato il primo indirizzo Netsukuku della prima identità, con questo
+viene subito valorizzato `ArrayList<int> naddr` che è locale nella funzione `main`; altrimenti
+resta per ora vuoto e verrà valorizzato in modo casuale dopo l'inizializzazione del generatore `PRNGen`.  
 Il PID finisce nella variabile globale `int pid` nel file `system_ntkd.vala`.  
 La lista di interfacce finisce in `ArrayList<string> devs` che è locale nella funzione `main`.  
 La lista di interfacce finisce in `ArrayList<string> tasks` che è locale nella funzione `main`.  
+Il livello della sottorete a gestione autonoma finisce nella variabile globale `int subnetlevel`.  
+Il flag di accettazione richieste anonime finisce nella variabile globale `bool accept_anonymous_requests`.  
+Il flag di rifiuto di mascheramento finisce nella variabile globale `bool no_anonymize`.  
 
 Dopo si inizializza lo scheduler delle tasklet. Va nella variabile globale `ITasklet tasklet`.
-
-Dopo si inizializza un FakeCommandDispatcher. Va nella variabile globale `FakeCommandDispatcher fake_cm`.
 
 Dopo si inizializzano i singoli moduli (principalmente perché hanno delle classi serializzabili) e si
 registrano le classi serializzabili che servono.  
 I moduli si inizializzano con il metodo statico `init` delle classi  `NeighborhoodManager`,
-`IdentityManager`, ...  
+`IdentityManager`, `QspnManager`, ...  
 Le classi serializzabili da registrare direttamente in `main` sono `WholeNodeSourceID`, `WholeNodeUnicastID`,
-`EveryWholeNodeBroadcastID`, `NeighbourSrcNic`, ...
+`EveryWholeNodeBroadcastID`, `NeighbourSrcNic`, `IdentityAwareSourceID`, `IdentityAwareUnicastID`,
+`IdentityAwareBroadcastID`, `Naddr`, `Fingerprint`, `Cost`, ...
+
+In particolare l'inizializzazione del modulo `QspnManager` serve anche a impostare dei parametri comuni
+a tutte le istanze di `QspnManager` (che saranno più di una nel singolo nodo). Questi sono stati
+memorizzati come costanti `max_paths`, `max_common_hops_ratio`, `arc_timeout`.
 
 Dopo si inizializza il generatore di numeri pseudo-casuali. Si usa come seed il PID.  
 Questa operazione si fa con il metodo statico `init_rngen` delle classi `PRNGen`, `NeighborhoodManager`,
-`IdentityManager`, ...  
+`IdentityManager`, `QspnManager`, ...
+
+Dopo, se non era valorizzato `naddr`, il primo indirizzo Netsukuku della prima identità,
+viene valorizzato in modo casuale nel range imposto dalla topologia.
+
+Dopo si inizializza un FakeCommandDispatcher. Va nella variabile globale `FakeCommandDispatcher fake_cm`.
 
 Dopo si passa lo scheduler delle tasklet alla libreria `ntkdrpc`, chiamandone la funzione statica `init_tasklet_system`.
 
@@ -951,15 +976,56 @@ Per ogni pseudo-interfaccia di rete da gestire si eseguono questi compiti:
 Dopo si istanzia il IdentityManager nella variabile globale `identity_mgr`. Esso è unico.  
 Si passa ad esso una funzione callback per la generazione pseudo-random di un indirizzo link-local.
 
-Dopo si recupera dal `identity_mgr` appena creato l'identificativo della prima identità
-di questo nodo con il metodo `get_main_id` e si memorizza nella lista `my_nodeid_list`.
-
 Dopo si connettono i segnali del IdentityManager.
+
+Dopo si recupera dal `identity_mgr` l'identificativo `NodeID` della prima identità
+di questo nodo con il metodo `get_main_id`; si usa la variabile globale
+`next_local_identity_index` per assegnargli un indice (progressivo);
+si usa l'identificativo `NodeID` e l'indice per costruire una istanza di `IdentityData`
+e si memorizza questa nel hashmap `local_identities`.  
+Si memorizza temporaneamente questa istanza anche nella variabile locale `first_identity_data`.
+
+Dopo si prepara nel membro `my_naddr` di `first_identity_data` una istanza di `N.Naddr` che
+rappresenta il primo indirizzo Netsukuku della prima identità; e nel membro `my_fp` una istanza
+di `N.Fingerprint` che rappresenta il fingerprint di questo nodo/identità/g-nodo di livello 0.  
+Queste info vengono anche prodotte a video.
+
+Dopo si crea la prima istanza di QspnManager nel membro `qspn_mgr` di `first_identity_data`.
+Questa viene creata con il costruttore `create_net`, poiché la prima identità nel nodo viene
+a formare una nuova rete. Oltre a passare l'indirizzo e il fingerprint, a questo costruttore
+viene passata una nuova istanza di `N.QspnStubFactory` costruita sulla `first_identity_data`.
+
+Dopo si connettono i segnali di questa istanza di QspnManager ai metodi della
+istanza `first_identity_data`, di modo che il segnale possa essere associato alla
+corretta identità nel nodo.
+
+Dopo si attende che venga emesso e gestito il segnale di `bootstrap_complete` di questa
+istanza di QspnManager; questo dovrebbe avvenire immediatamente.
+
+Dopo si può eliminare il riferimento nella variabile globale `first_identity_data`.
 
 Dopo si entra nel main loop degli eventi fino alla terminazione del programma (con il segnale Posix
 di terminazione).
 
-Alla terminazione del programma, si chiama `stop_rpc` su tutte le pseudo-interfacce di rete gestite.
+Alla terminazione del programma,
+si rimuovono tutte le identità di connettività che sono presenti al momento nel nodo.  
+Per ognuna di esse
+si chiama il metodo `destroy` della relativa istanza di QspnManager;  
+si sconnettono dai segnali di questa istanza di QspnManager i relativi gestori;  
+si chiama il metodo `stop_operations` della relativa istanza di QspnManager;  
+si rimuove l'istanza di IdentityData dalla hashmap `local_identities` con il
+metodo helper `remove_local_identity`.
+
+A questo punto **deve** essere presente la sola identità principale.  
+Essa viene memorizzata temporaneamente nella variabile locale `last_identity_data`.  
+Si chiama il metodo `destroy` della relativa istanza di QspnManager.  
+Si sconnettono dai segnali di questa istanza di QspnManager i relativi gestori.  
+Si chiama il metodo `stop_operations` della relativa istanza di QspnManager.  
+Si rimuove l'istanza di IdentityData dalla hashmap `local_identities` con il
+metodo helper `remove_local_identity`.  
+Dopo si può eliminare il riferimento nella variabile globale `last_identity_data`.
+
+Dopo si chiama `stop_rpc` su tutte le pseudo-interfacce di rete gestite.
 
 Dopo si rimuove il NeighborhoodManager (dalla variabile globale).
 
