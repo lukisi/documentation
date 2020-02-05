@@ -529,19 +529,26 @@ non è più nell hashmap `local_identities` ha l'effetto di terminare la tasklet
 Quando il modulo `Qspn` chiama `i_qspn_get_broadcast` di `N.Q.IQspnStubFactory` gli passa una lista
 di archi `IQspnArc`, `arcs`, e opzionalmente una istanza di `IQspnMissingArcHandler` per gestire gli archi che
 non comunicano l'avvenuta ricezione del messaggio broadcast.  
-La classe suddetta, se la lista di archi è vuota restituisce semplicemente una nuova istanza
+La classe `N.Q.IQspnStubFactory`, se la lista di archi è vuota restituisce semplicemente una nuova istanza
 di `QspnManagerStubVoid`.  
 Altrimenti, prepara una lista di `NodeID`, `broadcast_node_id_set`, che sono gli identificativi delle
 identità nei nodi diretti vicini reperite da `arcs`.  
 Di seguito prepara una lista di `IAddressManagerStub`, `addr_list`, uno per ogni interfaccia di rete
 del nodo corrente su cui va trasmesso il messaggio broadcast. Queste sono ottenute con altrettante
 chiamate al metodo `stub_factory.get_stub_identity_aware_broadcast` che indicano tra l'altro il
-nome dell'interfaccia di rete e la lisra `broadcast_node_id_set` dei destinatari.  
+nome dell'interfaccia di rete e la lista `broadcast_node_id_set` dei destinatari.  
 Se era richiesto un `IQspnMissingArcHandler`, anche esso viene passato ad ogni chiamata
 di `stub_factory.get_stub_identity_aware_broadcast` come nuova istanza di `MissingArcHandlerForQspn`
 costruita sulla istanza di `IQspnMissingArcHandler`. Sotto si illustra il meccanismo.  
 Dopo aver ottenuto la lista `addr_list` con essi viene costruita e restituita una nuova istanza
 di `QspnManagerStubBroadcastHolder`.
+
+La classe `MissingArcHandlerForQspn` implementa l'interfaccia `N.IIdentityAwareMissingArcHandler`
+dichiarata nel file `rpc/stub_factory.vala`.  
+Nel suo construttore riceve una istanza di `IQspnMissingArcHandler` che memorizza come `qspn_missing`.  
+Nel metodo `missing`, che è una callback che verrà chiamata sugli archi-identità che non sono
+stati raggiunti da questo messaggio, chiama il metodo `i_qspn_missing` dell'istanza `IQspnMissingArcHandler`
+passata all'inizio al metodo `i_qspn_get_broadcast`.
 
 Quando il modulo `Qspn` chiama `i_qspn_get_tcp` di `N.Q.IQspnStubFactory` gli passa un arco `IQspnArc arc`,
 e un booleano `wait_reply`.  
@@ -550,10 +557,6 @@ chiamando il metodo `stub_factory.get_stub_identity_aware_unicast_from_ia`, dopo
 da `arc` il relativo `IdentityArc`.  
 Con questa viene costruita e restituita una nuova istanza
 di `QspnManagerStubHolder`.
-
-La classe `MissingArcHandlerForQspn` implementa `IIdentityAwareMissingArcHandler` **TODO**  
-Nel suo construttore riceve una istanza di `IQspnMissingArcHandler` che memorizza come `qspn_missing`.  
-Ha un metodo `missing` che riceve un `IdentityArc`. Esso chiama `qspn_missing.i_qspn_missing(identity_arc.qspn_arc)`. **TODO**
 
 * * *
 
@@ -572,12 +575,13 @@ Vedere la classe `N.QspnArc` nel file `qspn_helpers.vala`.
 
 Una istanza di questa classe rappresenta un arco-identità. Viene costruita passando una
 istanza di `IdentityArc`.  
-Dalla istanza di `IdentityArc` si accede al costo dell'arco (**TODO** rivedere come);
-ad esso si aggiunge un (insignificante) piccolo intero randomico da 0 a 1000 per fare
-in modo che risulti difficile ottenere due path distinti con costo identico.
-
-La classe memorizza anche (prendendole dalla `IdentityArc`) gli identificativi
-dell'identità presente `sourceid` e quella del nodo vicino `destid`.
+Dalla istanza di `IdentityArc` si accede alla istanza di `N.N.INeighborhoodArc` prodotta
+dal modulo Neighborhood che rappresenta l'arco-nodo; attraverso la quale si può accedere
+al relativo costo.  
+Nel costruttore di `N.QspnArc` si sceglie un intero randomico da 0 a 1000 e lo si memorizza
+per fare in modo che, aggiungendolo al costo dell'arco-nodo quando viene richiesto il
+costo di questo arco-identità, questa piccola (insignificante) variazione renda molto
+improbabile ottenere due path distinti con costo identico.
 
 Quando il modulo `Qspn` chiama `i_qspn_get_cost` di `N.Q.IQspnArc` la classe suddetta
 restituisce una istanza di `N.Cost` col valore ottenuto come detto prima.
@@ -601,6 +605,20 @@ Vedere le classi `N.Naddr`, `N.Cost`, `N.Fingerprint` nel file `serializables.va
 
 Per reagire ai segnali emessi dal modulo `Qspn` sono implementate delle funzioni
 nel file `qspn_signals.vala`.
+
+Essi sono:
+`per_identity_qspn_arc_removed`,
+`per_identity_qspn_changed_fp`,
+`per_identity_qspn_changed_nodes_inside`,
+`per_identity_qspn_destination_added`,
+`per_identity_qspn_destination_removed`,
+`per_identity_qspn_gnode_splitted`,
+`per_identity_qspn_path_added`,
+`per_identity_qspn_path_changed`,
+`per_identity_qspn_path_removed`,
+`per_identity_qspn_presence_notified`,
+`per_identity_qspn_qspn_bootstrap_complete`,
+`per_identity_qspn_remove_identity`.
 
 **TODO**
 
@@ -663,6 +681,90 @@ la stringa `send_pathname` che la classe costruisce a partire dall'identificativ
 (che è memorizzato nella variabile globale `pid` nel file `system_ntkd.vala`) e dal nome della pseudo interfaccia
 di rete, che viene preso dal membro `dev` dell'istanza di `N.N.INeighborhoodNetworkInterface` passata al metodo.  
 Quindi con tutti questi dati la classe chiama il metodo `get_addr_datagram_system`.
+
+Per avere uno stub radice di tipo unicast verso un modulo di identità si chiama
+il metodo `get_stub_identity_aware_unicast` passando l'arco-nodo `INeighborhoodArc arc`,
+l'identità mittente `IdentityData identity_data` e l'identificativo dell'identità
+destinataria nel nodo destinatario `NodeID unicast_node_id`; oppure si può usare
+il metodo scorciatoia `get_stub_identity_aware_unicast_from_ia` passando
+l'arco-identità `IdentityArc ia`.  
+In entrambi i casi si passa anche opzionalmente un booleano che dice se si intende attendere
+la risposta `bool wait_reply=true`.  
+La classe prepara i dati serializzabili che sono previsti dal protocollo ZCD, cioè:
+
+*   Un `IdentityAwareSourceID` che rappresenta il mittente.  
+    Il `NodeID` che serve viene preso dalla istanza `identity_data` passata al metodo.
+*   Un `IdentityAwareUnicastID` che rappresenta il destinatario.  
+    Il `NodeID` che serve è il `unicast_node_id` passato al metodo.
+*   Un `NeighbourSrcNic` che identifica l'interfaccia di rete (del mittente) usata per la trasmissione.  
+    Il MAC address che serve (della propria scheda di rete) viene preso dal membro `mac` dell'istanza di
+    `N.N.INeighborhoodNetworkInterface nic` memorizzata nell'arco-nodo `arc` passato al metodo.
+
+Poi la classe chiama il metodo di `ntkdrpc` che restituisce lo stub radice di tipo stream.  
+In particolare in questo programma di test si chiama il metodo che usa il medium system. Per questo serve
+la stringa `send_pathname` che la classe costruisce a partire dall'indirizzo linklocal della
+scheda di rete del vicino `neighbour_nic_addr` memorizzato nell'arco-nodo `arc` passato al metodo.  
+Quindi con tutti questi dati la classe chiama il metodo `get_addr_stream_system`.
+
+Per avere uno stub radice di tipo broadcast verso un modulo di identità si chiama il metodo
+`get_stub_identity_aware_broadcast` passando il nome della scheda di rete `string my_dev` su cui
+il messaggio deve essere trasmesso, l'identità mittente `IdentityData identity_data` e
+un set con gli identificativo delle identità destinatarie nei nodi destinatari `List<NodeID> broadcast_node_id_set`;
+può anche essere opzionalmente passata una callback per gestire gli archi-identità dai quali non
+si riceve in tempo il messaggio di avvenuta ricezione (una istanza di `IIdentityAwareMissingArcHandler`).  
+La classe prepara i dati serializzabili che sono previsti dal protocollo ZCD, cioè:
+
+*   Un `IdentityAwareSourceID` che rappresenta il mittente.  
+    Il `NodeID` che serve viene preso dalla istanza `identity_data` passata al metodo.
+*   Un `IdentityAwareBroadcastID` che rappresenta i destinatari.  
+    Il set `List<NodeID>` che serve è il `broadcast_node_id_set` passato al metodo.
+*   Un `NeighbourSrcNic` che identifica l'interfaccia di rete (del mittente) usata per la trasmissione.  
+    Il MAC address che serve (della propria scheda di rete) è recuperato, attraverso il `my_dev` passato
+    al metodo, dalla relativa istanza di `N.HandledNic` in `handlednic_map`.
+
+Poi la classe chiama il metodo di `ntkdrpc` che restituisce lo stub radice di tipo datagram.  
+In particolare in questo programma di test si chiama il metodo che usa il medium system. Per questo serve
+la stringa `send_pathname` che la classe costruisce a partire dall'identificativo univoco del processo
+(che è memorizzato nella variabile globale `pid` nel file `system_ntkd.vala`) e dal nome della pseudo interfaccia
+di rete passata al metodo in `my_dev`.  
+Se è stato passato il gestore `IIdentityAwareMissingArcHandler`, si usa come descritto sotto per costruire
+una implementazione di `N.IAckCommunicator` da passare al metodo di `ntkdrpc`.  
+Quindi con tutti questi dati la classe chiama il metodo `get_addr_datagram_system`.
+
+Se è stato passato il gestore (opzionale) degli archi-identità *mancati* dal messaggio, che è una istanza
+di `IIdentityAwareMissingArcHandler`, si costruisce con questa e con l'identità mittente `IdentityData identity_data`
+una istanza di `NodeMissingArcHandlerForIdentityAware`; e poi con questa e il nome della scheda di rete `string my_dev`
+e l'istanza di `N.StubFactory this`, si costruisce una istanza di `AcknowledgementsCommunicator`.
+
+La classe `AcknowledgementsCommunicator` implementa l'interfaccia `N.IAckCommunicator` fornita da `ntkdrpc`, il
+cui metodo `process_src_nics_list (Gee.List<Netsukuku.ISrcNic> src_nics_list)` viene chiamato da `ntkdrpc`
+per indicare quali istanze (serializzabili) di `ISrcNic` (cioè `NeighbourSrcNic`) hanno segnalato di avere
+ricevuto il messaggio. La classe `AcknowledgementsCommunicator` dunque, al momento della sua costruzione
+chiama `stub_factory.get_current_arcs_for_broadcast(my_dev)` per sapere quali archi dovrebbero essere raggiunti;
+poi al momento della verifica, lo chiama di nuovo perché solo quelli che sono rimasti possono essere
+verificati; poi per ogni arco da verificare, se il suo `neighbour_mac` non è fra i `NeighbourSrcNic` che
+hanno segnalato, lo prepara in una lista `lst_missed` di archi mancati; alla fine tutti quelli in questa
+lista `lst_missed`, ognuno in una tasklet separata, vengono passati al metodo `missing`
+di `NodeMissingArcHandlerForIdentityAware`.
+
+Qui entra in gioco l'identità mittente `IdentityData identity_data` che è nota all'istanza
+di `NodeMissingArcHandlerForIdentityAware`. Questa cerca fra gli archi-identità di proprietà
+di `identity_data` quelli (possono in teoria essere più) che poggiano sull'arco passato al
+suo metodo `missing` e, ognuno in una tasklet separata, li passa al metodo `missing` della
+istanza di `IIdentityAwareMissingArcHandler` che è stata all'inizio passata al metodo
+`get_stub_identity_aware_broadcast` di `N.StubFactory`.
+
+Il metodo `get_current_arcs_for_broadcast(my_dev)` di `N.StubFactory` è privato. Esso
+trova gli archi `N.N.INeighborhoodArc` attuali sull'interfaccia di rete `my_dev`
+nella hashmap `arc_map`.
+
+Anche le classi `NodeMissingArcHandlerForIdentityAware` e `AcknowledgementsCommunicator`
+sono inner-classi private di `N.StubFactory`.
+
+L'interfaccia `N.IIdentityAwareMissingArcHandler` dichiarata nel file `rpc/stub_factory.vala`,
+serve come abbiamo visto per definire una callback da chiamare sugli archi-identità che non sono
+stati raggiunti da un particolare messaggio. Questa callback è definita nel suo metodo
+astratto `missing(IdentityData identity_data, IdentityArc identity_arc)`
 
 * * *
 
@@ -762,7 +864,7 @@ istanza di `DatagramCallerInfo`:
     *   Recupera il MAC della interfaccia che ha trasmesso;
     *   Recupera (cercando in `pseudonic_map`) il nome della interfaccia di questo nodo che ha ricevuto;
     *   Chiama `get_identity_skeleton_set(source_nodeid, broadcast_set, peer_mac, my_dev)`:
-        *   Il metodo `get_identity_skeleton` prepara una lista di `IAddressManagerSkeleton` che
+        *   Il metodo `get_identity_skeleton_set` prepara una lista di `IAddressManagerSkeleton` che
             verrà restituita. Cerca tra le istanze di `IdentityData` in `local_identities` se ce
             ne sono alcune con il `NodeID` tra quelli idicati come destinatari. Per ognuna che trova,
             si accerta che essa abbia un arco-identità verso il `NodeID` indicato come mittente, in particolare
