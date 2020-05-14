@@ -3,12 +3,12 @@
 Consideriamo un caso banale. Un nodo in cui il programma si avvia e dopo un po' viene
 terminato senza che incontri altri nodi.
 
-Nel presente documento trattiamo la sequenza di operazioni che fa il programma in
+Nel presente documento trattiamo la sequenza di operazioni che il programma fa in
 questo caso. In particolare le operazioni di creazione e rimozione delle singole
 istanze delle classi dei vari moduli.
 
-La parte iniziale sarà comune a tutti i casi. Ogni nodo appena il programma si avvia
-si considera l'unico membro di una nuova rete.
+La parte iniziale sarà comune a tutti i casi. Ogni nodo infatti, appena il programma
+si avvia, si considera l'unico membro di una nuova rete.
 
 La parte finale sarà comune a qualsiasi nodo che al termine del programma si trovi
 a essere l'ultimo rimasto della sua rete.
@@ -28,14 +28,16 @@ assegna subito a questa prima identità il suo identificativo. Quindi il program
 subito dopo aver costruito l'istanza di `IdentityManager`, la interroga per conoscere
 la prima identità.
 
-Poi il programma associa alla prima identità del nodo una istanza di `QspnManager`
-che è creata in modalità `create_net`. In questa modalità viene creata dal modulo `Qspn`
-una nuova rete composta dal solo nodo.
+Poi il programma crea una istanza di `QspnManager` che associa alla prima identità
+del nodo.  
+L'istanza di `QspnManager` è creata in modalità `create_net`. In questa modalità viene
+costituita dal modulo `Qspn` una nuova rete composta dal solo nodo.
 
-Ora il programma dovrà associare alla prima identità del nodo una istanza di `PeersManager`.
-Questa è necessaria per poi associare alla prima identità del nodo una istanza
-di `CoordinatorManager`. Infine questa è necessaria per associare alla prima identità del
-nodo una istanza di `HookingManager`.  
+Ora il programma dovrà creare una istanza di `PeersManager` che assocerà alla prima
+identità del nodo. Questa è necessaria perché poi il programma dovrà creare una
+istanza di `CoordinatorManager` che assocerà alla prima identità del nodo.
+Infine questa è necessaria perché poi il programma dovrà creare una istanza di
+`HookingManager` che assocerà alla prima identità del nodo.  
 Va notato che le prime istanze di `PeersManager` e`CoordinatorManager` si troveranno a
 operare in un contesto molto "semplice" essendo la prima identità del nodo unico membro
 di una nuova rete.

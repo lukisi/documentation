@@ -13,6 +13,7 @@ Può essere utile per facilitare l'implementazione partire con un caso banale. U
 in cui il programma si avvia e dopo un po' viene terminato senza che incontri altri
 nodi.
 
-In [questo documento](CasoBanale.md) tratteremo la sequenza di operazioni che coinvolgono la creazione
+Nel documento [Caso banale](CasoBanale.md) tratteremo la sequenza di operazioni che
+il programma fa in questo caso e che coinvolgono la creazione
 e la rimozione delle singole istanze delle classi dei vari moduli.
 
