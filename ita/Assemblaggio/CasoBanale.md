@@ -64,12 +64,21 @@ Il nome dell'eseguibile sarà `sys_ntkd_alone`.
 
 La routine main è nel file `main.vala`.
 
-* * *
+#### Comunicazioni in rete
 
-Bisogna poter dare i comandi uno alla volta. Inoltre bisogna avere la possibilità
-di dare una serie di comandi senza permettere che altre tasklet possano introdurne
-altri in mezzo a questi.  
-Vedere il file `commander.vala` e `fake_command_dispatcher.vala`.
+Simuleremo due interfacce di rete, su due diversi segmenti di rete. In ognuno dei
+due il nostro nodo sarà il solo connesso.
+
+Questo comporta alcune conseguenze:
+
+*   Il programma si troverà a trasmettere in broadcast (datagram) alcuni messaggi
+    sull'una o l'altra interfaccia.
+*   Il programma non si troverà mai a trasmettere in unicast (stream) alcun
+    messaggio, poiché il nodo non costituirà nessun arco con altri nodi.
+*   Il programma si troverà a rilevare alcuni messaggi in broadcast (datagram)
+    sull'una o l'altra interfaccia. Saranno sempre messaggi provenienti dal
+    nodo stesso.
+*   Il programma non si troverà mai a rilevare alcun messaggio in unicast (stream).
 
 * * *
 
@@ -87,11 +96,6 @@ Vedere la variabile globale `pseudonic_map` nel file `main.vala`.
 
 * * *
 
-Bisogna integrare l'unica istanza di `N.N.NeighborhoodManager` che si crea all'avio
-del programma e muore alla sua terminazione.
-
-* * *
-
 La fase d'inizio ascolto su una interfaccia (in broadcast e in unicast sul
 linklocal) va svolta in correlazione con quella di aggiunta della stessa
 alla gestione del `N.N.NeighborhoodManager`.  
@@ -100,16 +104,70 @@ quella di rimozione dell'interfaccia dalla gestione del `N.N.NeighborhoodManager
 
 Vedere la funzione `void stop_rpc(string dev)` nel file `main.vala`.
 
-
 * * *
 
 In una unica classe viene implementato il codice per avviare le tasklet che
-si metteranno in ascolto su socket di sistema emulando le varie modalità:
+si metteranno in ascolto per comunicazioni di rete in entrata. Queste tasklet
+in questa particolare testsuite staranno in ascolto solo su socket di sistema;
+non ci saranno reali comunicazioni di rete. Per quanto riguarda le modalità,
+invece, anche nella presente testsuite saranno presenti entrambe:
 stream e datagram.  
 Vedere la classe `N.SkeletonFactory` nel file `rpc/skeleton_factory.vala`.
 
 La classe è pensata per avere una sola istanza in una variabile globale
 `skeleton_factory` nel file `main.vala`, a uso comune di tutto il codice.
+
+Nella fase di avvio, il programma (nella routine main) costruisce una
+istanza di questa classe.  
+Più avanti valorizzerà la sua proprietà pubblica `NeighborhoodNodeID whole_node_id`
+con l'identificativo di questo nodo fornito dal modulo `Neighborhood`.
+
+Il costruttore di `N.SkeletonFactory` valorizza la proprietà privata
+`ServerDelegate dlg`. Servirà alle tasklet che ricevono i
+messaggi, come illustreremo a breve.  
+Inoltre valorizza la proprietà privata `NodeSkeleton node_skeleton`. Sarà
+questa a memorizzare l'identificativo di questo nodo fornito passato
+dalla routine main più avanti alla proprietà pubblica `whole_node_id`.
+
+Il metodo `start_stream_system_listen` avvia una tasklet per gestire i messaggi
+di tipo stream trasmessi in unicast a uno specifico indirizzo IP. In questa
+testsuite il programma richiamerà questo metodo sia per gestire un IP linklocal,
+sia per gestire un IP pubblico. In realtà non riceveremo mai tali messaggi.  
+A questo metodo viene passata la stringa `listen_pathname`, come prescrive la
+funzione `stream_system_listen` fornita dalla libreria `ntkdrpc` basata su ZCD.
+Inoltre il metodo si costruisce un `N.IErrorHandler` apposito per questo
+listener (la classe `ServerErrorHandler` è una privata inner-classe
+di `N.SkeletonFactory`) e usa una istanza di `N.IDelegate` in comune con tutti
+i listener (la classe `ServerDelegate` è una privata inner-classe
+di `N.SkeletonFactory`); entrambe le classi sono prescritte da `ntkdrpc`.  
+Infine il metodo `start_stream_system_listen` memorizza in un HashMap l'handle
+della tasklet avviata associandolo alla stringa `listen_pathname`, di modo che
+la stessa classe `N.SkeletonFactory` con il metodo `stop_stream_system_listen`
+possa gestirne la terminazione.
+
+Il metodo `start_datagram_system_listen` avvia una tasklet per gestire i
+messaggi di tipo datagram trasmessi in broadcast su un segmento di rete
+(broadcast domain) e recepiti da una certa interfaccia di rete
+del nodo corrente. In realtà rileveremo tali messaggi solo quando sarà
+il nostro stesso nodo a trasmetterli.  
+A questo metodo viene passata la stringa `listen_pathname`, la stringa
+`send_pathname` e una istanza di `ISrcNic src_nic`, come prescrive la funzione
+`datagram_system_listen` fornita dalla libreria `ntkdrpc` basata su ZCD.
+Inoltre il metodo si costruisce un `N.IErrorHandler` apposito per questo listener
+e usa l'istanza comune di `N.IDelegate`, prescritte da `ntkdrpc`.  
+Infine il metodo `start_datagram_system_listen` memorizza in un HashMap l'handle
+della tasklet avviata associandolo alla stringa `listen_pathname`, di modo che
+la stessa classe `N.SkeletonFactory` con il metodo `stop_datagram_system_listen`
+possa gestirne la terminazione.
+
+La classe ServerDelegate (nel metodo `get_addr_set` prescritto da `ntkdrpc`)
+per prima cosa discerne se ha ricevuto un messaggio di tipo stream o di tipo
+datagram. Il primo caso non è contemplato da questa testsuite, quindi
+il codice semplicemente va in errore.  
+Nel secondo caso la classe fa il suo lavoro usando il metodo `get_dispatcher_set`
+di `N.SkeletonFactory` passando il CallerInfo.
+
+**TODO** completare.
 
 * * *
 
@@ -119,3 +177,18 @@ Vedere la classe `N.StubFactory` nel file `rpc/stub_factory.vala`.
 
 La classe è pensata per avere una sola istanza in una variabile globale
 `stub_factory` nel file `main.vala`, a uso comune di tutto il codice.
+
+**TODO** completare.
+
+
+#### Altri aspetti (riorganizzare)
+
+Bisogna poter dare i comandi uno alla volta. Inoltre bisogna avere la possibilità
+di dare una serie di comandi senza permettere che altre tasklet possano introdurne
+altri in mezzo a questi.  
+Vedere il file `commander.vala` e `fake_command_dispatcher.vala`.
+
+* * *
+
+Bisogna integrare l'unica istanza di `N.N.NeighborhoodManager` che si crea all'avio
+del programma e muore alla sua terminazione.
