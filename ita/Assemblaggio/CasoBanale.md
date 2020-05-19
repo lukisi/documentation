@@ -39,9 +39,10 @@ istanza di `CoordinatorManager` che assocerà alla prima identità del nodo.
 Infine questa è necessaria perché poi il programma dovrà creare una istanza di
 `HookingManager` che assocerà alla prima identità del nodo.  
 Va notato che le prime istanze di `PeersManager` e`CoordinatorManager` si troveranno a
-operare in un contesto molto "semplice" essendo la prima identità del nodo unico membro
-di una nuova rete. I servizi P2P saranno sempre forniti dal nodo stesso senza nessuna
-reale comunicazione di rete. Il nodo stesso sarà il *Coordinator* a tutti i livelli.
+operare in un contesto molto "semplice", poiché la prima identità del nodo è per
+definizione l'unico membro di una nuova rete. I servizi P2P saranno sempre forniti dal
+nodo stesso senza nessuna reale comunicazione di rete. Il nodo stesso sarà
+il *Coordinator* a tutti i livelli.
 
 
 ## Implementazione testsuite locale
@@ -58,7 +59,7 @@ indica che vogliamo provare questo semplice scenario.
 
 I file sorgente sono nella dir `sys-ntkd-alone`.
 
-Il nome del pacchetto (configure.ac) è `sys-ntkd-alone`.
+Il nome del pacchetto (nel file configure.ac) è `sys-ntkd-alone`.
 
 Il nome dell'eseguibile sarà `sys_ntkd_alone`.
 
@@ -130,7 +131,7 @@ questa a memorizzare l'identificativo di questo nodo fornito passato
 dalla routine main più avanti alla proprietà pubblica `whole_node_id`.
 
 Il metodo `start_stream_system_listen` avvia una tasklet per gestire i messaggi
-di tipo stream trasmessi in unicast a uno specifico indirizzo IP. In questa
+di tipo stream trasmessi in unicast a uno specifico indirizzo IP. Nella presente
 testsuite il programma richiamerà questo metodo sia per gestire un IP linklocal,
 sia per gestire un IP pubblico. In realtà non riceveremo mai tali messaggi.  
 A questo metodo viene passata la stringa `listen_pathname`, come prescrive la
@@ -165,9 +166,27 @@ per prima cosa discerne se ha ricevuto un messaggio di tipo stream o di tipo
 datagram. Il primo caso non è contemplato da questa testsuite, quindi
 il codice semplicemente va in errore.  
 Nel secondo caso la classe fa il suo lavoro usando il metodo `get_dispatcher_set`
-di `N.SkeletonFactory` passando il CallerInfo.
+di `N.SkeletonFactory` passando il CallerInfo fornito da ZCD.
 
-**TODO** completare.
+Il metodo `get_dispatcher_set` dovrà restituire una lista di *skeleton* che saranno
+chiamati a eseguire una procedura remota come effetto del messaggio rilevato.  
+A seconda del tipo di CallerInfo, il metodo capisce se il messaggio è destinato
+a una identità o a un nodo. Inoltre capisce se il messaggio è destinato a qualcuno
+in questo sistema.
+
+*Implementazione attuale:* il pacchetto ha sicuramente come `source_id` un WholeNodeSourceID
+e come `broadcast_id` un EveryWholeNodeBroadcastID; altrimenti la tasklet che gestisce
+il pacchetto termina con `abort_tasklet`. Il metodo restituisce una lista con un
+unico *skeleton* che è il `NodeSkeleton node_skeleton`.
+
+* * *
+
+Il `NodeSkeleton node_skeleton` è uno *skeleton* per i metodi remoti di nodo. Ci sarà
+una sola istanza che rappresenta il sistema. Ha il membro pubblico
+`NeighborhoodNodeID id` che contiene il suo identificativo di nodo.
+
+*Implementazione attuale:* l'unico manager che può restituire è il Neighborhood,
+implementa cioè solo `neighborhood_manager_getter`.
 
 * * *
 
@@ -178,8 +197,36 @@ Vedere la classe `N.StubFactory` nel file `rpc/stub_factory.vala`.
 La classe è pensata per avere una sola istanza in una variabile globale
 `stub_factory` nel file `main.vala`, a uso comune di tutto il codice.
 
-**TODO** completare.
+Per avere uno stub radice di tipo broadcast verso un modulo di nodo, poiché
+l'unico caso d'uso è quello della funzione di radar del modulo `Neighborhood`,
+si chiama il metodo `get_stub_whole_node_broadcast_for_radar` passando
+l'interfaccia di rete gestita, cioè l'istanza
+di `N.N.INeighborhoodNetworkInterface`.  
+Il metodo prepara i dati serializzabili che sono previsti dal protocollo
+ZCD, cioè:
 
+*   Un `WholeNodeSourceID` che rappresenta il mittente.  
+    Il `NeighborhoodNodeID`, che serve per crearlo, viene preso dalla variabile
+    globale `skeleton_factory`.
+*   Un `EveryWholeNodeBroadcastID` che rappresenta il destinatario, che è chiunque
+    in questo caso.
+*   Un `NeighbourSrcNic` che identifica l'interfaccia di rete (del mittente)
+    usata per la trasmissione.  
+    Il MAC address che serve (della propria scheda di rete) viene preso dal
+    membro `mac` dell'istanza di `N.N.INeighborhoodNetworkInterface` passata
+    al metodo.
+
+Poi il metodo usa la libreria `ntkdrpc` basata su ZCD per ottenere uno stub
+radice di tipo datagram sul medium system; cioè chiama la funzione
+`get_addr_datagram_system`.  
+Per comporre la stringa `send_pathname` prescritta da `ntkdrpc`, la classe
+`N.StubFactory` usa l'identificativo univoco del processo (che è memorizzato
+nella variabile globale `pid` nel file `system_ntkd.vala`) e il nome della
+pseudo interfaccia di rete, che viene preso dal membro `dev` dell'istanza di
+`N.N.INeighborhoodNetworkInterface` passata al metodo.
+
+La presente testsuite non necessiterà mai di uno stub per inviare messaggi
+di tipo unicast.
 
 #### Altri aspetti (riorganizzare)
 
@@ -192,3 +239,20 @@ Vedere il file `commander.vala` e `fake_command_dispatcher.vala`.
 
 Bisogna integrare l'unica istanza di `N.N.NeighborhoodManager` che si crea all'avio
 del programma e muore alla sua terminazione.
+
+* * *
+
+Nel file `serializables.vala` sono implementate le classi serializzabili che servono per comunicare
+con il protocollo ZCD e i metodi definiti nel pacchetto `ntkdrpc`.
+
+La classe `N.WholeNodeSourceID` implementa l'interfaccia `N.ISourceID` fornita da `ntkdrpc`. Contiene una
+istanza di `NeighborhoodNodeID id` che rappresenta il mittente.
+
+La classe `N.WholeNodeUnicastID` implementa l'interfaccia `N.IUnicastID` fornita da `ntkdrpc`. Contiene una
+istanza di `NeighborhoodNodeID neighbour_id` che rappresenta il vicino destinatario.
+
+La classe `N.EveryWholeNodeBroadcastID` implementa l'interfaccia `N.IBroadcastID` fornita da `ntkdrpc`. Essa
+non contiene dati; rappresenta infatti chiunque riceva il messaggio.
+
+La classe `N.NeighbourSrcNic` implementa l'interfaccia `N.ISrcNic` fornita da `ntkdrpc`. Contiene una
+istanza di `string mac` che identifica la specifica interfaccia di rete del mittente.
