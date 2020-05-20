@@ -228,6 +228,143 @@ pseudo interfaccia di rete, che viene preso dal membro `dev` dell'istanza di
 La presente testsuite non necessiterà mai di uno stub per inviare messaggi
 di tipo unicast.
 
+#### Argomenti al programma
+
+Si può passare la topologia della rete (il default è 1,1,1,2). **TODO**  
+Si può passare il primo indirizzo Netsukuku della prima identità. **TODO**  
+Si deve passare un PID per identificare un processo che simula un nodo in una
+testsuite.  
+Si deve passare una lista di pseudo-interfacce di rete da gestire.  
+Si può passare una lista di compiti (tasks) da fare in un dato momento. **TODO**  
+Si può passare il livello (di default 0) della sottorete a gestione autonoma. **TODO**  
+Si può passare un flag per far sì che il nodo accetti richieste anonime dirette
+a lui. **TODO**  
+Si può passare un flag per far sì che il nodo rifiuti di passare richieste
+anonime mascherandole. **TODO**  
+
+#### Routine main
+
+Operazioni nella funzione `main` del file `main.vala`.
+
+##### Operazioni iniziali
+
+Per prima cosa si fa il parsing delle opzioni date sulla linea di comando.
+
+Il PID finisce nella variabile globale `int pid` nel file `main.vala`.  
+La lista di interfacce finisce in `ArrayList<string> devs` che è locale nella
+funzione `main`.  
+
+Dopo si inizializza lo scheduler delle tasklet. Va nella variabile globale
+`ITasklet tasklet`.
+
+Dopo si inizializzano i singoli moduli (principalmente perché hanno al loro
+interno delle classi serializzabili da registrare) e si registrano le classi
+serializzabili che servono direttamente al programma.  
+I moduli si inizializzano con il metodo statico `init` delle classi `NeighborhoodManager`,
+`IdentityManager` **TODO**, `QspnManager` **TODO**, ...  
+Le classi serializzabili da registrare direttamente in `main` sono:
+`WholeNodeSourceID`, `WholeNodeUnicastID`, `EveryWholeNodeBroadcastID`, `NeighbourSrcNic`,
+`IdentityAwareSourceID` **TODO**, `IdentityAwareUnicastID` **TODO**, `IdentityAwareBroadcastID` **TODO**,
+`Naddr` **TODO**, `Fingerprint` **TODO**, `Cost` **TODO**, ...
+
+Dopo si inizializza il generatore di numeri pseudo-casuali. Si usa come seed il PID.  
+Questa operazione si fa con il metodo statico `init_rngen` delle classi `PRNGen`,
+`NeighborhoodManager`,
+`IdentityManager` **TODO**, `QspnManager` **TODO**, ...
+
+Dopo si inizializza un FakeCommandDispatcher. Va nella variabile globale
+`FakeCommandDispatcher fake_cm`.
+
+Dopo si passa lo scheduler delle tasklet alla libreria `ntkdrpc`, chiamandone la funzione
+statica `init_tasklet_system`.
+
+Dopo si istanzia lo `skeleton_factory`.
+
+Dopo si istanzia lo `stub_factory`.
+
+I primi due comandi, dati in blocco, sono qui:
+
+```shell script
+sysctl net.ipv4.ip_forward=1
+sysctl net.ipv4.conf.all.rp_filter=0
+```
+
+Dopo si istanzia il NeighborhoodManager nella variabile globale `neighborhood_mgr`.
+Esso è unico.
+
+Subito dal `neighborhood_mgr` si ottiene il `neighborhood_id` con cui si valorizza il
+membro `whole_node_id` di `skeleton_factory`.
+
+Dopo si connettono i segnali del NeighborhoodManager.
+
+Dopo si prepara una hashmap (var globale) `pseudonic_map` per le interfacce di rete da gestire
+rappresentate da istanze di `N.PseudoNetworkInterface`.
+
+Per ogni pseudo-interfaccia di rete da gestire si eseguono questi compiti:
+
+*   Si genera pseudo-random un finto MAC.
+*   Si memorizza una nuova istanza di `N.PseudoNetworkInterface` in `pseudonic_map`.
+*   Si eseguono dei comandi in blocco per inizializzare la scheda di rete:
+    ```shell script
+    sysctl net.ipv4.conf.${dev}.rp_filter=0
+    sysctl net.ipv4.conf.${dev}.arp_ignore=1
+    sysctl net.ipv4.conf.${dev}.arp_announce=2
+    ip link set dev ${dev} up
+    ```
+*   Si avvia una tasklet di ascolto per i messaggi datagram broadcast ricevuti da
+    questa interfaccia di rete (con `skeleton_factory.start_datagram_system_listen`).
+*   Si avvia `neighborhood_mgr.start_monitor` con l'istanza
+    di `INeighborhoodNetworkInterface nic` memorizzata nella nuova istanza
+    di `N.PseudoNetworkInterface`;  
+    sulla chiamata di questo metodo, immediatamente il `neighborhood_mgr` genera
+    un IP linklocal e lo assegna a questa *NIC* e emette il
+    segnale `nic_address_set`. Di conseguenza... **TODO**
+*   **TODO** Si memorizzano i dati della pseudo-interfaccia di rete nelle
+    liste `if_list_dev`, `if_list_mac` e `if_list_linklocal`.
+
+Dopo si registra la funzione `safe_exit` come gestore dei segnali Posix di
+terminazione (`INT` e `TERM`), per fare in modo di uscire dal loop in cui
+adesso il programma entra.
+
+##### Ciclo eventi
+
+Dopo si entra nel main loop. In esso si gestiscono i vari segnali che i moduli
+nelle diverse tasklet emettono. Si veda la sezione [gestione segnali]().
+
+##### Operazioni finali
+
+Alla terminazione del programma,
+**TODO** si rimuovono tutte le identità di connettività che sono presenti
+al momento nel nodo...
+
+**TODO** A questo punto **deve** essere presente la sola identità principale...
+
+Dopo si chiama **TODO** `stop_rpc` su tutte le pseudo-interfacce di rete gestite.
+
+Dopo si rimuove il NeighborhoodManager (dalla variabile globale).
+
+Dopo si termina lo scheduler delle tasklet.
+
+#### Gestione segnali dai moduli
+
+Mettendosi in ascolto sui segnali emessi dai vari moduli l'applicazione coordina le funzionalità
+di questi.
+
+##### Segnali da NeighborhoodManager
+
+Per reagire ai segnali emessi dal modulo `Neighborhood` sono implementate delle
+funzioni nel file `neighborhood_signals.vala`.
+
+Il segnale `nic_address_set` è gestito nella funzione `neighborhood_nic_address_set`.  
+La funzione riceve un `N.N.INeighborhoodNetworkInterface` e l'indirizzo linklocal
+che gli è stato appena assegnato.  
+La funzione recupera l'istanza di `N.PseudoNetworkInterface` dal set `pseudonic_map`
+e valorizza i suoi membri `linklocal` e `st_listen_pathname`.  
+**TODO** Inoltre crea una istanza di `N.HandledNic` valorizzando tutti i dati in essa contenuti
+e la mette in `handlednic_map`.  
+Inoltre avvia in questo momento la tasklet in ascolto per i messaggi stream unicast
+ricevuti dall'indirizzo linklocal di cui sopra (con `skeleton_factory.start_stream_system_listen`).
+
 #### Altri aspetti (riorganizzare)
 
 Bisogna poter dare i comandi uno alla volta. Inoltre bisogna avere la possibilità
