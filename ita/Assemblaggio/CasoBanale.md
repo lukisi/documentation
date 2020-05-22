@@ -199,16 +199,21 @@ il codice semplicemente va in errore.
 Nel secondo caso la classe fa il suo lavoro usando il metodo `get_dispatcher_set`
 di `N.SkeletonFactory` passando il CallerInfo fornito da ZCD.
 
-Il metodo `get_dispatcher_set` dovrà restituire una lista di *skeleton* che saranno
-chiamati a eseguire una procedura remota come effetto del messaggio rilevato.  
+Il metodo `get_dispatcher_set` è usato per gestire i messaggi in datagram. Gli viene
+passata una istanza di `DatagramCallerInfo`. Dovrà restituire una lista di
+*skeleton* che saranno chiamati a eseguire una procedura remota come effetto
+del messaggio rilevato.  
 A seconda del tipo di CallerInfo, il metodo capisce se il messaggio è destinato
 a una identità o a un nodo. Inoltre capisce se il messaggio è destinato a qualcuno
 in questo sistema.
 
-*Implementazione attuale:* il pacchetto ha sicuramente come `source_id` un WholeNodeSourceID
-e come `broadcast_id` un EveryWholeNodeBroadcastID; altrimenti la tasklet che gestisce
-il pacchetto termina con `abort_tasklet`. Il metodo restituisce una lista con un
-unico *skeleton* che è il `NodeSkeleton node_skeleton`.
+*   Se il caller ha in `source_id` un `WholeNodeSourceID` e in `broadcast_id` un `EveryWholeNodeBroadcastID`:
+    *   Siccome i messaggi di questo tipo sono destinati sempre a tutti i nodi, semplicemente
+        restituisce in un set il proprio `node_skeleton`.
+*   Se il caller ha in `source_id` un `IdentityAwareSourceID` e in `broadcast_id` un `IdentityAwareBroadcastID`
+    e in `src_nic` un `NeighbourSrcNic` e in `listener` un `DatagramSystemListener`:
+    *   Questo evento non si verifica mai poiché non ci saranno archi. Il codice
+        semplicemente va in errore.
 
 * * *
 
@@ -231,6 +236,24 @@ una sola istanza che rappresenta il sistema. Ha il membro pubblico
 Restituisce con appositi getter i manager del modulo Neighborhood e
 del modulo Identities, che sono moduli di nodo. Quindi sono implementati
 i metodi `neighborhood_manager_getter` e `identity_manager_getter`.
+
+* * *
+
+Sempre nel file `rpc/skeleton_factory.vala`, la classe `IdentitySkeleton`
+è uno *skeleton* per i metodi remoti di identità.
+Ogni volta che serve, cioè in ricezione di un messaggio, viene costruita
+una nuova istanza passando al costruttore l'istanza di `IdentityData`.
+
+Restituisce con appositi getter i manager dei moduli di identità:
+`N.IQspnManagerSkeleton`, `N.IPeersManagerSkeleton`, `N.ICoordinatorManagerSkeleton`,
+`N.IHookingManagerSkeleton`, `N.IAndnaManagerSkeleton`.  
+È implementato il `qspn_manager_getter` che prevede una attesa di qualche istante
+se non è stato ancora costruito.  
+Non è ancora implementato il `peers_manager_getter`.  
+Non è ancora implementato il `coordinator_manager_getter`.  
+Non è ancora implementato il `hooking_manager_getter`.  
+Va ancora fatto in `ntkdrpc` quanto serve a produrre il metodo astratto `andna_manager_getter`. Dopo
+andrà implementato il `andna_manager_getter`.
 
 * * *
 
@@ -265,7 +288,7 @@ radice di tipo datagram sul medium system; cioè chiama la funzione
 `get_addr_datagram_system`.  
 Per comporre la stringa `send_pathname` prescritta da `ntkdrpc`, la classe
 `N.StubFactory` usa l'identificativo univoco del processo (che è memorizzato
-nella variabile globale `pid` nel file `system_ntkd.vala`) e il nome della
+nella variabile globale `pid` nel file `main.vala`) e il nome della
 pseudo interfaccia di rete, che viene preso dal membro `dev` dell'istanza di
 `N.N.INeighborhoodNetworkInterface` passata al metodo.
 
@@ -283,6 +306,19 @@ La classe `N.NeighborhoodManagerStubHolder` implementa l'interfaccia
 La classe `N.IdentityManagerStubHolder` implementa l'interfaccia
 `N.IIdentityManagerStub` a partire da uno stub radice.
 
+La classe `N.QspnManagerStubHolder` implementa l'interfaccia
+`N.IQspnManagerStub` a partire da uno stub radice.  
+In questa testsuite non sarà mai usata, poiché non si realizzano archi.
+
+La classe `N.QspnManagerStubBroadcastHolder` implementa l'interfaccia
+`N.IQspnManagerStub` a partire da una lista di stub radice.  
+In questa testsuite non sarà mai usata, poiché non si realizzano archi.
+
+La classe `N.QspnManagerStubVoid` implementa l'interfaccia
+`N.IQspnManagerStub` semplicemente ignorando i messaggi che gli sono passati.
+Infatti viene restituita al modulo `Qspn` quando questi chiama il metodo
+`i_qspn_get_broadcast` passando una lista di archi vuota.
+
 **TODO** altri moduli
 
 #### Argomenti al programma
@@ -299,6 +335,97 @@ a lui. **TODO**
 Si può passare un flag per far sì che il nodo rifiuti di passare richieste
 anonime mascherandole. **TODO**  
 
+#### Identità e archi-identità
+
+Nella classe `N.IdentityData` memorizziamo le informazioni relative a ogni identità
+assunta dal nodo corrente: una principale e 0 o più di connettività.  
+Fra queste informazioni ci sono i relativi archi-identità, rappresentati da istanze
+della classe `N.IdentityArc`.  
+Entrambe le classi sono nel file `main.vala`.
+
+Anche il modulo `Identities` ha fra i suoi compiti il mantenimento delle info relative
+ad ogni identità, ma usiamo anche questa classe per alcuni motivi:
+
+*   praticità nel ciclare fra le identità presenti; e.g. **TODO**
+*   memorizzazione di alcuni dati temporanei nelle fasi di aggiornamento delle
+    informazioni; e.g. **TODO**
+*   ...
+
+Ogni istanza di `N.IdentityData` quando viene creata riceve un `NodeID` e un
+identificativo locale numerico progressivo chiamato `local_identity_index`.
+
+Tutte le istanze che vengono create sono immediatamente messe nell hashmap
+`local_identities` indicizzate per il valore intero che costituisce il `NodeID`
+assegnato all'identità (dal modulo `Identities`).
+
+Il metodo helper `create_local_identity` nel file `main.vala` è usato per creare
+una istanza e metterla nel hashmap dopo aver verificato che non era già stata creata.
+
+Il metodo helper `find_local_identity` nel file `main.vala` è usato per cercare una
+istanza di cui si conosce il `NodeID`. Se esiste la restituisce altrimenti
+restituisce *null*.
+
+Il metodo helper `find_local_identity_by_index` nel file `main.vala` è usato per
+cercare una istanza di cui si conosce il `local_identity_index`. Se esiste la
+restituisce altrimenti restituisce *null*.
+
+Il metodo helper `remove_local_identity` nel file `main.vala` è usato per rimuovere
+una istanza dal hashmap dopo aver verificato che era in effetti presente.
+
+Ogni istanza di `N.IdentityData` memorizza una lista di archi-identità nel membro
+`identity_arcs`, rappresentati da istanze di `IdentityArc`.
+
+Ogni istanza di `N.IdentityData` può anche memorizzare:
+
+*   L'indirizzo Netsukuku come istanza `Naddr my_naddr`.
+*   Il fingerprint come istanza `Fingerprint my_fp`.
+*   I livelli come "identità di connettività" `int connectivity_from_level` e
+    `int connectivity_to_level`.
+*   L'identità da cui è derivata `weak IdentityData? copy_of_identity`.
+*   L'istanza `QspnManager qspn_mgr`.
+*   Un getter `bool main_id` dice se è la principale confrontando se stessa con la
+    variabile globale `IdentityData main_identity_data` sempre nel file `main.vala`.
+
+Alcuni metodi pubblici della classe `N.IdentityData` sono usati per registrare gli
+handler dei segnali che produce il modulo Qspn. Le implementazioni sono comunque
+funzioni esterne alla classe, per poterle raggruppare nel file `qspn_signals.vala`.
+
+Questi sono:
+
+*  `per_identity_qspn_arc_removed`,
+*  `per_identity_qspn_changed_fp`,
+*  `per_identity_qspn_changed_nodes_inside`,
+*  `per_identity_qspn_destination_added`,
+*  `per_identity_qspn_destination_removed`,
+*  `per_identity_qspn_gnode_splitted`,
+*  `per_identity_qspn_path_added`,
+*  `per_identity_qspn_path_changed`,
+*  `per_identity_qspn_path_removed`,
+*  `per_identity_qspn_presence_notified`,
+*  `per_identity_qspn_qspn_bootstrap_complete`,
+*  `per_identity_qspn_remove_identity`.
+
+* * *
+
+Ogni istanza di `N.IdentityArc` memorizza immediatamente:
+
+*   l'identità a cui è associata (come indice
+    `int local_identity_index`)
+*   l'arco su cui poggia (come passato al modulo Identites, cioè `IIdmgmtArc arc`)
+*   l'arco identità stesso (come ottenuto dal modulo Identites, cioè
+    `IIdmgmtIdentityArc id_arc`)
+
+L'identità è memorizzata in un `IdentityArc` come indice `int local_identity_index`.
+Questa classe ha un getter per risalire alla istanza
+di `IdentityData` che se viene invocato su una identità che non è più nell hashmap
+`local_identities` ha l'effetto di terminare la tasklet corrente.
+
+Ogni istanza può anche memorizzare:
+
+*   `string peer_mac`
+*   `string peer_linklocal`
+*   `QspnArc? qspn_arc`
+
 #### Routine main
 
 Operazioni nella funzione `main` del file `main.vala`.
@@ -307,27 +434,52 @@ Operazioni nella funzione `main` del file `main.vala`.
 
 Per prima cosa si fa il parsing delle opzioni date sulla linea di comando.
 
+La topologia fa valorizzare
+la variabile globale `ArrayList<int> gsizes`,
+la variabile globale `ArrayList<int> g_exp`,
+la variabile globale `int levels`
+e la variabile globale `ArrayList<int> hooking_epsilon`,
+nel file `main.vala`.  
+Se viene passato il primo indirizzo Netsukuku della prima identità, con questo
+viene subito valorizzato `ArrayList<int> naddr` che è locale nella funzione `main`;
+altrimenti resta per ora vuoto e verrà valorizzato in modo casuale dopo
+l'inizializzazione del generatore `PRNGen`.  
 Il PID finisce nella variabile globale `int pid` nel file `main.vala`.  
 La lista di interfacce finisce in `ArrayList<string> devs` che è locale nella
 funzione `main`.  
+Il livello della sottorete a gestione autonoma finisce nella variabile globale
+`int subnetlevel`.  
+Il flag di accettazione richieste anonime finisce nella variabile globale
+`bool accept_anonymous_requests`.  
+Il flag di rifiuto di mascheramento finisce nella variabile globale
+`bool no_anonymize`.
 
 Dopo si inizializza lo scheduler delle tasklet. Va nella variabile globale
 `ITasklet tasklet`.
 
 Dopo si inizializzano i singoli moduli (principalmente perché hanno al loro
-interno delle classi serializzabili da registrare) e si registrano le classi
-serializzabili che servono direttamente al programma.  
+interno delle classi serializzabili da registrare).  
 I moduli si inizializzano con il metodo statico `init` delle classi `NeighborhoodManager`,
-`IdentityManager`, `QspnManager` **TODO**, ...  
-Le classi serializzabili da registrare direttamente in `main` sono:
+`IdentityManager`, `QspnManager`, ...
+
+In particolare l'inizializzazione del modulo `QspnManager` serve anche a impostare
+dei parametri comuni a tutte le istanze di `QspnManager` (che saranno più di una nel
+singolo nodo). Questi sono stati memorizzati come costanti `max_paths`,
+`max_common_hops_ratio`, `arc_timeout`.
+
+Dopo si registrano le classi serializzabili che servono direttamente al programma.
+Queste sono:  
 `WholeNodeSourceID`, `WholeNodeUnicastID`, `EveryWholeNodeBroadcastID`, `NeighbourSrcNic`,
-`IdentityAwareSourceID` **TODO**, `IdentityAwareUnicastID` **TODO**, `IdentityAwareBroadcastID` **TODO**,
-`Naddr` **TODO**, `Fingerprint` **TODO**, `Cost` **TODO**, ...
+`IdentityAwareSourceID`, `IdentityAwareUnicastID`, `IdentityAwareBroadcastID`,
+`Naddr`, `Fingerprint`, `Cost`, ...
 
 Dopo si inizializza il generatore di numeri pseudo-casuali. Si usa come seed il PID.  
 Questa operazione si fa con il metodo statico `init_rngen` delle classi `PRNGen`,
 `NeighborhoodManager`,
-`IdentityManager`, `QspnManager` **TODO**, ...
+`IdentityManager`, `QspnManager`, ...
+
+Dopo, se non era valorizzato `naddr`, il primo indirizzo Netsukuku della prima identità,
+viene valorizzato in modo casuale nel range imposto dalla topologia.
 
 Dopo si inizializza un FakeCommandDispatcher. Va nella variabile globale
 `FakeCommandDispatcher fake_cm`.
@@ -388,13 +540,36 @@ Per ogni pseudo-interfaccia di rete da gestire si eseguono questi compiti:
 *   Si memorizzano i dati della pseudo-interfaccia di rete nelle
     liste `if_list_dev`, `if_list_mac` e `if_list_linklocal`.
 
-Dopo si crea una lista nella variabile globale `my_nodeid_list` che conterrà
-tutti gli identificativi delle identità in questo nodo.
-
 Dopo si istanzia il IdentityManager nella variabile globale `identity_mgr`.
 Esso è unico.
 
 Dopo si connettono i segnali del IdentityManager.
+
+Dopo si recupera dal `identity_mgr` l'identificativo `NodeID` della prima identità
+di questo nodo con il metodo `get_main_id`; si usa la variabile globale
+`next_local_identity_index` per assegnargli un indice (progressivo);
+si usa l'identificativo `NodeID` e l'indice per costruire una istanza di `IdentityData`
+e si memorizza questa nel hashmap `local_identities`.  
+Si memorizza temporaneamente questa istanza anche nella variabile locale `first_identity_data`.
+
+Dopo si prepara nel membro `my_naddr` di `first_identity_data` una istanza di `N.Naddr` che
+rappresenta il primo indirizzo Netsukuku della prima identità; e nel membro `my_fp` una istanza
+di `N.Fingerprint` che rappresenta il fingerprint di questo nodo/identità/g-nodo di livello 0.  
+Queste info vengono anche prodotte a video.
+
+Dopo si crea la prima istanza di QspnManager nel membro `qspn_mgr` di `first_identity_data`.
+Questa viene creata con il costruttore `create_net`, poiché la prima identità nel nodo viene
+a formare una nuova rete. Oltre a passare l'indirizzo e il fingerprint, a questo costruttore
+viene passata una nuova istanza di `N.QspnStubFactory` costruita sulla `first_identity_data`.
+
+Dopo si connettono i segnali di questa istanza di QspnManager ai metodi della
+istanza `first_identity_data`, di modo che il segnale possa essere associato alla
+corretta identità nel nodo.
+
+Dopo si attende che venga emesso e gestito il segnale di `bootstrap_complete` di questa
+istanza di QspnManager; questo dovrebbe avvenire immediatamente.
+
+Dopo si può eliminare il riferimento nella variabile globale `first_identity_data`.
 
 Dopo si registra la funzione `safe_exit` come gestore dei segnali Posix di
 terminazione (`INT` e `TERM`), per fare in modo di uscire dal loop in cui
@@ -408,10 +583,22 @@ nelle diverse tasklet emettono. Si veda la sezione [gestione segnali]().
 ##### Operazioni finali
 
 Alla terminazione del programma,
-**TODO** si rimuovono tutte le identità di connettività che sono presenti
-al momento nel nodo...
+si rimuovono tutte le identità di connettività che sono presenti al momento nel nodo.  
+Per ognuna di esse:  
+si chiama il metodo `destroy` della relativa istanza di QspnManager;  
+si sconnettono dai segnali di questa istanza di QspnManager i relativi gestori;  
+si chiama il metodo `stop_operations` della relativa istanza di QspnManager;  
+si rimuove l'istanza di IdentityData dalla hashmap `local_identities` con il
+metodo helper `remove_local_identity`.
 
-**TODO** A questo punto **deve** essere presente la sola identità principale...
+A questo punto **deve** essere presente la sola identità principale.  
+Essa viene memorizzata temporaneamente nella variabile locale `last_identity_data`.  
+Si chiama il metodo `destroy` della relativa istanza di QspnManager.  
+Si sconnettono dai segnali di questa istanza di QspnManager i relativi gestori.  
+Si chiama il metodo `stop_operations` della relativa istanza di QspnManager.  
+Si rimuove l'istanza di IdentityData dalla hashmap `local_identities` con il
+metodo helper `remove_local_identity`.  
+Dopo si può eliminare il riferimento nella variabile globale `last_identity_data`.
 
 Dopo si chiama `stop_rpc` su tutte le pseudo-interfacce di rete gestite.
 
@@ -481,6 +668,27 @@ Il segnale `identity_arc_removed` è gestito nella funzione
 `identities_identity_arc_removed`.
 
 Il segnale `arc_removed` è gestito nella funzione `identities_arc_removed`.
+
+##### Segnali da QspnManager
+
+Per reagire ai segnali emessi dal modulo `Qspn` sono implementate delle
+funzioni nel file `qspn_signals.vala`.
+
+Essi sono:
+`per_identity_qspn_arc_removed`,
+`per_identity_qspn_changed_fp`,
+`per_identity_qspn_changed_nodes_inside`,
+`per_identity_qspn_destination_added`,
+`per_identity_qspn_destination_removed`,
+`per_identity_qspn_gnode_splitted`,
+`per_identity_qspn_path_added`,
+`per_identity_qspn_path_changed`,
+`per_identity_qspn_path_removed`,
+`per_identity_qspn_presence_notified`,
+`per_identity_qspn_qspn_bootstrap_complete`,
+`per_identity_qspn_remove_identity`.
+
+**TODO**
 
 #### Integrazione modulo Neighborhood
 
@@ -686,6 +894,126 @@ una istanza di questa classe deve rappresentare un arco tra due nodi diretti vic
 Poiché questa testsuite non prevede la costituzione di archi, questa classe non è
 implementata.
 
+#### Integrazione modulo Qspn
+
+Bisogna integrare le istanze di `N.Q.QspnManager` che si creano al momento che nasce
+una nuova identità e muoiono alla sua terminazione.
+
+Alcune classi dovranno essere prodotte dal programma per implementare le interfacce
+definite nel modulo `Qspn`. Tali classi sono definite nel file
+`qspn_helpers.vala`.
+
+I segnali emessi dal modulo `Qspn` saranno gestiti da funzioni che sono definite
+nel file `qspn_signals.vala`.
+
+* * *
+
+L'interfaccia `N.Q.IQspnStubFactory` è implementata nella classe
+`N.QspnStubFactory`.
+
+Una istanza di questa classe è collegata a una identità assunta in questo nodo.
+Nella costruzione di questa istanza viene passato l'identificativo
+`int local_identity_index`; questa classe ha un getter per risalire alla istanza di
+`IdentityData` che se viene invocato su una identità che non è più nella hashmap
+`local_identities` ha l'effetto di terminare la tasklet corrente.
+
+Quando il modulo `Qspn` chiama `i_qspn_get_broadcast` gli passa una lista di archi
+`List<IQspnArc> arcs`, e opzionalmente una istanza di `IQspnMissingArcHandler` per
+gestire gli archi che non comunicano l'avvenuta ricezione del messaggio
+broadcast.  
+La classe suddetta deve restituire uno stub per comunicare in broadcast con vari
+archi. In questa testsuite non si realizzano archi, perciò il codice va semplicemente
+in errore se la lista che riceve come argomento contiene qualche arco. Se invece la
+lista è vuota restituisce semplicemente una nuova istanza di `QspnManagerStubVoid`.
+
+Quando il modulo `Qspn` chiama `i_qspn_get_tcp` di `N.Q.IQspnStubFactory` gli passa
+un arco `IQspnArc arc`, e un booleano `wait_reply`.  
+In questa testsuite non si realizzano archi, perciò il codice va semplicemente
+in errore.
+
+* * *
+
+L'interfaccia `N.Q.IQspnThresholdCalculator` è implementata nella classe
+`N.ThresholdCalculator`.
+
+Quando il modulo `Qspn` chiama `i_qspn_calculate_threshold` gli passa
+due istanze di `IQspnNodePath`. Questi percorsi calcolati dal modulo Qspn hanno
+ognuno un *costo* che la classe suddetta sa tradurre in microsecondi. La classe
+moltiplica la somma dei costi per 50 e la converte in millisecondi. Restituisce
+questo valore.
+
+* * *
+
+L'interfaccia `N.Q.IQspnArc` è implementata nella classe `N.QspnArc`.  
+Ne viene realizzato lo scheletro, sebbene in questa testsuite non
+si realizzano archi, perciò il codice non ne farà mai uso.
+
+Una istanza di questa classe rappresenta un arco-identità. Viene costruita
+passando una istanza di `IdentityArc`.  
+Dalla istanza di `IdentityArc` si accede alla istanza di `N.N.INeighborhoodArc`
+prodotta dal modulo Neighborhood che rappresenta l'arco-nodo; attraverso la quale si
+può accedere al relativo costo.  
+Nel costruttore di `N.QspnArc` si sceglie un intero casuale da 0 a 1000 e lo si
+memorizza. Questo viene aggiunto al costo dell'arco-nodo quando viene
+richiesto il costo di questo arco-identità. Questa piccola (insignificante)
+variazione renda molto improbabile ottenere due path distinti con
+costo identico.
+
+Quando il modulo `Qspn` chiama `i_qspn_get_cost` la classe suddetta deve
+restituire una istanza di `N.Cost` col valore ottenuto come detto prima.  
+In realtà l'implementazione in questa testsuite va semplicemente in errore.
+
+Quando il modulo `Qspn` chiama `i_qspn_equals` la classe suddetta deve
+restituire *TRUE* solo se si tratta di due `N.QspnArc` costruite sulla stessa
+istanza di `IdentityArc`.  
+In realtà l'implementazione in questa testsuite va semplicemente in errore.
+
+Quando il modulo `Qspn` chiama `i_qspn_comes_from` gli passa una istanza di
+`CallerInfo`. La classe suddetta usa un metodo di `skeleton_factory` per
+vedere se si tratta della stessa istanza di `IdentityArc`.  
+In realtà l'implementazione in questa testsuite va semplicemente in errore.
+
+#### Serializzabili
+
+Nel file `serializables.vala` sono implementate alcune classi serializzabili.  
+Molte classi serializzabili usate dai vari moduli sono implementate all'interno dei
+moduli stessi. Ma alcune devono essere implementate nel programma.
+
+##### richieste da ntkdrpc
+
+La classe `N.WholeNodeSourceID` implementa l'interfaccia `N.ISourceID`.
+Contiene una istanza di `NeighborhoodNodeID id` che rappresenta il
+mittente.
+
+La classe `N.WholeNodeUnicastID` implementa l'interfaccia `N.IUnicastID`.
+Contiene una istanza di `NeighborhoodNodeID neighbour_id` che rappresenta
+il vicino destinatario.
+
+La classe `N.EveryWholeNodeBroadcastID` implementa l'interfaccia `N.IBroadcastID`.
+Essa non contiene dati; rappresenta infatti chiunque riceva
+il messaggio.
+
+La classe `N.NeighbourSrcNic` implementa l'interfaccia `N.ISrcNic`.
+Contiene una istanza di `string mac` che identifica la specifica
+interfaccia di rete del mittente.
+
+La classe `N.IdentityAwareSourceID` implementa l'interfaccia `N.ISourceID`.
+Contiene una istanza di `NodeID id` che rappresenta il mittente.
+
+La classe `N.IdentityAwareUnicastID` implementa l'interfaccia `N.IUnicastID`.
+Contiene una istanza di `NodeID id` che rappresenta il vicino destinatario.
+
+La classe `N.IdentityAwareBroadcastID` implementa l'interfaccia `N.IBroadcastID`.
+Contiene una lista `List<NodeID> id_set` che identifica i destinatari.
+
+##### richieste da Qspn
+
+La classe `N.Naddr` implementa l'interfaccia `N.Q.IQspnMyNaddr`.
+
+La classe `N.Cost` implementa l'interfaccia `N.Q.IQspnCost`.
+
+La classe `N.Fingerprint` implementa l'interfaccia `N.Q.IQspnFingerprint`.
+
 #### Altri aspetti (riorganizzare)
 
 Bisogna poter dare i comandi uno alla volta. Inoltre bisogna avere la possibilità
@@ -693,20 +1021,3 @@ di dare una serie di comandi senza permettere che altre tasklet possano introdur
 altri in mezzo a questi.  
 Questo compito è affidato ad un oggetto detto *commander*.  
 Vedere il file `commander.vala` e `fake_command_dispatcher.vala`.
-
-* * *
-
-Nel file `serializables.vala` sono implementate le classi serializzabili che servono per comunicare
-con il protocollo ZCD e i metodi definiti nel pacchetto `ntkdrpc`.
-
-La classe `N.WholeNodeSourceID` implementa l'interfaccia `N.ISourceID` fornita da `ntkdrpc`. Contiene una
-istanza di `NeighborhoodNodeID id` che rappresenta il mittente.
-
-La classe `N.WholeNodeUnicastID` implementa l'interfaccia `N.IUnicastID` fornita da `ntkdrpc`. Contiene una
-istanza di `NeighborhoodNodeID neighbour_id` che rappresenta il vicino destinatario.
-
-La classe `N.EveryWholeNodeBroadcastID` implementa l'interfaccia `N.IBroadcastID` fornita da `ntkdrpc`. Essa
-non contiene dati; rappresenta infatti chiunque riceva il messaggio.
-
-La classe `N.NeighbourSrcNic` implementa l'interfaccia `N.ISrcNic` fornita da `ntkdrpc`. Contiene una
-istanza di `string mac` che identifica la specifica interfaccia di rete del mittente.

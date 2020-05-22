@@ -988,7 +988,6 @@ La classe `N.IdentityAwareUnicastID` implementa l'interfaccia `N.IUnicastID` for
 istanza di `NodeID id` che rappresenta il vicino destinatario.
 
 La classe `N.IdentityAwareBroadcastID` implementa l'interfaccia `N.IBroadcastID` fornita da `ntkdrpc`. Contiene una
-non contiene dati; rappresenta infatti chiunque riceva il messaggio.
 lista `List<NodeID> id_set` che identifica i destinatari.
 
 * * *
