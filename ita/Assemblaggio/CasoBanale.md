@@ -98,6 +98,20 @@ Questo comporta alcune conseguenze:
 
 In una classe memorizziamo le informazioni relative a una interfaccia di rete che
 il programma deve gestire.  
+Vedere la classe `N.HandledNic` nel file `main.vala`.  
+I dati memorizzati includono `dev`, `mac`, `linklocal`, `INeighborhoodNetworkInterface nic`.
+
+In una hashmap memorizziamo le istanze di `N.HandledNic` di ogni interfaccia di rete che il
+programma deve gestire, indicizzate per il nome `dev`.  
+Vedere la variabile globale `handlednic_map` nel file `main.vala`.
+
+Gli oggetti in `handlednic_map` servono al programma in quanto coordina le operazioni
+dei vari moduli.
+
+* * *
+
+In una classe memorizziamo le informazioni relative a una interfaccia di rete che
+il programma deve gestire.  
 Vedere la classe `N.PseudoNetworkInterface` nel file `main.vala`. I dati memorizzati
 includono `dev`, `mac`, `linklocal`, `INeighborhoodNetworkInterface nic` e anche
 informazioni legate al fatto che si tratta di pseudo-interfacce di rete simulate da
@@ -107,6 +121,10 @@ In una hashmap memorizziamo le istanze di `N.PseudoNetworkInterface` di ogni
 interfaccia di rete che il programma deve gestire, indicizzate per il nome
 `dev`.  
 Vedere la variabile globale `pseudonic_map` nel file `main.vala`.
+
+Gli oggetti in `pseudonic_map` servono solo a questa specifica
+testsuite in quanto deve fornire i parametri necessari ai metodi di ZCD a supporto
+delle comunicazioni nel medium *system*.
 
 * * *
 
@@ -205,12 +223,14 @@ il codice semplicemente restituisce *null*.
 
 * * *
 
-Il `NodeSkeleton node_skeleton` è uno *skeleton* per i metodi remoti di nodo. Ci sarà
+Sempre nel file `rpc/skeleton_factory.vala`, il `NodeSkeleton node_skeleton`
+è uno *skeleton* per i metodi remoti di nodo. Ci sarà
 una sola istanza che rappresenta il sistema. Ha il membro pubblico
 `NeighborhoodNodeID id` che contiene il suo identificativo di nodo.
 
-*Implementazione attuale:* l'unico manager che può restituire è il Neighborhood,
-implementa cioè solo `neighborhood_manager_getter`.
+Restituisce con appositi getter i manager del modulo Neighborhood e
+del modulo Identities, che sono moduli di nodo. Quindi sono implementati
+i metodi `neighborhood_manager_getter` e `identity_manager_getter`.
 
 * * *
 
@@ -334,8 +354,15 @@ membro `whole_node_id` di `skeleton_factory`.
 
 Dopo si connettono i segnali del NeighborhoodManager.
 
-Dopo si prepara una hashmap (var globale) `pseudonic_map` per le interfacce di rete da gestire
-rappresentate da istanze di `N.PseudoNetworkInterface`.
+Dopo si prepara una hashmap (var globale) `handlednic_map` per le interfacce di rete
+da gestire, rappresentate da istanze di `N.HandledNic`.
+Delle stesse interfacce di rete si prepara anche una hashmap (var globale)
+`pseudonic_map` rappresentate da istanze di `N.PseudoNetworkInterface`.
+
+Delle stesse interfacce di rete si prepara anche una lista (var locale)
+`if_list_dev` per i nomi, una lista `if_list_mac` per i MAC e una lista
+`if_list_linklocal` per gli indirizzi link-local: queste liste
+serviranno nella costruzione del IdentityManager.
 
 Per ogni pseudo-interfaccia di rete da gestire si eseguono questi compiti:
 
@@ -352,12 +379,22 @@ Per ogni pseudo-interfaccia di rete da gestire si eseguono questi compiti:
     questa interfaccia di rete (con `skeleton_factory.start_datagram_system_listen`).
 *   Si avvia `neighborhood_mgr.start_monitor` con l'istanza
     di `INeighborhoodNetworkInterface nic` memorizzata nella nuova istanza
-    di `N.PseudoNetworkInterface`;  
-    sulla chiamata di questo metodo, immediatamente il `neighborhood_mgr` genera
+    di `N.PseudoNetworkInterface`.  
+    Sulla chiamata di questo metodo, immediatamente il `neighborhood_mgr` genera
     un IP linklocal e lo assegna a questa *NIC* e emette il
-    segnale `nic_address_set`. Di conseguenza... **TODO**
-*   **TODO** Si memorizzano i dati della pseudo-interfaccia di rete nelle
+    segnale `nic_address_set`. Di conseguenza (come detto nella sezione sulla
+    gestione dei segnali) viene creata la relativa istanza di `N.HandledNic`
+    nella `handlednic_map` e viene valorizzato il campo `linklocal`.
+*   Si memorizzano i dati della pseudo-interfaccia di rete nelle
     liste `if_list_dev`, `if_list_mac` e `if_list_linklocal`.
+
+Dopo si crea una lista nella variabile globale `my_nodeid_list` che conterrà
+tutti gli identificativi delle identità in questo nodo.
+
+Dopo si istanzia il IdentityManager nella variabile globale `identity_mgr`.
+Esso è unico.
+
+Dopo si connettono i segnali del IdentityManager.
 
 Dopo si registra la funzione `safe_exit` come gestore dei segnali Posix di
 terminazione (`INT` e `TERM`), per fare in modo di uscire dal loop in cui
@@ -376,7 +413,7 @@ al momento nel nodo...
 
 **TODO** A questo punto **deve** essere presente la sola identità principale...
 
-Dopo si chiama **TODO** `stop_rpc` su tutte le pseudo-interfacce di rete gestite.
+Dopo si chiama `stop_rpc` su tutte le pseudo-interfacce di rete gestite.
 
 Dopo si rimuove il NeighborhoodManager (dalla variabile globale).
 
@@ -397,10 +434,15 @@ La funzione riceve un `N.N.INeighborhoodNetworkInterface` e l'indirizzo linkloca
 che gli è stato appena assegnato.  
 La funzione recupera l'istanza di `N.PseudoNetworkInterface` dal set `pseudonic_map`
 e valorizza i suoi membri `linklocal` e `st_listen_pathname`.  
-**TODO** Inoltre crea una istanza di `N.HandledNic` valorizzando tutti i dati in essa contenuti
-e la mette in `handlednic_map`.  
+Inoltre crea una istanza di `N.HandledNic` valorizzando tutti i dati in essa contenuti,
+tra i quali il `linklocal`, e la mette in `handlednic_map`.  
 Inoltre avvia in questo momento la tasklet in ascolto per i messaggi stream unicast
 ricevuti dall'indirizzo linklocal di cui sopra (con `skeleton_factory.start_stream_system_listen`).
+
+Gli oggetti in `handlednic_map` servono al programma in quanto coordina le operazioni
+dei vari moduli. Gli oggetti in `pseudonic_map` servono invece solo a questa specifica
+testsuite in quanto deve fornire i parametri necessari ai metodi di ZCD a supporto
+delle comunicazioni nel medium *system*.
 
 Poiché questa testsuite non prevede la costituzione di archi,
 non è necessario gestire i segnali `neighborhood_arc_*`.
@@ -414,14 +456,13 @@ Il segnale `arc_removing` è gestito nella funzione `neighborhood_arc_removing`.
 Il segnale `arc_removed` è gestito nella funzione `neighborhood_arc_removed`.
 
 Il segnale `nic_address_unset` è gestito nella funzione
-`neighborhood_nic_address_unset`.
+`neighborhood_nic_address_unset`. Al momento non fa nulla eccetto scrivere
+delle informazioni.
 
 ##### Segnali da IdentityManager
 
 Per reagire ai segnali emessi dal modulo `Identities` sono implementate delle
 funzioni nel file `identities_signals.vala`.
-
-**TODO** per il momento il file è vuoto e non dà errori di compilazione.
 
 Poiché questa testsuite non prevede la costituzione di archi,
 non è necessario gestire i segnali `identity_arc_*`, né il segnale
