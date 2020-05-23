@@ -293,7 +293,15 @@ pseudo interfaccia di rete, che viene preso dal membro `dev` dell'istanza di
 `N.N.INeighborhoodNetworkInterface` passata al metodo.
 
 La presente testsuite non necessiterà mai di uno stub per inviare messaggi
-di tipo unicast.
+di tipo unicast.  
+La funzione `get_stub_whole_node_unicast` è stata riportata nel file come commento.  
+La funzione `get_stub_identity_aware_unicast_from_ia` è stata riportata nel file come
+commento.
+
+La presente testsuite non necessiterà mai di uno stub per inviare messaggi
+di tipo broadcast verso un modulo di identità.  
+La funzione `get_stub_identity_aware_broadcast` e altre a corredo sono
+state riportate nel file come commento.
 
 * * *
 
@@ -351,15 +359,14 @@ ad ogni identità, ma usiamo anche questa classe per alcuni motivi:
     informazioni; e.g. **TODO**
 *   ...
 
-Ogni istanza di `N.IdentityData` quando viene creata riceve un `NodeID` e un
-identificativo locale numerico progressivo chiamato `local_identity_index`.
-
-Tutte le istanze che vengono create sono immediatamente messe nell hashmap
-`local_identities` indicizzate per il valore intero che costituisce il `NodeID`
-assegnato all'identità (dal modulo `Identities`).
-
-Il metodo helper `create_local_identity` nel file `main.vala` è usato per creare
-una istanza e metterla nel hashmap dopo aver verificato che non era già stata creata.
+La creazione di una istanza di `N.IdentityData` si fa chiamando il metodo
+helper `find_or_create_local_identity` nel file `main.vala` e passando
+il `NodeID` che è stato assegnato all'identità (dal modulo `Identities`).  
+Il metodo usa la variabile globale `next_local_identity_index` per assegnare alla
+nuova istanza un identificativo locale numerico progressivo chiamato
+`local_identity_index`. Poi mette la nuova istanza nell hashmap `local_identities`
+indicizzate per il valore intero che costituisce il `NodeID`.  
+L'istanza di `N.IdentityData` ha come membri `nodeid` e `local_identity_index`.
 
 Il metodo helper `find_local_identity` nel file `main.vala` è usato per cercare una
 istanza di cui si conosce il `NodeID`. Se esiste la restituisce altrimenti
@@ -385,6 +392,10 @@ Ogni istanza di `N.IdentityData` può anche memorizzare:
 *   L'istanza `QspnManager qspn_mgr`.
 *   Un getter `bool main_id` dice se è la principale confrontando se stessa con la
     variabile globale `IdentityData main_identity_data` sempre nel file `main.vala`.
+*   L'insieme degli indirizzi IP pubblici propri.
+*   L'insieme degli indirizzi IP pubblici come destinazioni.
+*   Il network namespace (in realtà lo si chiede di volta in volta al IdentityManager)
+    in cui si trova a operare.
 
 Alcuni metodi pubblici della classe `N.IdentityData` sono usati per registrare gli
 handler dei segnali che produce il modulo Qspn. Le implementazioni sono comunque
@@ -425,6 +436,7 @@ Ogni istanza può anche memorizzare:
 *   `string peer_mac`
 *   `string peer_linklocal`
 *   `QspnArc? qspn_arc`
+*   `int64? network_id` - identifica la rete in cui esiste il peer.
 
 #### Routine main
 
@@ -481,7 +493,8 @@ Questa operazione si fa con il metodo statico `init_rngen` delle classi `PRNGen`
 Dopo, se non era valorizzato `naddr`, il primo indirizzo Netsukuku della prima identità,
 viene valorizzato in modo casuale nel range imposto dalla topologia.
 
-Dopo si inizializza un FakeCommandDispatcher. Va nella variabile globale
+Dopo si inizializza il *commander* e il *tn*.  
+In particolare il commander è un FakeCommandDispatcher. Va nella variabile globale
 `FakeCommandDispatcher fake_cm`.
 
 Dopo si passa lo scheduler delle tasklet alla libreria `ntkdrpc`, chiamandone la funzione
@@ -687,6 +700,10 @@ Essi sono:
 `per_identity_qspn_presence_notified`,
 `per_identity_qspn_qspn_bootstrap_complete`,
 `per_identity_qspn_remove_identity`.
+
+Alla segnalazione di `bootstrap_complete` o di variazioni alle mappe
+vengono eseguiti dei comandi `ip` per mezzo di chiamate a funzioni
+nel namespace `UpdateGraph`.
 
 **TODO**
 
@@ -949,7 +966,8 @@ Ne viene realizzato lo scheletro, sebbene in questa testsuite non
 si realizzano archi, perciò il codice non ne farà mai uso.
 
 Una istanza di questa classe rappresenta un arco-identità. Viene costruita
-passando una istanza di `IdentityArc`.  
+passando una istanza di `IdentityArc`, il NodeID sorgente (la nostra identità)
+e quello destinazione.  
 Dalla istanza di `IdentityArc` si accede alla istanza di `N.N.INeighborhoodArc`
 prodotta dal modulo Neighborhood che rappresenta l'arco-nodo; attraverso la quale si
 può accedere al relativo costo.  
@@ -1021,3 +1039,50 @@ di dare una serie di comandi senza permettere che altre tasklet possano introdur
 altri in mezzo a questi.  
 Questo compito è affidato ad un oggetto detto *commander*.  
 Vedere il file `commander.vala` e `fake_command_dispatcher.vala`.
+
+I comandi `ip`, in particolare, vengono eseguiti usando il *commander* in
+collaborazione con un oggetto `TableNames tn`.  
+Vedere il file `table_names.vala`.
+
+***
+
+Esistono i file `enter_network.vala` e `migrate.vala`
+che per il momento non servono in questa testsuite.
+
+Sono lasciati per riferimento futuro, ma non sono inclusi nel Makefile.
+
+***
+
+Ci sono delle funzioni nel namespace `Netsukuku.IPCompute`
+attraverso le quali per una identità nel nodo corrente vengono computati gli
+indirizzi IP pubblici propri e delle possibili destinazioni da mettere nelle
+tabelle di routing. La logica dietro queste funzioni si può comprendere leggendo il
+documento [IndirizziIP](../DemoneNTKD/IndirizziIP.md).
+
+Ci sono delle funzioni nel namespace `Netsukuku.IpCommands`
+attraverso le quali per una identità nel nodo corrente vengono dati i vari
+comandi `ip` che servono a inizializzare o aggiornare le tabelle di routing.
+
+Ci sono delle funzioni nel namespace `Netsukuku.UpdateGraph`
+attraverso le quali per una identità nel nodo corrente vengono dati i vari
+comandi `ip` che servono ad aggiornare le tabelle di routing per variazioni
+alle mappe.
+
+Quando si entra in una rete esistente (una nuova identità nasce e una
+vecchia identità diventa di connettività) nelle funzioni del file enter_network.vala:
+
+*   Si chiamano alcune funzioni di IpCompute:
+    *   si chiama IpCompute.new_main_id per la nuova identità (se main)
+    *   si chiama IpCompute.new_id per la nuova identità
+    *   si chiama IpCompute.gone_connectivity_id per la vecchia identità
+*   Si chiamano alcune funzioni di IpCommands:
+    *   si chiama IpCommands.gone_connectivity per la vecchia identità
+    *   si chiama IpCommands.main_dup oppure IpCommands.connectivity_dup per la nuova identità
+    *   dopo un bel po' si chiama IpCommands.connectivity_stop per la vecchia identità
+
+Quando il QspnManager (di una identità) segnala bootstrapcomplete o variazioni
+alle mappe, nelle funzioni del file qspn_signals.vala:
+
+*   Si chiama UpdateGraph.update_destination:
+    *   Questa chiama IpCommands.map_update.
+
