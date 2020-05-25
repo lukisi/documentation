@@ -207,11 +207,13 @@ A seconda del tipo di CallerInfo, il metodo capisce se il messaggio è destinato
 a una identità o a un nodo. Inoltre capisce se il messaggio è destinato a qualcuno
 in questo sistema.
 
-*   Se il caller ha in `source_id` un `WholeNodeSourceID` e in `broadcast_id` un `EveryWholeNodeBroadcastID`:
-    *   Siccome i messaggi di questo tipo sono destinati sempre a tutti i nodi, semplicemente
-        restituisce in un set il proprio `node_skeleton`.
-*   Se il caller ha in `source_id` un `IdentityAwareSourceID` e in `broadcast_id` un `IdentityAwareBroadcastID`
-    e in `src_nic` un `NeighbourSrcNic` e in `listener` un `DatagramSystemListener`:
+*   Se il caller ha in `source_id` un `WholeNodeSourceID` e in `broadcast_id` un
+    `EveryWholeNodeBroadcastID`:
+    *   Siccome i messaggi di questo tipo sono destinati sempre a tutti i nodi,
+        semplicemente restituisce in un set il proprio `node_skeleton`.
+*   Se il caller ha in `source_id` un `IdentityAwareSourceID` e in `broadcast_id`
+    un `IdentityAwareBroadcastID` e in `src_nic` un `NeighbourSrcNic` e
+    in `listener` un `DatagramSystemListener`:
     *   Questo evento non si verifica mai poiché non ci saranno archi. Il codice
         semplicemente va in errore.
 
@@ -331,22 +333,21 @@ Infatti viene restituita al modulo `Qspn` quando questi chiama il metodo
 
 #### Argomenti al programma
 
-Si può passare la topologia della rete (il default è 1,1,1,2). **TODO**  
-Si può passare il primo indirizzo Netsukuku della prima identità. **TODO**  
+Si può passare la topologia della rete (il default è 1,1,1,2).  
+Si può passare il primo indirizzo Netsukuku della prima identità.  
 Si deve passare un PID per identificare un processo che simula un nodo in una
 testsuite.  
 Si deve passare una lista di pseudo-interfacce di rete da gestire.  
-Si può passare una lista di compiti (tasks) da fare in un dato momento. **TODO**  
-Si può passare il livello (di default 0) della sottorete a gestione autonoma. **TODO**  
+Si può passare il livello (di default 0) della sottorete a gestione autonoma.  
 Si può passare un flag per far sì che il nodo accetti richieste anonime dirette
-a lui. **TODO**  
+a lui.  
 Si può passare un flag per far sì che il nodo rifiuti di passare richieste
-anonime mascherandole. **TODO**  
+anonime mascherandole.
 
 #### Identità e archi-identità
 
 Nella classe `N.IdentityData` memorizziamo le informazioni relative a ogni identità
-assunta dal nodo corrente: una principale e 0 o più di connettività.  
+assunta dal nodo corrente: una principale e zero o più di connettività.  
 Fra queste informazioni ci sono i relativi archi-identità, rappresentati da istanze
 della classe `N.IdentityArc`.  
 Entrambe le classi sono nel file `main.vala`.
@@ -378,6 +379,9 @@ restituisce altrimenti restituisce *null*.
 
 Il metodo helper `remove_local_identity` nel file `main.vala` è usato per rimuovere
 una istanza dal hashmap dopo aver verificato che era in effetti presente.
+
+La variabile globale `main_identity_data` nel file `main.vala` identifica l'identità
+principale.
 
 Ogni istanza di `N.IdentityData` memorizza una lista di archi-identità nel membro
 `identity_arcs`, rappresentati da istanze di `IdentityArc`.
@@ -559,11 +563,14 @@ Esso è unico.
 Dopo si connettono i segnali del IdentityManager.
 
 Dopo si recupera dal `identity_mgr` l'identificativo `NodeID` della prima identità
-di questo nodo con il metodo `get_main_id`; si usa la variabile globale
-`next_local_identity_index` per assegnargli un indice (progressivo);
-si usa l'identificativo `NodeID` e l'indice per costruire una istanza di `IdentityData`
-e si memorizza questa nel hashmap `local_identities`.  
-Si memorizza temporaneamente questa istanza anche nella variabile locale `first_identity_data`.
+di questo nodo con il metodo `get_main_id`; si chiama la funzione
+`find_or_create_local_identity` per costruire una istanza di `IdentityData`
+e memorizzarla nel hashmap `local_identities` con il prossimo indice
+univoco progressivo.  
+Si memorizza questa identità anche nella variabile globale `main_identity_data`
+poiché è l'identità principale.  
+Si memorizza temporaneamente questa istanza anche nella variabile locale
+`first_identity_data`.
 
 Dopo si prepara nel membro `my_naddr` di `first_identity_data` una istanza di `N.Naddr` che
 rappresenta il primo indirizzo Netsukuku della prima identità; e nel membro `my_fp` una istanza
