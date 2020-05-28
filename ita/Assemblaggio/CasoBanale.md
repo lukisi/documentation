@@ -422,6 +422,16 @@ Questi sono:
 
 * * *
 
+Le istanze di `N.IdentityArc` che rappresentano gli archi-identità, come detto sopra,
+sono memorizzate come liste nel membro `identity_arcs` dell'istanza di
+`N.IdentityData` a cui appartengono.
+
+Le funzioni `find_identity_arc` e `find_identity_arc_by_peer_nodeid` facilitano
+il recupero di una istanza di `N.IdentityArc` partendo dall'arco-identità come
+restituito dal modulo Identities (cioè da una istanza di
+`IIdmgmtIdentityArc id_arc`) oppure dalle informazioni note al programma (cioè
+tramite `IdentityData identity_data`, `IIdmgmtArc arc`, `NodeID peer_nodeid`).
+
 Ogni istanza di `N.IdentityArc` memorizza immediatamente:
 
 *   l'identità a cui è associata (come indice
@@ -577,6 +587,12 @@ rappresenta il primo indirizzo Netsukuku della prima identità; e nel membro `my
 di `N.Fingerprint` che rappresenta il fingerprint di questo nodo/identità/g-nodo di livello 0.  
 Queste info vengono anche prodotte a video.
 
+Dopo si chiamano alcune funzioni di IpCompute e di IpCommands:
+
+*   si chiama `IpCompute.new_main_id` per la prima identità;
+*   si chiama `IpCompute.new_id` per la prima identità;
+*   si chiama `IpCommands.main_start` per la prima identità.
+
 Dopo si crea la prima istanza di QspnManager nel membro `qspn_mgr` di `first_identity_data`.
 Questa viene creata con il costruttore `create_net`, poiché la prima identità nel nodo viene
 a formare una nuova rete. Oltre a passare l'indirizzo e il fingerprint, a questo costruttore
@@ -604,18 +620,23 @@ nelle diverse tasklet emettono. Si veda la sezione [gestione segnali]().
 
 Alla terminazione del programma,
 si rimuovono tutte le identità di connettività che sono presenti al momento nel nodo.  
-Per ognuna di esse:  
-si chiama il metodo `destroy` della relativa istanza di QspnManager;  
-si sconnettono dai segnali di questa istanza di QspnManager i relativi gestori;  
-si chiama il metodo `stop_operations` della relativa istanza di QspnManager;  
-si rimuove l'istanza di IdentityData dalla hashmap `local_identities` con il
-metodo helper `remove_local_identity`.
+Per ognuna di esse alcune operazioni sono state implementate e sono qui di seguito
+indicate; tuttavia nella presente testsuite non si creano identità di connettività.
+
+*   Si chiama il metodo `destroy` della relativa istanza di QspnManager.  
+*   Si sconnettono dai segnali di questa istanza di QspnManager i relativi gestori.  
+*   Si chiama il metodo `stop_operations` della relativa istanza di QspnManager.  
+*   Si rimuove l'identità dalla gestione dell'IdentityManager.  
+*   Si rimuove l'istanza di IdentityData dalla hashmap `local_identities` con il
+    metodo helper `remove_local_identity`.
+*   Si chiama `IpCommands.connectivity_stop`.
 
 A questo punto **deve** essere presente la sola identità principale.  
 Essa viene memorizzata temporaneamente nella variabile locale `last_identity_data`.  
 Si chiama il metodo `destroy` della relativa istanza di QspnManager.  
 Si sconnettono dai segnali di questa istanza di QspnManager i relativi gestori.  
 Si chiama il metodo `stop_operations` della relativa istanza di QspnManager.  
+Si chiama `IpCommands.main_stop`.  
 Si rimuove l'istanza di IdentityData dalla hashmap `local_identities` con il
 metodo helper `remove_local_identity`.  
 Dopo si può eliminare il riferimento nella variabile globale `last_identity_data`.
@@ -1084,8 +1105,10 @@ vecchia identità diventa di connettività) nelle funzioni del file enter_networ
     *   si chiama IpCompute.gone_connectivity_id per la vecchia identità
 *   Si chiamano alcune funzioni di IpCommands:
     *   si chiama IpCommands.gone_connectivity per la vecchia identità
-    *   si chiama IpCommands.main_dup oppure IpCommands.connectivity_dup per la nuova identità
-    *   dopo un bel po' si chiama IpCommands.connectivity_stop per la vecchia identità
+    *   si chiama IpCommands.main_dup oppure IpCommands.connectivity_dup per la
+        nuova identità
+    *   dopo un bel po' si chiama IpCommands.connectivity_stop per la vecchia
+        identità
 
 Quando il QspnManager (di una identità) segnala bootstrapcomplete o variazioni
 alle mappe, nelle funzioni del file qspn_signals.vala:
