@@ -331,19 +331,6 @@ Infatti viene restituita al modulo `Qspn` quando questi chiama il metodo
 
 **TODO** altri moduli
 
-#### Argomenti al programma
-
-Si può passare la topologia della rete (il default è 1,1,1,2).  
-Si può passare il primo indirizzo Netsukuku della prima identità.  
-Si deve passare un PID per identificare un processo che simula un nodo in una
-testsuite.  
-Si deve passare una lista di pseudo-interfacce di rete da gestire.  
-Si può passare il livello (di default 0) della sottorete a gestione autonoma.  
-Si può passare un flag per far sì che il nodo accetti richieste anonime dirette
-a lui.  
-Si può passare un flag per far sì che il nodo rifiuti di passare richieste
-anonime mascherandole.
-
 #### Identità e archi-identità
 
 Nella classe `N.IdentityData` memorizziamo le informazioni relative a ogni identità
@@ -454,11 +441,22 @@ Ogni istanza può anche memorizzare:
 
 #### Routine main
 
-Operazioni nella funzione `main` del file `main.vala`.
+Analizziamo la funzione `main` del file `main.vala`.
 
-##### Operazioni iniziali
+##### Argomenti al programma
 
 Per prima cosa si fa il parsing delle opzioni date sulla linea di comando.
+
+Si può passare la topologia della rete (il default è 1,1,1,2).  
+Si può passare il primo indirizzo Netsukuku della prima identità.  
+Si deve passare un PID per identificare un processo che simula un nodo in una
+testsuite.  
+Si deve passare una lista di pseudo-interfacce di rete da gestire.  
+Si può passare il livello (di default 0) della sottorete a gestione autonoma.  
+Si può passare un flag per far sì che il nodo accetti richieste anonime dirette
+a lui.  
+Si può passare un flag per far sì che il nodo rifiuti di passare richieste
+anonime mascherandole.
 
 La topologia fa valorizzare
 la variabile globale `ArrayList<int> gsizes`,
@@ -479,6 +477,8 @@ Il flag di accettazione richieste anonime finisce nella variabile globale
 `bool accept_anonymous_requests`.  
 Il flag di rifiuto di mascheramento finisce nella variabile globale
 `bool no_anonymize`.
+
+##### Operazioni iniziali
 
 Dopo si inizializza lo scheduler delle tasklet. Va nella variabile globale
 `ITasklet tasklet`.
@@ -552,6 +552,7 @@ Per ogni pseudo-interfaccia di rete da gestire si eseguono questi compiti:
     sysctl net.ipv4.conf.${dev}.rp_filter=0
     sysctl net.ipv4.conf.${dev}.arp_ignore=1
     sysctl net.ipv4.conf.${dev}.arp_announce=2
+    ip link set dev ${dev} address ${MAC}
     ip link set dev ${dev} up
     ```
 *   Si avvia una tasklet di ascolto per i messaggi datagram broadcast ricevuti da
@@ -735,7 +736,9 @@ nel namespace `UpdateGraph`.
 
 **TODO**
 
-#### Integrazione modulo Neighborhood
+#### Classi per l'integrazione dei moduli
+
+##### Integrazione modulo Neighborhood
 
 Bisogna integrare l'unica istanza di `N.N.NeighborhoodManager` che si crea all'avio
 del programma e muore alla sua terminazione.
@@ -837,7 +840,7 @@ Questo avverrà eseguendo il comando `ping` e interpretandone l'output. Per il m
 invece, questo programma di test chiede al *commander* di eseguire un singolo
 comando "`ping`" e restituisce una misurazione fake di 1000 usec.
 
-#### Integrazione modulo Identities
+##### Integrazione modulo Identities
 
 Bisogna integrare l'unica istanza di `N.I.IdentityManager` che si crea all'avio
 del programma e muore alla sua terminazione.
@@ -939,7 +942,7 @@ una istanza di questa classe deve rappresentare un arco tra due nodi diretti vic
 Poiché questa testsuite non prevede la costituzione di archi, questa classe non è
 implementata.
 
-#### Integrazione modulo Qspn
+##### Integrazione modulo Qspn
 
 Bisogna integrare le istanze di `N.Q.QspnManager` che si creano al momento che nasce
 una nuova identità e muoiono alla sua terminazione.

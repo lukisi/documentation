@@ -8,12 +8,14 @@ a quali altri moduli; ecc.
 
 Il programma vero e proprio. Coordina e gestisce i vari moduli.
 
-Una particolare modalità di uso di questo programma è quella di gestire le interfacce di rete di un
-sistema e attraverso di esse comunica con diretti vicini. In questo caso il programma è in esecuzione
-con i permessi di amministratore del sistema.
+Una particolare modalità di uso di questo programma è quella in cui esso gestisce le
+reali interfacce di rete di un sistema e attraverso di esse comunica con diretti
+vicini. In questo caso il programma è in esecuzione con i permessi di amministratore
+del sistema.
 
-Un'altra modalità di uso di questo programma è quella di gestire dei socket di sistema e
-attraverso di essi comunicare con altri processi in una simulazione (o test suite).
+Un'altra modalità di uso di questo programma è quella in cui esso gestisce dei socket
+di sistema e attraverso di essi comunica con altri processi in una simulazione (o
+test suite).
 
 #### Comunicazioni di rete
 
