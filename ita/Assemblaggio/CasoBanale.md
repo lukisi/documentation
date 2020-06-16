@@ -55,8 +55,6 @@ Il nome dell'eseguibile sarà `sys_ntkd_alone`. La parte `sys` indica che usa il
 system, cioè socket di sistema per comunicazioni locali tra processi. La parte `alone`
 indica che vogliamo provare questo semplice scenario.
 
-### Appunti dell'implementazione
-
 I file sorgente sono nella dir `sys-ntkd-alone`.
 
 Il nome del pacchetto (nel file configure.ac) è `sys-ntkd-alone`.
@@ -78,7 +76,7 @@ Per indicare i namespaces usiamo in seguito le abbreviazioni:
 *   `N.A.` per `Netsukuku.Andna`
 *   `T.` per `TaskletSystem`
 
-#### Comunicazioni in rete
+### Comunicazioni in rete
 
 Simuleremo due interfacce di rete, su due diversi segmenti di rete. In ognuno dei
 due il nostro nodo sarà il solo connesso.
@@ -99,17 +97,17 @@ Questo comporta alcune conseguenze:
 Le parti dell'implementazione che riguardano le comunicazioni in rete sono trattate
 nel documento [ComunicazioniRete](CasoBanaleImplementazioneTestsuite/ComunicazioniRete.md).
 
-#### Identità e archi-identità
+### Identità e archi-identità
 
 Le parti dell'implementazione che riguardano la memorizzazione delle informazioni
 riguardanti le identità assunte dal nodo e i relativi archi-identità sono trattate
 nel documento [ClassiIdentita](CasoBanaleImplementazioneTestsuite/ClassiIdentita.md).
 
-#### Routine main
+### Routine main
 
 Analizziamo la funzione `main` del file `main.vala`.
 
-##### Argomenti al programma
+#### Argomenti al programma
 
 Per prima cosa si fa il parsing delle opzioni date sulla linea di comando.
 
@@ -144,7 +142,7 @@ Il flag di accettazione richieste anonime finisce nella variabile globale
 Il flag di rifiuto di mascheramento finisce nella variabile globale
 `bool no_anonymize`.
 
-##### Operazioni iniziali
+#### Operazioni iniziali
 
 Dopo si inizializza lo scheduler delle tasklet. Va nella variabile globale
 `ITasklet tasklet`.
@@ -278,12 +276,12 @@ Dopo si registra la funzione `safe_exit` come gestore dei segnali Posix di
 terminazione (`INT` e `TERM`), per fare in modo di uscire dal loop in cui
 adesso il programma entra.
 
-##### Ciclo eventi
+#### Ciclo eventi
 
 Dopo si entra nel main loop. In esso si gestiscono i vari segnali che i moduli
 nelle diverse tasklet emettono. Si veda la sezione [gestione segnali]().
 
-##### Operazioni finali
+#### Operazioni finali
 
 Alla terminazione del programma,
 si rimuovono tutte le identità di connettività che sono presenti al momento nel nodo.  
@@ -314,12 +312,12 @@ Dopo si rimuove il NeighborhoodManager (dalla variabile globale).
 
 Dopo si termina lo scheduler delle tasklet.
 
-#### Gestione segnali dai moduli
+### Gestione segnali dai moduli
 
 Mettendosi in ascolto sui segnali emessi dai vari moduli l'applicazione coordina le funzionalità
 di questi.
 
-##### Segnali da NeighborhoodManager
+#### Segnali da NeighborhoodManager
 
 Per reagire ai segnali emessi dal modulo `Neighborhood` sono implementate delle
 funzioni nel file `neighborhood_signals.vala`.
@@ -354,7 +352,7 @@ Il segnale `nic_address_unset` è gestito nella funzione
 `neighborhood_nic_address_unset`. Al momento non fa nulla eccetto scrivere
 delle informazioni.
 
-##### Segnali da IdentityManager
+#### Segnali da IdentityManager
 
 Per reagire ai segnali emessi dal modulo `Identities` sono implementate delle
 funzioni nel file `identities_signals.vala`.
@@ -377,7 +375,7 @@ Il segnale `identity_arc_removed` è gestito nella funzione
 
 Il segnale `arc_removed` è gestito nella funzione `identities_arc_removed`.
 
-##### Segnali da QspnManager
+#### Segnali da QspnManager
 
 Per reagire ai segnali emessi dal modulo `Qspn` sono implementate delle
 funzioni nel file `qspn_signals.vala`.
@@ -402,13 +400,13 @@ nel namespace `UpdateGraph`.
 
 **TODO**
 
-#### Classi per l'integrazione dei moduli
+### Classi per l'integrazione dei moduli
 
 Il programma, per essere in grado di usare i vari moduli, deve fornire alcune classi
 (dette classi helper) che implementino le interfacce definite in essi. Inoltre il
 programma deve gestire i segnali emessi dai moduli.
 
-##### Integrazione modulo Neighborhood
+#### Integrazione modulo Neighborhood
 
 Ci sarà una sola istanza di `N.N.NeighborhoodManager` che si crea all'avio
 del programma e muore alla sua terminazione.
@@ -419,7 +417,7 @@ Le classi helper per il modulo `Neighborhood` sono trattate nel documento
 I segnali emessi dal modulo `Neighborhood` saranno gestiti da funzioni che sono
 definite nel file `neighborhood_signals.vala`.
 
-##### Integrazione modulo Identities
+#### Integrazione modulo Identities
 
 Ci sarà una sola istanza di `N.I.IdentityManager` che si crea all'avio
 del programma e muore alla sua terminazione.
@@ -430,7 +428,7 @@ Le classi helper per il modulo `Identities` sono trattate nel documento
 I segnali emessi dal modulo `Identities` saranno gestiti da funzioni che sono
 definite nel file `identities_signals.vala`.
 
-##### Integrazione modulo Qspn
+#### Integrazione modulo Qspn
 
 Ci saranno diverse istanze di `N.Q.QspnManager` che si creano al momento che nasce
 una nuova identità e muoiono alla sua terminazione.
@@ -441,13 +439,13 @@ Le classi helper per il modulo `Qspn` sono trattate nel documento
 I segnali emessi dal modulo `Qspn` saranno gestiti da funzioni che sono definite
 nel file `qspn_signals.vala`.
 
-#### Serializzabili
+### Serializzabili
 
 Nel file `serializables.vala` sono implementate alcune classi serializzabili.  
 Molte classi serializzabili usate dai vari moduli sono implementate all'interno dei
 moduli stessi. Ma alcune devono essere implementate nel programma.
 
-##### richieste da ntkdrpc
+#### richieste da ntkdrpc
 
 La classe `N.WholeNodeSourceID` implementa l'interfaccia `N.ISourceID`.
 Contiene una istanza di `NeighborhoodNodeID id` che rappresenta il
@@ -474,7 +472,7 @@ Contiene una istanza di `NodeID id` che rappresenta il vicino destinatario.
 La classe `N.IdentityAwareBroadcastID` implementa l'interfaccia `N.IBroadcastID`.
 Contiene una lista `List<NodeID> id_set` che identifica i destinatari.
 
-##### richieste da Qspn
+#### richieste da Qspn
 
 La classe `N.Naddr` implementa l'interfaccia `N.Q.IQspnMyNaddr`.
 
@@ -482,7 +480,7 @@ La classe `N.Cost` implementa l'interfaccia `N.Q.IQspnCost`.
 
 La classe `N.Fingerprint` implementa l'interfaccia `N.Q.IQspnFingerprint`.
 
-#### Altri aspetti (riorganizzare)
+### Altri aspetti (riorganizzare)
 
 Bisogna poter dare i comandi uno alla volta. Inoltre bisogna avere la possibilità
 di dare una serie di comandi senza permettere che altre tasklet possano introdurne
