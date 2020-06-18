@@ -1,4 +1,6 @@
-#### Comunicazioni in rete
+# Comunicazioni in rete
+
+## Panoramica
 
 Simuleremo due interfacce di rete, su due diversi segmenti di rete. In ognuno dei
 due il nostro nodo sarà il solo connesso.
@@ -14,7 +16,7 @@ Questo comporta alcune conseguenze:
     nodo stesso.
 *   Il programma non si troverà mai a rilevare alcun messaggio in unicast (stream).
 
-* * *
+## Strutture dati
 
 In una classe memorizziamo le informazioni relative a una interfaccia di rete che
 il programma deve gestire.  
@@ -46,7 +48,7 @@ Gli oggetti in `pseudonic_map` servono solo a questa specifica
 testsuite in quanto deve fornire i parametri necessari ai metodi di ZCD a supporto
 delle comunicazioni nel medium *system*.
 
-* * *
+## Gestione messaggi in entrata
 
 La fase d'inizio ascolto su una interfaccia (in broadcast e in unicast sul
 linklocal) va svolta in correlazione con quella di aggiunta della stessa
@@ -66,7 +68,8 @@ invece, anche nella presente testsuite saranno presenti entrambe:
 stream e datagram.  
 Vedere la classe `N.SkeletonFactory` nel file `rpc/skeleton_factory.vala`.
 
-La classe è pensata per avere una sola istanza in una variabile globale
+La classe è realizzata in modo che il programma ne debba
+creare una sola istanza e memorizzarla in una variabile globale
 `skeleton_factory` nel file `main.vala`, a uso comune di tutto il codice.
 
 Nella fase di avvio, il programma (nella routine main) costruisce una
@@ -137,7 +140,7 @@ in questo sistema.
     *   Questo evento non si verifica mai poiché non ci saranno archi. Il codice
         semplicemente va in errore.
 
-* * *
+### Reperimento info aggiuntive dal CallerInfo
 
 Sempre nella classe `N.SkeletonFactory` nel file `rpc/skeleton_factory.vala`, ci
 sono metodi che gli skeleton usano durante l'esecuzione di un metodo remoto, per
@@ -148,7 +151,7 @@ da quale arco una tale richiesta è arrivata.
 In questa testsuite non si formeranno mai archi, quindi
 il codice semplicemente restituisce *null*.
 
-* * *
+### Reperimento degli Skeleton specifici di modulo
 
 Sempre nel file `rpc/skeleton_factory.vala`, il `NodeSkeleton node_skeleton`
 è uno *skeleton* per i metodi remoti di nodo. Ci sarà
@@ -163,7 +166,7 @@ i metodi `neighborhood_manager_getter` e `identity_manager_getter`.
 
 Sempre nel file `rpc/skeleton_factory.vala`, la classe `IdentitySkeleton`
 è uno *skeleton* per i metodi remoti di identità.
-Ogni volta che serve, cioè in ricezione di un messaggio, viene costruita
+Ad ogni messaggio ricevuto viene costruita
 una nuova istanza passando al costruttore l'istanza di `IdentityData`.
 
 Restituisce con appositi getter i manager dei moduli di identità:
@@ -177,14 +180,17 @@ Non è ancora implementato il `hooking_manager_getter`.
 Va ancora fatto in `ntkdrpc` quanto serve a produrre il metodo astratto `andna_manager_getter`. Dopo
 andrà implementato il `andna_manager_getter`.
 
-* * *
+## Gestione messaggi in uscita
 
 In una unica classe viene implementato il codice per ottenere degli stub
 radice di vario tipo (broadcast, unicast, di nodo o d'identità).  
 Vedere la classe `N.StubFactory` nel file `rpc/stub_factory.vala`.
 
-La classe è pensata per avere una sola istanza in una variabile globale
+La classe è realizzata in modo che il programma ne debba
+creare una sola istanza e memorizzarla in una variabile globale
 `stub_factory` nel file `main.vala`, a uso comune di tutto il codice.
+
+### Trasmissione broadcast a modulo di nodo
 
 Per avere uno stub radice di tipo broadcast verso un modulo di nodo, poiché
 l'unico caso d'uso è quello della funzione di radar del modulo `Neighborhood`,
@@ -214,18 +220,22 @@ nella variabile globale `pid` nel file `main.vala`) e il nome della
 pseudo interfaccia di rete, che viene preso dal membro `dev` dell'istanza di
 `N.N.INeighborhoodNetworkInterface` passata al metodo.
 
-La presente testsuite non necessiterà mai di uno stub per inviare messaggi
-di tipo unicast.  
-La funzione `get_stub_whole_node_unicast` è stata riportata nel file come commento.  
-La funzione `get_stub_identity_aware_unicast_from_ia` è stata riportata nel file come
-commento.
+### Trasmissione broadcast a modulo di identità
 
 La presente testsuite non necessiterà mai di uno stub per inviare messaggi
 di tipo broadcast verso un modulo di identità.  
 La funzione `get_stub_identity_aware_broadcast` e altre a corredo sono
 state riportate nel file come commento.
 
-* * *
+### Trasmissione unicast a modulo di nodo
+
+La presente testsuite non necessiterà mai di uno stub per inviare messaggi
+di tipo unicast.  
+La funzione `get_stub_whole_node_unicast` è stata riportata nel file come commento.  
+La funzione `get_stub_identity_aware_unicast_from_ia` è stata riportata nel file come
+commento.
+
+### Stub specifici di modulo
 
 Diverse classi (una o più per ogni modulo) realizzano gli stub dedicati.  
 Vedere le classi nel file `rpc/module_stubs.vala`.
