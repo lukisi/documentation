@@ -1,4 +1,4 @@
-#### Identità e archi-identità
+# Identità e archi-identità
 
 Nella classe `N.IdentityData` memorizziamo le informazioni relative a ogni identità
 assunta dal nodo corrente: una principale e zero o più di connettività.  
@@ -6,13 +6,14 @@ Fra queste informazioni ci sono i relativi archi-identità, rappresentati da ist
 della classe `N.IdentityArc`.  
 Entrambe le classi sono nel file `main.vala`.
 
-Anche il modulo `Identities` ha fra i suoi compiti il mantenimento delle info relative
-ad ogni identità, ma usiamo anche questa classe per alcuni motivi:
+Si era pensato dall'inizio di affidare al modulo `Identities` anche il compito
+(oltre ad altri importanti come la gestione degli archi-identità)
+di tenere traccia delle istanze di altre classi legate a ogni identità.  
+Ma avere nel programma stesso una classe (quale appunto `N.IdentityData`)
+a questo scopo è più pratico perché il programma ha conoscenza delle varie
+classi dei moduli, mentre il modulo `Identities` è in questo senso agnostico.
 
-*   praticità nel ciclare fra le identità presenti; e.g. **TODO**
-*   memorizzazione di alcuni dati temporanei nelle fasi di aggiornamento delle
-    informazioni; e.g. **TODO**
-*   ...
+## Gestione istanze di IdentityData
 
 La creazione di una istanza di `N.IdentityData` si fa chiamando il metodo
 helper `find_or_create_local_identity` nel file `main.vala` e passando
@@ -36,6 +37,8 @@ una istanza dal hashmap dopo aver verificato che era in effetti presente.
 
 La variabile globale `main_identity_data` nel file `main.vala` identifica l'identità
 principale.
+
+## Proprietà di una IdentityData
 
 Ogni istanza di `N.IdentityData` memorizza una lista di archi-identità nel membro
 `identity_arcs`, rappresentati da istanze di `IdentityArc`.
@@ -74,7 +77,7 @@ Questi sono:
 *  `per_identity_qspn_qspn_bootstrap_complete`,
 *  `per_identity_qspn_remove_identity`.
 
-* * *
+## Gestione istanze di IdentityArc
 
 Le istanze di `N.IdentityArc` che rappresentano gli archi-identità, come detto sopra,
 sono memorizzate come liste nel membro `identity_arcs` dell'istanza di
@@ -85,6 +88,8 @@ il recupero di una istanza di `N.IdentityArc` partendo dall'arco-identità come
 restituito dal modulo Identities (cioè da una istanza di
 `IIdmgmtIdentityArc id_arc`) oppure dalle informazioni note al programma (cioè
 tramite `IdentityData identity_data`, `IIdmgmtArc arc`, `NodeID peer_nodeid`).
+
+## Proprietà di un IdentityArc
 
 Ogni istanza di `N.IdentityArc` memorizza immediatamente:
 
