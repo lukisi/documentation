@@ -1,16 +1,4 @@
-##### Integrazione modulo Neighborhood
-
-Bisogna integrare l'unica istanza di `N.N.NeighborhoodManager` che si crea all'avio
-del programma e muore alla sua terminazione.
-
-Alcune classi dovranno essere prodotte dal programma per implementare le interfacce
-definite nel modulo `Neighborhood`. Tali classi sono definite nel file
-`neighborhood_helpers.vala`.
-
-I segnali emessi dal modulo `Neighborhood` saranno gestiti da funzioni che sono definite
-nel file `neighborhood_signals.vala`.
-
-* * *
+# Classi helper modulo Neighborhood
 
 L'interfaccia `N.N.INeighborhoodIPRouteManager` è implementata nella classe
 `N.NeighborhoodIPRouteManager`.

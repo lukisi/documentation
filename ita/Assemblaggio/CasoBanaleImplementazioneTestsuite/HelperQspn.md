@@ -1,16 +1,4 @@
-##### Integrazione modulo Qspn
-
-Bisogna integrare le istanze di `N.Q.QspnManager` che si creano al momento che nasce
-una nuova identità e muoiono alla sua terminazione.
-
-Alcune classi dovranno essere prodotte dal programma per implementare le interfacce
-definite nel modulo `Qspn`. Tali classi sono definite nel file
-`qspn_helpers.vala`.
-
-I segnali emessi dal modulo `Qspn` saranno gestiti da funzioni che sono definite
-nel file `qspn_signals.vala`.
-
-* * *
+# Classi helper modulo Qspn
 
 L'interfaccia `N.Q.IQspnStubFactory` è implementata nella classe
 `N.QspnStubFactory`.

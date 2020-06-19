@@ -1,16 +1,4 @@
-##### Integrazione modulo Identities
-
-Bisogna integrare l'unica istanza di `N.I.IdentityManager` che si crea all'avio
-del programma e muore alla sua terminazione.
-
-Alcune classi dovranno essere prodotte dal programma per implementare le interfacce
-definite nel modulo `Identities`. Tali classi sono definite nel file
-`identities_helpers.vala`.
-
-I segnali emessi dal modulo `Identities` saranno gestiti da funzioni che sono definite
-nel file `identities_signals.vala`.
-
-* * *
+# Classi helper modulo Identities
 
 L'interfaccia `N.I.IIdmgmtNetnsManager` è implementata nella classe
 `N.IdmgmtNetnsManager`.
