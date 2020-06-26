@@ -150,7 +150,7 @@ Dopo si inizializza lo scheduler delle tasklet. Va nella variabile globale
 Dopo si inizializzano i singoli moduli (principalmente perché hanno al loro
 interno delle classi serializzabili da registrare).  
 I moduli si inizializzano con il metodo statico `init` delle classi `NeighborhoodManager`,
-`IdentityManager`, `QspnManager`, `PeersManager`, ...
+`IdentityManager`, `QspnManager`, `PeersManager`, `CoordinatorManager`, ...
 
 In particolare l'inizializzazione del modulo `QspnManager` serve anche a impostare
 dei parametri comuni a tutte le istanze di `QspnManager` (che saranno più di una nel
@@ -166,7 +166,7 @@ Queste sono:
 Dopo si inizializza il generatore di numeri pseudo-casuali. Si usa come seed il PID.  
 Questa operazione si fa con il metodo statico `init_rngen` delle classi `PRNGen`,
 `NeighborhoodManager`,
-`IdentityManager`, `QspnManager`, `PeersManager`, ...
+`IdentityManager`, `QspnManager`, `PeersManager`, `CoordinatorManager`, ...
 
 Dopo, se non era valorizzato `naddr`, il primo indirizzo Netsukuku della prima identità,
 viene valorizzato in modo casuale nel range imposto dalla topologia.
@@ -270,13 +270,32 @@ corretta identità nel nodo.
 Dopo si attende che venga emesso e gestito il segnale di `bootstrap_complete` di questa
 istanza di QspnManager; questo dovrebbe avvenire immediatamente.
 
-Dopo si crea la prima istanza di PeersManager nel membro `peers_mgr` di `first_identity_data`.
+Dopo si crea la prima istanza di PeersManager nel membro `peers_mgr`
+di `first_identity_data`.  
 Questa viene creata passando come `old_identity` *null*, come `guest_gnode_level` *0*,
 come `host_gnode_level` *0*; poiché si tratta della prima identità che forma una
 rete nuova da un singolo nodo.  
 Oltre a ciò, al costruttore viene passata una istanza di ognuna delle classi helper
 che servono (`N.PeersMapPaths`, `N.PeersBackStubFactory`, `N.PeersNeighborsFactory`)
 ognuna costruita sulla `first_identity_data`.
+
+Dopo si crea la prima istanza di CoordinatorManager nel membro `coord_mgr`
+di `first_identity_data`.  
+Questa viene creata passando come `gsizes` la topologia della rete memorizzata nella
+variabile globale `gsizes`; come `guest_gnode_level`, `host_gnode_level`
+e `prev_coord_mgr` tutti *null* poiché si tratta della prima identità che forma una
+rete nuova da un singolo nodo.  
+Oltre a ciò, al costruttore viene passata una istanza di ognuna delle classi helper
+che servono (`N.CoordinatorEvaluateEnterHandler`,
+`N.CoordinatorBeginEnterHandler`,
+`N.CoordinatorCompletedEnterHandler`,
+`N.CoordinatorAbortEnterHandler`,
+`N.CoordinatorPropagationHandler` e
+`N.CoordinatorStubFactory`)
+ognuna costruita sulla `first_identity_data`.  
+Infine sulla stessa istanza appena creata viene chiamato il
+metodo `bootstrap_completed` passando l'istanza del PeersManager e una istanza
+della classe helper `N.CoordinatorMap` costruita sulla `first_identity_data`.
 
 Dopo si può eliminare il riferimento nella variabile globale `first_identity_data`.
 
@@ -412,6 +431,10 @@ nel namespace `UpdateGraph`.
 
 Apparentemente non occorre gestire alcun segnale dal modulo `PeerServices`.
 
+#### Segnali da CoordinatorManager
+
+Apparentemente non occorre gestire alcun segnale dal modulo `Coordinator`.
+
 ### Classi per l'integrazione dei moduli
 
 Il programma, per essere in grado di usare i vari moduli, deve fornire alcune classi
@@ -442,8 +465,8 @@ definite nel file `identities_signals.vala`.
 
 #### Integrazione modulo Qspn
 
-Ci saranno diverse istanze di `N.Q.QspnManager` che si creano al momento che nasce
-una nuova identità e muoiono alla sua terminazione.
+Ci saranno diverse istanze di `N.Q.QspnManager` che si creano al momento
+in cui nasce una nuova identità e muoiono alla sua terminazione.
 
 Le classi helper per il modulo `Qspn` sono trattate nel documento
 [HelperQspn](CasoBanaleImplementazioneTestsuite/HelperQspn.md).
@@ -453,13 +476,24 @@ nel file `qspn_signals.vala`.
 
 #### Integrazione modulo PeerServices
 
-Ci saranno diverse istanze di `N.P.PeersManager` che si creano al momento che nasce
-una nuova identità e muoiono alla sua terminazione.
+Ci saranno diverse istanze di `N.P.PeersManager` che si creano al momento
+in cui nasce una nuova identità e muoiono alla sua terminazione.
 
 Le classi helper per il modulo `PeerServices` sono trattate nel documento
 [HelperPeerServices](CasoBanaleImplementazioneTestsuite/HelperPeerServices.md).
 
-I segnali emessi dal modulo `PeerServices` (`arc_failing`) al momento non sono gestiti.
+I segnali emessi dal modulo `PeerServices` (`arc_failing`) al momento
+non sono gestiti.
+
+#### Integrazione modulo Coordinator
+
+Ci saranno diverse istanze di `N.C.CoordinatorManager` che si creano al momento
+in cui nasce una nuova identità e muoiono alla sua terminazione.
+
+Le classi helper per il modulo `Coordinator` sono trattate nel documento
+[HelperCoordinator](CasoBanaleImplementazioneTestsuite/HelperCoordinator.md).
+
+Non ci sono segnali emessi dal modulo `Coordinator`.
 
 ### Serializzabili
 
