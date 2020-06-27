@@ -28,9 +28,10 @@ sono a questo servizio, principalmente nei file che si trovano sotto la director
 ### Il modulo `Neighborhood`
 
 Il modulo `Neighborhood` ha il compito di realizzare e monitorare gli archi di un sistema con
-i suoi diretti vicini.
-
+i suoi diretti vicini.  
 Questi archi sono detti archi-nodo.
+
+Il modulo `Neighborhood` segnala al demone `ntkd` quando nasce un arco-nodo.
 
 ### Il modulo `Identities`
 
@@ -39,16 +40,24 @@ obbligato a impersonare diverse identità.
 In particolare questo modulo fa sì che gli altri moduli si occupino di comunicare attraverso
 dei cosiddetti archi-identità.
 
+Il demone `ntkd` indica al modulo `Identities` quando è stato creato un arco-nodo.  
+In questo momento, siccome esiste sempre per lo meno l'identità principale nel sistema,
+viene sicuramente creato un arco-identità. Il modulo `Identities` segnala al demone `ntkd`
+quando nasce un arco-identità.
+
 ### Il modulo `Hooking`
 
-Il modulo `Hooking` viene messo a conoscenza che il nodo ha un arco-identità con un diretto
-vicino. Il suo compito adesso è di comunicare attraverso questo arco e vedere se i nodi appartengono
-alla stessa rete.
+Il demone `ntkd` indica al modulo `Hooking` quando è stato creato un arco-identità.  
+Il modulo `Hooking` ha adesso il compito di comunicare attraverso questo arco e vedere
+se i nodi appartengono alla stessa rete.
 
-In caso positivo realizza gli archi-qspn e li fa avere al modulo `Qspn`.
+In caso positivo emette il segnale `same_network`. A fronte di questo il demone `ntkd`
+realizza un arco-qspn e lo fa avere al modulo `Qspn`.
 
-In caso negativo fa in modo che uno dei due nodi (e tutta la rete a cui esso appartiene)
-decida di entrare nella rete del vicino.
+In caso negativo emette il segnale `another_network`. Poi fa in modo che uno dei
+due nodi decida di entrare nella rete del vicino (e con lui tutta la rete a cui
+esso appartiene). La decisione presa sarà comunicata al demone `ntkd` per mezzo dei
+segnali `do_prepare_enter`, ...
 
 ### Il modulo `Qspn`
 
