@@ -51,6 +51,9 @@ Ogni istanza di `N.IdentityData` può anche memorizzare:
     `int connectivity_to_level`.
 *   L'identità da cui è derivata `weak IdentityData? copy_of_identity`.
 *   L'istanza `QspnManager qspn_mgr`.
+*   L'istanza `PeersManager peers_mgr`.
+*   L'istanza `CoordinatorManager coord_mgr`.
+*   L'istanza `HookingManager hook_mgr`.
 *   Un getter `bool main_id` dice se è la principale confrontando se stessa con la
     variabile globale `IdentityData main_identity_data` sempre nel file `main.vala`.
 *   L'insieme degli indirizzi IP pubblici propri.
@@ -109,4 +112,5 @@ Ogni istanza può anche memorizzare:
 *   `string peer_mac`
 *   `string peer_linklocal`
 *   `QspnArc? qspn_arc`
+*   `HookingIdentityArc? hooking_arc`
 *   `int64? network_id` - identifica la rete in cui esiste il peer.

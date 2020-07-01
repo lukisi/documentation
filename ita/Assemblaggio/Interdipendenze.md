@@ -90,5 +90,8 @@ Elenchiamo alcune di queste decisioni.
 
 *   Individuare una posizione libera nel g-nodo.
 *   Tenere traccia dei nuovi g-nodi che vogliono entrare in questo g-nodo.
+*   Coadiuvare il modulo `Hooking` nelle sue funzioni (fare da proxy verso
+    il nodo Coordinator per alcuni metodi, propagare messaggi all'interno del
+    proprio g-nodo, ...).
 
 ### Il modulo `ANDNA`

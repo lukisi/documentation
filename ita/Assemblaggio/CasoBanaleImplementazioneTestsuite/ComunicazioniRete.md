@@ -174,9 +174,12 @@ Restituisce con appositi getter i manager dei moduli di identità:
 `N.IHookingManagerSkeleton`, `N.IAndnaManagerSkeleton`.  
 È implementato il `qspn_manager_getter` che prevede una attesa di qualche istante
 se non è stato ancora costruito.  
-Non è ancora implementato il `peers_manager_getter`.  
-Non è ancora implementato il `coordinator_manager_getter`.  
-Non è ancora implementato il `hooking_manager_getter`.  
+È implementato il `peers_manager_getter` che prevede una attesa di qualche istante
+se non è stato ancora costruito.  
+È implementato il `coordinator_manager_getter` che va semplicemente in errore
+se non è stato ancora costruito.  
+È implementato il `hooking_manager_getter` che va semplicemente in errore
+se non è stato ancora costruito.  
 Va ancora fatto in `ntkdrpc` quanto serve a produrre il metodo astratto `andna_manager_getter`. Dopo
 andrà implementato il `andna_manager_getter`.
 
@@ -258,5 +261,29 @@ La classe `N.QspnManagerStubVoid` implementa l'interfaccia
 `N.IQspnManagerStub` semplicemente ignorando i messaggi che gli sono passati.
 Infatti viene restituita al modulo `Qspn` quando questi chiama il metodo
 `i_qspn_get_broadcast` passando una lista di archi vuota.
+
+La classe `N.PeersManagerStubHolder` implementa l'interfaccia
+`N.IPeersManagerStub` a partire da uno stub radice.  
+In questa testsuite non sarà mai usata, poiché non si realizzano archi.
+
+La classe `N.PeersManagerStubVoid` implementa l'interfaccia
+`N.IPeersManagerStub` semplicemente ignorando i messaggi che gli sono passati.
+Infatti viene restituita al modulo `PeerServices` quando questi chiama il metodo
+`i_peers_get_broadcast` e l'identità associata non ha alcun arco-identità
+di cui è stato fatto un arco-qspn.
+
+La classe `N.CoordinatorManagerStubHolder` implementa l'interfaccia
+`N.ICoordinatorManagerStub` a partire da uno stub radice.  
+In questa testsuite non sarà mai usata, poiché non si realizzano archi.
+
+La classe `N.CoordinatorManagerStubVoid` implementa l'interfaccia
+`N.ICoordinatorManagerStub` semplicemente ignorando i messaggi che gli sono passati.
+Infatti viene restituita al modulo `Coordinator` quando questi chiama il metodo
+`get_stub_for_all_neighbors` e l'identità associata non ha alcun arco-identità
+di cui è stato fatto un arco-qspn.
+
+La classe `N.HookingManagerStubHolder` implementa l'interfaccia
+`N.IHookingManagerStub` a partire da uno stub radice.  
+In questa testsuite non sarà mai usata, poiché non si realizzano archi.
 
 **TODO** altri moduli
