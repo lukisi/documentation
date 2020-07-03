@@ -495,6 +495,16 @@ Le classi helper per il modulo `Coordinator` sono trattate nel documento
 
 Non ci sono segnali emessi dal modulo `Coordinator`.
 
+#### Integrazione modulo Hooking
+
+Ci saranno diverse istanze di `N.H.HookingManager` che si creano al momento
+in cui nasce una nuova identità e muoiono alla sua terminazione.
+
+Le classi helper per il modulo `Hooking` sono trattate nel documento
+[HelperHooking](CasoBanaleImplementazioneTestsuite/HelperHooking.md).
+
+I segnali emessi dal modulo `Hooking`... **TODO**
+
 ### Serializzabili
 
 Nel file `serializables.vala` sono implementate alcune classi serializzabili.  
