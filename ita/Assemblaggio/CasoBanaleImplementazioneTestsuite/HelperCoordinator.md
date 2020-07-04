@@ -15,7 +15,7 @@ Coordinator, deve *valutare l'ingresso* in una diversa rete.
 Perciò, quando il modulo `Coordinator` chiama `evaluate_enter` la classe suddetta
 dovrà chiamare il metodo `evaluate_enter` del modulo Hooking.  
 In questa testsuite non sarà mai usata, perciò il codice va semplicemente
-in errore.
+in errore. L'implementazione è riportata come commento.
 
 * * *
 
