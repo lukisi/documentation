@@ -435,6 +435,33 @@ Apparentemente non occorre gestire alcun segnale dal modulo `PeerServices`.
 
 Apparentemente non occorre gestire alcun segnale dal modulo `Coordinator`.
 
+#### Segnali da HookingManager
+
+Per reagire ai segnali emessi dal modulo `Hooking` sono implementate delle
+funzioni nel file `hooking_signals.vala`.
+
+Poiché questa testsuite non prevede la costituzione di archi,
+non è necessario gestire i segnali `identity_arc_*`, né il segnale
+`arc_removed`.
+
+Il segnale `same_network` è gestito nella funzione
+`per_identity_hooking_same_network`.
+
+Il segnale `another_network` è gestito nella funzione
+`per_identity_hooking_another_network`.
+
+Il segnale `do_prepare_migration` è gestito nella funzione
+`per_identity_hooking_do_prepare_migration`.
+ 
+Il segnale `do_finish_migration` è gestito nella funzione
+`per_identity_hooking_do_finish_migration`.
+
+Il segnale `do_prepare_enter` è gestito nella funzione
+`per_identity_hooking_do_prepare_enter`.
+
+Il segnale `do_finish_enter` è gestito nella funzione
+`per_identity_hooking_do_finish_enter`.
+
 ### Classi per l'integrazione dei moduli
 
 Il programma, per essere in grado di usare i vari moduli, deve fornire alcune classi
