@@ -128,9 +128,10 @@ Coordinator di tutta la rete o di un g-nodo.
 
 Il modulo `Hooking` nel nodo *x* chiama `evaluate_enter` della classe che implementa
 l'interfaccia `N.H.ICoordinator`.  
-Questa esegue `coord_mgr.evaluate_enter`. Il modulo `Coordinator` fa in modo che il messaggio
-giunga al nodo *y*. Nel nodo *y* il modulo `Coordinator` chiama `evaluate_enter` della classe
-che implementa l'interfaccia `N.C.IEvaluateEnterHandler`.  
+Questa esegue `coord_mgr.evaluate_enter`. Il modulo `Coordinator` fa in modo che
+il messaggio giunga al nodo *y*. Nel nodo *y* il modulo `Coordinator` chiama
+`evaluate_enter` della classe che implementa
+l'interfaccia `N.C.IEvaluateEnterHandler`.  
 Questa esegue `hook_mgr.evaluate_enter`. Il modulo `Hooking` nel nodo *y* fa
 il suo lavoro e restituisce il risultato al metodo `evaluate_enter` della classe
 che implementa l'interfaccia `N.C.IEvaluateEnterHandler`.  
@@ -140,17 +141,18 @@ Nel nodo *x* la precedente chiamata a `coord_mgr.evaluate_enter` restituisce una
 risposta al metodo `evaluate_enter` della classe che implementa
 l'interfaccia `N.H.ICoordinator`. Il quale la restituisce al modulo `Hooking`.
 
-In conclusione, quando il modulo `Hooking` chiama `evaluate_enter` la classe suddetta deve
-restituire quanto ritornato dalla chiamata `coord_mgr.evaluate_enter`.  
-Un eventuale errore nelle operazioni di comunicazione è segnalato con il lancio dell'eccezione
-`N.H.CoordProxyError`.  
+In conclusione, quando il modulo `Hooking` chiama `evaluate_enter` la classe
+suddetta deve restituire quanto ritornato dalla
+chiamata `coord_mgr.evaluate_enter`.  
+Un eventuale errore nelle operazioni di comunicazione è segnalato con il lancio
+dell'eccezione `N.H.CoordProxyError`.  
 In realtà in questa testsuite non sarà mai eseguito questo metodo.
 
 Similmente, quando il modulo `Hooking` chiama `begin_enter` la classe suddetta deve
 restituire quanto ritornato dalla chiamata `coord_mgr.begin_enter`.
 
-Similmente, quando il modulo `Hooking` chiama `completed_enter` la classe suddetta deve
-restituire quanto ritornato dalla chiamata `coord_mgr.completed_enter`.
+Similmente, quando il modulo `Hooking` chiama `completed_enter` la classe suddetta
+deve restituire quanto ritornato dalla chiamata `coord_mgr.completed_enter`.
 
 Similmente, quando il modulo `Hooking` chiama `abort_enter` la classe suddetta deve
 restituire quanto ritornato dalla chiamata `coord_mgr.abort_enter`.
@@ -158,28 +160,31 @@ restituire quanto ritornato dalla chiamata `coord_mgr.abort_enter`.
 ### Collaborazioni B
 
 Il modulo Hooking in esecuzione nel nodo *y* che è il
-Coordinator di tutta la rete o di un g-nodo vuole accedere in lettura/scrittura alla memoria
-condivisa (di tutta la rete o di un g-nodo) per salvare e recuperare alcune informazioni
-di sua pertinenza.
+Coordinator di tutta la rete o di un g-nodo vuole accedere in lettura/scrittura alla
+memoria condivisa (di tutta la rete o di un g-nodo) per salvare e recuperare alcune
+informazioni di sua pertinenza.
 
-Il modulo `Hooking` nel nodo *y* chiama `get_hooking_memory` della classe che implementa
-l'interfaccia `N.H.ICoordinator`.  
-Questa esegue `coord_mgr.get_hooking_memory`. Il modulo `Coordinator` fa in modo di recuperare
-la sua memoria condivisa, cioè il valore nel database distribuito (DHT) associato alla chiave
-che rappresente il livello del suo g-nodo di pertinenza; in esso c'è un dato che costituisce
-la memoria condivisa di pertinenza del modulo `Hooking`. In altre parole, il modulo
-`Coordinator` si occupa di reperire questa informazione e la restituisce al metodo
-`get_hooking_memory` della classe che implementa l'interfaccia `N.H.ICoordinator`. Il quale la
+Il modulo `Hooking` nel nodo *y* chiama `get_hooking_memory` della classe che
+implementa l'interfaccia `N.H.ICoordinator`.  
+Questa esegue `coord_mgr.get_hooking_memory`. Il modulo `Coordinator` fa in modo di
+recuperare la sua memoria condivisa, cioè il valore nel database distribuito (DHT)
+associato alla chiave che rappresente il livello del suo g-nodo di pertinenza; in
+esso c'è un dato che costituisce la memoria condivisa di pertinenza del modulo
+`Hooking`. In altre parole, il modulo `Coordinator` si occupa di reperire questa
+informazione e la restituisce al metodo `get_hooking_memory` della classe che
+implementa l'interfaccia `N.H.ICoordinator`. Il quale la
 restituisce al modulo `Hooking`.
 
-In conclusione, quando il modulo `Hooking` chiama `get_hooking_memory` la classe suddetta deve
-restituire quanto ritornato dalla chiamata `coord_mgr.get_hooking_memory`.  
-Un eventuale errore nelle operazioni di comunicazione è segnalato con il lancio dell'eccezione
-`N.H.CoordProxyError`.  
+In conclusione, quando il modulo `Hooking` chiama `get_hooking_memory` la classe
+suddetta deve restituire quanto ritornato dalla
+chiamata `coord_mgr.get_hooking_memory`.  
+Un eventuale errore nelle operazioni di comunicazione è segnalato con il lancio
+dell'eccezione `N.H.CoordProxyError`.  
 In realtà in questa testsuite non sarà mai eseguito questo metodo.
 
-Similmente, quando il modulo `Hooking` chiama `set_hooking_memory` la classe suddetta deve
-restituire quanto ritornato dalla chiamata `coord_mgr.set_hooking_memory`.
+Similmente, quando il modulo `Hooking` chiama `set_hooking_memory` la classe
+suddetta deve restituire quanto ritornato dalla
+chiamata `coord_mgr.set_hooking_memory`.
 
 ### Collaborazioni C
 
@@ -192,24 +197,25 @@ cumulativo.
 
 Il modulo `Hooking` nel nodo *x* chiama `prepare_enter` della classe che implementa
 l'interfaccia `N.H.ICoordinator`.  
-Questa esegue `coord_mgr.prepare_enter`. Il modulo `Coordinator` fa in modo che un messaggio
-di `void execute_prepare_enter` giunga a tutti i nodi del suo g-nodo e
-venga eseguito una e una sola volta su ogni nodo. In questo caso si tratta di un messaggio
-che ha esito `void`, quindi la sola risposta che riceve è il completamento dell'esecuzione.
-Ogni singolo nodo, quando riceve il messaggio e se intende eseguirlo (cioè se si riconosce
-destinatario e non lo ha già eseguito), chiama il metodo `prepare_enter` della classe
-che implementa l'interfaccia `N.C.IPropagationHandler`.  
-Questa esegue `hook_mgr.prepare_enter`. Il modulo `Hooking` nel singolo nodo destinatario
-fa il suo lavoro e restituisce il risultato al metodo `prepare_enter` della classe
-che implementa l'interfaccia `N.C.IPropagationHandler`.  
+Questa esegue `coord_mgr.prepare_enter`. Il modulo `Coordinator` fa in modo che un
+messaggio di `void execute_prepare_enter` giunga a tutti i nodi del suo g-nodo e
+venga eseguito una e una sola volta su ogni nodo. In questo caso si tratta di un
+messaggio che ha esito `void`, quindi la sola risposta che riceve è il completamento
+dell'esecuzione. Ogni singolo nodo, quando riceve il messaggio e se intende
+eseguirlo (cioè se si riconosce destinatario e non lo ha già eseguito), chiama il
+metodo `prepare_enter` della classe che implementa
+l'interfaccia `N.C.IPropagationHandler`.  
+Questa esegue `hook_mgr.prepare_enter`. Il modulo `Hooking` nel singolo nodo
+destinatario fa il suo lavoro e restituisce il risultato al metodo `prepare_enter`
+della classe che implementa l'interfaccia `N.C.IPropagationHandler`.  
 Questa la restituisce al modulo `Coordinator` il quale la fa giungere come risposta
 in conclusione al modulo `Coordinator` del nodo *x*.  
-Infine il modulo `Coordinator` del nodo *x* risponde al metodo `prepare_enter` della
-classe che implementa l'interfaccia `N.H.ICoordinator` e questa risponde al modulo
-`Hooking`.
+Infine il modulo `Coordinator` del nodo *x* risponde al metodo `prepare_enter`
+della classe che implementa l'interfaccia `N.H.ICoordinator` e questa risponde
+al modulo `Hooking`.
 
-Similmente, quando il modulo `Hooking` chiama `prepare_migration` la classe suddetta deve
-restituire quanto ritornato dalla chiamata `coord_mgr.prepare_migration`.
+Similmente, quando il modulo `Hooking` chiama `prepare_migration` la classe suddetta
+deve restituire quanto ritornato dalla chiamata `coord_mgr.prepare_migration`.
 
 ### Collaborazioni D
 
@@ -221,29 +227,32 @@ nodi.
 
 Il modulo `Hooking` nel nodo *x* chiama `finish_enter` della classe che implementa
 l'interfaccia `N.H.ICoordinator`.  
-Questa esegue `coord_mgr.finish_enter`. Il modulo `Coordinator` fa in modo che un messaggio
-di `void execute_finish_enter` parta per giungere a tutti i nodi del suo g-nodo e
-venire eseguito una e una sola volta su ogni nodo. Ma non attende il risultato di
-questo messaggio.  
-Ogni singolo nodo, quando riceve il messaggio e se intende eseguirlo (cioè se si riconosce
-destinatario e non lo ha già eseguito), chiama il metodo `finish_enter` della classe
-che implementa l'interfaccia `N.C.IPropagationHandler`.  
-Questa esegue `hook_mgr.finish_enter`. Il modulo `Hooking` nel singolo nodo destinatario
-fa il suo lavoro. Ma indipendentemente da questo, il modulo `Coordinator` del nodo *x*
-risponde immediatamente al metodo `finish_enter` della
+Questa esegue `coord_mgr.finish_enter`. Il modulo `Coordinator` fa in modo che un
+messaggio di `void execute_finish_enter` parta per giungere a tutti i nodi del suo
+g-nodo e venire eseguito una e una sola volta su ogni nodo. Ma non attende il
+risultato di questo messaggio.  
+Ogni singolo nodo, quando riceve il messaggio e se intende eseguirlo (cioè se si
+riconosce destinatario e non lo ha già eseguito), chiama il metodo `finish_enter`
+della classe che implementa l'interfaccia `N.C.IPropagationHandler`.  
+Questa esegue `hook_mgr.finish_enter`. Il modulo `Hooking` nel singolo nodo
+destinatario fa il suo lavoro. Ma indipendentemente da questo, il modulo
+`Coordinator` del nodo *x* risponde immediatamente al metodo `finish_enter` della
 classe che implementa l'interfaccia `N.H.ICoordinator` e questa risponde al modulo
 `Hooking`.
 
-Similmente, quando il modulo `Hooking` chiama `finish_migration` la classe suddetta deve
-restituire quanto ritornato dalla chiamata `coord_mgr.finish_migration`.
+Similmente, quando il modulo `Hooking` chiama `finish_migration` la classe suddetta
+deve restituire quanto ritornato dalla chiamata `coord_mgr.finish_migration`.
 
-Similmente, quando il modulo `Hooking` chiama `we_have_splitted` la classe suddetta deve
-restituire quanto ritornato dalla chiamata `coord_mgr.we_have_splitted`.
+Similmente, quando il modulo `Hooking` chiama `we_have_splitted` la classe suddetta
+deve restituire quanto ritornato dalla chiamata `coord_mgr.we_have_splitted`.
 
 ### Collaborazioni E
 
-Una importante funzione del modulo Coordinator è quella di riservare un posto in un g-nodo. Anche
-questa si può vedere come una fondamentale collaborazione del modulo Coordinator per le esigenze
+```
+
+Una importante funzione del modulo Coordinator è quella di riservare un posto in un
+g-nodo. Anche questa si può vedere come una fondamentale collaborazione del modulo
+Coordinator per le esigenze
 del modulo Hooking.
 
 Un altro caso di collaborazione richiesta dal modulo Hooking è un metodo che il modulo Coordinator
@@ -253,8 +262,6 @@ Si vedranno nella trattazione i metodi `reserve`, `get_n_nodes`.
 
 
 
-
-```
   .      public abstract int get_n_nodes();
 
   V      public abstract Object evaluate_enter(Object evaluate_enter_data) throws CoordProxyError;
