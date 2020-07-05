@@ -450,7 +450,7 @@ alla lista di *valutazioni* vede che un certo numero di queste ha per nodo vicin
 al g-nodo di *J* in cui *G* vorrebbe entrare. Deduce quindi il numero di archi che dovrebbero rompersi
 per far sì che il g-nodo divenga disconnesso.
 
-Inoltre si da minore preferenza (ma non si vietano) alle opzioni in cui il nodo di partenza della
+Inoltre si dà minore preferenza (ma non si vietano) alle opzioni in cui il nodo di partenza della
 migration-path, cioè *v*, è un gateway con `evaluate_enter_data.neighbor_min_level` maggiore di `max_lvl`.
 Se si dovesse scegliere una tale opzione, il valore di `first_ask_lvl` dovrebbe essere
 `neighbor_min_level` anziché `max_lvl`.
