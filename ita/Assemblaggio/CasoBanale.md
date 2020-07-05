@@ -441,14 +441,16 @@ Per reagire ai segnali emessi dal modulo `Hooking` sono implementate delle
 funzioni nel file `hooking_signals.vala`.
 
 Poiché questa testsuite non prevede la costituzione di archi,
-non è necessario gestire i segnali `identity_arc_*`, né il segnale
-`arc_removed`.
+non è necessario gestire nessuno di questi segnali.
 
-Il segnale `same_network` è gestito nella funzione
+Il segnale `failing_arc(IIdentityArc ia)` non è al momento gestito
+in nessuna funzione.
+
+Il segnale `same_network(IIdentityArc ia)` è gestito nella funzione
 `per_identity_hooking_same_network`.
 
-Il segnale `another_network` è gestito nella funzione
-`per_identity_hooking_another_network`.
+Il segnale `another_network(IIdentityArc ia, int64 network_id)` è gestito
+nella funzione `per_identity_hooking_another_network`.
 
 Il segnale `do_prepare_migration` è gestito nella funzione
 `per_identity_hooking_do_prepare_migration`.

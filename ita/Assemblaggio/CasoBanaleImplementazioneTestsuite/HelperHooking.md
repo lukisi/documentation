@@ -1,5 +1,16 @@
 # Classi helper modulo Hooking
 
+## Interfaccia IIdentityArc
+
+Un arco-identità da passare al modulo `Hooking` è rappresentato da una istanza
+della classe `N.HookingIdentityArc` che implementa l'interfaccia `N.H.IIdentityArc`.
+
+Quando il modulo `Hooking` chiama `get_tcp` la classe suddetta deve
+restituire uno stub per inviare un messaggio tramite questo
+arco-identità.  
+In questa testsuite il metodo non verrà mai chiamato. L'implementazione è stata
+riportata come commento.
+
 ## Interfaccia IHookingMapPaths
 
 L'interfaccia `N.H.IHookingMapPaths` è implementata nella classe
