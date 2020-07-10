@@ -17,3 +17,16 @@ Nel documento [Caso banale](CasoBanale.md) tratteremo la sequenza di operazioni 
 il programma fa in questo caso e che coinvolgono la creazione
 e la rimozione delle singole istanze delle classi dei vari moduli.
 
+### Testsuite #1
+
+Subito dopo aver realizzato l'implementazione di una testsuite per il caso banale
+sopra descritto, proviamo a implementare un primo test significativo.
+
+Nel programma che realizza il caso banale, alcuni metodi saranno rimasti non
+implementati perché non necessari in un nodo che non incontra nessun altro nodo.  
+Quando il programma viene eseguito in uno scenario in cui questi metodi vengono
+chiamati, il codice va in errore e questo ci indica in quali punti dobbiamo
+proseguire il lavoro.
+
+Nel documento [Scenario #1](Scenario01.md) tratteremo la sequenza di operazioni
+che il programma fa in un semplice scenario in cui due nodi si incontrano.
