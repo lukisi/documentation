@@ -149,7 +149,7 @@ avere informazioni aggiuntive sul chiamante del metodo.
 Il metodo `from_caller_get_nodearc` è usato per richieste di nodo, per sapere
 da quale arco una tale richiesta è arrivata.  
 In questa testsuite non si formeranno mai archi, quindi
-il codice semplicemente restituisce *null*.
+il metodo semplicemente non esiste.
 
 ### Reperimento degli Skeleton specifici di modulo
 

@@ -58,3 +58,17 @@ Il nome dell'eseguibile sarà `sys_ntkd_test1`.
 I file sorgente sono nella dir `sys-ntkd-test1`.
 
 ### Comunicazioni in rete
+
+Diversamente dal caso banale:
+
+*   Il programma si troverà a trasmettere in unicast (stream) alcuni
+    messaggi, poiché il nodo costituirà un arco con un altro nodo.
+*   Il programma si troverà a rilevare alcuni messaggi in broadcast (datagram)
+    sull'una o l'altra interfaccia. Alcuni saranno messaggi provenienti dal
+    nodo stesso **e** altri da un altro nodo.
+*   Il programma si troverà a rilevare alcuni messaggi in unicast (stream).
+
+* * *
+
+Le parti dell'implementazione che riguardano le comunicazioni in rete sono trattate
+nel documento [ComunicazioniRete](Scenario01ImplementazioneTestsuite/ComunicazioniRete.md).
