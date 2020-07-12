@@ -72,3 +72,24 @@ Diversamente dal caso banale:
 
 Le parti dell'implementazione che riguardano le comunicazioni in rete sono trattate
 nel documento [ComunicazioniRete](Scenario01ImplementazioneTestsuite/ComunicazioniRete.md).
+
+### Identità e archi-identità
+
+Come per il caso banale.
+
+### Routine main
+
+Come per il caso banale.
+
+### Gestione segnali dai moduli
+
+Come per il caso banale.
+
+### Classi per l'integrazione dei moduli
+
+Come per il caso banale.
+
+#### Integrazione modulo Neighborhood
+
+Le classi helper per il modulo `Neighborhood` sono trattate nel documento
+[HelperNeighborhood](Scenario01ImplementazioneTestsuite/HelperNeighborhood.md).
