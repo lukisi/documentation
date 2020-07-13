@@ -85,7 +85,16 @@ Come per il caso banale.
 
 ### Routine main
 
-Come per il caso banale.
+Come per il caso banale. Eccetto quanto segue.
+
+#### Operazioni iniziali
+
+Durante le operazioni iniziali, prima di creare l'istanza `neighborhood_mgr`
+e connettere i gestori dei suoi segnali, viene preparata una hashmap (var globale)
+`arc_map` che conterrà gli archi realizzati dal modulo `Neighborhood`.
+
+Ogni elemento rappresenta un arco come istanza della classe `NodeArc` definita
+nel file `main.vala`.
 
 ### Gestione segnali dai moduli
 
@@ -128,3 +137,9 @@ Come per il caso banale.
 
 Le classi helper per il modulo `Neighborhood` sono trattate nel documento
 [HelperNeighborhood](Scenario01ImplementazioneTestsuite/HelperNeighborhood.md).
+
+#### Integrazione modulo Identities
+
+Le classi helper per il modulo `Identities` sono trattate nel documento
+[HelperIdentities](Scenario01ImplementazioneTestsuite/HelperIdentities.md).
+

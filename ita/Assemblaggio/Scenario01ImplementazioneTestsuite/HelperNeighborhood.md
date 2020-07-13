@@ -1,6 +1,6 @@
 # Classi helper modulo Neighborhood
 
-Come per il caso banale.
+Come per il caso banale. Eccetto quanto segue.
 
 Mentre nel caso banale la classe
 `N.NeighborhoodStubFactory` nel metodo `get_unicast` il codice semplicemente
