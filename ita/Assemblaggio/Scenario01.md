@@ -47,7 +47,13 @@ che sono state aggiunte rispetto a quello.
 Come nel caso banale fino alla costruzione della prima identità (sia nel nodo 123
 che nel nodo 456) con le relative istanze dei vari manager dei moduli di identità.
 
-In seguito all'incontro...
+In seguito all'incontro il modulo `Neighborhood` usa il metodo `get_unicast` della
+helper classe `N.NeighborhoodStubFactory`. Ottiene uno stub per chiamare un metodo
+remoto (mandare un messaggio) al vicino in modo unicast. Quindi il vicino riceve un
+messaggio stream verso un modulo di nodo e chiama il metodo nel manager interessato
+che è il NeighborhoodManager. Il modulo `Neighborhood` nei due nodi diretti vicini
+costruisce un arco. E per questo emette un segnale.
+
 
 
 ## Implementazione testsuite locale
@@ -84,6 +90,35 @@ Come per il caso banale.
 ### Gestione segnali dai moduli
 
 Come per il caso banale.
+
+#### Segnali da NeighborhoodManager
+
+Come per il caso banale. Eccetto quanto segue.
+
+Poiché questa testsuite prevede la costituzione di archi,
+diventa necessario gestire i segnali `neighborhood_arc_*`.
+
+##### arc_added
+
+Il segnale `arc_added` è gestito nella funzione `neighborhood_arc_added`.
+
+In essa il nuovo arco va aggiunto alle strutture dati del programma.  
+Il programma memorizza nella variabile globale `arc_map`... **TODO**
+
+Inoltre va passato al modulo Identities perché ci costruisca uno o più
+archi-identità, a seconda di quante identità ci sono nel nodo... **TODO**
+
+##### arc_changed
+
+Il segnale `arc_changed` è gestito nella funzione `neighborhood_arc_changed`.
+
+##### arc_removing
+
+Il segnale `arc_removing` è gestito nella funzione `neighborhood_arc_removing`.
+
+##### arc_removed
+
+Il segnale `arc_removed` è gestito nella funzione `neighborhood_arc_removed`.
 
 ### Classi per l'integrazione dei moduli
 
